@@ -7,7 +7,7 @@ import { createScheduleAction, updateScheduleAction } from '../../app/actions';
 import { format } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import { backdropVariants, smoothModalVariants } from '@/src/lib/modalVariants';
-import { Streamer, Game, ModalProps, ScheduleWithParticipants } from '@/src/d';
+import { Streamer, Game, ModalProps } from '@/src/d';
 
 type CreateScheduleModalProps = ModalProps & {
   streamers: Streamer[];
@@ -70,8 +70,6 @@ export default function ScheduleFormModal({
       ? await updateScheduleAction(initialData!.id, payload)
       : await createScheduleAction(payload);
 
-    console.log('Schedule form submission result:', result);
-
     if (result.success) onClose();
     else alert('일정 저장에 실패했습니다.');
     setIsSubmitting(false);
@@ -90,7 +88,6 @@ export default function ScheduleFormModal({
         className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* --- 헤더 (기존 코드 동일) --- */}
         <div className="p-6 md:p-8 border-b border-slate-50 flex justify-between items-start shrink-0">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
@@ -113,7 +110,6 @@ export default function ScheduleFormModal({
           </button>
         </div>
 
-        {/* --- 폼 영역 (기존 코드 동일) --- */}
         <form
           id="schedule-form"
           onSubmit={handleSubmit}

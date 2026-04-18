@@ -139,8 +139,6 @@ export default function CreateStreamerModal({
             </div>
           </div>
 
-          {/* 역할 */}
-
           <div>
             <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase">
               치지직 주소 (선택)

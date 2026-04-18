@@ -3,7 +3,6 @@ import Navigation from '@/src/components/Navigation';
 import './globals.css';
 import { Inter } from 'next/font/google';
 import AuthProvider from '@/src/providers/AuthProvider';
-import { LogIn } from 'lucide-react';
 import Link from 'next/link';
 import Header from '@/src/components/Layout/Header';
 

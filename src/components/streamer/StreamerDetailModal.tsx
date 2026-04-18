@@ -1,7 +1,7 @@
 // src/components/Streamer/StreamerDetailModal.tsx
 'use client';
 
-import { motion, Variants } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   X,
   ExternalLink,
@@ -10,21 +10,7 @@ import {
   Gamepad2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-
-const backdropVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.3 } },
-};
-
-const modalVariants: Variants = {
-  hidden: { opacity: 0, scale: 0.95, y: 50 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    y: 0,
-    transition: { type: 'spring', damping: 30, stiffness: 250 },
-  },
-};
+import { backdropVariants, smoothModalVariants } from '@/src/lib/modalVariants';
 
 export default function StreamerDetailModal({ streamer }: any) {
   const router = useRouter();
@@ -40,7 +26,7 @@ export default function StreamerDetailModal({ streamer }: any) {
       onClick={() => router.back()}
     >
       <motion.div
-        variants={modalVariants}
+        variants={smoothModalVariants}
         // max-w-3xl로 시원시원한 크기 부여
         className="bg-white w-full max-w-3xl rounded-[3rem] shadow-[0_0_50px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}

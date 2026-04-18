@@ -1,12 +1,7 @@
 import { AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 
 // src/app/admin/feedbacks/StatusBadge.tsx
-export default function StatusBadge({
-  status,
-}: {
-  status: string;
-  id: string;
-}) {
+export default function StatusBadge({ status }: { status: string }) {
   const configs: Record<string, { label: string; color: string; icon: any }> = {
     PENDING: {
       label: '대기중',

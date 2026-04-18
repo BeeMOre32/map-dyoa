@@ -7,7 +7,6 @@ import { signIn, signOut, useSession } from 'next-auth/react';
 
 export default function Header() {
   const { data: session } = useSession();
-  console.log('Session in Header:', session); // 세션 정보 확인
 
   return (
     <header className="py-4 px-8 border-b bg-white flex justify-between items-center shrink-0">
@@ -34,7 +33,6 @@ export default function Header() {
 
         {session ? (
           <div className="flex items-center gap-3">
-            {/* 로그인 완료 표시 (선택사항) */}
             <div className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[10px] font-black uppercase">
               <UserCheck className="w-3 h-3" /> Admin
             </div>

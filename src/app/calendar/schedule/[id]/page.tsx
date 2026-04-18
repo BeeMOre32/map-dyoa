@@ -13,7 +13,6 @@ export default async function FullSchedulePage({
 
   // 1. 모든 데이터 병렬로 가져오기 (성능 최적화)
   const [targetSchedule, allSchedules, streamers, games] = await Promise.all([
-    // 특정 상세 일정
     prisma.schedule.findUnique({
       where: { id },
       include: {
@@ -21,14 +20,12 @@ export default async function FullSchedulePage({
         participants: { include: { streamer: true } },
       },
     }),
-    // 배경 달력에 뿌릴 모든 일정
     prisma.schedule.findMany({
       include: {
         game: true,
         participants: { include: { streamer: true } },
       },
     }),
-    // 수정 모달용 데이터
     prisma.streamer.findMany({ orderBy: { name: 'asc' } }),
     prisma.game.findMany({ orderBy: { title: 'asc' } }),
   ]);

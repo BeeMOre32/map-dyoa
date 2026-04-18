@@ -44,7 +44,7 @@ export default function CalendarView({
   streamers,
   games,
 }: CalendarViewProps) {
-  const router = useRouter(); // 🌟 주소 이동을 위해 선언
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
   const [currentDate, setCurrentDate] = useState(new Date());

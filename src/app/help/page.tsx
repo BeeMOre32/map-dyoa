@@ -189,7 +189,6 @@ export default function GuidePage() {
                 <GitBranch className="w-5 h-5" />
               </a>
 
-              {/* 💡 여기에 나중에 이메일 주소를 넣으세요 (예: mailto:your@email.com) */}
               <a
                 href="mailto:windowssart01@gmail.com"
                 className="p-4 bg-white text-slate-400 rounded-full shadow-sm border border-slate-100 hover:text-indigo-500 hover:shadow-md hover:-translate-y-1 transition-all"

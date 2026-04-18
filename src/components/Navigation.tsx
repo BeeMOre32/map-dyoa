@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, LogInIcon, RectangleGoggles, Users } from 'lucide-react';
+import { Calendar, Users } from 'lucide-react';
 
 const tabs = [
   { id: 'calendar', label: '스케줄', href: '/calendar', icon: Calendar },

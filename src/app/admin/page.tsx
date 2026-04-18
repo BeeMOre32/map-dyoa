@@ -1,6 +1,6 @@
 // src/app/admin/page.tsx
 import Link from 'next/link';
-import { MessageSquare, Users, Settings, Activity } from 'lucide-react';
+import { MessageSquare, Users } from 'lucide-react';
 import { auth } from '@/src/auth';
 
 export default async function AdminDashboard() {
