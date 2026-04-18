@@ -1,0 +1,125 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Streamer {
+  id         String  @id @default(cuid())
+  name       String  @unique
+  handle     String  @unique // URL용 ID (예: chimchakman)
+  generation Int     @default(1) // 1기, 2기 등
+  role       String? // 부장, 부부장, 멤버 등
+  platform   String  @default("CHZZK")
+  profileImg String?
+  colorCode  String  @default("#673AB7") // 캘린더 표시 색상
+  chzzkUrl   String?
+
+  schedules ScheduleParticipant[]
+  createdAt DateTime              @default(now())
+}
+
+model Schedule {
+  id          String    @id @default(cuid())
+  title       String
+  content     String?
+  startTime   DateTime
+  endTime     DateTime?
+  isGuerrilla Boolean   @default(false)
+
+  participants ScheduleParticipant[]
+  createdAt    DateTime              @default(now())
+  game         Game?                 @relation(fields: [gameId], references: [id])
+  gameId       String?
+}
+
+model ScheduleParticipant {
+  id         String   @id @default(cuid())
+  scheduleId String
+  streamerId String
+  schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  streamer   Streamer @relation(fields: [streamerId], references: [id], onDelete: Cascade)
+
+  @@index([scheduleId, streamerId])
+}
+
+model Game {
+  id        String     @id @default(cuid())
+  title     String     @unique
+  schedules Schedule[]
+}
+
+model Feedback {
+  id           String   @id @default(cuid())
+  type         String   // 예: "EDIT_REQUEST" (수정 요청), "GENERAL" (일반 피드백)
+  category     String   // 예: "닉네임 오류", "정보 수정" 등
+  content      String   @db.Text
+  
+  // 어떤 스트리머에 대한 요청인지 (선택 사항)
+  streamerId   String?
+  streamerName String?  // 스트리머가 삭제될 경우를 대비한 스냅샷
+  
+  status       String   @default("PENDING") // PENDING, IN_PROGRESS, RESOLVED, REJECTED
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([streamerId])
+}
+
+// prisma/schema.prisma
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          String    @default("USER") // 우리가 추가한 필드
+  accounts      Account[]
+  sessions      Session[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
