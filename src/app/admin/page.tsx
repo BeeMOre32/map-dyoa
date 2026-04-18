@@ -1,12 +1,12 @@
 // src/app/admin/page.tsx
 import Link from 'next/link';
 import { MessageSquare, Users, Settings, Activity } from 'lucide-react';
-import { useSession } from 'next-auth/react';
+import { auth } from '@/src/auth';
 
-export default function AdminDashboard() {
-  const session = useSession();
+export default async function AdminDashboard() {
+  const session = await auth();
 
-  if (session.data?.user.role !== 'ADMIN') {
+  if (session?.user.role !== 'ADMIN') {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="bg-white p-8 rounded-lg shadow-md text-center">
