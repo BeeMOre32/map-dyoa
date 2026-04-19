@@ -119,7 +119,7 @@ export default function StreamerDetailModal({ streamer }: any) {
             돌아가기
           </button>
           <a
-            target="_blank"
+            target={streamer.chzzkUrl ? '_blank' : '_self'}
             rel="noopener noreferrer"
             href={streamer.chzzkUrl || '#'}
             className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
