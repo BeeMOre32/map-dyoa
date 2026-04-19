@@ -8,6 +8,7 @@ import { useState } from 'react';
 import RequestEditModal from '../Form/RequestEdit';
 
 export default function StreamerView({ streamers }: { streamers: any[] }) {
+  console.log('StreamerView 렌더링, streamers:', streamers);
   const [requestTarget, setRequestTarget] = useState<any>(null);
   return (
     <div className="h-full flex flex-col bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden">

@@ -37,6 +37,10 @@ export async function createScheduleAction(data: {
 }
 
 export async function deleteScheduleAction(id: string) {
+  const session = await auth();
+  if (!session) {
+    return { success: false, error: '권한이 없습니다.' };
+  }
   try {
     await prisma.schedule.delete({ where: { id } });
     revalidatePath('/calendar');
@@ -58,50 +62,20 @@ export async function updateScheduleAction(
   },
 ) {
   try {
-    // 기존 participants 조회 (ID만 필요)
-    const existingParticipants = await prisma.scheduleParticipant.findMany({
-      where: { scheduleId: id },
-      select: { streamerId: true },
-    });
-
-    const existingIds = new Set(existingParticipants.map((p) => p.streamerId));
-    const newIds = new Set(data.streamerIds);
-
-    // 추가할 ID (새로운 ID 중 기존에 없는 것)
-    const toAdd = data.streamerIds.filter((id) => !existingIds.has(id));
-    // 제거할 ID (기존 ID 중 새로운 것에 없는 것)
-    const toRemove = Array.from(existingIds).filter((id) => !newIds.has(id));
-
-    // 스케줄 업데이트
     await prisma.schedule.update({
       where: { id },
       data: {
         title: data.title,
         startTime: data.startTime,
         gameId: data.gameId || null,
-        // participants는 개별적으로 처리
+        participants: {
+          deleteMany: {},
+          create: data.streamerIds.map((streamerId) => ({
+            streamer: { connect: { id: streamerId } },
+          })),
+        },
       },
     });
-
-    // 제거할 participants 삭제
-    if (toRemove.length > 0) {
-      await prisma.scheduleParticipant.deleteMany({
-        where: {
-          scheduleId: id,
-          streamerId: { in: toRemove },
-        },
-      });
-    }
-
-    // 추가할 participants 생성
-    if (toAdd.length > 0) {
-      await prisma.scheduleParticipant.createMany({
-        data: toAdd.map((streamerId) => ({
-          scheduleId: id,
-          streamerId,
-        })),
-      });
-    }
 
     revalidatePath('/calendar');
     revalidatePath('/schedule');
