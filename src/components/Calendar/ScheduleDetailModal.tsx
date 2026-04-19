@@ -20,6 +20,7 @@ import { deleteScheduleAction } from '@/src/app/actions';
 import CreateScheduleModal from '../Form/CreateScheduleModal';
 import { backdropVariants, smoothModalVariants } from '@/src/lib/modalVariants';
 import { GAME_COLORS } from '@/src/constants/gamecolor';
+import Link from 'next/link';
 
 export default function ScheduleDetailView({
   schedule,
@@ -160,7 +161,8 @@ export default function ScheduleDetailView({
                   {schedule.participants.map((p: any) => {
                     const streamer = p.streamer || p;
                     return (
-                      <div
+                      <Link
+                        href={`/streamers/detail/${streamer.id}`}
                         key={streamer.id}
                         className="px-4 py-2.5 rounded-2xl border font-bold text-sm shadow-sm transition-all hover:scale-105"
                         style={{
@@ -170,7 +172,7 @@ export default function ScheduleDetailView({
                         }}
                       >
                         {streamer.name}
-                      </div>
+                      </Link>
                     );
                   })}
                 </div>

@@ -5,9 +5,10 @@ import { useState, useRef } from 'react';
 import { X, Calendar as CalendarIcon, Check } from 'lucide-react';
 import { createScheduleAction, updateScheduleAction } from '../../app/actions';
 import { format } from 'date-fns';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { backdropVariants, smoothModalVariants } from '@/src/lib/modalVariants';
 import { Streamer, Game, ModalProps } from '@/src/d';
+import StreamerSelector from './StreamerSelctor';
 
 type CreateScheduleModalProps = ModalProps & {
   streamers: Streamer[];
@@ -26,6 +27,8 @@ export default function ScheduleFormModal({
   const defaultTime = initialData?.startTime
     ? format(new Date(initialData.startTime), "yyyy-MM-dd'T'HH:mm")
     : '';
+
+  console.log('Initial Data:', initialData);
 
   const [title, setTitle] = useState(initialData?.title || '');
   const [startTime, setStartTime] = useState(defaultTime);
@@ -160,7 +163,6 @@ export default function ScheduleFormModal({
           </div>
 
           <div className="relative" ref={dropdownRef}>
-            {/* 🌟 가로 스크롤형 원형 아바타 카드 섹션 */}
             <div className="border-t border-slate-100 pt-8 space-y-4">
               <div className="flex justify-between items-end px-2">
                 <label className="text-sm font-black text-slate-700 uppercase tracking-tight">
@@ -169,97 +171,14 @@ export default function ScheduleFormModal({
                     ({selectedStreamers.length})
                   </span>
                 </label>
-                <p className="text-[10px] text-slate-400 font-bold italic animate-pulse">
-                  옆으로 밀어서 선택 →
-                </p>
               </div>
 
-              {/* 🌟 가로 스크롤 컨테이너 (Snap-x 적용으로 딱딱 걸리는 고급스러운 느낌) */}
-              <div className="relative group">
-                <div className="flex gap-4 overflow-x-auto pb-6 pt-2 px-2 no-scrollbar snap-x snap-mandatory scroll-smooth">
-                  {sortedStreamers.map((streamer: any) => {
-                    const isSelected = selectedStreamers.includes(streamer.id);
-                    const avatarLetters = streamer.name.slice(0, 2); // 닉네임 앞 두 글자
-
-                    return (
-                      <motion.div
-                        key={streamer.id}
-                        className="flex-none snap-center" // 스크롤 시 중앙에 딱 걸리게
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => toggleStreamer(streamer.id)}
-                          className="flex flex-col items-center gap-3 transition-all duration-300"
-                        >
-                          {/* 상단 원형 아바타 */}
-                          <div className="relative">
-                            <div
-                              className={`
-                    w-20 h-20 rounded-full flex items-center justify-center border-4 transition-all duration-500
-                    ${
-                      isSelected
-                        ? 'shadow-[0_0_20px_rgba(0,0,0,0.1)] scale-110'
-                        : 'border-slate-50 bg-slate-50 opacity-50 grayscale-[0.5]'
-                    }
-                  `}
-                              style={{
-                                borderColor: isSelected
-                                  ? streamer.colorCode
-                                  : undefined,
-                                backgroundColor: isSelected
-                                  ? streamer.colorCode
-                                  : `${streamer.colorCode}15`,
-                                color: isSelected
-                                  ? '#ffffff'
-                                  : streamer.colorCode,
-                              }}
-                            >
-                              <span className="text-2xl font-black tracking-tighter">
-                                {avatarLetters}
-                              </span>
-                            </div>
-
-                            {/* 선택 시 나타나는 체크 뱃지 */}
-                            <AnimatePresence>
-                              {isSelected && (
-                                <motion.div
-                                  initial={{ scale: 0, rotate: -45 }}
-                                  animate={{ scale: 1, rotate: 0 }}
-                                  exit={{ scale: 0, rotate: -45 }}
-                                  className="absolute -top-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center shadow-md border-4 border-white z-10"
-                                  style={{
-                                    backgroundColor: streamer.colorCode,
-                                  }}
-                                >
-                                  <Check className="w-4 h-4 text-white stroke-[4px]" />
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-
-                          {/* 하단 전체 닉네임 */}
-                          <span
-                            className={`text-[13px] font-black transition-all duration-300 ${
-                              isSelected ? 'translate-y-1' : 'text-slate-400'
-                            }`}
-                            style={{
-                              color: isSelected
-                                ? streamer.colorCode
-                                : undefined,
-                            }}
-                          >
-                            {streamer.name}
-                          </span>
-                        </button>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-
-                {/* 좌우 그라데이션 페이드 (끝부분이 잘린 느낌을 줘서 스크롤을 유도) */}
-                <div className="absolute left-0 top-0 bottom-6 w-12 bg-gradient-to-r from-white to-transparent pointer-events-none z-10" />
-                <div className="absolute right-0 top-0 bottom-6 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
+              <div>
+                <StreamerSelector
+                  streamers={sortedStreamers}
+                  selectedStreamers={selectedStreamers}
+                  toggleStreamer={toggleStreamer}
+                />
               </div>
             </div>
           </div>

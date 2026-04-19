@@ -9,6 +9,7 @@ export async function createScheduleAction(data: {
   title: string;
   startTime: Date;
   streamerIds: string[];
+  gameId?: string;
 }) {
   const session = await auth();
   if (!session) {
@@ -24,6 +25,7 @@ export async function createScheduleAction(data: {
             streamer: { connect: { id: id } },
           })),
         },
+        gameId: data.gameId || null,
       },
     });
 
