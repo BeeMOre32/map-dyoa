@@ -59,13 +59,13 @@ export default function MainTabController({
     <div className="h-full flex flex-col relative overflow-hidden">
       {/* 🌟 상단 탭 네비게이션 🌟 */}
       <div className="px-6 pt-4 pb-2 shrink-0 flex justify-center">
-        <div className="flex bg-slate-200/50 p-1 rounded-2xl">
+        <div className="flex bg-slate-200/50 dark:bg-slate-800/50 p-1 rounded-2xl">
           <button
             onClick={() => setActiveTab('calendar')}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${
               activeTab === 'calendar'
-                ? 'bg-white text-slate-800 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
             }`}
           >
             <CalendarIcon className="w-4 h-4" /> 스케줄
@@ -74,8 +74,8 @@ export default function MainTabController({
             onClick={() => setActiveTab('streamers')}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${
               activeTab === 'streamers'
-                ? 'bg-white text-slate-800 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
             }`}
           >
             <Users className="w-4 h-4" /> 지도동 멤버

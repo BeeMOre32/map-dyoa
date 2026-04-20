@@ -5,17 +5,20 @@ export default function StatusBadge({ status }: { status: string }) {
   const configs: Record<string, { label: string; color: string; icon: any }> = {
     PENDING: {
       label: '대기중',
-      color: 'bg-amber-50 text-amber-600 border-amber-100',
+      color:
+        'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800',
       icon: Clock,
     },
     RESOLVED: {
       label: '해결됨',
-      color: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+      color:
+        'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800',
       icon: CheckCircle2,
     },
     REJECTED: {
       label: '반려됨',
-      color: 'bg-red-50 text-red-600 border-red-100',
+      color:
+        'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-100 dark:border-red-800',
       icon: AlertCircle,
     },
   };

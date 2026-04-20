@@ -25,12 +25,12 @@ export default function StreamerSelector({
           placeholder="스트리머 검색..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-12 pr-10 py-4 px-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-sm"
+          className="w-full pl-12 pr-10 py-4 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl text-sm font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-600 focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-sm"
         />
       </div>
 
       {/* 📋 스트리머 그리드 영역 */}
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 pt-12 pb-8 px-6 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 pt-12 pb-8 px-6 shadow-sm overflow-hidden">
         <div
           className="grid grid-cols-3 gap-4 max-h-120 overflow-y-auto pr-2 custom-scrollbar py-2"
           style={{
@@ -63,8 +63,8 @@ export default function StreamerSelector({
                       <div
                         className={`w-16 h-16 rounded-full flex items-center justify-center border-4 transition-all duration-300 ${
                           isSelected
-                            ? 'shadow-2xl shadow-indigo-100 scale-110'
-                            : 'bg-slate-50 border-slate-50 opacity-50 grayscale group-hover:opacity-100 group-hover:grayscale-0 group-hover:scale-105'
+                            ? 'shadow-2xl shadow-indigo-100 dark:shadow-indigo-900/30 scale-110'
+                            : 'bg-slate-50 dark:bg-slate-700 border-slate-50 dark:border-slate-700 opacity-50 grayscale group-hover:opacity-100 group-hover:grayscale-0 group-hover:scale-105'
                         }`}
                         style={{
                           backgroundColor: isSelected
@@ -88,8 +88,8 @@ export default function StreamerSelector({
                     <span
                       className={`text-[13px] font-black text-center truncate w-full px-1 leading-tight transition-colors ${
                         isSelected
-                          ? 'text-slate-900'
-                          : 'text-slate-400 group-hover:text-slate-700'
+                          ? 'text-slate-900 dark:text-slate-100'
+                          : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'
                       }`}
                       style={{
                         color: isSelected ? streamer.colorCode : undefined,

@@ -83,21 +83,21 @@ export default function ScheduleFormModal({
       initial="hidden"
       animate="visible"
       variants={backdropVariants}
-      className="fixed inset-0 z-70 flex items-center justify-center p-4 md:p-6 bg-slate-900/60 backdrop-blur-sm"
+      className="fixed inset-0 z-70 flex items-center justify-center p-4 md:p-6 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm"
       onClick={onClose}
     >
       <motion.div
         variants={smoothModalVariants}
-        className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh]"
+        className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 flex flex-col max-h-[90vh] border border-slate-100 dark:border-slate-700"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 md:p-8 border-b border-slate-50 flex justify-between items-start shrink-0">
+        <div className="p-6 md:p-8 border-b border-slate-50 dark:border-slate-700 flex justify-between items-start shrink-0 bg-slate-50/50 dark:bg-slate-700/30">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
+            <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
               <CalendarIcon className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">
+              <p className="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-wider">
                 {isEdit ? 'Edit Schedule' : 'New Schedule'}
               </p>
               <h3 className="text-2xl font-black text-slate-800">

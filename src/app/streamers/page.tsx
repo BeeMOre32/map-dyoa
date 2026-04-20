@@ -7,7 +7,7 @@ export default async function StreamersPage() {
   const streamers = await getAllStreamers();
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50/50">
+    <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-950 transition-colors">
       <StreamerView streamers={streamers} />
     </div>
   );

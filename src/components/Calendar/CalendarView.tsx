@@ -95,7 +95,6 @@ export default function CalendarView({
     }
   }, [currentDate, viewMode]);
 
-  // 날짜별 일정 맵 생성 (메모이제이션)
   const schedulesByDate = useMemo(() => {
     const map = new Map<string, FlattenedSchedule[]>();
     initialSchedules.forEach((schedule) => {
@@ -109,7 +108,6 @@ export default function CalendarView({
   }, [initialSchedules]);
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
-  // 🌟 날짜 칸 클릭 시 해당 날짜 주소로 이동하는 함수
   const handleDayClick = useCallback(
     (day: Date) => {
       const dateString = format(day, 'yyyy-MM-dd');
@@ -123,7 +121,7 @@ export default function CalendarView({
   }, []);
 
   if (!mounted) {
-    return <div className="flex-1 bg-slate-50/50" />;
+    return <div className="flex-1 bg-slate-50/50 dark:bg-slate-950" />;
   }
 
   return (
@@ -131,26 +129,26 @@ export default function CalendarView({
       {/* 상단 컨트롤 영역 */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center shrink-0 mb-4">
         <div className="flex items-center gap-3">
-          <div className="flex bg-white rounded-xl shadow-sm border border-slate-100 p-1">
+          <div className="flex bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 p-1">
             <button
               onClick={prevPeriod}
-              className="p-1.5 hover:bg-slate-50 rounded-xl transition-colors"
+              className="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors"
             >
-              <ChevronLeft className="w-5 h-5 text-slate-600" />
+              <ChevronLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
             </button>
             <button
               onClick={nextPeriod}
-              className="p-1.5 hover:bg-slate-50 rounded-xl transition-colors"
+              className="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors"
             >
-              <ChevronRight className="w-5 h-5 text-slate-600" />
+              <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
             </button>
           </div>
           <div>
-            <h2 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight leading-none">
+            <h2 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight leading-none">
               {format(currentDate, 'yyyy년 M월')}
             </h2>
             {viewMode === 'weekly' && (
-              <p className="text-slate-400 font-bold text-xs mt-1">
+              <p className="text-slate-400 dark:text-slate-500 font-bold text-xs mt-1">
                 {format(startOfWeek(currentDate), 'M. d')} -{' '}
                 {format(endOfWeek(currentDate), 'M. d')}
               </p>
@@ -159,16 +157,16 @@ export default function CalendarView({
         </div>
 
         <div className="flex items-center gap-2.5 mt-3 md:mt-0">
-          <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+          <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-800">
             <button
               onClick={() => setViewMode('weekly')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-bold transition-all ${viewMode === 'weekly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-bold transition-all ${viewMode === 'weekly' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
             >
               <LayoutGrid className="w-4 h-4" /> 주간
             </button>
             <button
               onClick={() => setViewMode('monthly')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-bold transition-all ${viewMode === 'monthly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-bold transition-all ${viewMode === 'monthly' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
             >
               <CalendarIcon className="w-4 h-4" /> 월간
             </button>
@@ -187,8 +185,8 @@ export default function CalendarView({
       </div>
 
       {/* 캘린더 본체 */}
-      <div className="flex-1 overflow-hidden bg-white rounded-4xl shadow-sm border border-slate-100 flex flex-col">
-        <div className="grid grid-cols-7 border-b border-slate-50 shrink-0 bg-slate-50/30">
+      <div className="flex-1 overflow-hidden bg-white dark:bg-slate-900 rounded-4xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col">
+        <div className="grid grid-cols-7 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/30 dark:bg-slate-800/60">
           {weekDays.map((day, idx) => (
             <div
               key={day}
@@ -224,11 +222,11 @@ export default function CalendarView({
                   key={day.toString()}
                   // 🌟 수정: 클릭 시 handleDayClick 실행
                   onClick={() => handleDayClick(day)}
-                  className={`p-2 border-b border-r border-slate-50 relative group cursor-pointer hover:bg-slate-50/50 transition-all duration-300 overflow-hidden ${!isSelectedMonth && viewMode === 'monthly' ? 'bg-slate-50/30 opacity-50' : ''} ${idx % 7 === 6 ? 'border-r-0' : ''}`}
+                  className={`p-2 border-b border-r border-slate-100 dark:border-slate-800 relative group cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/80 transition-all duration-300 overflow-hidden ${!isSelectedMonth && viewMode === 'monthly' ? 'bg-slate-50/30 dark:bg-slate-950/60 opacity-50' : ''} ${idx % 7 === 6 ? 'border-r-0' : ''}`}
                 >
                   <div className="flex justify-between items-start mb-1">
                     <span
-                      className={`w-7 h-7 flex items-center justify-center text-[13px] font-bold rounded-full transition-colors duration-300 ${today ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 group-hover:text-indigo-600'}`}
+                      className={`w-7 h-7 flex items-center justify-center text-[13px] font-bold rounded-full transition-colors duration-300 ${today ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'}`}
                     >
                       {format(day, 'd')}
                     </span>
@@ -245,14 +243,7 @@ export default function CalendarView({
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div
-                          className="px-2 py-1 text-[11px] font-bold rounded-md truncate border shadow-sm shrink-0"
-                          style={{
-                            backgroundColor: schedule.game
-                              ? '#fffbeb'
-                              : '#f8fafc',
-                            color: schedule.game ? '#d97706' : '#475569',
-                            borderColor: schedule.game ? '#fde68a' : '#e2e8f0',
-                          }}
+                          className={`px-2 py-1 text-[11px] font-bold rounded-md truncate border shadow-sm shrink-0 ${schedule.game ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-600'}`}
                         >
                           <span className="opacity-70 mr-1 font-semibold">
                             {format(new Date(schedule.startTime), 'HH:mm')}

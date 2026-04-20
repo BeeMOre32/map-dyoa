@@ -7,7 +7,11 @@ import { X, Send, AlertCircle, Loader2 } from 'lucide-react';
 import { createFeedbackAction } from '@/app/actions';
 import { backdropVariants, defaultModalVariants } from '@/lib/modalVariants';
 import type { Streamer } from '@prisma/client';
-import type { RequestEditModalProps } from '@/types/components';
+
+interface RequestEditModalProps {
+  streamer: Streamer;
+  onClose: () => void;
+}
 
 export default function RequestEditModal({
   streamer,
@@ -53,23 +57,23 @@ export default function RequestEditModal({
       animate="visible"
       exit="hidden"
       variants={backdropVariants}
-      className="fixed inset-0 z-110 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+      className="fixed inset-0 z-110 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm"
       onClick={isPending ? undefined : onClose}
     >
       <motion.div
         variants={defaultModalVariants}
-        className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden"
+        className="bg-white dark:bg-slate-800 w-full max-w-md rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 overflow-hidden border border-slate-100 dark:border-slate-700"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-8">
+        <div className="p-8 bg-slate-50/50 dark:bg-slate-700/30 border-b border-slate-100 dark:border-slate-700">
           {/* 헤더 */}
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-indigo-500" />
+              <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
                 정보 수정 요청
               </h3>
-              <p className="text-sm text-slate-400 font-bold mt-1">
+              <p className="text-sm text-slate-400 dark:text-slate-500 font-bold mt-1">
                 <span style={{ color: streamer.colorCode }}>
                   {streamer.name}
                 </span>{' '}
@@ -79,22 +83,22 @@ export default function RequestEditModal({
             <button
               onClick={onClose}
               disabled={isPending}
-              className="p-2 hover:bg-slate-100 rounded-full transition-colors disabled:opacity-30"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors disabled:opacity-30"
             >
-              <X className="w-5 h-5 text-slate-400" />
+              <X className="w-5 h-5 text-slate-400 dark:text-slate-600" />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="p-8 space-y-5">
             <div>
-              <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2 px-1">
+              <label className="block text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 px-1">
                 수정 사유
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 disabled={isPending}
-                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all disabled:opacity-50"
+                className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-all disabled:opacity-50"
               >
                 <option>잘못된 핸들/닉네임</option>
                 <option>기수(세대) 정보 오류</option>
@@ -104,7 +108,7 @@ export default function RequestEditModal({
             </div>
 
             <div>
-              <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2 px-1">
+              <label className="block text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 px-1">
                 상세 내용
               </label>
               <textarea
@@ -113,7 +117,7 @@ export default function RequestEditModal({
                 onChange={(e) => setContent(e.target.value)}
                 disabled={isPending}
                 placeholder="어떤 부분이 틀렸나요? 정확한 정보를 적어주시면 큰 도움이 됩니다!"
-                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-4 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none disabled:opacity-50"
+                className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl px-4 py-4 text-sm font-bold text-slate-700 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-all resize-none disabled:opacity-50"
               />
             </div>
 
@@ -122,14 +126,14 @@ export default function RequestEditModal({
                 type="button"
                 onClick={onClose}
                 disabled={isPending}
-                className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black hover:bg-slate-200 transition-all text-sm disabled:opacity-50"
+                className="flex-1 py-4 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-2xl font-black hover:bg-slate-200 dark:hover:bg-slate-600 transition-all text-sm disabled:opacity-50"
               >
                 취소
               </button>
               <button
                 type="submit"
                 disabled={isPending}
-                className="flex-2 py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2 text-sm disabled:bg-indigo-400"
+                className="flex-2 py-4 bg-indigo-600 dark:bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 dark:hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-indigo-950 flex items-center justify-center gap-2 text-sm disabled:bg-indigo-400 dark:disabled:bg-indigo-800"
               >
                 {isPending ? (
                   <>

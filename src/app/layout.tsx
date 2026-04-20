@@ -1,11 +1,11 @@
 // src/app/layout.tsx
-import Navigation from '@/components/Navigation';
 import './globals.css';
 import { Inter } from 'next/font/google';
 import AuthProvider from '@/providers/AuthProvider';
 import Header from '@/components/Layout/Header';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { ThemeProvider } from '@/providers/ThemeProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,20 +20,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko">
-      <body className={`${inter.className} antialiased text-slate-900`}>
-        <AuthProvider>
-          <main className="h-screen w-full bg-slate-50/50 flex flex-col overflow-hidden">
-            <Header />
-            <div className="shrink-0 pt-2">
-              <Navigation />
-            </div>
-
-            <div className="flex-1 flex flex-col overflow-hidden">
-              {children}
-            </div>
-          </main>
-        </AuthProvider>
+    <html lang="ko" suppressHydrationWarning>
+      <body
+        className={`${inter.className} antialiased text-slate-900 dark:text-slate-100 transition-colors duration-300`}
+      >
+        <ThemeProvider>
+          <AuthProvider>
+            <main className="h-screen w-full bg-slate-50/50 dark:bg-slate-950 flex flex-col overflow-hidden transition-colors duration-300">
+              <Header />
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {children}
+              </div>
+            </main>
+          </AuthProvider>
+        </ThemeProvider>
         <Analytics />
         <SpeedInsights />
       </body>

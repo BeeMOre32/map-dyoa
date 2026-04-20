@@ -24,21 +24,21 @@ export function ModalHeader({
   onClose,
 }: ModalHeaderProps) {
   return (
-    <div className="p-8 border-b border-slate-50 flex justify-between items-start">
+    <div className="p-8 border-b border-slate-50 dark:border-slate-700 flex justify-between items-start bg-slate-50/50 dark:bg-slate-700/30">
       <div className="flex items-center gap-4 flex-1">
         {Icon && (
-          <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center shrink-0">
-            <Icon className="w-6 h-6 text-indigo-600" />
+          <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900 rounded-2xl flex items-center justify-center shrink-0">
+            <Icon className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
           </div>
         )}
         <div>
           {title && (
-            <p className="text-slate-400 text-xs font-bold uppercase">
+            <p className="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase">
               {title}
             </p>
           )}
           {subtitle && (
-            <h3 className="text-2xl font-black text-slate-800 mt-1">
+            <h3 className="text-2xl font-black text-slate-800 dark:text-white mt-1">
               {subtitle}
             </h3>
           )}
@@ -46,7 +46,7 @@ export function ModalHeader({
       </div>
       <button
         onClick={onClose}
-        className="p-2 hover:bg-slate-100 rounded-full shrink-0 transition-colors"
+        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-600 rounded-full shrink-0 transition-colors"
         aria-label="Close modal"
       >
         <X className="w-6 h-6 text-slate-400" />
