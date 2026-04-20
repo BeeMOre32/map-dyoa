@@ -34,6 +34,8 @@ export default function ScheduleModal({
   const { data: session } = useSession();
   const { editingSchedule, toggleEditMode, exitEditMode } = useScheduleModal();
 
+  console.log('Client Received Schedules:', schedules);
+
   const isAdmin = session;
 
   const handleClose = () => {
