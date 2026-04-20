@@ -32,7 +32,7 @@ export default function StreamerSelector({
       {/* 📋 스트리머 그리드 영역 */}
       <div className="bg-white rounded-[2.5rem] border border-slate-100 pt-12 pb-8 px-6 shadow-sm overflow-hidden">
         <div
-          className="grid grid-cols-3 gap-4 max-h-[480px] overflow-y-auto pr-2 custom-scrollbar py-2"
+          className="grid grid-cols-3 gap-4 max-h-120 overflow-y-auto pr-2 custom-scrollbar py-2"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
@@ -51,7 +51,7 @@ export default function StreamerSelector({
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className="flex flex-col items-center justify-start min-h-[110px]"
+                  className="flex flex-col items-center justify-start min-h-27.5"
                 >
                   <button
                     type="button"

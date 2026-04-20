@@ -1,5 +1,5 @@
-import { prisma } from '@/src/lib/prisma';
-import ScheduleDetailModal from '@/src/components/Calendar/ScheduleDetailModal';
+import { prisma } from '@/lib/prisma';
+import ScheduleDetailModal from '@/components/Calendar/ScheduleDetailModal';
 import { notFound } from 'next/navigation';
 
 export default async function InterceptedSchedulePage({

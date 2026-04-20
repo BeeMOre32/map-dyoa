@@ -1,7 +1,12 @@
-import { prisma } from '@/src/lib/prisma';
-import ScheduleModal from '@/src/components/Calendar/CalendarModal';
+import { prisma } from '@/lib/prisma';
+import ScheduleModal from '@/components/Calendar/CalendarModal';
+import CalendarView from '@/components/Calendar/CalendarView';
+import {
+  flattenSchedules,
+  filterSchedulesByDate,
+} from '@/lib/schedule-formatters';
+import { getAllStreamers, getAllGames } from '@/lib/data-fetching';
 import { notFound } from 'next/navigation';
-import CalendarView from '@/src/components/Calendar/CalendarView';
 
 export default async function FullDayPage({
   params,
@@ -15,7 +20,8 @@ export default async function FullDayPage({
 
   if (isNaN(startKST.getTime())) return notFound();
 
-  const [daySchedules, allSchedules, streamers, games] = await Promise.all([
+  // 캐싱된 데이터와 함께 당일 일정 페칭
+  const [daySchedules, streamers, games] = await Promise.all([
     prisma.schedule.findMany({
       where: {
         startTime: {
@@ -29,44 +35,19 @@ export default async function FullDayPage({
       },
       orderBy: { startTime: 'asc' },
     }),
-    prisma.schedule.findMany({
-      include: {
-        game: true,
-        participants: { include: { streamer: true } },
-      },
-    }),
-    prisma.streamer.findMany({ orderBy: { name: 'asc' } }),
-    prisma.game.findMany({ orderBy: { title: 'asc' } }),
+    getAllStreamers(),
+    getAllGames(),
   ]);
 
-  const flattenedDaySchedules = daySchedules.map((s) => ({
-    ...s,
-    startTime: new Date(s.startTime),
-    endTime: s.endTime ? new Date(s.endTime) : null,
-    createdAt: new Date(s.createdAt),
-    participants: s.participants
-      .map((p) => p.streamer)
-      .filter((streamer) => streamer !== null),
-  }));
-
-  const formattedAllSchedules = allSchedules.map((s) => ({
-    ...s,
-    startTime: new Date(s.startTime),
-    endTime: s.endTime ? new Date(s.endTime) : null,
-    createdAt: new Date(s.createdAt),
-    participants: s.participants
-      .map((p) => p.streamer)
-      .filter((streamer) => streamer !== null),
-  }));
-
-  console.log('[FullDayPage] Flattened Day Schedules:', flattenedDaySchedules);
+  // 포맷팅 함수 사용
+  const flattenedDaySchedules = flattenSchedules(daySchedules);
 
   return (
     <>
-      {/* 전체 달력 뷰 */}
+      {/* 전체 달력 뷰 - daySchedules 그룹으로 표시 */}
       <CalendarView
         games={games}
-        initialSchedules={formattedAllSchedules}
+        initialSchedules={flattenedDaySchedules}
         streamers={streamers}
       />
 

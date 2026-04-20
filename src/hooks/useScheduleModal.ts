@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScheduleWithParticipants } from '@/src/d';
+import { ScheduleWithParticipants } from '@/d';
 
 /**
  * CalendarModal의 상태 관리를 위한 커스텀 훅

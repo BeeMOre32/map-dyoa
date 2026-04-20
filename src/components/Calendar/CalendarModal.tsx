@@ -16,12 +16,12 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { deleteScheduleAction } from '../../app/actions';
+import { deleteScheduleAction } from '@/app/actions';
 import CreateScheduleModal from '../Form/CreateScheduleModal';
-import { backdropVariants, smoothModalVariants } from '@/src/lib/modalVariants';
-import { CalendarModalProps } from '@/src/d';
-import { useScheduleModal } from '@/src/hooks/useScheduleModal';
-import { GAME_COLORS } from '@/src/constants/gamecolor';
+import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
+import { CalendarModalProps } from '@/d';
+import { useScheduleModal } from '@/hooks/useScheduleModal';
+import { GAME_COLORS } from '@/constants/gamecolor';
 
 export default function ScheduleModal({
   selectedDate,
@@ -87,7 +87,7 @@ export default function ScheduleModal({
       animate="visible"
       exit="hidden"
       variants={backdropVariants}
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+      className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
       onClick={handleClose}
     >
       <motion.div
@@ -159,7 +159,7 @@ export default function ScheduleModal({
                     scroll={false}
                     className="group block"
                   >
-                    <div className="relative p-6 rounded-[2rem] border border-slate-100 bg-white shadow-sm group-hover:shadow-md group-hover:border-indigo-100 transition-all duration-300">
+                    <div className="relative p-6 rounded-4xl border border-slate-100 bg-white shadow-sm group-hover:shadow-md group-hover:border-indigo-100 transition-all duration-300">
                       <div className="flex justify-between items-start mb-4 gap-4">
                         {schedule.game ? (
                           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-full border border-amber-100 shadow-sm shrink-0 max-w-[70%] ">

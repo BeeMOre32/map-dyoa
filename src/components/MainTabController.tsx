@@ -8,9 +8,15 @@ import StreamerView from './streamer/StreamerView';
 
 import type { Streamer, Game, Schedule } from '@prisma/client';
 
-export type FlattenedSchedule = Schedule & {
+export type FlattenedSchedule = Omit<
+  Schedule,
+  'startTime' | 'endTime' | 'createdAt'
+> & {
+  startTime: Date;
+  endTime: Date | null;
+  createdAt: Date;
   participants: Streamer[];
-  game: Game | null;
+  game?: Game | null;
 };
 
 interface MainTabControllerProps {

@@ -16,7 +16,7 @@ export default function Navigation() {
 
   return (
     <nav className="flex justify-center my-6">
-      <div className="flex bg-slate-100 p-1.5 rounded-[1.5rem] border border-slate-200 relative">
+      <div className="flex bg-slate-100 p-1.5 rounded-3xl border border-slate-200 relative">
         {tabs.map((tab) => {
           const isActive = pathname.startsWith(tab.href);
 

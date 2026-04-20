@@ -1,59 +1,95 @@
 // src/app/actions.ts
 'use server';
 
-import { prisma } from '@/src/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { auth } from '@/src/auth';
+import { requireAdmin } from '@/lib/auth-helpers';
+import { ActionResult } from '@/types/api-response';
+import {
+  ValidationError,
+  getErrorMessage,
+  logError,
+} from '@/lib/error-handling';
+import {
+  getRevalidationPaths,
+  getRevalidationPathsMulti,
+} from '@/constants/revalidation-paths';
 
+/**
+ * 일정 생성
+ */
 export async function createScheduleAction(data: {
   title: string;
   startTime: Date;
   streamerIds: string[];
   gameId?: string;
-}) {
-  const session = await auth();
-  if (!session) {
-    return { success: false, error: '권한이 없습니다.' };
-  }
+}): Promise<ActionResult> {
   try {
+    await requireAdmin();
+
+    // 입력 검증
+    if (!data.title?.trim()) {
+      throw new ValidationError('제목을 입력해주세요.');
+    }
+    if (!data.startTime || isNaN(new Date(data.startTime).getTime())) {
+      throw new ValidationError('올바른 시간을 입력해주세요.');
+    }
+    if (!data.streamerIds || data.streamerIds.length === 0) {
+      throw new ValidationError('참여자를 최소 1명 이상 선택해주세요.');
+    }
+
     await prisma.schedule.create({
       data: {
-        title: data.title,
-        startTime: data.startTime,
+        title: data.title.trim(),
+        startTime: new Date(data.startTime),
         participants: {
           create: data.streamerIds.map((id) => ({
-            streamer: { connect: { id: id } },
+            streamer: { connect: { id } },
           })),
         },
         gameId: data.gameId || null,
       },
     });
 
-    revalidatePath('/calendar');
-    revalidatePath('/schedule');
-    return { success: true };
+    // 통합된 재검증
+    const paths = getRevalidationPaths('schedule');
+    await Promise.all(paths.map((path: string) => revalidatePath(path)));
+
+    return { success: true, data: null };
   } catch (error) {
-    console.error('일정 생성 실패:', error);
-    return { success: false };
+    const { message, code } = getErrorMessage(error);
+    logError('createSchedule', error);
+    return { success: false, error: message, errorCode: code };
   }
 }
 
-export async function deleteScheduleAction(id: string) {
-  const session = await auth();
-  if (!session) {
-    return { success: false, error: '권한이 없습니다.' };
-  }
+/**
+ * 일정 삭제
+ */
+export async function deleteScheduleAction(id: string): Promise<ActionResult> {
   try {
+    await requireAdmin();
+
+    if (!id?.trim()) {
+      throw new ValidationError('유효한 일정 ID가 필요합니다.');
+    }
+
     await prisma.schedule.delete({ where: { id } });
-    revalidatePath('/calendar');
-    revalidatePath('/schedule');
-    return { success: true };
+
+    const paths = getRevalidationPaths('schedule');
+    await Promise.all(paths.map((path: string) => revalidatePath(path)));
+
+    return { success: true, data: null };
   } catch (error) {
-    console.error('일정 삭제 실패:', error);
-    return { success: false };
+    const { message, code } = getErrorMessage(error);
+    logError('deleteSchedule', error);
+    return { success: false, error: message, errorCode: code };
   }
 }
 
+/**
+ * 일정 수정
+ */
 export async function updateScheduleAction(
   id: string,
   data: {
@@ -62,13 +98,28 @@ export async function updateScheduleAction(
     streamerIds: string[];
     gameId?: string;
   },
-) {
+): Promise<ActionResult> {
   try {
+    await requireAdmin();
+
+    if (!id?.trim()) {
+      throw new ValidationError('유효한 일정 ID가 필요합니다.');
+    }
+    if (!data.title?.trim()) {
+      throw new ValidationError('제목을 입력해주세요.');
+    }
+    if (!data.startTime || isNaN(new Date(data.startTime).getTime())) {
+      throw new ValidationError('올바른 시간을 입력해주세요.');
+    }
+    if (!data.streamerIds || data.streamerIds.length === 0) {
+      throw new ValidationError('참여자를 최소 1명 이상 선택해주세요.');
+    }
+
     await prisma.schedule.update({
       where: { id },
       data: {
-        title: data.title,
-        startTime: data.startTime,
+        title: data.title.trim(),
+        startTime: new Date(data.startTime),
         gameId: data.gameId || null,
         participants: {
           deleteMany: {},
@@ -79,15 +130,20 @@ export async function updateScheduleAction(
       },
     });
 
-    revalidatePath('/calendar');
-    revalidatePath('/schedule');
-    return { success: true };
+    const paths = getRevalidationPaths('schedule');
+    await Promise.all(paths.map((path: string) => revalidatePath(path)));
+
+    return { success: true, data: null };
   } catch (error) {
-    console.error('일정 수정 실패:', error);
-    return { success: false };
+    const { message, code } = getErrorMessage(error);
+    logError('updateSchedule', error);
+    return { success: false, error: message, errorCode: code };
   }
 }
 
+/**
+ * 스트리머 생성
+ */
 export async function createStreamerAction(data: {
   name: string;
   handle: string;
@@ -96,64 +152,111 @@ export async function createStreamerAction(data: {
   platform: string;
   colorCode: string;
   chzzkUrl: string;
-}) {
+}): Promise<ActionResult> {
   try {
+    await requireAdmin();
+
+    if (!data.name?.trim()) {
+      throw new ValidationError('이름을 입력해주세요.');
+    }
+    if (!data.handle?.trim()) {
+      throw new ValidationError('핸들을 입력해주세요.');
+    }
+
     await prisma.streamer.create({
       data: {
-        name: data.name,
-        handle: data.handle,
-        generation: data.generation,
-        role: data.role || null,
-        platform: data.platform,
-        colorCode: data.colorCode,
-        chzzkUrl: data.chzzkUrl || null,
+        name: data.name.trim(),
+        handle: data.handle.trim(),
+        generation: data.generation || 1,
+        role: data.role?.trim() || null,
+        platform: data.platform || 'CHZZK',
+        colorCode: data.colorCode || '#673AB7',
+        chzzkUrl: data.chzzkUrl?.trim() || null,
       },
     });
 
-    revalidatePath('/streamers');
-    revalidatePath('/calendar');
-    return { success: true };
+    const paths = getRevalidationPathsMulti(['streamer', 'schedule']);
+    await Promise.all(paths.map((path: string) => revalidatePath(path)));
+
+    return { success: true, data: null };
   } catch (error) {
-    console.error('방송인 추가 실패:', error);
-    return { success: false };
+    const { message, code } = getErrorMessage(error);
+    logError('createStreamer', error);
+    return { success: false, error: message, errorCode: code };
   }
 }
 
-export async function bulkCreateStreamersAction(streamersData: any[]) {
+/**
+ * 스트리머 일괄 생성
+ */
+export async function bulkCreateStreamersAction(
+  streamersData: any[],
+): Promise<ActionResult<{ created: number }>> {
   try {
-    await prisma.streamer.createMany({
-      data: streamersData,
-      skipDuplicates: true, // 영문 ID(handle)가 겹치면 무시하고 다음 사람을 넣습니다.
+    await requireAdmin();
+
+    if (!Array.isArray(streamersData) || streamersData.length === 0) {
+      throw new ValidationError('생성할 스트리머 데이터가 필요합니다.');
+    }
+
+    const result = await prisma.streamer.createMany({
+      data: streamersData.map((s) => ({
+        name: s.name?.trim(),
+        handle: s.handle?.trim(),
+        generation: s.generation || 1,
+        role: s.role?.trim() || null,
+        platform: s.platform || 'CHZZK',
+        colorCode: s.colorCode || '#673AB7',
+        chzzkUrl: s.chzzkUrl?.trim() || null,
+      })),
+      skipDuplicates: true,
     });
-    return { success: true };
+
+    const paths = getRevalidationPathsMulti(['streamer', 'schedule']);
+    await Promise.all(paths.map((path: string) => revalidatePath(path)));
+
+    return { success: true, data: { created: result.count } };
   } catch (error) {
-    console.error('일괄 추가 실패:', error);
-    return { success: false, error };
+    const { message, code } = getErrorMessage(error);
+    logError('bulkCreateStreamers', error);
+    return { success: false, error: message, errorCode: code };
   }
 }
 
+/**
+ * 피드백 생성
+ */
 export async function createFeedbackAction(formData: {
   streamerId: string;
   streamerName: string;
   category: string;
   content: string;
-}) {
+}): Promise<ActionResult> {
   try {
+    if (!formData.category?.trim()) {
+      throw new ValidationError('카테고리를 선택해주세요.');
+    }
+    if (!formData.content?.trim()) {
+      throw new ValidationError('내용을 입력해주세요.');
+    }
+
     await prisma.feedback.create({
       data: {
         type: 'EDIT_REQUEST',
-        category: formData.category,
-        content: formData.content,
-        streamerId: formData.streamerId,
-        streamerName: formData.streamerName,
+        category: formData.category.trim(),
+        content: formData.content.trim(),
+        streamerId: formData.streamerId || null,
+        streamerName: formData.streamerName || null,
       },
     });
 
-    revalidatePath('/admin/feedbacks');
+    const paths = getRevalidationPaths('admin');
+    await Promise.all(paths.map((path: string) => revalidatePath(path)));
 
-    return { success: true };
+    return { success: true, data: null };
   } catch (error) {
-    console.error('Feedback Error:', error);
-    return { success: false, error: '요청을 보내는 중 오류가 발생했습니다.' };
+    const { message, code } = getErrorMessage(error);
+    logError('createFeedback', error);
+    return { success: false, error: message, errorCode: code };
   }
 }

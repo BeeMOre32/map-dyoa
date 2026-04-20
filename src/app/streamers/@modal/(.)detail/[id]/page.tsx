@@ -1,6 +1,6 @@
 // src/app/streamers/@modal/(.)detail/[id]/page.tsx
-import { prisma } from '@/src/lib/prisma';
-import StreamerDetailModal from '@/src/components/streamer/StreamerDetailModal';
+import { prisma } from '@/lib/prisma';
+import StreamerDetailModal from '@/components/streamer/StreamerDetailModal';
 import { notFound } from 'next/navigation';
 
 export default async function InterceptedStreamerDetailPage({

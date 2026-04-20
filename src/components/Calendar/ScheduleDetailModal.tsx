@@ -16,10 +16,10 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { deleteScheduleAction } from '@/src/app/actions';
+import { deleteScheduleAction } from '@/app/actions';
 import CreateScheduleModal from '../Form/CreateScheduleModal';
-import { backdropVariants, smoothModalVariants } from '@/src/lib/modalVariants';
-import { GAME_COLORS } from '@/src/constants/gamecolor';
+import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
+import { GAME_COLORS } from '@/constants/gamecolor';
 import Link from 'next/link';
 
 export default function ScheduleDetailView({
@@ -61,7 +61,7 @@ export default function ScheduleDetailView({
       animate="visible"
       exit="hidden"
       variants={backdropVariants}
-      className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
+      className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
       onClick={handleClose}
     >
       <motion.div
@@ -183,14 +183,14 @@ export default function ScheduleDetailView({
                 <div className="flex gap-3 pt-4 border-t border-slate-50">
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="flex-1 flex items-center justify-center gap-2 py-4 bg-slate-900 text-white rounded-[1.5rem] font-black hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95"
+                    className="flex-1 flex items-center justify-center gap-2 py-4 bg-slate-900 text-white rounded-3xl font-black hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95"
                   >
                     <Edit2 className="w-4 h-4" />
                     내용 수정하기
                   </button>
                   <button
                     onClick={handleDelete}
-                    className="p-4 bg-red-50 text-red-500 rounded-[1.5rem] border border-red-100 hover:bg-red-100 transition-all active:scale-95"
+                    className="p-4 bg-red-50 text-red-500 rounded-3xl border border-red-100 hover:bg-red-100 transition-all active:scale-95"
                     title="삭제"
                   >
                     <Trash2 className="w-5 h-5" />

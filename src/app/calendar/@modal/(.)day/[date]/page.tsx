@@ -1,6 +1,6 @@
 // src/app/calendar/@modal/(.)day/[date]/page.tsx
-import { prisma } from '@/src/lib/prisma';
-import ScheduleModal from '@/src/components/Calendar/CalendarModal';
+import { prisma } from '@/lib/prisma';
+import ScheduleModal from '@/components/Calendar/CalendarModal';
 import { notFound } from 'next/navigation';
 
 export default async function InterceptedDayPage({
@@ -46,14 +46,14 @@ export default async function InterceptedDayPage({
     }),
   ]);
 
-  const flattenedSchedules = schedulesData.map((s) => ({
+  const flattenedSchedules = schedulesData.map((s: any) => ({
     ...s,
     startTime: new Date(s.startTime),
     endTime: s.endTime ? new Date(s.endTime) : null,
     createdAt: new Date(s.createdAt),
     participants: s.participants
-      .map((p) => p.streamer)
-      .filter((streamer) => streamer !== null),
+      .map((p: any) => p.streamer)
+      .filter((streamer: any) => streamer !== null),
   }));
 
   return (

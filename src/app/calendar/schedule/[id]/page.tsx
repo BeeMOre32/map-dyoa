@@ -1,8 +1,8 @@
 // src/app/calendar/schedule/[id]/page.tsx
-import { prisma } from '@/src/lib/prisma';
-import ScheduleDetailView from '@/src/components/Calendar/ScheduleDetailModal'; // 🌟 컴포넌트 이름/경로 확인
+import { prisma } from '@/lib/prisma';
+import ScheduleDetailView from '@/components/Calendar/ScheduleDetailModal';
 import { notFound } from 'next/navigation';
-import CalendarView from '@/src/components/Calendar/CalendarView';
+import CalendarView from '@/components/Calendar/CalendarView';
 
 export default async function FullSchedulePage({
   params,

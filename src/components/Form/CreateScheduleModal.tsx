@@ -3,11 +3,11 @@
 
 import { useState, useRef } from 'react';
 import { X, Calendar as CalendarIcon, Check } from 'lucide-react';
-import { createScheduleAction, updateScheduleAction } from '../../app/actions';
+import { createScheduleAction, updateScheduleAction } from '@/app/actions';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
-import { backdropVariants, smoothModalVariants } from '@/src/lib/modalVariants';
-import { Streamer, Game, ModalProps } from '@/src/d';
+import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
+import { Streamer, Game, ModalProps } from '@/d';
 import StreamerSelector from './StreamerSelctor';
 
 type CreateScheduleModalProps = ModalProps & {
@@ -83,7 +83,7 @@ export default function ScheduleFormModal({
       initial="hidden"
       animate="visible"
       variants={backdropVariants}
-      className="fixed inset-0 z-[70] flex items-center justify-center p-4 md:p-6 bg-slate-900/60 backdrop-blur-sm"
+      className="fixed inset-0 z-70 flex items-center justify-center p-4 md:p-6 bg-slate-900/60 backdrop-blur-sm"
       onClick={onClose}
     >
       <motion.div

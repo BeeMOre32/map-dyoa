@@ -2,7 +2,7 @@
 
 import { MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
-import { getStreamerImagePath } from '@/src/lib/utils';
+import { getStreamerImagePath } from '@/lib/utils';
 import StreamerAvatar from './StreamerAvatar';
 
 interface Streamer {
@@ -38,12 +38,13 @@ export default function StreamerCard({
           name={streamer.name}
           imgSrc={imgSrc}
           colorCode={streamer.colorCode}
+          size="medium"
         />
         <button
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            onRequestEdit(streamer); // 수정 요청 타겟 지정
+            onRequestEdit(streamer);
           }}
           className="p-1.5 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
         >

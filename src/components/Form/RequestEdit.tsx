@@ -1,20 +1,13 @@
 // src/components/streamer/RequestEditModal.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { X, Send, AlertCircle, Loader2 } from 'lucide-react';
-import { createFeedbackAction } from '@/src/app/actions';
-import {
-  backdropVariants,
-  defaultModalVariants,
-} from '@/src/lib/modalVariants';
-import { Streamer } from '@/src/d';
-
-type RequestEditModalProps = {
-  streamer: Streamer;
-  onClose: () => void;
-};
+import { createFeedbackAction } from '@/app/actions';
+import { backdropVariants, defaultModalVariants } from '@/lib/modalVariants';
+import type { Streamer } from '@prisma/client';
+import type { RequestEditModalProps } from '@/types/components';
 
 export default function RequestEditModal({
   streamer,
@@ -60,7 +53,7 @@ export default function RequestEditModal({
       animate="visible"
       exit="hidden"
       variants={backdropVariants}
-      className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+      className="fixed inset-0 z-110 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
       onClick={isPending ? undefined : onClose}
     >
       <motion.div
@@ -136,7 +129,7 @@ export default function RequestEditModal({
               <button
                 type="submit"
                 disabled={isPending}
-                className="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2 text-sm disabled:bg-indigo-400"
+                className="flex-2 py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2 text-sm disabled:bg-indigo-400"
               >
                 {isPending ? (
                   <>

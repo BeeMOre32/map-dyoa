@@ -1,34 +1,15 @@
 // src/app/calendar/page.tsx
-import { prisma } from '@/src/lib/prisma';
-import CalendarView from '@/src/components/Calendar/CalendarView';
+import { getCalendarData } from '@/lib/data-fetching';
+import CalendarView from '@/components/Calendar/CalendarView';
 
 export default async function CalendarPage() {
-  const schedules = await prisma.schedule.findMany({
-    include: {
-      game: true,
-      participants: {
-        include: { streamer: true },
-      },
-    },
-  });
-
-  const streamers = await prisma.streamer.findMany({
-    orderBy: { name: 'asc' },
-  });
-
-  const games = await prisma.game.findMany({
-    orderBy: { title: 'asc' },
-  });
-
-  const formattedSchedules = schedules.map((schedule) => ({
-    ...schedule,
-    participants: schedule.participants.map((p) => p.streamer),
-  }));
+  // 캐싱된 데이터 페칭
+  const { schedules, streamers, games } = await getCalendarData();
 
   return (
     <div className="min-h-screen bg-slate-50/50">
       <CalendarView
-        initialSchedules={formattedSchedules}
+        initialSchedules={schedules}
         streamers={streamers}
         games={games}
       />

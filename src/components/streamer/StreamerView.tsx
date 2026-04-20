@@ -2,12 +2,21 @@
 'use client';
 
 import { AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import RequestEditModal from '../Form/RequestEdit';
 import StreamerCard from './StreamerCard';
 
 export default function StreamerView({ streamers }: { streamers: any[] }) {
   const [requestTarget, setRequestTarget] = useState<any>(null);
+
+  // useCallback으로 메모이제이션하여 자식 컴포넌트의 불필요한 리렌더링 방지
+  const handleRequestEdit = useCallback((streamer: any) => {
+    setRequestTarget(streamer);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setRequestTarget(null);
+  }, []);
 
   return (
     <div className="h-full flex flex-col bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden">
@@ -36,7 +45,7 @@ export default function StreamerView({ streamers }: { streamers: any[] }) {
               <StreamerCard
                 key={streamer.id}
                 streamer={streamer}
-                onRequestEdit={setRequestTarget}
+                onRequestEdit={handleRequestEdit}
               />
             ))}
           </div>
@@ -45,10 +54,7 @@ export default function StreamerView({ streamers }: { streamers: any[] }) {
 
       <AnimatePresence>
         {requestTarget && (
-          <RequestEditModal
-            streamer={requestTarget}
-            onClose={() => setRequestTarget(null)}
-          />
+          <RequestEditModal streamer={requestTarget} onClose={handleClose} />
         )}
       </AnimatePresence>
     </div>

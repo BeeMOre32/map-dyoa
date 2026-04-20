@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { X, UserPlus, Check, Palette } from 'lucide-react';
-import { createStreamerAction } from '@/src/app/actions';
+import { createStreamerAction } from '@/app/actions';
 
 // 캘린더에 예쁘게 보일 추천 파스텔 색상 목록
 const PASTEL_COLORS = [
@@ -53,7 +53,7 @@ export default function CreateStreamerModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div
         className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95"
         onClick={(e) => e.stopPropagation()}

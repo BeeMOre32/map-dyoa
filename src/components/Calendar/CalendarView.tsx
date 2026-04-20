@@ -1,7 +1,7 @@
 // src/components/calendar/CalendarView.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   format,
   addMonths,
@@ -28,7 +28,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
 
-import ScheduleFormModal from '@/src/components/Form/CreateScheduleModal';
+import ScheduleFormModal from '@/components/Form/CreateScheduleModal';
 
 import type { Streamer, Game } from '@prisma/client';
 import type { FlattenedSchedule } from '../MainTabController';
@@ -57,54 +57,66 @@ export default function CalendarView({
     'left',
   );
 
-  const nextPeriod = () => {
+  const nextPeriod = useCallback(() => {
     setSlideDirection('left');
-    setCurrentDate(
-      viewMode === 'monthly'
-        ? addMonths(currentDate, 1)
-        : addWeeks(currentDate, 1),
+    setCurrentDate((prev) =>
+      viewMode === 'monthly' ? addMonths(prev, 1) : addWeeks(prev, 1),
     );
-  };
-  const prevPeriod = () => {
-    setSlideDirection('right');
-    setCurrentDate(
-      viewMode === 'monthly'
-        ? subMonths(currentDate, 1)
-        : subWeeks(currentDate, 1),
-    );
-  };
+  }, [viewMode]);
 
-  const getDaysToRender = () => {
+  const prevPeriod = useCallback(() => {
+    setSlideDirection('right');
+    setCurrentDate((prev) =>
+      viewMode === 'monthly' ? subMonths(prev, 1) : subWeeks(prev, 1),
+    );
+  }, [viewMode]);
+
+  // 날짜 계산을 useMemo로 메모이제이션
+  const days = useMemo(() => {
     if (viewMode === 'monthly') {
       const monthStart = startOfMonth(currentDate);
       const monthEnd = endOfMonth(monthStart);
       const startDate = startOfWeek(monthStart);
       const endDate = endOfWeek(monthEnd);
-      const days = [];
+      const daysList = [];
       let day = startDate;
       while (day <= endDate) {
-        days.push(day);
+        daysList.push(day);
         day = addDays(day, 1);
       }
-      return days;
+      return daysList;
     } else {
       const startDate = startOfWeek(currentDate);
-      const days = [];
+      const daysList = [];
       for (let i = 0; i < 7; i++) {
-        days.push(addDays(startDate, i));
+        daysList.push(addDays(startDate, i));
       }
-      return days;
+      return daysList;
     }
-  };
+  }, [currentDate, viewMode]);
 
-  const days = getDaysToRender();
+  // 날짜별 일정 맵 생성 (메모이제이션)
+  const schedulesByDate = useMemo(() => {
+    const map = new Map<string, FlattenedSchedule[]>();
+    initialSchedules.forEach((schedule) => {
+      const dateKey = format(new Date(schedule.startTime), 'yyyy-MM-dd');
+      if (!map.has(dateKey)) {
+        map.set(dateKey, []);
+      }
+      map.get(dateKey)!.push(schedule);
+    });
+    return map;
+  }, [initialSchedules]);
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
   // 🌟 날짜 칸 클릭 시 해당 날짜 주소로 이동하는 함수
-  const handleDayClick = (day: Date) => {
-    const dateString = format(day, 'yyyy-MM-dd');
-    router.push(`/calendar/day/${dateString}`, { scroll: false });
-  };
+  const handleDayClick = useCallback(
+    (day: Date) => {
+      const dateString = format(day, 'yyyy-MM-dd');
+      router.push(`/calendar/day/${dateString}`, { scroll: false });
+    },
+    [router],
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -175,7 +187,7 @@ export default function CalendarView({
       </div>
 
       {/* 캘린더 본체 */}
-      <div className="flex-1 overflow-hidden bg-white rounded-[2rem] shadow-sm border border-slate-100 flex flex-col">
+      <div className="flex-1 overflow-hidden bg-white rounded-4xl shadow-sm border border-slate-100 flex flex-col">
         <div className="grid grid-cols-7 border-b border-slate-50 shrink-0 bg-slate-50/30">
           {weekDays.map((day, idx) => (
             <div
@@ -203,9 +215,9 @@ export default function CalendarView({
             {days.map((day, idx) => {
               const isSelectedMonth = isSameMonth(day, currentDate);
               const today = isToday(day);
-              const daySchedules = initialSchedules.filter((s) =>
-                isSameDay(new Date(s.startTime), day),
-              );
+              // 메모이제이션된 맵에서 일정 조회
+              const dateKey = format(day, 'yyyy-MM-dd');
+              const daySchedules = schedulesByDate.get(dateKey) || [];
 
               return (
                 <div

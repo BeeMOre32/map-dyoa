@@ -1,9 +1,9 @@
 // src/app/admin/feedbacks/page.tsx
-import { prisma } from '@/src/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { CheckCircle2, Clock, AlertCircle, MessageSquare } from 'lucide-react';
-import StatusBadge from '@/src/components/StatusBadge'; // 🌟 2단계에서 만들 컴포넌트
+import StatusBadge from '@/components/StatusBadge';
 
 export default async function AdminFeedbackPage() {
   // 1. 서버에서 직접 데이터를 가져옵니다. (No Fetch API!)
@@ -36,10 +36,10 @@ export default async function AdminFeedbackPage() {
           feedbacks.map((item) => (
             <div
               key={item.id}
-              className="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row gap-6 items-start"
+              className="bg-white rounded-4xl border border-slate-100 p-8 shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row gap-6 items-start"
             >
               {/* 왼쪽: 상태 및 정보 */}
-              <div className="shrink-0 flex flex-col gap-3 min-w-[140px]">
+              <div className="shrink-0 flex flex-col gap-3 min-w-35">
                 <StatusBadge status={item.status} />
                 <div className="px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100 text-[11px] font-black text-slate-400 uppercase">
                   {format(new Date(item.createdAt), 'yyyy.MM.dd HH:mm')}

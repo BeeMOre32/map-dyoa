@@ -10,11 +10,13 @@ import {
   Gamepad2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { backdropVariants, smoothModalVariants } from '@/src/lib/modalVariants';
+import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
+import StreamerAvatar from './StreamerAvatar';
+import { getStreamerImagePath } from '@/lib/utils';
 
 export default function StreamerDetailModal({ streamer }: any) {
   const router = useRouter();
-  const avatarLetters = streamer.name.slice(0, 2); // 닉네임 앞 두 글자
+  const imgSrc = getStreamerImagePath(streamer.name);
 
   return (
     <motion.div
@@ -22,7 +24,7 @@ export default function StreamerDetailModal({ streamer }: any) {
       animate="visible"
       exit="hidden"
       variants={backdropVariants}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-slate-950/70 backdrop-blur-xl"
+      className="fixed inset-0 z-100 flex items-center justify-center p-4 md:p-8 bg-slate-950/70 backdrop-blur-xl"
       onClick={() => router.back()}
     >
       <motion.div
@@ -41,12 +43,12 @@ export default function StreamerDetailModal({ streamer }: any) {
           </button>
 
           {/* 원형 아바타 (더 크게) */}
-          <div
-            className="w-32 h-32 rounded-full flex items-center justify-center text-5xl font-black border-4 border-white shadow-xl flex-none"
-            style={{ backgroundColor: streamer.colorCode, color: '#fff' }}
-          >
-            {avatarLetters}
-          </div>
+          <StreamerAvatar
+            size="large"
+            colorCode=""
+            name={streamer.name}
+            imgSrc={imgSrc}
+          />
 
           {/* 이름 및 슬로건 */}
           <div className="flex-1 space-y-1.5">
@@ -72,11 +74,7 @@ export default function StreamerDetailModal({ streamer }: any) {
               스트리머 소개
             </h4>
             <div className="bg-slate-50/50 p-8 rounded-3xl border border-slate-100/50 text-slate-600 font-bold leading-relaxed text-sm">
-              <p>
-                매일 저녁 7시, 긍정 에너지로 꽉 찬 방송을 약속합니다! RPG 게임을
-                좋아하며 시청자분들과 소통하는 것을 가장 행복하게 생각합니다.
-                언제든지 편하게 놀러 오세요!
-              </p>
+              <p>아직 준비중입니다.</p>
             </div>
           </div>
 
@@ -91,13 +89,7 @@ export default function StreamerDetailModal({ streamer }: any) {
             </h4>
             {/* 가로 스크롤 게임 배지 리스트 */}
             <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar px-1">
-              {[
-                '로스트아크',
-                '젤다의 전설',
-                '메이플스토리',
-                '원신',
-                '리그 오브 레전드',
-              ].map((game) => (
+              {['공사중', 'test'].map((game) => (
                 <div
                   key={game}
                   className="flex-none flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-slate-100 text-slate-500 font-bold text-xs shadow-sm hover:border-slate-200 hover:text-slate-700 transition-all"

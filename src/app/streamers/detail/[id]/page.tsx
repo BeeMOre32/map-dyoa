@@ -1,7 +1,7 @@
 // src/app/streamers/detail/[id]/page.tsx
-import { prisma } from '@/src/lib/prisma';
-import StreamerView from '@/src/components/streamer/StreamerView'; // 멤버 목록 컴포넌트
-import StreamerDetailModal from '@/src/components/streamer/StreamerDetailModal';
+import { prisma } from '@/lib/prisma';
+import StreamerView from '@/components/streamer/StreamerView';
+import StreamerDetailModal from '@/components/streamer/StreamerDetailModal';
 import { notFound } from 'next/navigation';
 
 export default async function FullStreamerDetailPage({
