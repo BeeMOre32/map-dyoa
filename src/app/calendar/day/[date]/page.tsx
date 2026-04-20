@@ -3,9 +3,6 @@ import ScheduleModal from '@/src/components/Calendar/CalendarModal';
 import { notFound } from 'next/navigation';
 import CalendarView from '@/src/components/Calendar/CalendarView';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 export default async function FullDayPage({
   params,
 }: {
