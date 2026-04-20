@@ -1,6 +1,5 @@
 // src/app/calendar/@modal/(.)day/[date]/page.tsx
 import { prisma } from '@/src/lib/prisma';
-import { startOfDay, endOfDay } from 'date-fns';
 import ScheduleModal from '@/src/components/Calendar/CalendarModal';
 import { notFound } from 'next/navigation';
 
@@ -12,48 +11,54 @@ export default async function InterceptedDayPage({
   const resolvedParams = await params;
   const { date } = resolvedParams;
 
-  const targetDate = new Date(date);
+  const startKST = new Date(`${date}T00:00:00+09:00`);
+  const endKST = new Date(`${date}T23:59:59+09:00`);
 
-  if (isNaN(targetDate.getTime())) {
+  if (isNaN(startKST.getTime())) {
     return notFound();
   }
 
-  const schedulesData = await prisma.schedule.findMany({
-    where: {
-      startTime: {
-        gte: startOfDay(targetDate),
-        lte: endOfDay(targetDate),
-      },
-    },
-    include: {
-      game: true,
-      participants: {
-        include: {
-          streamer: true,
+  const [schedulesData, streamers, games] = await Promise.all([
+    prisma.schedule.findMany({
+      where: {
+        startTime: {
+          gte: startKST,
+          lte: endKST,
         },
       },
-    },
-    orderBy: {
-      startTime: 'asc',
-    },
-  });
+      include: {
+        game: true,
+        participants: {
+          include: {
+            streamer: true,
+          },
+        },
+      },
+      orderBy: {
+        startTime: 'asc',
+      },
+    }),
+    prisma.streamer.findMany({
+      orderBy: { name: 'asc' },
+    }),
+    prisma.game.findMany({
+      orderBy: { title: 'asc' },
+    }),
+  ]);
 
   const flattenedSchedules = schedulesData.map((s) => ({
     ...s,
-    participants: s.participants.map((p) => p.streamer),
+    startTime: new Date(s.startTime),
+    endTime: s.endTime ? new Date(s.endTime) : null,
+    createdAt: new Date(s.createdAt),
+    participants: s.participants
+      .map((p) => p.streamer)
+      .filter((streamer) => streamer !== null),
   }));
-
-  const streamers = await prisma.streamer.findMany({
-    orderBy: { name: 'asc' },
-  });
-
-  const games = await prisma.game.findMany({
-    orderBy: { title: 'asc' },
-  });
 
   return (
     <ScheduleModal
-      selectedDate={targetDate}
+      selectedDate={startKST}
       schedules={flattenedSchedules}
       streamers={streamers}
       games={games}

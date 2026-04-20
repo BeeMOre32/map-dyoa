@@ -3,8 +3,6 @@ import ScheduleModal from '@/src/components/Calendar/CalendarModal';
 import { notFound } from 'next/navigation';
 import CalendarView from '@/src/components/Calendar/CalendarView';
 
-export const dynamic = 'force-dynamic';
-
 export default async function FullDayPage({
   params,
 }: {
@@ -41,26 +39,38 @@ export default async function FullDayPage({
     prisma.game.findMany({ orderBy: { title: 'asc' } }),
   ]);
 
-  console.log(`Date: ${date} | Found: ${daySchedules.length} items`);
-
   const flattenedDaySchedules = daySchedules.map((s) => ({
     ...s,
-    participants: s.participants.map((p) => p.streamer),
+    startTime: new Date(s.startTime),
+    endTime: s.endTime ? new Date(s.endTime) : null,
+    createdAt: new Date(s.createdAt),
+    participants: s.participants
+      .map((p) => p.streamer)
+      .filter((streamer) => streamer !== null),
   }));
 
   const formattedAllSchedules = allSchedules.map((s) => ({
     ...s,
-    participants: s.participants.map((p) => p.streamer),
+    startTime: new Date(s.startTime),
+    endTime: s.endTime ? new Date(s.endTime) : null,
+    createdAt: new Date(s.createdAt),
+    participants: s.participants
+      .map((p) => p.streamer)
+      .filter((streamer) => streamer !== null),
   }));
+
+  console.log('[FullDayPage] Flattened Day Schedules:', flattenedDaySchedules);
 
   return (
     <>
+      {/* 전체 달력 뷰 */}
       <CalendarView
         games={games}
         initialSchedules={formattedAllSchedules}
         streamers={streamers}
       />
 
+      {/* 선택된 날짜의 일정 모달 */}
       <ScheduleModal
         selectedDate={startKST}
         schedules={flattenedDaySchedules}
