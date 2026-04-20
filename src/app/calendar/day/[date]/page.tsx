@@ -3,6 +3,8 @@ import ScheduleModal from '@/src/components/Calendar/CalendarModal';
 import { notFound } from 'next/navigation';
 import CalendarView from '@/src/components/Calendar/CalendarView';
 
+export const dynamic = 'force-dynamic';
+
 export default async function FullDayPage({
   params,
 }: {
@@ -38,6 +40,8 @@ export default async function FullDayPage({
     prisma.streamer.findMany({ orderBy: { name: 'asc' } }),
     prisma.game.findMany({ orderBy: { title: 'asc' } }),
   ]);
+
+  console.log(`Date: ${date} | Found: ${daySchedules.length} items`);
 
   const flattenedDaySchedules = daySchedules.map((s) => ({
     ...s,
