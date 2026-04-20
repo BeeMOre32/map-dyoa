@@ -36,7 +36,7 @@ export default function ScheduleFormModal({
     initialData?.gameId || '',
   );
   const [selectedStreamers, setSelectedStreamers] = useState<string[]>(
-    initialData?.participants?.map((p: any) => p.id) || [],
+    initialData?.participants?.map((p: any) => p.name) || [],
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);

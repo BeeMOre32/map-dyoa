@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Check, X } from 'lucide-react';
+import StreamerAvatar from '@/components/streamer/StreamerAvatar';
+import { getStreamerImagePath } from '@/lib/utils';
 
 export default function StreamerSelector({
   streamers,
@@ -30,7 +31,7 @@ export default function StreamerSelector({
       </div>
 
       {/* 📋 스트리머 그리드 영역 */}
-      <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 pt-12 pb-8 px-6 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 pt-6 pb-8 px-6 shadow-sm overflow-hidden">
         <div
           className="grid grid-cols-3 gap-4 max-h-120 overflow-y-auto pr-2 custom-scrollbar py-2"
           style={{
@@ -41,8 +42,7 @@ export default function StreamerSelector({
         >
           <AnimatePresence mode="popLayout">
             {filteredStreamers.map((streamer) => {
-              const isSelected = selectedStreamers.includes(streamer.id);
-              const avatarLetters = streamer.name.slice(0, 2);
+              const isSelected = selectedStreamers.includes(streamer.name);
 
               return (
                 <motion.div
@@ -55,33 +55,30 @@ export default function StreamerSelector({
                 >
                   <button
                     type="button"
-                    onClick={() => toggleStreamer(streamer.id)}
+                    onClick={() => toggleStreamer(streamer.name)}
                     className="flex flex-col items-center gap-4 w-full group outline-none"
                   >
-                    <div className="relative shrink-0">
-                      {/* 원형 아바타 */}
-                      <div
-                        className={`w-16 h-16 rounded-full flex items-center justify-center border-4 transition-all duration-300 ${
-                          isSelected
-                            ? 'shadow-2xl shadow-indigo-100 dark:shadow-indigo-900/30 scale-110'
-                            : 'bg-slate-50 dark:bg-slate-700 border-slate-50 dark:border-slate-700 opacity-50 grayscale group-hover:opacity-100 group-hover:grayscale-0 group-hover:scale-105'
-                        }`}
-                        style={{
-                          backgroundColor: isSelected
-                            ? streamer.colorCode
-                            : undefined,
-                          borderColor: isSelected
-                            ? streamer.colorCode
-                            : undefined,
-                          color: isSelected ? '#ffffff' : streamer.colorCode,
-                        }}
-                      >
-                        <span className="text-xl font-black tracking-tighter">
-                          {avatarLetters}
-                        </span>
-                      </div>
-
-                      {/* 체크 배지 */}
+                    <div
+                      className={`relative shrink-0 rounded-2xl transition-all duration-300 ${
+                        isSelected
+                          ? 'scale-110 shadow-xl'
+                          : 'opacity-50 grayscale group-hover:opacity-100 group-hover:grayscale-0 group-hover:scale-105'
+                      }`}
+                      style={
+                        isSelected
+                          ? {
+                              outline: `2.5px solid ${streamer.colorCode}`,
+                              outlineOffset: '3px',
+                            }
+                          : undefined
+                      }
+                    >
+                      <StreamerAvatar
+                        name={streamer.name}
+                        imgSrc={getStreamerImagePath(streamer.name)}
+                        colorCode={streamer.colorCode}
+                        size="medium"
+                      />
                     </div>
 
                     {/* 닉네임 */}

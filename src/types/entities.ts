@@ -45,15 +45,6 @@ export type StreamerWithSchedules = Prisma.StreamerGetPayload<{
 }>;
 
 /**
- * 피드백 + 스트리머 정보
- */
-export type FeedbackWithStreamer = Prisma.FeedbackGetPayload<{
-  include: {
-    streamer: true;
-  };
-}>;
-
-/**
  * 사용자 + 계정 정보
  */
 export type UserWithAccounts = Prisma.UserGetPayload<{
