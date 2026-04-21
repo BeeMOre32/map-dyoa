@@ -3,7 +3,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath, updateTag } from 'next/cache';
-import { requireAdmin } from '@/lib/auth-helpers';
+import { requireAdmin, requireAuth } from '@/lib/auth-helpers';
 import { ActionResult } from '@/types/api-response';
 import {
   ValidationError,
@@ -25,7 +25,7 @@ export async function createScheduleAction(data: {
   gameId?: string;
 }): Promise<ActionResult<{ id: string }>> {
   try {
-    await requireAdmin();
+    await requireAuth();
 
     // 입력 검증
     if (!data.title?.trim()) {
@@ -70,7 +70,7 @@ export async function createScheduleAction(data: {
  */
 export async function deleteScheduleAction(id: string): Promise<ActionResult> {
   try {
-    await requireAdmin();
+    await requireAuth();
 
     if (!id?.trim()) {
       throw new ValidationError('유효한 일정 ID가 필요합니다.');
@@ -105,7 +105,7 @@ export async function updateScheduleAction(
   },
 ): Promise<ActionResult> {
   try {
-    await requireAdmin();
+    await requireAuth();
 
     if (!id?.trim()) {
       throw new ValidationError('유효한 일정 ID가 필요합니다.');
