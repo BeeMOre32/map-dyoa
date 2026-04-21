@@ -8,7 +8,8 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
       "Bash(curl -s -L -o /dev/null -w \"%{http_code} %{url_effective}\" http://localhost:3000)",
       "Bash(curl -s http://localhost:3000/calendar)",
-      "Bash(curl -s http://localhost:3000/api/streamers)"
+      "Bash(curl -s http://localhost:3000/api/streamers)",
+      "Bash(npx tsc *)"
     ]
   }
 }

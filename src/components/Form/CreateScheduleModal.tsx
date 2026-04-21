@@ -2,19 +2,32 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { X, Calendar as CalendarIcon, Check } from 'lucide-react';
+import { X, Calendar as CalendarIcon, AlertCircle } from 'lucide-react';
 import { createScheduleAction, updateScheduleAction } from '@/app/actions';
-import { format } from 'date-fns';
 import { motion } from 'framer-motion';
+import { z } from 'zod';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
-import { Streamer, Game, ModalProps } from '@/d';
+import { ModalProps } from '@/types/props';
+import { Streamer, Game } from '@prisma/client';
+import { FlattenedSchedule } from '@/lib/schedule-formatters';
 import StreamerSelector from './StreamerSelctor';
+
+const scheduleSchema = z.object({
+  title: z.string().min(1, '방송 제목을 입력해주세요.'),
+  startTime: z.string().min(1, '시작 시간을 선택해주세요.'),
+  streamerIds: z.array(z.string()).min(1, '참여 멤버를 최소 1명 이상 선택해주세요.'),
+});
+
+type ScheduleErrors = Partial<Record<keyof z.infer<typeof scheduleSchema> | 'submit', string>>;
 
 type CreateScheduleModalProps = ModalProps & {
   streamers: Streamer[];
   games: Game[];
-  initialData?: any;
+  initialData?: FlattenedSchedule | null;
   isEdit?: boolean;
+  onOptimisticCreate?: (schedule: FlattenedSchedule) => void;
 };
 
 export default function ScheduleFormModal({
@@ -23,12 +36,11 @@ export default function ScheduleFormModal({
   onClose,
   initialData,
   isEdit = false,
+  onOptimisticCreate,
 }: CreateScheduleModalProps) {
   const defaultTime = initialData?.startTime
     ? format(new Date(initialData.startTime), "yyyy-MM-dd'T'HH:mm")
     : '';
-
-  console.log('Initial Data:', initialData);
 
   const [title, setTitle] = useState(initialData?.title || '');
   const [startTime, setStartTime] = useState(defaultTime);
@@ -36,9 +48,9 @@ export default function ScheduleFormModal({
     initialData?.gameId || '',
   );
   const [selectedStreamers, setSelectedStreamers] = useState<string[]>(
-    initialData?.participants?.map((p: any) => p.id) || [],
+    initialData?.participants?.map((p) => p.id) || [],
   );
-
+  const [errors, setErrors] = useState<ScheduleErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -51,17 +63,25 @@ export default function ScheduleFormModal({
     setSelectedStreamers((prev) =>
       prev.includes(id) ? prev.filter((sId) => sId !== id) : [...prev, id],
     );
+    if (errors.streamerIds) setErrors((e) => ({ ...e, streamerIds: undefined }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !startTime || selectedStreamers.length === 0) {
-      return alert(
-        '제목, 시간, 그리고 참여 멤버를 최소 1명 이상 선택해주세요!',
-      );
-    }
 
+    const parsed = scheduleSchema.safeParse({ title, startTime, streamerIds: selectedStreamers });
+    if (!parsed.success) {
+      const fieldErrors: ScheduleErrors = {};
+      for (const issue of parsed.error.issues) {
+        const field = issue.path[0] as keyof ScheduleErrors;
+        fieldErrors[field] = issue.message;
+      }
+      setErrors(fieldErrors);
+      return;
+    }
+    setErrors({});
     setIsSubmitting(true);
+
     const payload = {
       title,
       startTime: new Date(startTime),
@@ -73,8 +93,30 @@ export default function ScheduleFormModal({
       ? await updateScheduleAction(initialData!.id, payload)
       : await createScheduleAction(payload);
 
-    if (result.success) onClose();
-    else alert('일정 저장에 실패했습니다.');
+    if (result.success) {
+      if (!isEdit && onOptimisticCreate) {
+        const selectedGame = games.find((g) => g.id === selectedGameId) ?? null;
+        const participants = streamers.filter((s) => selectedStreamers.includes(s.id));
+        const startDate = new Date(startTime);
+        onOptimisticCreate({
+          id: result.data?.id ?? `optimistic-${Date.now()}`,
+          title,
+          content: null,
+          gameId: selectedGameId || null,
+          isGuerrilla: false,
+          startTime: startDate,
+          endTime: null,
+          createdAt: new Date(),
+          participants,
+          game: selectedGame,
+          formattedDate: format(startDate, 'yyyy년 MM월 dd일(EEEE)', { locale: ko }),
+          formattedTime: format(startDate, 'HH:mm'),
+        });
+      }
+      onClose();
+    } else {
+      setErrors({ submit: '일정 저장에 실패했습니다. 다시 시도해주세요.' });
+    }
     setIsSubmitting(false);
   };
 
@@ -126,10 +168,21 @@ export default function ScheduleFormModal({
               <input
                 type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  if (errors.title) setErrors((er) => ({ ...er, title: undefined }));
+                }}
                 placeholder="예) 문명 6 합방"
-                className="w-full p-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+                className={`w-full p-3 bg-slate-50 dark:bg-slate-700 border rounded-xl font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all ${
+                  errors.title ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-slate-600'
+                }`}
               />
+              {errors.title && (
+                <p className="mt-1.5 flex items-center gap-1 text-xs font-bold text-red-500">
+                  <AlertCircle className="w-3 h-3 shrink-0" />
+                  {errors.title}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
@@ -141,7 +194,7 @@ export default function ScheduleFormModal({
                 className="w-full p-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none text-slate-700 dark:text-slate-200 transition-all"
               >
                 <option value="">선택 안 함</option>
-                {games.map((game: any) => (
+                {games.map((game) => (
                   <option key={game.id} value={game.id}>
                     {game.title}
                   </option>
@@ -157,9 +210,20 @@ export default function ScheduleFormModal({
             <input
               type="datetime-local"
               value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className="w-full p-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-medium text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all scheme-light dark:scheme-dark"
+              onChange={(e) => {
+                setStartTime(e.target.value);
+                if (errors.startTime) setErrors((er) => ({ ...er, startTime: undefined }));
+              }}
+              className={`w-full p-3 bg-slate-50 dark:bg-slate-700 border rounded-xl font-medium text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all scheme-light dark:scheme-dark ${
+                errors.startTime ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-slate-600'
+              }`}
             />
+            {errors.startTime && (
+              <p className="mt-1.5 flex items-center gap-1 text-xs font-bold text-red-500">
+                <AlertCircle className="w-3 h-3 shrink-0" />
+                {errors.startTime}
+              </p>
+            )}
           </div>
 
           <div className="relative" ref={dropdownRef}>
@@ -173,6 +237,13 @@ export default function ScheduleFormModal({
                 </label>
               </div>
 
+              {errors.streamerIds && (
+                <p className="flex items-center gap-1 text-xs font-bold text-red-500 px-2">
+                  <AlertCircle className="w-3 h-3 shrink-0" />
+                  {errors.streamerIds}
+                </p>
+              )}
+
               <div>
                 <StreamerSelector
                   streamers={sortedStreamers}
@@ -184,22 +255,30 @@ export default function ScheduleFormModal({
           </div>
         </form>
 
-        <div className="p-6 md:p-8 bg-slate-50 dark:bg-slate-800 flex gap-3 border-t border-slate-100 dark:border-slate-700 shrink-0">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 py-4 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-bold border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
-          >
-            취소
-          </button>
-          <button
-            form="schedule-form"
-            type="submit"
-            disabled={isSubmitting}
-            className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50"
-          >
-            {isSubmitting ? '저장 중...' : isEdit ? '수정 완료' : '일정 등록'}
-          </button>
+        <div className="p-6 md:p-8 bg-slate-50 dark:bg-slate-800 flex flex-col gap-3 border-t border-slate-100 dark:border-slate-700 shrink-0">
+          {errors.submit && (
+            <p className="flex items-center gap-1.5 text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {errors.submit}
+            </p>
+          )}
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-4 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-bold border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
+            >
+              취소
+            </button>
+            <button
+              form="schedule-form"
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50"
+            >
+              {isSubmitting ? '저장 중...' : isEdit ? '수정 완료' : '일정 등록'}
+            </button>
+          </div>
         </div>
       </motion.div>
     </motion.div>

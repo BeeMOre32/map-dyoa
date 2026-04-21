@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import ScheduleDetailView from '@/components/Calendar/ScheduleDetailModal';
 import { notFound } from 'next/navigation';
 import CalendarView from '@/components/Calendar/CalendarView';
+import { flattenScheduleParticipants } from '@/lib/schedule-formatters';
+import { getCalendarData } from '@/lib/data-fetching';
 
 export default async function FullSchedulePage({
   params,
@@ -11,44 +13,27 @@ export default async function FullSchedulePage({
 }) {
   const { id } = await params;
 
-  // 1. 모든 데이터 병렬로 가져오기 (성능 최적화)
-  const [targetSchedule, allSchedules, streamers, games] = await Promise.all([
-    prisma.schedule.findUnique({
-      where: { id },
-      include: {
-        game: true,
-        participants: { include: { streamer: true } },
-      },
-    }),
-    prisma.schedule.findMany({
-      include: {
-        game: true,
-        participants: { include: { streamer: true } },
-      },
-    }),
-    prisma.streamer.findMany({ orderBy: { name: 'asc' } }),
-    prisma.game.findMany({ orderBy: { title: 'asc' } }),
-  ]);
+  // 캘린더 배경 데이터는 캐시에서, 상세 일정만 DB 직접 조회 (최신 보장)
+  const [{ schedules: allSchedules, streamers, games }, targetSchedule] =
+    await Promise.all([
+      getCalendarData(),
+      prisma.schedule.findUnique({
+        where: { id },
+        include: {
+          game: true,
+          participants: { include: { streamer: true } },
+        },
+      }),
+    ]);
 
-  // 🌟 상세 일정이 없으면 404
   if (!targetSchedule) return notFound();
 
-  // 2. 배경 달력용 데이터 가공 (배열)
-  const formattedAllSchedules = allSchedules.map((s) => ({
-    ...s,
-    participants: s.participants.map((p) => p.streamer),
-  }));
-
-  // 3. 상세 보기용 데이터 가공 (단일 객체)
-  const flattenedTarget = {
-    ...targetSchedule,
-    participants: targetSchedule.participants.map((p) => p.streamer),
-  };
+  const flattenedTarget = flattenScheduleParticipants(targetSchedule);
 
   return (
     <div className="relative w-full h-full min-h-screen">
       <CalendarView
-        initialSchedules={formattedAllSchedules}
+        initialSchedules={allSchedules}
         streamers={streamers}
         games={games}
       />

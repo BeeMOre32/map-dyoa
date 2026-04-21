@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import ScheduleDetailModal from '@/components/Calendar/ScheduleDetailModal';
 import { notFound } from 'next/navigation';
+import { flattenScheduleParticipants } from '@/lib/schedule-formatters';
+import { getAllStreamers, getAllGames } from '@/lib/data-fetching';
 
 export default async function InterceptedSchedulePage({
   params,
@@ -9,28 +11,21 @@ export default async function InterceptedSchedulePage({
 }) {
   const { id } = await params;
 
-  const schedule = await prisma.schedule.findUnique({
-    where: { id },
-    include: {
-      game: true,
-      participants: { include: { streamer: true } },
-    },
-  });
+  const [schedule, streamers, games] = await Promise.all([
+    prisma.schedule.findUnique({
+      where: { id },
+      include: {
+        game: true,
+        participants: { include: { streamer: true } },
+      },
+    }),
+    getAllStreamers(),
+    getAllGames(),
+  ]);
 
   if (!schedule) return notFound();
 
-  const streamers = await prisma.streamer.findMany({
-    orderBy: { name: 'asc' },
-  });
-
-  const games = await prisma.game.findMany({
-    orderBy: { title: 'asc' },
-  });
-
-  const flattenedSchedule = {
-    ...schedule,
-    participants: schedule.participants.map((p) => p.streamer),
-  };
+  const flattenedSchedule = flattenScheduleParticipants(schedule);
 
   return (
     <ScheduleDetailModal

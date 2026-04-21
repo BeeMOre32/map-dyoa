@@ -1,15 +1,12 @@
 // src/app/admin/feedbacks/page.tsx
-import { prisma } from '@/lib/prisma';
+import { getFeedbacks } from '@/lib/data-fetching';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { CheckCircle2, Clock, AlertCircle, MessageSquare } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
 
 export default async function AdminFeedbackPage() {
-  // 1. 서버에서 직접 데이터를 가져옵니다. (No Fetch API!)
-  const feedbacks = await prisma.feedback.findMany({
-    orderBy: { createdAt: 'desc' },
-  });
+  const feedbacks = await getFeedbacks();
 
   return (
     <div className="p-8 space-y-8 bg-white dark:bg-slate-950 min-h-screen transition-colors">

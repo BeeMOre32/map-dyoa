@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { ScheduleWithParticipants } from '@/d';
+import { FlattenedSchedule } from '@/lib/schedule-formatters';
 
 /**
  * CalendarModal의 상태 관리를 위한 커스텀 훅
  */
 export const useScheduleModal = () => {
   const [editingSchedule, setEditingSchedule] =
-    useState<ScheduleWithParticipants | null>(null);
+    useState<FlattenedSchedule | null>(null);
 
-  const toggleEditMode = (schedule: ScheduleWithParticipants | null) => {
+  const toggleEditMode = (schedule: FlattenedSchedule | null) => {
     setEditingSchedule(schedule);
   };
 

@@ -1,7 +1,7 @@
 // src/components/calendar/CalendarView.tsx
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useOptimistic, useTransition } from 'react';
 import {
   format,
   addMonths,
@@ -31,7 +31,7 @@ import { AnimatePresence } from 'framer-motion';
 import ScheduleFormModal from '@/components/Form/CreateScheduleModal';
 
 import type { Streamer, Game } from '@prisma/client';
-import type { FlattenedSchedule } from '../MainTabController';
+import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 
 interface CalendarViewProps {
   initialSchedules: FlattenedSchedule[];
@@ -46,6 +46,15 @@ export default function CalendarView({
 }: CalendarViewProps) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [, startTransition] = useTransition();
+
+  const [optimisticSchedules, addOptimisticSchedule] = useOptimistic(
+    initialSchedules,
+    (state: FlattenedSchedule[], newSchedule: FlattenedSchedule) => [
+      ...state,
+      newSchedule,
+    ],
+  );
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -97,7 +106,7 @@ export default function CalendarView({
 
   const schedulesByDate = useMemo(() => {
     const map = new Map<string, FlattenedSchedule[]>();
-    initialSchedules.forEach((schedule) => {
+    optimisticSchedules.forEach((schedule) => {
       const dateKey = format(new Date(schedule.startTime), 'yyyy-MM-dd');
       if (!map.has(dateKey)) {
         map.set(dateKey, []);
@@ -105,7 +114,7 @@ export default function CalendarView({
       map.get(dateKey)!.push(schedule);
     });
     return map;
-  }, [initialSchedules]);
+  }, [optimisticSchedules]);
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
   const handleDayClick = useCallback(
@@ -266,9 +275,15 @@ export default function CalendarView({
             streamers={streamers}
             games={games}
             initialData={editSchedule}
+            onOptimisticCreate={(schedule) => {
+              startTransition(() => {
+                addOptimisticSchedule(schedule);
+              });
+            }}
             onClose={() => {
               setIsFormOpen(false);
               setEditSchedule(undefined);
+              router.refresh();
             }}
           />
         )}

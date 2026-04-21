@@ -2,7 +2,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { requireAdmin } from '@/lib/auth-helpers';
 import { ActionResult } from '@/types/api-response';
 import {
@@ -23,7 +23,7 @@ export async function createScheduleAction(data: {
   startTime: Date;
   streamerIds: string[];
   gameId?: string;
-}): Promise<ActionResult> {
+}): Promise<ActionResult<{ id: string }>> {
   try {
     await requireAdmin();
 
@@ -38,7 +38,7 @@ export async function createScheduleAction(data: {
       throw new ValidationError('참여자를 최소 1명 이상 선택해주세요.');
     }
 
-    await prisma.schedule.create({
+    const created = await prisma.schedule.create({
       data: {
         title: data.title.trim(),
         startTime: new Date(data.startTime),
@@ -51,11 +51,13 @@ export async function createScheduleAction(data: {
       },
     });
 
-    // 통합된 재검증
     const paths = getRevalidationPaths('schedule');
-    await Promise.all(paths.map((path: string) => revalidatePath(path)));
+    await Promise.all([
+      ...paths.map((path: string) => revalidatePath(path)),
+      updateTag('calendar'),
+    ]);
 
-    return { success: true, data: null };
+    return { success: true, data: { id: created.id } };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
     logError('createSchedule', error);
@@ -77,7 +79,10 @@ export async function deleteScheduleAction(id: string): Promise<ActionResult> {
     await prisma.schedule.delete({ where: { id } });
 
     const paths = getRevalidationPaths('schedule');
-    await Promise.all(paths.map((path: string) => revalidatePath(path)));
+    await Promise.all([
+      ...paths.map((path: string) => revalidatePath(path)),
+      updateTag('calendar'),
+    ]);
 
     return { success: true, data: null };
   } catch (error) {
@@ -131,7 +136,10 @@ export async function updateScheduleAction(
     });
 
     const paths = getRevalidationPaths('schedule');
-    await Promise.all(paths.map((path: string) => revalidatePath(path)));
+    await Promise.all([
+      ...paths.map((path: string) => revalidatePath(path)),
+      updateTag('calendar'),
+    ]);
 
     return { success: true, data: null };
   } catch (error) {
@@ -176,7 +184,11 @@ export async function createStreamerAction(data: {
     });
 
     const paths = getRevalidationPathsMulti(['streamer', 'schedule']);
-    await Promise.all(paths.map((path: string) => revalidatePath(path)));
+    await Promise.all([
+      ...paths.map((path: string) => revalidatePath(path)),
+      updateTag('calendar'),
+      updateTag('streamers'),
+    ]);
 
     return { success: true, data: null };
   } catch (error) {
@@ -213,7 +225,11 @@ export async function bulkCreateStreamersAction(
     });
 
     const paths = getRevalidationPathsMulti(['streamer', 'schedule']);
-    await Promise.all(paths.map((path: string) => revalidatePath(path)));
+    await Promise.all([
+      ...paths.map((path: string) => revalidatePath(path)),
+      updateTag('calendar'),
+      updateTag('streamers'),
+    ]);
 
     return { success: true, data: { created: result.count } };
   } catch (error) {
@@ -251,7 +267,10 @@ export async function createFeedbackAction(formData: {
     });
 
     const paths = getRevalidationPaths('admin');
-    await Promise.all(paths.map((path: string) => revalidatePath(path)));
+    await Promise.all([
+      ...paths.map((path: string) => revalidatePath(path)),
+      updateTag('admin'),
+    ]);
 
     return { success: true, data: null };
   } catch (error) {

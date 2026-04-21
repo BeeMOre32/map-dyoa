@@ -2,14 +2,21 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Streamer } from '@prisma/client';
 import StreamerAvatar from '@/components/streamer/StreamerAvatar';
 import { getStreamerImagePath } from '@/lib/utils';
+
+interface StreamerSelectorProps {
+  streamers: Streamer[];
+  selectedStreamers: string[];
+  toggleStreamer: (id: string) => void;
+}
 
 export default function StreamerSelector({
   streamers,
   selectedStreamers,
   toggleStreamer,
-}: any) {
+}: StreamerSelectorProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredStreamers = useMemo(() => {

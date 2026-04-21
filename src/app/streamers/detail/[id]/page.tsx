@@ -1,7 +1,7 @@
 // src/app/streamers/detail/[id]/page.tsx
-import { prisma } from '@/lib/prisma';
 import StreamerView from '@/components/streamer/StreamerView';
 import StreamerDetailModal from '@/components/streamer/StreamerDetailModal';
+import { getAllStreamers } from '@/lib/data-fetching';
 import { notFound } from 'next/navigation';
 
 export default async function FullStreamerDetailPage({
@@ -11,10 +11,7 @@ export default async function FullStreamerDetailPage({
 }) {
   const { id } = await params;
 
-  const streamers = await prisma.streamer.findMany({
-    orderBy: { name: 'asc' },
-  });
-
+  const streamers = await getAllStreamers();
   const streamer = streamers.find((s) => s.id === id);
 
   if (!streamer) return notFound();

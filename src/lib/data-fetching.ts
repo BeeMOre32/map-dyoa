@@ -68,28 +68,37 @@ export const getAllGames = unstable_cache(
 );
 
 /**
- * 특정 날짜의 일정 가져오기
+ * 특정 날짜 범위의 일정 가져오기
+ * getCalendarData() 캐시에서 필터링해 별도 DB 쿼리 없이 처리
  */
-export const getSchedulesByDateRange = unstable_cache(
-  async (startDate: Date, endDate: Date) => {
-    const schedules = await prisma.schedule.findMany({
-      where: {
-        startTime: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-      include: {
-        game: true,
-        participants: {
-          include: { streamer: true },
-        },
-      },
-      orderBy: { startTime: 'asc' },
-    });
+export async function getSchedulesByDateRange(startDate: Date, endDate: Date) {
+  const { schedules } = await getCalendarData();
+  const start = startDate.getTime();
+  const end = endDate.getTime();
+  return schedules.filter((s) => {
+    const t = new Date(s.startTime).getTime();
+    return t >= start && t <= end;
+  });
+}
 
-    return flattenSchedules(schedules);
+/**
+ * 피드백 목록 가져오기 (캐싱 적용)
+ * 필요한 컬럼만 select해 전송량 최소화
+ */
+export const getFeedbacks = unstable_cache(
+  async () => {
+    return prisma.feedback.findMany({
+      select: {
+        id: true,
+        status: true,
+        category: true,
+        streamerName: true,
+        content: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   },
-  ['schedules-by-date'],
-  { revalidate: 30, tags: ['schedule'] },
+  ['feedbacks-all'],
+  { revalidate: 30, tags: ['admin'] },
 );

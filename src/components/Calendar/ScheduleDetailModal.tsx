@@ -21,12 +21,20 @@ import CreateScheduleModal from '../Form/CreateScheduleModal';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { GAME_COLORS } from '@/constants/gamecolor';
 import Link from 'next/link';
+import type { Streamer, Game } from '@prisma/client';
+import type { FlattenedSchedule } from '@/lib/schedule-formatters';
+
+interface ScheduleDetailViewProps {
+  schedule: FlattenedSchedule;
+  streamers: Streamer[];
+  games: Game[];
+}
 
 export default function ScheduleDetailView({
   schedule,
   streamers,
   games,
-}: any) {
+}: ScheduleDetailViewProps) {
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -42,7 +50,6 @@ export default function ScheduleDetailView({
   };
 
   const handleDelete = async () => {
-    if (!isUser) return alert('권한이 없습니다.');
     if (confirm('정말로 이 일정을 삭제하시겠습니까?')) {
       const result = await deleteScheduleAction(schedule.id);
       if (result.success) {
@@ -53,7 +60,9 @@ export default function ScheduleDetailView({
   };
 
   const gameColor =
-    GAME_COLORS[schedule.game?.id] || GAME_COLORS['default'] || '#4f46e5';
+    (schedule.game?.id ? GAME_COLORS[schedule.game.id] : undefined) ??
+    GAME_COLORS['default'] ??
+    '#4f46e5';
 
   return (
     <motion.div
@@ -160,23 +169,20 @@ export default function ScheduleDetailView({
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  {schedule.participants.map((p: any) => {
-                    const streamer = p.streamer || p;
-                    return (
-                      <Link
-                        href={`/streamers/detail/${streamer.id}`}
-                        key={streamer.id}
-                        className="px-4 py-2.5 rounded-2xl border font-bold text-sm shadow-sm transition-all hover:scale-105"
-                        style={{
-                          backgroundColor: `${streamer.colorCode}08`,
-                          color: streamer.colorCode,
-                          borderColor: `${streamer.colorCode}25`,
-                        }}
-                      >
-                        {streamer.name}
-                      </Link>
-                    );
-                  })}
+                  {schedule.participants.map((p) => (
+                    <Link
+                      href={`/streamers/detail/${p.id}`}
+                      key={p.id}
+                      className="px-4 py-2.5 rounded-2xl border font-bold text-sm shadow-sm transition-all hover:scale-105"
+                      style={{
+                        backgroundColor: `${p.colorCode}08`,
+                        color: p.colorCode,
+                        borderColor: `${p.colorCode}25`,
+                      }}
+                    >
+                      {p.name}
+                    </Link>
+                  ))}
                 </div>
               </div>
 

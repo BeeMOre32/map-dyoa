@@ -2,18 +2,9 @@
 
 import { MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
+import { Streamer } from '@prisma/client';
 import { getStreamerImagePath } from '@/lib/utils';
 import StreamerAvatar from './StreamerAvatar';
-
-interface Streamer {
-  id: string;
-  name: string;
-  handle?: string;
-  generation: string;
-  role?: string;
-  platform?: string;
-  colorCode: string;
-}
 
 interface StreamerCardProps {
   streamer: Streamer;

@@ -6,18 +6,8 @@ import { Calendar as CalendarIcon, Users } from 'lucide-react';
 import CalendarView from './Calendar/CalendarView';
 import StreamerView from './streamer/StreamerView';
 
-import type { Streamer, Game, Schedule } from '@prisma/client';
-
-export type FlattenedSchedule = Omit<
-  Schedule,
-  'startTime' | 'endTime' | 'createdAt'
-> & {
-  startTime: Date;
-  endTime: Date | null;
-  createdAt: Date;
-  participants: Streamer[];
-  game?: Game | null;
-};
+import type { Streamer, Game } from '@prisma/client';
+import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 
 interface MainTabControllerProps {
   initialSchedules: FlattenedSchedule[];

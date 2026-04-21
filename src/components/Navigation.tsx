@@ -20,8 +20,6 @@ export default function Navigation() {
 
   if (isModalOpen) return null;
 
-  console.log('Current Pathname:', pathname);
-
   return (
     <nav className="flex justify-center py-6 shrink-0 bg-white dark:bg-slate-950 transition-colors z-30">
       <div className="rounded-xl flex bg-slate-100 dark:bg-slate-900 p-1.5 border-2 border-slate-200 dark:border-slate-800 relative shadow-inner">

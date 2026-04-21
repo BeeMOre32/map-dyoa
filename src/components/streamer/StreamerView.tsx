@@ -3,14 +3,14 @@
 
 import { AnimatePresence } from 'framer-motion';
 import { useCallback, useState } from 'react';
+import { Streamer } from '@prisma/client';
 import RequestEditModal from '../Form/RequestEdit';
 import StreamerCard from './StreamerCard';
 
-export default function StreamerView({ streamers }: { streamers: any[] }) {
-  const [requestTarget, setRequestTarget] = useState<any>(null);
+export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
+  const [requestTarget, setRequestTarget] = useState<Streamer | null>(null);
 
-  // useCallback으로 메모이제이션하여 자식 컴포넌트의 불필요한 리렌더링 방지
-  const handleRequestEdit = useCallback((streamer: any) => {
+  const handleRequestEdit = useCallback((streamer: Streamer) => {
     setRequestTarget(streamer);
   }, []);
 

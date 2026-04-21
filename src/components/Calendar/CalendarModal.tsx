@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
 import {
@@ -11,6 +12,7 @@ import {
   Users,
   ArrowRight,
   ChevronLeft,
+  AlertCircle,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -19,9 +21,11 @@ import Link from 'next/link';
 import { deleteScheduleAction } from '@/app/actions';
 import CreateScheduleModal from '../Form/CreateScheduleModal';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
-import { CalendarModalProps } from '@/d';
+import { CalendarModalProps } from '@/types/props';
 import { useScheduleModal } from '@/hooks/useScheduleModal';
 import { GAME_COLORS } from '@/constants/gamecolor';
+import { FlattenedSchedule } from '@/lib/schedule-formatters';
+import { Streamer } from '@prisma/client';
 
 export default function ScheduleModal({
   selectedDate,
@@ -33,8 +37,7 @@ export default function ScheduleModal({
   const router = useRouter();
   const { data: session } = useSession();
   const { editingSchedule, toggleEditMode, exitEditMode } = useScheduleModal();
-
-  console.log('Client Received Schedules:', schedules);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
 
   const isAdmin = session;
 
@@ -61,7 +64,10 @@ export default function ScheduleModal({
     e.preventDefault();
     e.stopPropagation();
 
-    if (!isAdmin) return alert('권한이 없습니다.');
+    if (!isAdmin) {
+      setPermissionError('로그인이 필요합니다.');
+      return;
+    }
 
     if (confirm('정말로 이 일정을 삭제하시겠습니까?')) {
       const result = await deleteScheduleAction(id);
@@ -72,11 +78,14 @@ export default function ScheduleModal({
     }
   };
 
-  const handleEditTrigger = (e: React.MouseEvent, schedule: any) => {
+  const handleEditTrigger = (e: React.MouseEvent, schedule: FlattenedSchedule) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!isAdmin) return alert('권한이 없습니다.');
+    if (!isAdmin) {
+      setPermissionError('로그인이 필요합니다.');
+      return;
+    }
 
     toggleEditMode(schedule);
   };
@@ -152,7 +161,7 @@ export default function ScheduleModal({
                   </p>
                 </div>
               ) : (
-                schedules.map((schedule: any) => (
+                schedules.map((schedule) => (
                   <Link
                     key={schedule.id}
                     href={`/calendar/schedule/${schedule.id}`}
@@ -223,22 +232,19 @@ export default function ScheduleModal({
                         </div>
 
                         <div className="flex flex-wrap gap-2 pt-2">
-                          {schedule.participants.map((participant: any) => {
-                            const target = participant.streamer || participant;
-                            return (
-                              <span
-                                key={target.id}
-                                className="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all shadow-sm"
-                                style={{
-                                  backgroundColor: `${target.colorCode}15`,
-                                  color: target.colorCode,
-                                  borderColor: `${target.colorCode}30`,
-                                }}
-                              >
-                                {target.name}
-                              </span>
-                            );
-                          })}
+                          {schedule.participants.map((participant: Streamer) => (
+                            <span
+                              key={participant.id}
+                              className="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all shadow-sm"
+                              style={{
+                                backgroundColor: `${participant.colorCode}15`,
+                                color: participant.colorCode,
+                                borderColor: `${participant.colorCode}30`,
+                              }}
+                            >
+                              {participant.name}
+                            </span>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -247,7 +253,13 @@ export default function ScheduleModal({
               )}
             </div>
 
-            <div className="p-6 md:p-8 bg-slate-50 dark:bg-slate-900 text-center shrink-0 border-t border-slate-100 dark:border-slate-800">
+            <div className="p-6 md:p-8 bg-slate-50 dark:bg-slate-900 shrink-0 border-t border-slate-100 dark:border-slate-800 flex flex-col items-center gap-3">
+              {permissionError && (
+                <p className="w-full flex items-center gap-1.5 text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2.5">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {permissionError}
+                </p>
+              )}
               <button
                 onClick={handleClose}
                 className="w-full md:w-auto px-12 py-3.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-2xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shadow-sm"
