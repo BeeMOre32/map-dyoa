@@ -36,7 +36,7 @@ export default function ScheduleFormModal({
     initialData?.gameId || '',
   );
   const [selectedStreamers, setSelectedStreamers] = useState<string[]>(
-    initialData?.participants?.map((p: any) => p.name) || [],
+    initialData?.participants?.map((p: any) => p.id) || [],
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,14 +100,14 @@ export default function ScheduleFormModal({
               <p className="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-wider">
                 {isEdit ? 'Edit Schedule' : 'New Schedule'}
               </p>
-              <h3 className="text-2xl font-black text-slate-800">
+              <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">
                 {isEdit ? '일정 수정' : '새 일정 등록'}
               </h3>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-600 rounded-full transition-colors"
           >
             <X className="w-6 h-6 text-slate-400" />
           </button>
@@ -120,7 +120,7 @@ export default function ScheduleFormModal({
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
                 방송 제목
               </label>
               <input
@@ -128,17 +128,17 @@ export default function ScheduleFormModal({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="예) 문명 6 합방"
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+                className="w-full p-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
                 플레이 게임 (선택)
               </label>
               <select
                 value={selectedGameId}
                 onChange={(e) => setSelectedGameId(e.target.value)}
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none text-slate-700 transition-all"
+                className="w-full p-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none text-slate-700 dark:text-slate-200 transition-all"
               >
                 <option value="">선택 안 함</option>
                 {games.map((game: any) => (
@@ -151,21 +151,21 @@ export default function ScheduleFormModal({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase">
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
               시작 시간
             </label>
             <input
               type="datetime-local"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+              className="w-full p-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-medium text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all scheme-light dark:scheme-dark"
             />
           </div>
 
           <div className="relative" ref={dropdownRef}>
-            <div className="border-t border-slate-100 pt-8 space-y-4">
+            <div className="border-t border-slate-100 dark:border-slate-700 pt-8 space-y-4">
               <div className="flex justify-between items-end px-2">
-                <label className="text-sm font-black text-slate-700 uppercase tracking-tight">
+                <label className="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight">
                   참여 멤버 선택{' '}
                   <span className="text-indigo-500 ml-1">
                     ({selectedStreamers.length})
@@ -184,11 +184,11 @@ export default function ScheduleFormModal({
           </div>
         </form>
 
-        <div className="p-6 md:p-8 bg-slate-50 flex gap-3 border-t border-slate-100 shrink-0">
+        <div className="p-6 md:p-8 bg-slate-50 dark:bg-slate-800 flex gap-3 border-t border-slate-100 dark:border-slate-700 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-4 bg-white text-slate-600 rounded-2xl font-bold border border-slate-200 hover:bg-slate-50 transition-colors"
+            className="flex-1 py-4 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-bold border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
           >
             취소
           </button>

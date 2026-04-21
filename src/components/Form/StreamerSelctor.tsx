@@ -42,7 +42,7 @@ export default function StreamerSelector({
         >
           <AnimatePresence mode="popLayout">
             {filteredStreamers.map((streamer) => {
-              const isSelected = selectedStreamers.includes(streamer.name);
+              const isSelected = selectedStreamers.includes(streamer.id);
 
               return (
                 <motion.div
@@ -55,7 +55,7 @@ export default function StreamerSelector({
                 >
                   <button
                     type="button"
-                    onClick={() => toggleStreamer(streamer.name)}
+                    onClick={() => toggleStreamer(streamer.id)}
                     className="flex flex-col items-center gap-4 w-full group outline-none"
                   >
                     <div
