@@ -195,79 +195,158 @@ export default function CalendarView({
 
       {/* 캘린더 본체 */}
       <div className="flex-1 overflow-hidden bg-white dark:bg-slate-900 rounded-4xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col">
-        <div className="grid grid-cols-7 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/30 dark:bg-slate-800/60">
-          {weekDays.map((day, idx) => (
-            <div
-              key={day}
-              className={`py-3 text-center text-[13px] font-black tracking-wide ${idx === 0 ? 'text-red-400' : idx === 6 ? 'text-blue-400' : 'text-slate-400'}`}
-            >
-              {day}
-            </div>
-          ))}
-        </div>
 
-        <div
-          key={`${currentDate.toISOString()}-${viewMode}`}
-          className={`flex-1 overflow-hidden animate-in fade-in duration-500 ease-out fill-mode-forwards ${slideDirection === 'left' ? 'slide-in-from-right-10' : 'slide-in-from-left-10'}`}
-        >
+        {/* ── 모바일 주간 리스트 (sm 미만 + weekly) ── */}
+        {viewMode === 'weekly' && (
           <div
-            className="grid grid-cols-7 h-full"
-            style={{
-              gridTemplateRows:
-                viewMode === 'monthly'
-                  ? `repeat(${days.length / 7}, 1fr)`
-                  : '1fr',
-            }}
+            key={`mobile-${currentDate.toISOString()}`}
+            className="sm:hidden flex-1 overflow-y-auto custom-scrollbar animate-in fade-in duration-300"
           >
-            {days.map((day, idx) => {
-              const isSelectedMonth = isSameMonth(day, currentDate);
+            {days.map((day) => {
               const today = isToday(day);
-              // 메모이제이션된 맵에서 일정 조회
               const dateKey = format(day, 'yyyy-MM-dd');
               const daySchedules = schedulesByDate.get(dateKey) || [];
+              const dayIdx = day.getDay();
+              const dayNameColor = dayIdx === 0 ? 'text-red-400' : dayIdx === 6 ? 'text-blue-400' : 'text-slate-400 dark:text-slate-500';
 
               return (
-                <div
-                  key={day.toString()}
-                  // 🌟 수정: 클릭 시 handleDayClick 실행
-                  onClick={() => handleDayClick(day)}
-                  className={`p-2 border-b border-r border-slate-100 dark:border-slate-800 relative group cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/80 transition-all duration-300 overflow-hidden ${!isSelectedMonth && viewMode === 'monthly' ? 'bg-slate-50/30 dark:bg-slate-950/60 opacity-50' : ''} ${idx % 7 === 6 ? 'border-r-0' : ''}`}
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <span
-                      className={`w-7 h-7 flex items-center justify-center text-[13px] font-bold rounded-full transition-colors duration-300 ${today ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'}`}
-                    >
+                <div key={day.toString()} className="border-b border-slate-100 dark:border-slate-800 last:border-b-0">
+                  {/* 날짜 행 */}
+                  <div
+                    onClick={() => handleDayClick(day)}
+                    className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                  >
+                    <span className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-black shrink-0 ${today ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 dark:text-slate-200'}`}>
                       {format(day, 'd')}
                     </span>
+                    <span className={`text-sm font-black ${dayNameColor}`}>
+                      {weekDays[dayIdx]}요일
+                    </span>
+                    {daySchedules.length > 0 && (
+                      <span className="ml-auto text-[11px] font-black text-slate-300 dark:text-slate-600">
+                        {daySchedules.length}개
+                      </span>
+                    )}
                   </div>
 
-                  <div className="flex flex-col gap-1 overflow-y-auto max-h-[calc(100%-35px)] custom-scrollbar">
-                    {daySchedules.map((schedule) => (
-                      <Link
-                        key={schedule.id}
-                        href={`/calendar/schedule/${schedule.id}`} // 🌟 주소 체계에 맞춰 수정
-                        scroll={false}
-                        className="block"
-                        // 🌟 중요: 개별 일정 클릭 시 '날짜 칸 클릭 이벤트'가 터지지 않게 방지
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div
-                          className={`px-2 py-1 text-[11px] font-bold rounded-md truncate border shadow-sm shrink-0 ${schedule.game ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-600'}`}
+                  {/* 일정 목록 */}
+                  {daySchedules.length > 0 && (
+                    <div className="px-4 pb-3 space-y-1.5">
+                      {daySchedules.map((schedule) => (
+                        <Link
+                          key={schedule.id}
+                          href={`/calendar/schedule/${schedule.id}`}
+                          scroll={false}
+                          onClick={(e) => e.stopPropagation()}
+                          className={`flex items-center gap-2.5 px-3 py-2.5 rounded-2xl border text-sm font-bold transition-all active:scale-95 ${schedule.game ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-100 dark:border-slate-700'}`}
                         >
-                          <span className="opacity-70 mr-1 font-semibold">
+                          <span className="text-xs opacity-60 shrink-0 font-semibold">
                             {format(new Date(schedule.startTime), 'HH:mm')}
                           </span>
-                          {schedule.title}
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
+                          <span className="truncate">{schedule.title}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
+        )}
+
+        {/* ── 데스크탑 그리드 / 모바일 월간 그리드 ── */}
+        <div className={`${viewMode === 'weekly' ? 'hidden sm:flex' : 'flex'} flex-col flex-1 overflow-hidden`}>
+          {/* 요일 헤더 */}
+          <div className="grid grid-cols-7 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/30 dark:bg-slate-800/60">
+            {weekDays.map((day, idx) => (
+              <div
+                key={day}
+                className={`py-3 text-center text-[13px] font-black tracking-wide ${idx === 0 ? 'text-red-400' : idx === 6 ? 'text-blue-400' : 'text-slate-400'}`}
+              >
+                {day}
+              </div>
+            ))}
+          </div>
+
+          <div
+            key={`${currentDate.toISOString()}-${viewMode}`}
+            className={`flex-1 overflow-y-auto custom-scrollbar animate-in fade-in duration-500 ease-out fill-mode-forwards ${slideDirection === 'left' ? 'slide-in-from-right-10' : 'slide-in-from-left-10'}`}
+          >
+            <div
+              className="grid grid-cols-7 h-full"
+              style={{
+                gridTemplateRows:
+                  viewMode === 'monthly'
+                    ? `repeat(${days.length / 7}, minmax(100px, 1fr))`
+                    : `repeat(1, 1fr)`,
+              }}
+            >
+              {days.map((day, idx) => {
+                const isSelectedMonth = isSameMonth(day, currentDate);
+                const today = isToday(day);
+                const dateKey = format(day, 'yyyy-MM-dd');
+                const daySchedules = schedulesByDate.get(dateKey) || [];
+
+                return (
+                  <div
+                    key={day.toString()}
+                    onClick={() => handleDayClick(day)}
+                    className={`p-2 border-b border-r border-slate-100 dark:border-slate-800 relative group cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/80 transition-all duration-300 overflow-hidden ${!isSelectedMonth && viewMode === 'monthly' ? 'bg-slate-50/30 dark:bg-slate-950/60 opacity-50' : ''} ${idx % 7 === 6 ? 'border-r-0' : ''}`}
+                  >
+                    <div className="flex justify-between items-start mb-1">
+                      <span
+                        className={`w-7 h-7 flex items-center justify-center text-[13px] font-bold rounded-full transition-colors duration-300 ${today ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'}`}
+                      >
+                        {format(day, 'd')}
+                      </span>
+                    </div>
+
+                    {/* 월간 모바일: 점 */}
+                    {daySchedules.length > 0 && (
+                      <div className="flex sm:hidden flex-col items-start gap-1 mt-0.5">
+                        <div className="flex flex-wrap gap-0.5">
+                          {daySchedules.slice(0, 3).map((schedule) => (
+                            <div
+                              key={schedule.id}
+                              className={`w-1.5 h-1.5 rounded-full ${schedule.game ? 'bg-amber-400' : 'bg-slate-400 dark:bg-slate-500'}`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">
+                          {daySchedules.length}개
+                        </span>
+                      </div>
+                    )}
+
+                    {/* 데스크탑: 텍스트 카드 */}
+                    <div className="hidden sm:flex flex-col gap-1 overflow-y-auto max-h-[calc(100%-35px)] custom-scrollbar">
+                      {daySchedules.map((schedule) => (
+                        <Link
+                          key={schedule.id}
+                          href={`/calendar/schedule/${schedule.id}`}
+                          scroll={false}
+                          className="block"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div
+                            className={`px-2 py-1 text-[11px] font-bold rounded-md truncate border shadow-sm shrink-0 ${schedule.game ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-600'}`}
+                          >
+                            <span className="opacity-70 mr-1 font-semibold">
+                              {format(new Date(schedule.startTime), 'HH:mm')}
+                            </span>
+                            {schedule.title}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </div>
+
+      </div> {/* 캘린더 본체 */}
 
       <AnimatePresence>
         {isFormOpen && (

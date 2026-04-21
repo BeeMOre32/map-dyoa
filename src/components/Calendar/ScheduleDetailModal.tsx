@@ -83,17 +83,17 @@ export default function ScheduleDetailView({
       animate="visible"
       exit="hidden"
       variants={backdropVariants}
-      className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md"
+      className="fixed inset-0 z-70 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md"
       onClick={handleClose}
     >
       <motion.div
         variants={smoothModalVariants}
-        className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 overflow-hidden flex flex-col max-h-[90vh] border border-slate-100 dark:border-slate-700"
+        className="bg-white dark:bg-slate-800 w-full sm:max-w-lg rounded-t-4xl sm:rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] border border-slate-100 dark:border-slate-700"
         onClick={(e) => e.stopPropagation()}
       >
         {isEditing ? (
           <div className="flex flex-col h-full overflow-hidden bg-white dark:bg-slate-800">
-            <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-700 flex justify-between items-center shrink-0 bg-slate-50/50 dark:bg-slate-700/30">
+            <div className="px-5 py-4 sm:px-8 sm:py-6 border-b border-slate-50 dark:border-slate-700 flex justify-between items-center shrink-0 bg-slate-50/50 dark:bg-slate-700/30">
               <button
                 onClick={() => setIsEditing(false)}
                 className="flex items-center gap-2 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-bold transition-colors group"
@@ -107,7 +107,7 @@ export default function ScheduleDetailView({
               <div className="w-10" />
             </div>
 
-            <div className="p-8 overflow-y-auto flex-1 custom-scrollbar">
+            <div className="p-5 sm:p-8 overflow-y-auto flex-1 custom-scrollbar">
               <CreateScheduleModal
                 initialData={schedule}
                 isEdit={true}
@@ -129,16 +129,16 @@ export default function ScheduleDetailView({
             >
               <button
                 onClick={() => router.back()}
-                className="absolute top-6 right-6 p-2.5 bg-black/10 hover:bg-black/25 text-white rounded-full backdrop-blur-md transition-all"
+                className="absolute top-1/2 -translate-y-1/2 right-4 p-2 sm:p-2.5 bg-black/10 hover:bg-black/25 text-white rounded-full backdrop-blur-md transition-all"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* 메인 컨텐츠 */}
-            <div className="p-8 space-y-8 overflow-y-auto flex-1 custom-scrollbar bg-white dark:bg-slate-800">
-              <div className="space-y-6">
-                <h2 className="text-3xl font-black text-slate-900 dark:text-white leading-tight">
+            <div className="p-5 sm:p-8 space-y-6 sm:space-y-8 overflow-y-auto flex-1 custom-scrollbar bg-white dark:bg-slate-800">
+              <div className="space-y-4 sm:space-y-6">
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight">
                   {schedule.title}
                 </h2>
 
@@ -234,14 +234,14 @@ export default function ScheduleDetailView({
                 <div className="flex gap-3 pt-4 border-t border-slate-50 dark:border-slate-700">
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="flex-1 flex items-center justify-center gap-2 py-4 bg-slate-900 dark:bg-indigo-600 text-white rounded-3xl font-black hover:bg-slate-800 dark:hover:bg-indigo-700 transition-all shadow-xl shadow-slate-200 dark:shadow-indigo-900/30 active:scale-95"
+                    className="flex-1 flex items-center justify-center gap-2 py-3.5 sm:py-4 bg-slate-900 dark:bg-indigo-600 text-white rounded-3xl font-black hover:bg-slate-800 dark:hover:bg-indigo-700 transition-all shadow-xl shadow-slate-200 dark:shadow-indigo-900/30 active:scale-95"
                   >
                     <Edit2 className="w-4 h-4" />
                     내용 수정하기
                   </button>
                   <button
                     onClick={handleDelete}
-                    className="p-4 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-3xl border border-red-100 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all active:scale-95"
+                    className="p-3.5 sm:p-4 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-3xl border border-red-100 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all active:scale-95"
                     title="삭제"
                   >
                     <Trash2 className="w-5 h-5" />
