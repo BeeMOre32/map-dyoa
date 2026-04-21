@@ -30,7 +30,7 @@ export default async function AdminFeedbackPage() {
             </p>
           </div>
         ) : (
-          feedbacks.map((item) => (
+          feedbacks.map((item: (typeof feedbacks)[number]) => (
             <div
               key={item.id}
               className="bg-white dark:bg-slate-800 rounded-4xl border border-slate-100 dark:border-slate-700 p-8 shadow-sm hover:shadow-md dark:hover:shadow-slate-900/50 transition-shadow flex flex-col md:flex-row gap-6 items-start"
