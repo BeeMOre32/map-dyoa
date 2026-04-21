@@ -32,15 +32,15 @@ export default function Header() {
   return (
     <header className="py-3 px-6 md:px-8 border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md flex justify-between items-center shrink-0 sticky top-0 z-40 transition-all duration-500">
       {/* 🚀 로고 영역 */}
-      <Link href="/" className="flex items-center gap-3 group">
-        <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:rotate-6 transition-all duration-300">
-          <Map className="w-6 h-6 text-white" />
+      <Link href="/" className="flex items-center gap-2.5 group">
+        <div className="w-9 h-9 sm:w-10 sm:h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:rotate-6 transition-all duration-300">
+          <Map className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
         </div>
         <div className="flex flex-col">
-          <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
+          <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
             Map-Dyoa
           </h1>
-          <span className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 mt-0.5 tracking-wider uppercase">
+          <span className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 mt-0.5 tracking-wider uppercase hidden sm:block">
             Management
           </span>
         </div>
@@ -52,16 +52,16 @@ export default function Header() {
       </div>
 
       {/* 🚀 우측 영역 */}
-      <div className="flex items-center gap-3 md:gap-5">
+      <div className="flex items-center gap-2 md:gap-5">
         <p className="text-sm text-slate-400 dark:text-slate-500 font-black hidden lg:block italic">
           "우왕 나도 지도동 됴아행"
         </p>
 
-        <div className="flex items-center gap-2">
-          {/* 🌟 다크모드 전환 버튼 (둥글게 + 애니메이션) */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* 🌟 다크모드 전환 버튼 */}
           <button
             onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-            className="relative p-3 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm overflow-hidden group"
+            className="relative p-2 sm:p-3 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm overflow-hidden group"
           >
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
@@ -72,9 +72,9 @@ export default function Header() {
                 transition={{ duration: 0.3, ease: 'backOut' }}
               >
                 {resolvedTheme === 'dark' ? (
-                  <Sun className="w-5 h-5 text-amber-400 fill-amber-400" />
+                  <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 fill-amber-400" />
                 ) : (
-                  <Moon className="w-5 h-5 text-indigo-500 fill-indigo-500" />
+                  <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 fill-indigo-500" />
                 )}
               </motion.div>
             </AnimatePresence>
@@ -82,33 +82,33 @@ export default function Header() {
 
           <Link
             href="/help"
-            className="p-3 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm hover:shadow-md group"
+            className="hidden sm:flex p-2 sm:p-3 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm hover:shadow-md group"
             title="도움말"
           >
-            <FileQuestionMark className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            <FileQuestionMark className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
           </Link>
 
           {session ? (
-            <div className="flex items-center gap-2 md:gap-3">
-              <div className="hidden md:flex items-center gap-1.5 px-4 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-2xl border border-emerald-100 dark:border-emerald-800 text-[10px] font-black uppercase">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-2xl border border-emerald-100 dark:border-emerald-800 text-[10px] font-black uppercase">
                 <UserCheck className="w-3 h-3" /> Admin
               </div>
 
               <button
                 onClick={() => signOut()}
-                className="p-3 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-white dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm hover:shadow-md group"
+                className="p-2 sm:p-3 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-white dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm hover:shadow-md group"
                 title="로그아웃"
               >
-                <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <LogOut className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
               </button>
             </div>
           ) : (
             <Link
               href="/login"
-              className="p-3 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm hover:shadow-md group"
+              className="p-2 sm:p-3 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm hover:shadow-md group"
               title="관리자 로그인"
             >
-              <LogIn className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              <LogIn className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
             </Link>
           )}
         </div>

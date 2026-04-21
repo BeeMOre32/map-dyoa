@@ -21,7 +21,7 @@ export default function Navigation() {
   if (isModalOpen) return null;
 
   return (
-    <nav className="flex justify-center py-6 shrink-0 bg-white dark:bg-slate-950 transition-colors z-30">
+    <nav className="flex justify-center py-0 shrink-0 transition-colors z-30">
       <div className="rounded-xl flex bg-slate-100 dark:bg-slate-900 p-1.5 border-2 border-slate-200 dark:border-slate-800 relative shadow-inner">
         {tabs.map((tab) => {
           const isActive = pathname.startsWith(tab.href);
@@ -30,7 +30,7 @@ export default function Navigation() {
             <Link
               key={tab.id}
               href={tab.href}
-              className={`relative flex items-center gap-2 px-8 py-2.5 rounded-2xl text-sm font-black transition-all z-10 ${
+              className={`relative flex items-center gap-1.5 px-3 py-2 sm:px-6 sm:py-2.5 md:px-8 rounded-2xl text-sm font-black transition-all z-10 ${
                 isActive
                   ? 'text-indigo-600 dark:text-indigo-400'
                   : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
@@ -45,7 +45,7 @@ export default function Navigation() {
               )}
 
               <tab.icon className="w-4 h-4 z-20" />
-              <span className="z-20">{tab.label}</span>
+              <span className="z-20 hidden sm:inline">{tab.label}</span>
             </Link>
           );
         })}

@@ -23,6 +23,7 @@ export async function createScheduleAction(data: {
   startTime: Date;
   streamerIds: string[];
   gameId?: string;
+  liveUrl?: string;
 }): Promise<ActionResult<{ id: string }>> {
   try {
     await requireAuth();
@@ -47,7 +48,8 @@ export async function createScheduleAction(data: {
             streamer: { connect: { id } },
           })),
         },
-        gameId: data.gameId || null,
+        ...(data.gameId ? { game: { connect: { id: data.gameId } } } : {}),
+        liveUrl: data.liveUrl?.trim() || null,
       },
     });
 
@@ -102,6 +104,7 @@ export async function updateScheduleAction(
     startTime: Date;
     streamerIds: string[];
     gameId?: string;
+    liveUrl?: string;
   },
 ): Promise<ActionResult> {
   try {
@@ -125,7 +128,8 @@ export async function updateScheduleAction(
       data: {
         title: data.title.trim(),
         startTime: new Date(data.startTime),
-        gameId: data.gameId || null,
+        game: data.gameId ? { connect: { id: data.gameId } } : { disconnect: true },
+        liveUrl: data.liveUrl?.trim() || null,
         participants: {
           deleteMany: {},
           create: data.streamerIds.map((streamerId) => ({

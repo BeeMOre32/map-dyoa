@@ -33,6 +33,7 @@ model Schedule {
   startTime   DateTime
   endTime     DateTime?
   isGuerrilla Boolean   @default(false)
+  liveUrl     String?
 
   participants ScheduleParticipant[]
   createdAt    DateTime              @default(now())

@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { X, Calendar as CalendarIcon, AlertCircle } from 'lucide-react';
+import { X, Calendar as CalendarIcon, AlertCircle, Link as LinkIcon } from 'lucide-react';
 import { createScheduleAction, updateScheduleAction } from '@/app/actions';
 import { motion } from 'framer-motion';
 import { z } from 'zod';
@@ -18,9 +18,11 @@ const scheduleSchema = z.object({
   title: z.string().min(1, '방송 제목을 입력해주세요.'),
   startTime: z.string().min(1, '시작 시간을 선택해주세요.'),
   streamerIds: z.array(z.string()).min(1, '참여 멤버를 최소 1명 이상 선택해주세요.'),
+  liveUrl: z.string().url('올바른 URL 형식이 아닙니다.').optional().or(z.literal('')),
 });
 
 type ScheduleErrors = Partial<Record<keyof z.infer<typeof scheduleSchema> | 'submit', string>>;
+
 
 type CreateScheduleModalProps = ModalProps & {
   streamers: Streamer[];
@@ -50,6 +52,7 @@ export default function ScheduleFormModal({
   const [selectedStreamers, setSelectedStreamers] = useState<string[]>(
     initialData?.participants?.map((p) => p.id) || [],
   );
+  const [liveUrl, setLiveUrl] = useState(initialData?.liveUrl || '');
   const [errors, setErrors] = useState<ScheduleErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -69,7 +72,7 @@ export default function ScheduleFormModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const parsed = scheduleSchema.safeParse({ title, startTime, streamerIds: selectedStreamers });
+    const parsed = scheduleSchema.safeParse({ title, startTime, streamerIds: selectedStreamers, liveUrl: liveUrl || undefined });
     if (!parsed.success) {
       const fieldErrors: ScheduleErrors = {};
       for (const issue of parsed.error.issues) {
@@ -87,6 +90,7 @@ export default function ScheduleFormModal({
       startTime: new Date(startTime),
       streamerIds: selectedStreamers,
       gameId: selectedGameId === '' ? undefined : selectedGameId,
+      liveUrl: liveUrl.trim() || undefined,
     };
 
     const result = isEdit
@@ -104,6 +108,7 @@ export default function ScheduleFormModal({
           content: null,
           gameId: selectedGameId || null,
           isGuerrilla: false,
+          liveUrl: liveUrl.trim() || null,
           startTime: startDate,
           endTime: null,
           createdAt: new Date(),
@@ -222,6 +227,33 @@ export default function ScheduleFormModal({
               <p className="mt-1.5 flex items-center gap-1 text-xs font-bold text-red-500">
                 <AlertCircle className="w-3 h-3 shrink-0" />
                 {errors.startTime}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
+              방송 링크 (선택)
+            </label>
+            <div className="relative">
+              <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="url"
+                value={liveUrl}
+                onChange={(e) => {
+                  setLiveUrl(e.target.value);
+                  if (errors.liveUrl) setErrors((er) => ({ ...er, liveUrl: undefined }));
+                }}
+                placeholder="https://chzzk.naver.com/... 또는 YouTube URL"
+                className={`w-full pl-9 pr-3 py-3 bg-slate-50 dark:bg-slate-700 border rounded-xl font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all ${
+                  errors.liveUrl ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-slate-600'
+                }`}
+              />
+            </div>
+            {errors.liveUrl && (
+              <p className="mt-1.5 flex items-center gap-1 text-xs font-bold text-red-500">
+                <AlertCircle className="w-3 h-3 shrink-0" />
+                {errors.liveUrl}
               </p>
             )}
           </div>
