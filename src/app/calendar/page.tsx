@@ -4,6 +4,7 @@ import CalendarView from '@/components/Calendar/CalendarView';
 
 export default async function CalendarPage() {
   // 캐싱된 데이터 페칭
+  //test
   const { schedules, streamers, games } = await getCalendarData();
 
   return (
