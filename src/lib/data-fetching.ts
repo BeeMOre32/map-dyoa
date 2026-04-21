@@ -6,6 +6,7 @@
 import { prisma } from '@/lib/prisma';
 import { unstable_cache } from 'next/cache';
 import { flattenSchedules } from './schedule-formatters';
+import type { Streamer } from '@prisma/client';
 
 /**
  * 캘린더 데이터 가져오기 (캐싱 적용)
@@ -45,7 +46,7 @@ export const getCalendarData = unstable_cache(
  * 모든 스트리머 가져오기 (캐싱 적용)
  */
 export const getAllStreamers = unstable_cache(
-  async () => {
+  async (): Promise<Streamer[]> => {
     return prisma.streamer.findMany({
       orderBy: { name: 'asc' },
     });

@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(node -e \"const tw = require\\('./node_modules/tailwindcss/package.json'\\); console.log\\(tw.version\\)\")",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(npx prisma *)"
     ]
   }
 }
