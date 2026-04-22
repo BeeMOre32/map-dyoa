@@ -168,9 +168,9 @@ export default function ScheduleDetailView({
                   {/* 시간 */}
                   <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 font-bold text-sm border border-slate-100 dark:border-slate-600">
                     <Clock className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-                    {format(new Date(schedule.startTime), 'a h:mm', {
-                      locale: ko,
-                    })}
+                    {schedule.isGuerrilla
+                      ? '시간 미정'
+                      : format(new Date(schedule.startTime), 'a h:mm', { locale: ko })}
                   </div>
                 </div>
               </div>

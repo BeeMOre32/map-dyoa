@@ -54,6 +54,7 @@ export default function ScheduleFormModal({
     initialData?.participants?.map((p) => p.id) || [],
   );
   const [liveUrl, setLiveUrl] = useState(initialData?.liveUrl || '');
+  const [isTimeTBD, setIsTimeTBD] = useState(initialData?.isGuerrilla || false);
   const [errors, setErrors] = useState<ScheduleErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -88,12 +89,17 @@ export default function ScheduleFormModal({
     setErrors({});
     setIsSubmitting(true);
 
+    const resolvedStartTime = isTimeTBD
+      ? new Date(startTime.split('T')[0] + 'T00:00')
+      : new Date(startTime);
+
     const payload = {
       title,
-      startTime: new Date(startTime),
+      startTime: resolvedStartTime,
       streamerIds: selectedStreamers,
       gameId: selectedGameId === '' ? undefined : selectedGameId,
       liveUrl: liveUrl.trim() || undefined,
+      isGuerrilla: isTimeTBD,
     };
 
     const result = isEdit
@@ -110,7 +116,7 @@ export default function ScheduleFormModal({
           title,
           content: null,
           gameId: selectedGameId || null,
-          isGuerrilla: false,
+          isGuerrilla: isTimeTBD,
           liveUrl: liveUrl.trim() || null,
           startTime: startDate,
           endTime: null,
@@ -212,12 +218,23 @@ export default function ScheduleFormModal({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
-              시작 시간
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+                시작 시간
+              </label>
+              <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={isTimeTBD}
+                  onChange={(e) => setIsTimeTBD(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded accent-indigo-600"
+                />
+                <span className="text-xs font-bold text-slate-400 dark:text-slate-500">시간 미정</span>
+              </label>
+            </div>
             <input
-              type="datetime-local"
-              value={startTime}
+              type={isTimeTBD ? 'date' : 'datetime-local'}
+              value={isTimeTBD ? startTime.split('T')[0] : startTime}
               onChange={(e) => {
                 setStartTime(e.target.value);
                 if (errors.startTime) setErrors((er) => ({ ...er, startTime: undefined }));

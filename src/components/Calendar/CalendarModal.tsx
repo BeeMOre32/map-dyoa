@@ -224,9 +224,9 @@ export default function ScheduleModal({
                         <div className="flex flex-wrap gap-3 items-center text-sm">
                           <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-bold bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700">
                             <Clock className="w-4 h-4 text-indigo-400" />
-                            {format(new Date(schedule.startTime), 'a h:mm', {
-                              locale: ko,
-                            })}
+                            {schedule.isGuerrilla
+                              ? '시간 미정'
+                              : format(new Date(schedule.startTime), 'a h:mm', { locale: ko })}
                           </div>
                           <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-bold bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700">
                             <Users className="w-4 h-4 text-emerald-400" />

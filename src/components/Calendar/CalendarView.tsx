@@ -244,7 +244,7 @@ export default function CalendarView({
                           className={`flex items-center gap-2.5 px-3 py-2.5 rounded-2xl border text-sm font-bold transition-all active:scale-95 ${schedule.game ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-100 dark:border-slate-700'}`}
                         >
                           <span className="text-xs opacity-60 shrink-0 font-semibold">
-                            {format(new Date(schedule.startTime), 'HH:mm')}
+                            {schedule.isGuerrilla ? '미정' : format(new Date(schedule.startTime), 'HH:mm')}
                           </span>
                           <span className="truncate">{schedule.title}</span>
                         </Link>
@@ -345,23 +345,25 @@ export default function CalendarView({
                                   </span>
                                 )}
                                 {schedule.isGuerrilla && (
-                                  <span className="inline-flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 shrink-0">
+                                  <span className="inline-flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 shrink-0">
                                     <Zap className="w-3 h-3" />
-                                    게릴라
+                                    시간 미정
                                   </span>
                                 )}
                               </div>
 
                               {/* 시간 */}
-                              <div className="flex items-center gap-1 text-[13px] font-semibold text-slate-400 dark:text-slate-500">
-                                <Clock className="w-3 h-3 shrink-0" />
-                                {format(new Date(schedule.startTime), 'HH:mm')}
-                                {schedule.endTime && (
-                                  <span className="opacity-70">
-                                    → {format(new Date(schedule.endTime), 'HH:mm')}
-                                  </span>
-                                )}
-                              </div>
+                              {!schedule.isGuerrilla && (
+                                <div className="flex items-center gap-1 text-[13px] font-semibold text-slate-400 dark:text-slate-500">
+                                  <Clock className="w-3 h-3 shrink-0" />
+                                  {format(new Date(schedule.startTime), 'HH:mm')}
+                                  {schedule.endTime && (
+                                    <span className="opacity-70">
+                                      → {format(new Date(schedule.endTime), 'HH:mm')}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
 
                               {/* 제목 */}
                               <p className={`text-sm font-bold line-clamp-2 leading-snug ${schedule.game ? 'text-amber-800 dark:text-amber-300' : 'text-slate-700 dark:text-slate-200'}`}>
