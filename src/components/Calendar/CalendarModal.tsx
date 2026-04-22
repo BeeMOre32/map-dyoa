@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { motion } from 'framer-motion';
 import {
   X,
@@ -59,6 +60,8 @@ export default function ScheduleModal({
       router.push('/calendar');
     }
   };
+
+  useEscapeKey(handleClose);
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.preventDefault();

@@ -11,12 +11,15 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 import StreamerAvatar from './StreamerAvatar';
 import { getStreamerImagePath } from '@/lib/utils';
 
 export default function StreamerDetailModal({ streamer }: any) {
   const router = useRouter();
   const imgSrc = getStreamerImagePath(streamer.name);
+
+  useEscapeKey(() => router.back());
 
   return (
     <motion.div

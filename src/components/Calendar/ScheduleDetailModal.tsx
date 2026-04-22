@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { motion } from 'framer-motion';
 import {
   X,
@@ -51,6 +52,8 @@ export default function ScheduleDetailView({
       router.back();
     }
   };
+
+  useEscapeKey(handleClose);
 
   const handleDelete = async () => {
     if (confirm('정말로 이 일정을 삭제하시겠습니까?')) {

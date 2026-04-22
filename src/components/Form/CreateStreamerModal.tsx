@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { X, UserPlus, Check, Palette, AlertCircle } from 'lucide-react';
 import { z } from 'zod';
 import { createStreamerAction } from '@/app/actions';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 const streamerSchema = z.object({
   name: z.string().min(1, '이름을 입력해주세요.'),
@@ -41,6 +42,8 @@ export default function CreateStreamerModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [chzzkUrl, setChzzkUrl] = useState('');
   const [errors, setErrors] = useState<StreamerErrors>({});
+
+  useEscapeKey(onClose);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

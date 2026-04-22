@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { X, Calendar as CalendarIcon, AlertCircle, Link as LinkIcon } from 'lucide-react';
 import { createScheduleAction, updateScheduleAction } from '@/app/actions';
 import { motion } from 'framer-motion';
@@ -57,6 +58,8 @@ export default function ScheduleFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEscapeKey(onClose);
 
   const sortedStreamers = [...streamers].sort((a, b) =>
     a.name.localeCompare(b.name, 'ko-KR'),
