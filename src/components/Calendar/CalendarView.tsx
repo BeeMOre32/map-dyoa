@@ -26,7 +26,6 @@ import {
   Clock,
   Gamepad2,
   Zap,
-  Radio,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -349,12 +348,6 @@ export default function CalendarView({
                                   <span className="inline-flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 shrink-0">
                                     <Zap className="w-3 h-3" />
                                     게릴라
-                                  </span>
-                                )}
-                                {schedule.liveUrl && (
-                                  <span className="ml-auto inline-flex items-center gap-0.5 text-[12px] font-bold text-indigo-400 dark:text-indigo-500 shrink-0">
-                                    <Radio className="w-3 h-3" />
-                                    LIVE
                                   </span>
                                 )}
                               </div>
