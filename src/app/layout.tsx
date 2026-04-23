@@ -3,6 +3,7 @@ import './globals.css';
 import { Inter } from 'next/font/google';
 import AuthProvider from '@/providers/AuthProvider';
 import Header from '@/components/Layout/Header';
+import HelpToast from '@/components/Common/HelpToast';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ThemeProvider } from '@/providers/ThemeProvider';
@@ -31,6 +32,7 @@ export default function RootLayout({
               <div className="flex-1 flex flex-col overflow-hidden">
                 {children}
               </div>
+              <HelpToast />
             </main>
           </AuthProvider>
         </ThemeProvider>

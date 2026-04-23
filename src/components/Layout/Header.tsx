@@ -82,10 +82,11 @@ export default function Header() {
 
           <Link
             href="/help"
-            className="hidden sm:flex p-2 sm:p-3 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm hover:shadow-md group"
-            title="도움말"
+            className="flex items-center gap-1.5 px-2.5 py-2 sm:px-3 sm:py-3 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm hover:shadow-md group"
+            title="이용 가이드"
           >
             <FileQuestionMark className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-black hidden md:inline">도움말</span>
           </Link>
 
           {session ? (
