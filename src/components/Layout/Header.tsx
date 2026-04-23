@@ -53,9 +53,20 @@ export default function Header() {
 
       {/* 🚀 우측 영역 */}
       <div className="flex items-center gap-2 md:gap-5">
-        <p className="text-sm text-slate-400 dark:text-slate-500 font-black hidden lg:block italic">
-          "우왕 나도 지도동 됴아행"
-        </p>
+        <motion.p
+          className="text-sm font-black hidden lg:block select-none"
+          style={{
+            background: 'linear-gradient(90deg, #94a3b8, #818cf8, #a78bfa, #818cf8, #94a3b8)',
+            backgroundSize: '300% auto',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}
+          animate={{ backgroundPosition: ['0% center', '100% center', '0% center'] }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+        >
+          &ldquo;우왕 나도 지도동 됴아행&rdquo;
+        </motion.p>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* 🌟 다크모드 전환 버튼 */}
