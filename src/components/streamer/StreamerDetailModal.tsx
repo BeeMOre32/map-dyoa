@@ -10,14 +10,18 @@ import {
   Gamepad2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import StreamerAvatar from './StreamerAvatar';
 import { getStreamerImagePath } from '@/lib/utils';
+import { getStreamerColor } from '@/constants/streamercolor';
 
 export default function StreamerDetailModal({ streamer }: any) {
   const router = useRouter();
   const imgSrc = getStreamerImagePath(streamer.name);
+  const { resolvedTheme } = useTheme();
+  const streamerColor = getStreamerColor(streamer.id, resolvedTheme === 'dark') ?? streamer.colorCode;
 
   useEscapeKey(() => router.back());
 
@@ -72,7 +76,7 @@ export default function StreamerDetailModal({ streamer }: any) {
             <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-2">
               <span
                 className="w-1.5 h-1.5 rounded-full"
-                style={{ backgroundColor: streamer.colorCode }}
+                style={{ backgroundColor: streamerColor }}
               ></span>
               스트리머 소개
             </h4>
@@ -86,7 +90,7 @@ export default function StreamerDetailModal({ streamer }: any) {
             <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-2">
               <span
                 className="w-1.5 h-1.5 rounded-full"
-                style={{ backgroundColor: streamer.colorCode }}
+                style={{ backgroundColor: streamerColor }}
               ></span>
               최근 플레이한 게임
             </h4>

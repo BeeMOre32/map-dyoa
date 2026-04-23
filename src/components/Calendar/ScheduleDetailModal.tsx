@@ -20,10 +20,12 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { useTheme } from 'next-themes';
 import { deleteScheduleAction } from '@/app/actions';
 import CreateScheduleModal from '../Form/CreateScheduleModal';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
-import { GAME_COLORS } from '@/constants/gamecolor';
+import { getGameColor } from '@/constants/gamecolor';
+import { getStreamerColor } from '@/constants/streamercolor';
 import Link from 'next/link';
 import type { Streamer, Game } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
@@ -44,6 +46,7 @@ export default function ScheduleDetailView({
 
   const [isEditing, setIsEditing] = useState(false);
   const isUser = !!session;
+  const { resolvedTheme } = useTheme();
 
   const handleClose = () => {
     if (isEditing) {
@@ -65,10 +68,9 @@ export default function ScheduleDetailView({
     }
   };
 
-  const gameColor =
-    (schedule.game?.id ? GAME_COLORS[schedule.game.id] : undefined) ??
-    GAME_COLORS['default'] ??
-    '#4f46e5';
+  const gameColor = schedule.game?.id
+    ? (getGameColor(schedule.game.id, resolvedTheme === 'dark') ?? '#4f46e5')
+    : '#4f46e5';
 
   const getLinkMeta = (url: string) => {
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
@@ -190,11 +192,11 @@ export default function ScheduleDetailView({
                       href={`/streamers/detail/${p.id}`}
                       key={p.id}
                       className="px-4 py-2.5 rounded-2xl border font-bold text-sm shadow-sm transition-all hover:scale-105"
-                      style={{
-                        backgroundColor: `${p.colorCode}08`,
-                        color: p.colorCode,
-                        borderColor: `${p.colorCode}25`,
-                      }}
+                      style={((c) => ({
+                        backgroundColor: `${c}08`,
+                        color: c,
+                        borderColor: `${c}25`,
+                      }))(getStreamerColor(p.id, resolvedTheme === 'dark') ?? p.colorCode)}
                     >
                       {p.name}
                     </Link>

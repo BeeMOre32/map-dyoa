@@ -2,9 +2,11 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from 'next-themes';
 import { Streamer } from '@prisma/client';
 import StreamerAvatar from '@/components/streamer/StreamerAvatar';
-import { getStreamerImagePath } from '@/lib/utils';
+import { getStreamerImagePath, getChosung } from '@/lib/utils';
+import { getStreamerColor } from '@/constants/streamercolor';
 
 interface StreamerSelectorProps {
   streamers: Streamer[];
@@ -18,10 +20,17 @@ export default function StreamerSelector({
   toggleStreamer,
 }: StreamerSelectorProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const { resolvedTheme } = useTheme();
 
   const filteredStreamers = useMemo(() => {
+    const term = searchTerm.trim();
     return [...streamers]
-      .filter((s) => s.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      .filter((s) => {
+        if (!term) return true;
+        const name = s.name.toLowerCase();
+        const lower = term.toLowerCase();
+        return name.includes(lower) || getChosung(s.name).includes(term);
+      })
       .sort((a, b) => a.name.localeCompare(b.name, 'ko'));
   }, [streamers, searchTerm]);
 
@@ -50,6 +59,7 @@ export default function StreamerSelector({
           <AnimatePresence mode="popLayout">
             {filteredStreamers.map((streamer) => {
               const isSelected = selectedStreamers.includes(streamer.id);
+              const streamerColor = getStreamerColor(streamer.id, resolvedTheme === 'dark') ?? streamer.colorCode;
 
               return (
                 <motion.div
@@ -74,7 +84,7 @@ export default function StreamerSelector({
                       style={
                         isSelected
                           ? {
-                              outline: `2.5px solid ${streamer.colorCode}`,
+                              outline: `2.5px solid ${streamerColor}`,
                               outlineOffset: '3px',
                             }
                           : undefined
@@ -83,7 +93,8 @@ export default function StreamerSelector({
                       <StreamerAvatar
                         name={streamer.name}
                         imgSrc={getStreamerImagePath(streamer.name)}
-                        colorCode={streamer.colorCode}
+                        colorCode={streamerColor}
+                        streamerId={streamer.id}
                         size="medium"
                       />
                     </div>
@@ -96,7 +107,7 @@ export default function StreamerSelector({
                           : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'
                       }`}
                       style={{
-                        color: isSelected ? streamer.colorCode : undefined,
+                        color: isSelected ? streamerColor : undefined,
                       }}
                     >
                       {streamer.name}

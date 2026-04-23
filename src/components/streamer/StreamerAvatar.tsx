@@ -2,11 +2,14 @@
 
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
+import { getStreamerColor } from '@/constants/streamercolor';
 
 interface StreamerAvatarProps {
   name: string;
-  imgSrc?: string | null; // null도 허용하도록 타입 확장
+  imgSrc?: string | null;
   colorCode: string;
+  streamerId?: string;
   size: 'small' | 'medium' | 'large';
 }
 
@@ -14,9 +17,13 @@ export default function StreamerAvatar({
   name,
   imgSrc,
   colorCode,
+  streamerId,
   size,
 }: StreamerAvatarProps) {
   const [imgError, setImgError] = useState(false);
+  const { resolvedTheme } = useTheme();
+  const resolvedColor =
+    (streamerId ? getStreamerColor(streamerId, resolvedTheme === 'dark') : null) ?? colorCode;
 
   useEffect(() => {
     setImgError(false);
@@ -32,10 +39,10 @@ export default function StreamerAvatar({
   if (shouldShowFallback) {
     return (
       <div
-        className={`${sizeClasses[size]}  rounded-2xl flex items-center justify-center font-black text-xl shadow-sm transition-transform group-hover:scale-110 duration-300 shrink-0`}
+        className={`${sizeClasses[size]} rounded-2xl flex items-center justify-center font-black text-xl shadow-sm transition-transform group-hover:scale-110 duration-300 shrink-0`}
         style={{
-          backgroundColor: `${colorCode}20`,
-          color: colorCode,
+          backgroundColor: `${resolvedColor}20`,
+          color: resolvedColor,
         }}
       >
         {name.substring(0, 2)}
@@ -50,9 +57,9 @@ export default function StreamerAvatar({
       <Image
         src={imgSrc}
         alt={name}
-        fill // 부모 컨테이너 크기에 맞춤
+        fill
         className="object-cover"
-        onError={() => setImgError(true)} // 🌟 실제 파일이 404 나면 텍스트 아바타로 전환
+        onError={() => setImgError(true)}
       />
     </div>
   );

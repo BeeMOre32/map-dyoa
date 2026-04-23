@@ -3,7 +3,9 @@
 import { MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { Streamer } from '@prisma/client';
+import { useTheme } from 'next-themes';
 import { getStreamerImagePath } from '@/lib/utils';
+import { getStreamerColor } from '@/constants/streamercolor';
 import StreamerAvatar from './StreamerAvatar';
 
 interface StreamerCardProps {
@@ -16,6 +18,8 @@ export default function StreamerCard({
   onRequestEdit,
 }: StreamerCardProps) {
   const imgSrc = getStreamerImagePath(streamer.name);
+  const { resolvedTheme } = useTheme();
+  const streamerColor = getStreamerColor(streamer.id, resolvedTheme === 'dark') ?? streamer.colorCode;
 
   return (
     <Link
@@ -28,7 +32,8 @@ export default function StreamerCard({
         <StreamerAvatar
           name={streamer.name}
           imgSrc={imgSrc}
-          colorCode={streamer.colorCode}
+          colorCode={streamerColor}
+          streamerId={streamer.id}
           size="medium"
         />
         <button
@@ -63,7 +68,7 @@ export default function StreamerCard({
         )}
         <span
           className="px-2.5 py-1 text-white rounded-xl text-[10px] font-black ml-auto shadow-sm"
-          style={{ backgroundColor: streamer.colorCode }}
+          style={{ backgroundColor: streamerColor }}
         >
           {streamer.platform || 'CHZZK'}
         </span>

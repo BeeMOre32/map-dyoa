@@ -5,8 +5,10 @@ import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { X, Send, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
 import { z } from 'zod';
+import { useTheme } from 'next-themes';
 import { createFeedbackAction } from '@/app/actions';
 import { backdropVariants, defaultModalVariants } from '@/lib/modalVariants';
+import { getStreamerColor } from '@/constants/streamercolor';
 import type { Streamer } from '@prisma/client';
 
 const feedbackSchema = z.object({
@@ -22,6 +24,8 @@ export default function RequestEditModal({
   streamer,
   onClose,
 }: RequestEditModalProps) {
+  const { resolvedTheme } = useTheme();
+  const streamerColor = getStreamerColor(streamer.id, resolvedTheme === 'dark') ?? streamer.colorCode;
   const [category, setCategory] = useState('잘못된 핸들/닉네임');
   const [content, setContent] = useState('');
   const [isPending, setIsPending] = useState(false);
@@ -85,7 +89,7 @@ export default function RequestEditModal({
                 정보 수정 요청
               </h3>
               <p className="text-sm text-slate-400 dark:text-slate-500 font-bold mt-1">
-                <span style={{ color: streamer.colorCode }}>
+                <span style={{ color: streamerColor }}>
                   {streamer.name}
                 </span>{' '}
                 님의 정보를 바로잡아주세요.

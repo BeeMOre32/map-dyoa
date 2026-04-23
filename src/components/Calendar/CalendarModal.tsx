@@ -24,7 +24,9 @@ import CreateScheduleModal from '../Form/CreateScheduleModal';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { CalendarModalProps } from '@/types/props';
 import { useScheduleModal } from '@/hooks/useScheduleModal';
-import { GAME_COLORS } from '@/constants/gamecolor';
+import { getGameColor } from '@/constants/gamecolor';
+import { getStreamerColor } from '@/constants/streamercolor';
+import { useTheme } from 'next-themes';
 import { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { Streamer } from '@prisma/client';
 
@@ -38,6 +40,7 @@ export default function ScheduleModal({
   const router = useRouter();
   const { data: session } = useSession();
   const { editingSchedule, toggleEditMode, exitEditMode } = useScheduleModal();
+  const { resolvedTheme } = useTheme();
   const [permissionError, setPermissionError] = useState<string | null>(null);
 
   const isAdmin = session;
@@ -180,8 +183,7 @@ export default function ScheduleModal({
                               className="text-xs font-black uppercase tracking-tight truncate"
                               style={{
                                 color:
-                                  GAME_COLORS[schedule.game.id] ||
-                                  GAME_COLORS['default'],
+                                  getGameColor(schedule.game.id, resolvedTheme === 'dark') ?? undefined,
                               }}
                             >
                               {schedule.game.title}
@@ -239,11 +241,11 @@ export default function ScheduleModal({
                             <span
                               key={participant.id}
                               className="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all shadow-sm"
-                              style={{
-                                backgroundColor: `${participant.colorCode}15`,
-                                color: participant.colorCode,
-                                borderColor: `${participant.colorCode}30`,
-                              }}
+                              style={((c) => ({
+                                backgroundColor: `${c}15`,
+                                color: c,
+                                borderColor: `${c}30`,
+                              }))(getStreamerColor(participant.id, resolvedTheme === 'dark') ?? participant.colorCode)}
                             >
                               {participant.name}
                             </span>
