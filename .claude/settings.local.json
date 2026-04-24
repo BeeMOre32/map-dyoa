@@ -4,7 +4,8 @@
       "Bash(node -e \"const tw = require\\('./node_modules/tailwindcss/package.json'\\); console.log\\(tw.version\\)\")",
       "Bash(git add *)",
       "Bash(npx prisma *)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "WebFetch(domain:chzzk.gitbook.io)"
     ]
   }
 }

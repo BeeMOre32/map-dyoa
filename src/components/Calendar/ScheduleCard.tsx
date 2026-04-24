@@ -1,6 +1,6 @@
 'use client';
 
-import { format } from 'date-fns';
+import { format, isToday } from 'date-fns';
 import Link from 'next/link';
 import { Clock, Gamepad2, Zap } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -8,15 +8,32 @@ import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
 
+function LiveBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 shrink-0">
+      <span className="relative flex w-1.5 h-1.5">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+        <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-red-500" />
+      </span>
+      <span className="text-[9px] font-black text-red-500 uppercase tracking-wide">live</span>
+    </span>
+  );
+}
+
 interface ScheduleCardProps {
   schedule: FlattenedSchedule;
   variant: 'weekly' | 'monthly' | 'mobile';
+  liveStreamerIds?: Set<string>;
 }
 
-export default function ScheduleCard({ schedule, variant }: ScheduleCardProps) {
+export default function ScheduleCard({ schedule, variant, liveStreamerIds }: ScheduleCardProps) {
   const href = `/calendar/schedule/${schedule.id}`;
   const stopProp = (e: React.MouseEvent) => e.stopPropagation();
   const { resolvedTheme } = useTheme();
+  const isLive =
+    liveStreamerIds !== undefined &&
+    isToday(new Date(schedule.startTime)) &&
+    schedule.participants.some((p) => liveStreamerIds.has(p.id));
   const gameColor = schedule.game
     ? getGameColor(schedule.game.id, resolvedTheme === 'dark')
     : null;
@@ -44,6 +61,7 @@ export default function ScheduleCard({ schedule, variant }: ScheduleCardProps) {
           {schedule.isGuerrilla ? '미정' : format(new Date(schedule.startTime), 'HH:mm')}
         </span>
         <span className="truncate">{schedule.title}</span>
+        {isLive && <LiveBadge />}
       </Link>
     );
   }
@@ -69,6 +87,7 @@ export default function ScheduleCard({ schedule, variant }: ScheduleCardProps) {
             {format(new Date(schedule.startTime), 'HH:mm')}
           </span>
           {schedule.title}
+          {isLive && <LiveBadge />}
         </div>
       </Link>
     );
@@ -127,18 +146,21 @@ export default function ScheduleCard({ schedule, variant }: ScheduleCardProps) {
           </div>
         )}
 
-        <p
-          className={`text-sm font-bold line-clamp-2 leading-snug ${
-            gameColor
-              ? ''
-              : schedule.game
-                ? 'text-amber-800 dark:text-amber-300'
-                : 'text-slate-700 dark:text-slate-200'
-          }`}
-          style={gameColor ? { color: gameColor } : undefined}
-        >
-          {schedule.title}
-        </p>
+        <div className="flex items-start gap-1">
+          <p
+            className={`text-sm font-bold line-clamp-2 leading-snug flex-1 ${
+              gameColor
+                ? ''
+                : schedule.game
+                  ? 'text-amber-800 dark:text-amber-300'
+                  : 'text-slate-700 dark:text-slate-200'
+            }`}
+            style={gameColor ? { color: gameColor } : undefined}
+          >
+            {schedule.title}
+          </p>
+          {isLive && <LiveBadge />}
+        </div>
 
         {schedule.participants.length > 0 && (
           <div className="flex items-center gap-1 flex-wrap">

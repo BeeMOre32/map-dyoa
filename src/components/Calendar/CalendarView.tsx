@@ -22,12 +22,14 @@ import {
   Plus,
   Calendar as CalendarIcon,
   LayoutGrid,
+  Settings,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
 
 import ScheduleFormModal from '@/components/Form/CreateScheduleModal';
 import ScheduleCard from '@/components/Calendar/ScheduleCard';
+import SettingsPanel from '@/components/Calendar/SettingsPanel';
 
 import type { Streamer, Game } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
@@ -64,6 +66,30 @@ export default function CalendarView({
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>(
     'left',
   );
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [selectedStreamers, setSelectedStreamers] = useState<Set<string>>(new Set());
+  const [liveStreamerIds, setLiveStreamerIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const fetchLive = async () => {
+      try {
+        const res = await fetch('/api/chzzk/live-status');
+        const data = await res.json();
+        setLiveStreamerIds(new Set(data.liveStreamerIds));
+      } catch {}
+    };
+    fetchLive();
+    const interval = setInterval(fetchLive, 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleStreamerToggle = useCallback((id: string) => {
+    setSelectedStreamers((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
 
   const nextPeriod = useCallback(() => {
     setSlideDirection('left');
@@ -104,16 +130,20 @@ export default function CalendarView({
   }, [currentDate, viewMode]);
 
   const schedulesByDate = useMemo(() => {
+    const filtered =
+      selectedStreamers.size === 0
+        ? optimisticSchedules
+        : optimisticSchedules.filter((s) =>
+            s.participants.some((p) => selectedStreamers.has(p.id)),
+          );
     const map = new Map<string, FlattenedSchedule[]>();
-    optimisticSchedules.forEach((schedule) => {
+    filtered.forEach((schedule) => {
       const dateKey = format(new Date(schedule.startTime), 'yyyy-MM-dd');
-      if (!map.has(dateKey)) {
-        map.set(dateKey, []);
-      }
+      if (!map.has(dateKey)) map.set(dateKey, []);
       map.get(dateKey)!.push(schedule);
     });
     return map;
-  }, [optimisticSchedules]);
+  }, [optimisticSchedules, selectedStreamers]);
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
   const handleDayClick = useCallback(
@@ -179,6 +209,20 @@ export default function CalendarView({
               <CalendarIcon className="w-4 h-4" /> 월간
             </button>
           </div>
+          <div className="relative">
+            <button
+              onClick={() => setIsSettingsOpen((v) => !v)}
+              className={`p-2 rounded-lg border transition-all shadow-sm ${isSettingsOpen ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800' : 'bg-white dark:bg-slate-900 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800'}`}
+              title="설정"
+            >
+              <Settings className="w-4 h-4" />
+              {selectedStreamers.size > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-indigo-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
+                  {selectedStreamers.size}
+                </span>
+              )}
+            </button>
+          </div>
           <button
             onClick={() => {
               setEditSchedule(undefined);
@@ -232,7 +276,7 @@ export default function CalendarView({
                   {daySchedules.length > 0 && (
                     <div className="px-4 pb-3 space-y-1.5">
                       {daySchedules.map((schedule) => (
-                        <ScheduleCard key={schedule.id} schedule={schedule} variant="mobile" />
+                        <ScheduleCard key={schedule.id} schedule={schedule} variant="mobile" liveStreamerIds={liveStreamerIds} />
                       ))}
                     </div>
                   )}
@@ -309,7 +353,7 @@ export default function CalendarView({
                     {/* 데스크탑: 텍스트 카드 */}
                     <div className="hidden sm:flex flex-col gap-1.5 overflow-y-auto max-h-[calc(100%-35px)] custom-scrollbar">
                       {daySchedules.map((schedule) => (
-                        <ScheduleCard key={schedule.id} schedule={schedule} variant={viewMode} />
+                        <ScheduleCard key={schedule.id} schedule={schedule} variant={viewMode} liveStreamerIds={liveStreamerIds} />
                       ))}
                     </div>
                   </div>
@@ -320,6 +364,18 @@ export default function CalendarView({
         </div>
 
       </div> {/* 캘린더 본체 */}
+
+      <AnimatePresence>
+        {isSettingsOpen && (
+          <SettingsPanel
+            streamers={streamers}
+            selectedStreamers={selectedStreamers}
+            onStreamerToggle={handleStreamerToggle}
+            onClearFilters={() => setSelectedStreamers(new Set())}
+            onClose={() => setIsSettingsOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isFormOpen && (
