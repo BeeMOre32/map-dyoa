@@ -1,7 +1,7 @@
 // src/components/calendar/CalendarView.tsx
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useOptimistic, useTransition } from 'react';
+import { useState, useEffect, useMemo, useCallback, useOptimistic, useTransition, useRef } from 'react';
 import {
   format,
   addMonths,
@@ -69,6 +69,7 @@ export default function CalendarView({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [selectedStreamers, setSelectedStreamers] = useState<Set<string>>(new Set());
   const [liveStreamerIds, setLiveStreamerIds] = useState<Set<string>>(new Set());
+  const todayMobileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchLive = async () => {
@@ -82,6 +83,12 @@ export default function CalendarView({
     const interval = setInterval(fetchLive, 60_000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (viewMode === 'weekly' && todayMobileRef.current) {
+      todayMobileRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [viewMode, currentDate]);
 
   const handleStreamerToggle = useCallback((id: string) => {
     setSelectedStreamers((prev) => {
@@ -253,7 +260,7 @@ export default function CalendarView({
               const dayNameColor = dayIdx === 0 ? 'text-red-400' : dayIdx === 6 ? 'text-blue-400' : 'text-slate-400 dark:text-slate-500';
 
               return (
-                <div key={day.toString()} className="border-b border-slate-100 dark:border-slate-800 last:border-b-0">
+                <div key={day.toString()} ref={today ? todayMobileRef : null} className="border-b border-slate-100 dark:border-slate-800 last:border-b-0">
                   {/* 날짜 행 */}
                   <div
                     onClick={() => handleDayClick(day)}

@@ -5,7 +5,8 @@
       "Bash(git add *)",
       "Bash(npx prisma *)",
       "Bash(node -e ' *)",
-      "WebFetch(domain:chzzk.gitbook.io)"
+      "WebFetch(domain:chzzk.gitbook.io)",
+      "Bash(grep -E \"\\\\.\\(tsx?|jsx?\\)$\")"
     ]
   }
 }
