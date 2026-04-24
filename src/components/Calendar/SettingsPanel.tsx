@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Search, LayoutGrid, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { X, LayoutGrid, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Streamer } from '@prisma/client';
 import StreamerAvatar from '@/components/streamer/StreamerAvatar';
 import { getStreamerImagePath } from '@/lib/utils';
+import StreamerSearchInput from '@/components/Calendar/StreamerSearchInput';
 
 interface SettingsPanelProps {
   streamers: Streamer[];
@@ -22,13 +23,9 @@ export default function SettingsPanel({
   onClearFilters,
   onClose,
 }: SettingsPanelProps) {
-  const [query, setQuery] = useState('');
+  const [filtered, setFiltered] = useState<Streamer[]>(streamers);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const hasFilters = selectedStreamers.size > 0;
-
-  const filtered = query.trim()
-    ? streamers.filter((s) => s.name.toLowerCase().includes(query.toLowerCase()))
-    : streamers;
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -38,23 +35,23 @@ export default function SettingsPanel({
         animate={{ x: 0 }}
         exit={{ x: '-100%' }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-        className="relative w-80 h-full bg-white dark:bg-slate-900 shadow-2xl flex flex-col border-r border-slate-100 dark:border-slate-800 z-10"
+        className="relative w-full sm:w-80 h-full bg-white dark:bg-slate-900 shadow-2xl flex flex-col border-r border-slate-100 dark:border-slate-800 z-10"
       >
         {/* 헤더 */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <div>
-            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+            <p className="text-xs sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
               Calendar
             </p>
-            <h2 className="text-lg font-black text-slate-800 dark:text-white leading-tight mt-0.5">
+            <h2 className="text-xl sm:text-lg font-black text-slate-800 dark:text-white leading-tight mt-0.5">
               설정
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+            className="p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 sm:w-4 sm:h-4" />
           </button>
         </div>
 
@@ -70,11 +67,11 @@ export default function SettingsPanel({
             >
               <div className="flex items-center gap-2">
                 <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                <span className="text-xs sm:text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                   스트리머 필터
                 </span>
                 {hasFilters && (
-                  <span className="text-[10px] font-black text-white bg-indigo-500 rounded-full px-1.5 py-0.5 leading-none">
+                  <span className="text-xs sm:text-[10px] font-black text-white bg-indigo-500 rounded-full px-1.5 py-0.5 leading-none">
                     {selectedStreamers.size}
                   </span>
                 )}
@@ -83,7 +80,7 @@ export default function SettingsPanel({
                 {hasFilters && (
                   <span
                     onClick={(e) => { e.stopPropagation(); onClearFilters(); }}
-                    className="text-[11px] font-black text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
+                    className="text-xs sm:text-[11px] font-black text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
                   >
                     초기화
                   </span>
@@ -109,16 +106,7 @@ export default function SettingsPanel({
                 >
                   <div className="px-5 pb-4 space-y-3">
                     {/* 검색 */}
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 dark:text-slate-600 pointer-events-none" />
-                      <input
-                        type="text"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="스트리머 검색..."
-                        className="w-full pl-8 pr-3 py-2 text-sm font-bold bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-slate-600 focus:outline-none focus:border-indigo-300 dark:focus:border-indigo-700 transition-colors"
-                      />
-                    </div>
+                    <StreamerSearchInput streamers={streamers} onFilter={setFiltered} />
 
                     {/* 스트리머 그리드 */}
                     {filtered.length === 0 ? (
@@ -149,7 +137,7 @@ export default function SettingsPanel({
                                   size="small"
                                 />
                               </div>
-                              <span className={`text-[10px] font-black w-full text-center truncate leading-none transition-colors ${isSelected ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                              <span className={`text-xs sm:text-[10px] font-black w-full text-center truncate leading-none transition-colors ${isSelected ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`}>
                                 {streamer.name}
                               </span>
                             </motion.button>
@@ -167,7 +155,7 @@ export default function SettingsPanel({
           <section className="px-5 py-4">
             <div className="flex items-center gap-2 mb-3">
               <LayoutGrid className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-              <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+              <span className="text-xs sm:text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 UI 설정
               </span>
             </div>
@@ -192,13 +180,13 @@ export default function SettingsPanel({
         )}
       </motion.div>
 
-      {/* 백드롭 */}
+      {/* 백드롭 (sm 이상에서만) */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.25 }}
-        className="flex-1 bg-black/25 backdrop-blur-[2px]"
+        className="hidden sm:block flex-1 bg-black/25 backdrop-blur-[2px]"
         onClick={onClose}
       />
     </div>
