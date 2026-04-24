@@ -23,6 +23,8 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
+  SlidersHorizontal,
+  Radio,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -52,7 +54,7 @@ function SectionCard({
 }: {
   icon: React.ReactNode;
   iconBg: string;
-  title: string;
+  title: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -99,6 +101,33 @@ function Row({
       <span className="shrink-0 mt-0.5 text-slate-400 dark:text-slate-500">{icon}</span>
       <span className="text-slate-600 dark:text-slate-300 font-medium">{children}</span>
     </motion.p>
+  );
+}
+
+/* ─── NewBadge ─── */
+function NewBadge() {
+  return (
+    <motion.span
+      initial={{ scale: 0.6, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 18, delay: 0.3 }}
+      className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-500 text-white uppercase tracking-wider"
+    >
+      new
+    </motion.span>
+  );
+}
+
+/* ─── LiveBadgeDemo ─── */
+function LiveBadgeDemo() {
+  return (
+    <span className="inline-flex items-center gap-1 align-middle mx-1 px-2 py-0.5 bg-red-50 dark:bg-red-900/20 rounded-full">
+      <span className="relative flex w-1.5 h-1.5">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+        <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-red-500" />
+      </span>
+      <span className="text-[9px] font-black text-red-500 uppercase tracking-wide">live</span>
+    </span>
   );
 }
 
@@ -173,11 +202,86 @@ export default function GuidePage() {
           </div>
         </SectionCard>
 
-        {/* ── 2. 색상 의미 ── */}
+        {/* ── 2. 스트리머 필터 ── */}
+        <SectionCard
+          icon={<SlidersHorizontal className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />}
+          iconBg="bg-indigo-50 dark:bg-indigo-900/20"
+          title={<>2. 스트리머 필터<NewBadge /></>}
+        >
+          <div className="space-y-4">
+            <Row icon={<SlidersHorizontal className="w-5 h-5" />} delay={0}>
+              좌측 상단 <strong>설정 버튼</strong>을 누르면 슬라이드 드로어가 열립니다.
+              스트리머 필터 섹션을 클릭해 펼치면 원하는 스트리머만 선택해 일정을 필터링할 수 있습니다.
+            </Row>
+            <Row icon={<Search className="w-5 h-5" />} delay={0.07}>
+              검색창에서 <strong>이름 또는 초성</strong>으로 스트리머를 빠르게 찾을 수 있습니다.{' '}
+              <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs font-black">ㄷㅁ</code>{' '}
+              → 두뭉,{' '}
+              <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs font-black">ㅎㅇ</code>{' '}
+              → 허인
+            </Row>
+            <Row icon={<Users className="w-5 h-5" />} delay={0.14}>
+              스트리머를 선택하면 해당 인원의 일정만 캘린더에 표시됩니다.
+              선택된 수는 <strong>배지</strong>로 확인할 수 있으며 '초기화'로 한 번에 해제됩니다.
+            </Row>
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.4, ease, delay: 0.2 }}
+              className="flex items-center gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-800/40 mt-2"
+            >
+              <motion.div
+                animate={{ x: [0, 4, 0] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                className="shrink-0 p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700"
+              >
+                <SlidersHorizontal className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+              </motion.div>
+              <span className="text-sm font-bold text-indigo-800 dark:text-indigo-300">
+                모바일에서는 드로어가 <strong>전체 화면</strong>으로 펼쳐집니다.
+              </span>
+            </motion.div>
+          </div>
+        </SectionCard>
+
+        {/* ── 3. 라이브 뱃지 ── */}
+        <SectionCard
+          icon={<Radio className="w-6 h-6 text-red-500 dark:text-red-400" />}
+          iconBg="bg-red-50 dark:bg-red-900/20"
+          title={<>3. 라이브 뱃지<NewBadge /></>}
+        >
+          <div className="space-y-4">
+            <Row icon={<Radio className="w-5 h-5" />} delay={0}>
+              오늘 일정에 참여하는 스트리머가 치지직에서 <strong>현재 방송 중</strong>이면
+              일정 카드에 <LiveBadgeDemo /> 뱃지가 자동으로 표시됩니다.
+            </Row>
+            <Row icon={<Clock className="w-5 h-5" />} delay={0.07}>
+              라이브 상태는 <strong>60초마다</strong> 자동으로 갱신됩니다. 페이지를 새로고침하지 않아도 됩니다.
+            </Row>
+            <Row icon={<CalendarDays className="w-5 h-5" />} delay={0.14}>
+              뱃지는 <strong>오늘 날짜 일정에만</strong> 표시됩니다. 과거·미래 일정에는 나타나지 않습니다.
+            </Row>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.4, ease, delay: 0.2 }}
+              className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-800/40"
+            >
+              <LiveBadgeDemo />
+              <span className="text-sm font-bold text-red-800 dark:text-red-300">
+                뱃지가 보인다면 지금 바로 방송 중이에요!
+              </span>
+            </motion.div>
+          </div>
+        </SectionCard>
+
+        {/* ── 4. 색상 의미 ── */}
         <SectionCard
           icon={<Palette className="w-6 h-6 text-violet-500 dark:text-violet-400" />}
           iconBg="bg-violet-50 dark:bg-violet-900/20"
-          title="2. 일정 카드 색상의 의미"
+          title="4. 일정 카드 색상의 의미"
         >
           <div className="space-y-4">
             <Row icon={<Gamepad2 className="w-5 h-5" />} delay={0}>
@@ -199,7 +303,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<MousePointerClick className="w-6 h-6 text-sky-500 dark:text-sky-400" />}
           iconBg="bg-sky-50 dark:bg-sky-900/20"
-          title="3. 일정 상세 보기"
+          title="5. 일정 상세 보기"
         >
           <div className="space-y-4">
             <Row icon={<Clock className="w-5 h-5" />} delay={0}>
@@ -218,7 +322,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<Users className="w-6 h-6 text-emerald-500 dark:text-emerald-400" />}
           iconBg="bg-emerald-50 dark:bg-emerald-900/20"
-          title="4. 스트리머 페이지"
+          title="6. 스트리머 페이지"
         >
           <div className="space-y-4">
             <Row icon={<Users className="w-5 h-5" />} delay={0}>
@@ -245,7 +349,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<LogIn className="w-6 h-6 text-amber-500 dark:text-amber-400" />}
           iconBg="bg-amber-50 dark:bg-amber-900/20"
-          title="5. 로그인과 편집 권한"
+          title="7. 로그인과 편집 권한"
         >
           <div className="space-y-4">
             <p className="text-slate-600 dark:text-slate-300 font-medium">
@@ -261,7 +365,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<Edit2 className="w-6 h-6 text-rose-500 dark:text-rose-400" />}
           iconBg="bg-rose-50 dark:bg-rose-900/20"
-          title="6. 일정 추가 · 수정 · 삭제"
+          title="8. 일정 추가 · 수정 · 삭제"
         >
           <div className="grid sm:grid-cols-3 gap-4">
             {[
@@ -323,7 +427,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<Keyboard className="w-6 h-6 text-slate-500 dark:text-slate-400" />}
           iconBg="bg-slate-100 dark:bg-slate-700"
-          title="7. 편의 기능"
+          title="9. 편의 기능"
         >
           <div className="space-y-4">
             <Row icon={<Keyboard className="w-5 h-5" />} delay={0}>
