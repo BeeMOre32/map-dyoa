@@ -108,6 +108,7 @@ export async function updateScheduleAction(
     gameId?: string;
     liveUrl?: string;
     isGuerrilla?: boolean;
+    isLiveEnded?: boolean;
   },
 ): Promise<ActionResult> {
   try {
@@ -134,6 +135,7 @@ export async function updateScheduleAction(
         game: data.gameId ? { connect: { id: data.gameId } } : { disconnect: true },
         liveUrl: data.liveUrl?.trim() || null,
         isGuerrilla: data.isGuerrilla ?? false,
+        isLiveEnded: data.isLiveEnded ?? false,
         participants: {
           deleteMany: {},
           create: data.streamerIds.map((streamerId) => ({

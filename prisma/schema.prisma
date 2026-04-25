@@ -34,8 +34,9 @@ model Schedule {
   content     String?
   startTime   DateTime
   endTime     DateTime?
-  isGuerrilla Boolean   @default(false)
-  liveUrl     String?
+  isGuerrilla  Boolean   @default(false)
+  isLiveEnded  Boolean   @default(false)
+  liveUrl      String?
 
   participants ScheduleParticipant[]
   createdAt    DateTime              @default(now())

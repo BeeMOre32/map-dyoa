@@ -47,6 +47,7 @@ export function flattenScheduleParticipants(
     gameId: schedule.gameId,
     game: schedule.game,
     isGuerrilla: schedule.isGuerrilla,
+    isLiveEnded: schedule.isLiveEnded,
     liveUrl: schedule.liveUrl,
     startTime: new Date(schedule.startTime),
     endTime: schedule.endTime ? new Date(schedule.endTime) : null,

@@ -31,6 +31,7 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds }: Sch
   const stopProp = (e: React.MouseEvent) => e.stopPropagation();
   const { resolvedTheme } = useTheme();
   const isLive =
+    !schedule.isLiveEnded &&
     liveStreamerIds !== undefined &&
     isToday(new Date(schedule.startTime)) &&
     schedule.participants.some((p) => liveStreamerIds.has(p.id));

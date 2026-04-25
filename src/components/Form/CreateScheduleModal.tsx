@@ -3,7 +3,7 @@
 
 import { useState, useRef } from 'react';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
-import { X, Calendar as CalendarIcon, AlertCircle, Link as LinkIcon } from 'lucide-react';
+import { X, Calendar as CalendarIcon, AlertCircle, Link as LinkIcon, WifiOff } from 'lucide-react';
 import { createScheduleAction, updateScheduleAction } from '@/app/actions';
 import { motion } from 'framer-motion';
 import { z } from 'zod';
@@ -55,6 +55,7 @@ export default function ScheduleFormModal({
   );
   const [liveUrl, setLiveUrl] = useState(initialData?.liveUrl || '');
   const [isTimeTBD, setIsTimeTBD] = useState(initialData?.isGuerrilla || false);
+  const [isLiveEnded, setIsLiveEnded] = useState(initialData?.isLiveEnded || false);
   const [errors, setErrors] = useState<ScheduleErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -100,6 +101,7 @@ export default function ScheduleFormModal({
       gameId: selectedGameId === '' ? undefined : selectedGameId,
       liveUrl: liveUrl.trim() || undefined,
       isGuerrilla: isTimeTBD,
+      isLiveEnded: isEdit ? isLiveEnded : false,
     };
 
     const result = isEdit
@@ -117,6 +119,7 @@ export default function ScheduleFormModal({
           content: null,
           gameId: selectedGameId || null,
           isGuerrilla: isTimeTBD,
+          isLiveEnded: false,
           liveUrl: liveUrl.trim() || null,
           startTime: startDate,
           endTime: null,
@@ -277,6 +280,38 @@ export default function ScheduleFormModal({
               </p>
             )}
           </div>
+
+          {isEdit && (
+            <div className={`flex items-start gap-3 px-4 py-3.5 rounded-2xl border transition-colors ${isLiveEnded ? 'bg-orange-50 dark:bg-orange-900/15 border-orange-200 dark:border-orange-800' : 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600'}`}>
+              <WifiOff className={`w-4 h-4 mt-0.5 shrink-0 ${isLiveEnded ? 'text-orange-500 dark:text-orange-400' : 'text-slate-400 dark:text-slate-500'}`} />
+              <div className="flex-1 min-w-0">
+                <label className="flex items-center justify-between gap-2 cursor-pointer">
+                  <div>
+                    <p className={`text-sm font-bold ${isLiveEnded ? 'text-orange-600 dark:text-orange-400' : 'text-slate-600 dark:text-slate-300'}`}>
+                      라이브 강제 종료
+                    </p>
+                    <p className="text-xs font-medium text-slate-400 dark:text-slate-500 mt-0.5">
+                      체크 시 자동 감지를 무시하고 라이브 뱃지를 숨깁니다
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={isLiveEnded}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        const ok = confirm(
+                          '⚠️ 라이브 강제 종료\n\n체크 시 자동 감지를 무시하고 라이브 뱃지를 강제로 숨깁니다.\n방송이 실제로 종료됐을 때만 사용해주세요.\n\n계속하시겠습니까?',
+                        );
+                        if (!ok) return;
+                      }
+                      setIsLiveEnded(e.target.checked);
+                    }}
+                    className="w-4 h-4 rounded accent-orange-500 shrink-0"
+                  />
+                </label>
+              </div>
+            </div>
+          )}
 
           <div className="relative" ref={dropdownRef}>
             <div className="border-t border-slate-100 dark:border-slate-700 pt-8 space-y-4">
