@@ -293,8 +293,8 @@ export default function CalendarView({
                   {/* 일정 목록 */}
                   {daySchedules.length > 0 && (
                     <div className="px-4 pb-3 space-y-1.5">
-                      {daySchedules.map((schedule) => (
-                        <ScheduleCard key={schedule.id} schedule={schedule} variant="mobile" liveStreamerIds={liveStreamerIds} />
+                      {daySchedules.map((schedule, i) => (
+                        <ScheduleCard key={schedule.id} schedule={schedule} variant="mobile" liveStreamerIds={liveStreamerIds} index={i} />
                       ))}
                     </div>
                   )}
@@ -370,8 +370,8 @@ export default function CalendarView({
 
                     {/* 데스크탑: 텍스트 카드 */}
                     <div className="hidden sm:flex flex-col gap-1.5 overflow-y-auto max-h-[calc(100%-35px)] custom-scrollbar">
-                      {daySchedules.map((schedule) => (
-                        <ScheduleCard key={schedule.id} schedule={schedule} variant={viewMode} liveStreamerIds={liveStreamerIds} />
+                      {daySchedules.map((schedule, i) => (
+                        <ScheduleCard key={schedule.id} schedule={schedule} variant={viewMode} liveStreamerIds={liveStreamerIds} index={i} />
                       ))}
                     </div>
                   </div>

@@ -9,6 +9,7 @@ import StreamerAvatar from '@/components/streamer/StreamerAvatar';
 import { getStreamerImagePath } from '@/lib/utils';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { getGameColor } from '@/constants/gamecolor';
+import { matchesChosung } from '@/lib/chosung';
 
 type Tab = 'streamer' | 'game';
 
@@ -37,7 +38,7 @@ function FilterPanel({
   const [search, setSearch] = useState('');
 
   const filteredStreamers = search
-    ? streamers.filter((s) => s.name.toLowerCase().includes(search.toLowerCase()))
+    ? streamers.filter((s) => matchesChosung(s.name, search))
     : streamers;
 
   return (
@@ -59,11 +60,18 @@ function FilterPanel({
               }`}
             >
               {label}
-              {count > 0 && (
-                <span className="ml-1 text-[9px] font-black bg-indigo-500 text-white rounded-full px-1 py-px">
-                  {count}
-                </span>
-              )}
+              <AnimatePresence>
+                {count > 0 && (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.6 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.6 }}
+                    className="ml-1 text-[9px] font-black bg-indigo-500 text-white rounded-full px-1 py-px"
+                  >
+                    {count}
+                  </motion.span>
+                )}
+              </AnimatePresence>
               {isActive && (
                 <motion.div
                   layoutId="filter-tab-bar"
@@ -84,105 +92,147 @@ function FilterPanel({
       </div>
 
       {/* 검색 (스트리머 탭) */}
-      {tab === 'streamer' && (
-        <div className="px-3 pt-2.5 pb-1">
-          <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2 border border-slate-100 dark:border-slate-700">
-            <Search className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 shrink-0" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="스트리머 검색..."
-              className="flex-1 bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-slate-600 outline-none"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch('')}
-                className="text-slate-300 dark:text-slate-600 hover:text-slate-500 transition-colors"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 컨텐츠 */}
-      <div className="p-3 overflow-y-auto max-h-56 custom-scrollbar">
+      <AnimatePresence initial={false}>
         {tab === 'streamer' && (
-          filteredStreamers.length === 0 ? (
-            <p className="text-xs font-bold text-slate-300 dark:text-slate-600 text-center py-4">
-              결과 없음
-            </p>
-          ) : (
-            <div className="grid grid-cols-4 gap-1">
-              {filteredStreamers.map((streamer) => {
-                const isSelected = selectedStreamers.has(streamer.id);
-                return (
-                  <motion.button
-                    key={streamer.id}
-                    onClick={() => onStreamerToggle(streamer.id)}
-                    whileTap={{ scale: 0.93 }}
-                    className={`flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all ${
-                      isSelected
-                        ? 'bg-indigo-50 dark:bg-indigo-900/20'
-                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                    }`}
-                  >
-                    <div className={`rounded-2xl transition-all ${
-                      isSelected
-                        ? 'ring-2 ring-indigo-400 dark:ring-indigo-500 ring-offset-1 ring-offset-white dark:ring-offset-slate-900'
-                        : ''
-                    }`}>
-                      <StreamerAvatar
-                        name={streamer.name}
-                        imgSrc={getStreamerImagePath(streamer.name)}
-                        colorCode={streamer.colorCode}
-                        streamerId={streamer.id}
-                        size="small"
-                      />
-                    </div>
-                    <span className={`text-[10px] font-black w-full text-center truncate leading-none transition-colors ${
-                      isSelected
-                        ? 'text-indigo-600 dark:text-indigo-400'
-                        : 'text-slate-400 dark:text-slate-500'
-                    }`}>
-                      {streamer.name}
-                    </span>
-                  </motion.button>
-                );
-              })}
-            </div>
-          )
-        )}
-
-        {tab === 'game' && (
-          <div className="space-y-0.5">
-            {games.map((game) => {
-              const isSelected = selectedGames.has(game.id);
-              const color = getGameColor(game.id, isDark);
-              return (
-                <button
-                  key={game.id}
-                  onClick={() => onGameToggle(game.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                    isSelected
-                      ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300'
-                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                  }`}
-                >
-                  <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{ backgroundColor: color ?? '#94a3b8' }}
-                  />
-                  {game.title}
-                  {isSelected && (
-                    <Check className="w-3.5 h-3.5 ml-auto text-indigo-500 dark:text-indigo-400" />
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="px-3 pt-2.5 pb-1">
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2 border border-slate-100 dark:border-slate-700">
+                <Search className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 shrink-0" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="이름 또는 초성 검색..."
+                  className="flex-1 bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-slate-600 outline-none"
+                />
+                <AnimatePresence>
+                  {search && (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.7 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.7 }}
+                      onClick={() => setSearch('')}
+                      className="text-slate-300 dark:text-slate-600 hover:text-slate-500 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </motion.button>
                   )}
-                </button>
-              );
-            })}
-          </div>
+                </AnimatePresence>
+              </div>
+            </div>
+          </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* 탭 컨텐츠 */}
+      <div className="p-3 overflow-y-auto max-h-56 custom-scrollbar">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={tab}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.13, ease: 'easeInOut' }}
+          >
+            {tab === 'streamer' && (
+              filteredStreamers.length === 0 ? (
+                <p className="text-xs font-bold text-slate-300 dark:text-slate-600 text-center py-4">
+                  결과 없음
+                </p>
+              ) : (
+                <div className="grid grid-cols-4 gap-1">
+                  <AnimatePresence mode="popLayout">
+                    {filteredStreamers.map((streamer, i) => {
+                      const isSelected = selectedStreamers.has(streamer.id);
+                      return (
+                        <motion.button
+                          key={streamer.id}
+                          layout
+                          initial={{ opacity: 0, scale: 0.85 }}
+                          animate={{ opacity: 1, scale: 1, transition: { delay: i * 0.025, duration: 0.15 } }}
+                          exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.1 } }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => onStreamerToggle(streamer.id)}
+                          className={`flex flex-col items-center gap-1.5 p-2 rounded-xl transition-colors ${
+                            isSelected
+                              ? 'bg-indigo-50 dark:bg-indigo-900/20'
+                              : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                          }`}
+                        >
+                          <div className={`rounded-2xl transition-all ${
+                            isSelected
+                              ? 'ring-2 ring-indigo-400 dark:ring-indigo-500 ring-offset-1 ring-offset-white dark:ring-offset-slate-900'
+                              : ''
+                          }`}>
+                            <StreamerAvatar
+                              name={streamer.name}
+                              imgSrc={getStreamerImagePath(streamer.name)}
+                              colorCode={streamer.colorCode}
+                              streamerId={streamer.id}
+                              size="small"
+                            />
+                          </div>
+                          <span className={`text-[10px] font-black w-full text-center truncate leading-none transition-colors ${
+                            isSelected
+                              ? 'text-indigo-600 dark:text-indigo-400'
+                              : 'text-slate-400 dark:text-slate-500'
+                          }`}>
+                            {streamer.name}
+                          </span>
+                        </motion.button>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              )
+            )}
+
+            {tab === 'game' && (
+              <div className="space-y-0.5">
+                {games.map((game) => {
+                  const isSelected = selectedGames.has(game.id);
+                  const color = getGameColor(game.id, isDark);
+                  return (
+                    <motion.button
+                      key={game.id}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => onGameToggle(game.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-colors ${
+                        isSelected
+                          ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300'
+                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      }`}
+                    >
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: color ?? '#94a3b8' }}
+                      />
+                      {game.title}
+                      <AnimatePresence>
+                        {isSelected && (
+                          <motion.span
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.5 }}
+                            transition={{ type: 'spring', damping: 20, stiffness: 400 }}
+                            className="ml-auto"
+                          >
+                            <Check className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -245,12 +295,22 @@ export default function FilterBar({
         >
           <SlidersHorizontal className="w-3.5 h-3.5" />
           필터
-          {totalFilters > 0 && (
-            <span className="bg-indigo-500 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center leading-none">
-              {totalFilters}
-            </span>
-          )}
-          <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+          <AnimatePresence>
+            {totalFilters > 0 && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                transition={{ type: 'spring', damping: 20, stiffness: 400 }}
+                className="bg-indigo-500 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center leading-none"
+              >
+                {totalFilters}
+              </motion.span>
+            )}
+          </AnimatePresence>
+          <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+            <ChevronDown className="w-3 h-3" />
+          </motion.div>
         </button>
 
         {/* 데스크탑 팝오버 */}
@@ -278,65 +338,68 @@ export default function FilterBar({
         </AnimatePresence>
       </div>
 
-      {/* 활성 스트리머 칩 */}
-      {[...selectedStreamers].map((id) => {
-        const streamer = streamers.find((s) => s.id === id);
-        if (!streamer) return null;
-        const color = getStreamerColor(id, isDark) ?? streamer.colorCode;
-        return (
-          <motion.span
-            key={id}
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.85 }}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border"
-            style={{ color, borderColor: `${color}40`, backgroundColor: `${color}12` }}
-          >
-            {streamer.name}
-            <button
-              onClick={() => onStreamerToggle(id)}
-              className="hover:opacity-60 transition-opacity"
+      {/* 활성 칩들 + 전체 해제 */}
+      <AnimatePresence mode="popLayout">
+        {[...selectedStreamers].map((id) => {
+          const streamer = streamers.find((s) => s.id === id);
+          if (!streamer) return null;
+          const color = getStreamerColor(id, isDark) ?? streamer.colorCode;
+          return (
+            <motion.span
+              key={`s-${id}`}
+              layout
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ type: 'spring', damping: 22, stiffness: 380 }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border"
+              style={{ color, borderColor: `${color}40`, backgroundColor: `${color}12` }}
             >
-              <X className="w-3 h-3" />
-            </button>
-          </motion.span>
-        );
-      })}
+              {streamer.name}
+              <button onClick={() => onStreamerToggle(id)} className="hover:opacity-60 transition-opacity">
+                <X className="w-3 h-3" />
+              </button>
+            </motion.span>
+          );
+        })}
 
-      {/* 활성 게임 칩 */}
-      {[...selectedGames].map((id) => {
-        const game = games.find((g) => g.id === id);
-        if (!game) return null;
-        const color = getGameColor(id, isDark) ?? '#6366f1';
-        return (
-          <motion.span
-            key={id}
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.85 }}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border"
-            style={{ color, borderColor: `${color}40`, backgroundColor: `${color}12` }}
-          >
-            {game.title}
-            <button
-              onClick={() => onGameToggle(id)}
-              className="hover:opacity-60 transition-opacity"
+        {[...selectedGames].map((id) => {
+          const game = games.find((g) => g.id === id);
+          if (!game) return null;
+          const color = getGameColor(id, isDark) ?? '#6366f1';
+          return (
+            <motion.span
+              key={`g-${id}`}
+              layout
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ type: 'spring', damping: 22, stiffness: 380 }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border"
+              style={{ color, borderColor: `${color}40`, backgroundColor: `${color}12` }}
             >
-              <X className="w-3 h-3" />
-            </button>
-          </motion.span>
-        );
-      })}
+              {game.title}
+              <button onClick={() => onGameToggle(id)} className="hover:opacity-60 transition-opacity">
+                <X className="w-3 h-3" />
+              </button>
+            </motion.span>
+          );
+        })}
 
-      {/* 전체 해제 */}
-      {hasFilters && (
-        <button
-          onClick={onClearAll}
-          className="text-xs font-bold text-slate-300 dark:text-slate-600 hover:text-red-400 dark:hover:text-red-400 transition-colors"
-        >
-          전체 해제
-        </button>
-      )}
+        {hasFilters && (
+          <motion.button
+            key="clear"
+            layout
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClearAll}
+            className="text-xs font-bold text-slate-300 dark:text-slate-600 hover:text-red-400 dark:hover:text-red-400 transition-colors"
+          >
+            전체 해제
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* 모바일 바텀시트 */}
       <AnimatePresence>
