@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Clapperboard, Plus, Construction, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -19,6 +19,7 @@ interface ClipViewProps {
 export default function ClipView({ clips, streamers, schedules }: ClipViewProps) {
   const { data: session } = useSession();
   const [showModal, setShowModal] = useState(false);
+  const [editingClip, setEditingClip] = useState<ClipWithParticipants | null>(null);
   const [filterStreamerId, setFilterStreamerId] = useState('');
   const [showDevToast, setShowDevToast] = useState(false);
 
@@ -28,11 +29,15 @@ export default function ClipView({ clips, streamers, schedules }: ClipViewProps)
     return () => { clearTimeout(timer); clearTimeout(autoClose); };
   }, []);
 
-  const filtered = filterStreamerId
-    ? clips.filter((c) =>
-        c.participants.some((p) => p.streamerId === filterStreamerId),
-      )
-    : clips;
+  const filtered = useMemo(
+    () =>
+      filterStreamerId
+        ? clips.filter((c) =>
+            c.participants.some((p) => p.streamerId === filterStreamerId),
+          )
+        : clips,
+    [clips, filterStreamerId],
+  );
 
   const handleOpen = useCallback(() => setShowModal(true), []);
   const handleClose = useCallback(() => setShowModal(false), []);
@@ -101,7 +106,7 @@ export default function ClipView({ clips, streamers, schedules }: ClipViewProps)
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filtered.map((clip) => (
-              <ClipCard key={clip.id} clip={clip} />
+              <ClipCard key={clip.id} clip={clip} onEdit={setEditingClip} />
             ))}
           </div>
         )}
@@ -113,6 +118,17 @@ export default function ClipView({ clips, streamers, schedules }: ClipViewProps)
             streamers={streamers}
             schedules={schedules}
             onClose={handleClose}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {editingClip && (
+          <CreateClipModal
+            streamers={streamers}
+            schedules={schedules}
+            initialData={editingClip}
+            onClose={() => setEditingClip(null)}
           />
         )}
       </AnimatePresence>

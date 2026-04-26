@@ -76,7 +76,7 @@ export default function ScheduleSearchSelect({
     setQuery('');
   }
 
-  function handleClear(e: React.MouseEvent) {
+  function handleClear(e: React.SyntheticEvent) {
     e.stopPropagation();
     onChange('');
     setQuery('');
@@ -115,7 +115,7 @@ export default function ScheduleSearchSelect({
               role="button"
               tabIndex={0}
               onClick={handleClear}
-              onKeyDown={(e) => e.key === 'Enter' && handleClear(e as any)}
+              onKeyDown={(e) => e.key === 'Enter' && handleClear(e)}
               className="p-0.5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             >
               <X className="w-3.5 h-3.5 text-slate-400" />

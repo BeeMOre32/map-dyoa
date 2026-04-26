@@ -3,49 +3,53 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { X, Link as LinkIcon, Clapperboard, Tv, Search, Users, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { twMerge } from 'tailwind-merge';
+import { format } from 'date-fns';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
-import { createClipAction } from '@/app/actions';
+import { createClipAction, updateClipAction } from '@/app/actions';
 import { getStreamerColor } from '@/constants/streamercolor';
+import { isChzzkClipUrl } from '@/lib/chzzk';
 import { useTheme } from 'next-themes';
 import type { Streamer } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
+import type { ClipWithParticipants } from '@/types/entities';
 import ScheduleSearchSelect from './ScheduleSearchSelect';
 
 interface CreateClipModalProps {
   streamers: Streamer[];
   schedules: FlattenedSchedule[];
   onClose: () => void;
-}
-
-function isChzzkClipUrl(url: string) {
-  try {
-    const { hostname, pathname } = new URL(url);
-    return hostname === 'chzzk.naver.com' && /^\/clips\/[A-Za-z0-9_-]+/.test(pathname);
-  } catch {
-    return false;
-  }
+  initialData?: ClipWithParticipants;
 }
 
 export default function CreateClipModal({
   streamers,
   schedules,
   onClose,
+  initialData,
 }: CreateClipModalProps) {
+  const isEdit = initialData !== undefined;
   const { resolvedTheme } = useTheme();
 
-  const [title, setTitle] = useState('');
-  const [url, setUrl] = useState('');
-  const [thumbnailUrl, setThumbnailUrl] = useState('');
-  const [description, setDescription] = useState('');
-  const [clipDate, setClipDate] = useState('');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [title, setTitle] = useState(initialData?.title ?? '');
+  const [url, setUrl] = useState(initialData?.url ?? '');
+  const [thumbnailUrl, setThumbnailUrl] = useState(initialData?.thumbnailUrl ?? '');
+  const [description, setDescription] = useState(initialData?.description ?? '');
+  const [clipDate, setClipDate] = useState(
+    initialData?.clipDate ? format(new Date(initialData.clipDate), 'yyyy-MM-dd') : '',
+  );
+  const [selectedIds, setSelectedIds] = useState<string[]>(
+    initialData?.participants.map((p) => p.streamerId) ?? [],
+  );
   const [streamerSearch, setStreamerSearch] = useState('');
-  const [scheduleId, setScheduleId] = useState('');
+  const [scheduleId, setScheduleId] = useState(initialData?.scheduleId ?? '');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [fetchingMeta, setFetchingMeta] = useState(false);
-  const [metaStatus, setMetaStatus] = useState<'idle' | 'ok' | 'fail'>('idle');
+  const [metaStatus, setMetaStatus] = useState<'idle' | 'ok' | 'fail'>(
+    initialData?.thumbnailUrl ? 'ok' : 'idle',
+  );
 
   const fetchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -64,7 +68,7 @@ export default function CreateClipModal({
         } else {
           setMetaStatus('fail');
         }
-        if (data.title && !title) setTitle(data.title);
+        if (data.title) setTitle((prev) => prev || data.title);
       } else {
         setMetaStatus('fail');
       }
@@ -73,16 +77,19 @@ export default function CreateClipModal({
     } finally {
       setFetchingMeta(false);
     }
-  }, [title]);
+  }, []);
 
-  function handleUrlChange(value: string) {
-    setUrl(value);
-    setMetaStatus('idle');
-    if (fetchDebounceRef.current) clearTimeout(fetchDebounceRef.current);
-    if (isChzzkClipUrl(value)) {
-      fetchDebounceRef.current = setTimeout(() => fetchChzzkMeta(value), 600);
-    }
-  }
+  const handleUrlChange = useCallback(
+    (value: string) => {
+      setUrl(value);
+      setMetaStatus('idle');
+      if (fetchDebounceRef.current) clearTimeout(fetchDebounceRef.current);
+      if (isChzzkClipUrl(value)) {
+        fetchDebounceRef.current = setTimeout(() => fetchChzzkMeta(value), 600);
+      }
+    },
+    [fetchChzzkMeta],
+  );
 
   const filteredStreamers = useMemo(() => {
     const q = streamerSearch.trim().toLowerCase();
@@ -92,10 +99,16 @@ export default function CreateClipModal({
 
   const filteredSchedules = useMemo(() => {
     if (selectedIds.length === 0) return schedules;
-    return schedules.filter((s) =>
+    const filtered = schedules.filter((s) =>
       s.participants.some((p) => selectedIds.includes(p.id)),
     );
-  }, [selectedIds, schedules]);
+    // 수정 모드에서 이미 선택된 방송이 필터에서 빠지지 않도록 보장
+    if (scheduleId && !filtered.some((s) => s.id === scheduleId)) {
+      const current = schedules.find((s) => s.id === scheduleId);
+      if (current) return [current, ...filtered];
+    }
+    return filtered;
+  }, [selectedIds, schedules, scheduleId]);
 
   function toggleStreamer(id: string) {
     setSelectedIds((prev) =>
@@ -109,11 +122,9 @@ export default function CreateClipModal({
     setError('');
     if (!title.trim()) return setError('제목을 입력해주세요.');
     if (!url.trim()) return setError('클립 URL을 입력해주세요.');
-    if (selectedIds.length === 0)
-      return setError('연관된 스트리머를 최소 1명 선택해주세요.');
+    if (selectedIds.length === 0) return setError('연관된 스트리머를 최소 1명 선택해주세요.');
 
-    setSubmitting(true);
-    const result = await createClipAction({
+    const payload = {
       title: title.trim(),
       url: url.trim(),
       streamerIds: selectedIds,
@@ -121,7 +132,12 @@ export default function CreateClipModal({
       thumbnailUrl: thumbnailUrl.trim() || undefined,
       description: description.trim() || undefined,
       clipDate: clipDate ? new Date(clipDate) : undefined,
-    });
+    };
+
+    setSubmitting(true);
+    const result = isEdit
+      ? await updateClipAction(initialData.id, payload)
+      : await createClipAction(payload);
     setSubmitting(false);
 
     if (result.success) {
@@ -158,7 +174,14 @@ export default function CreateClipModal({
             <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/40 rounded-2xl flex items-center justify-center">
               <Clapperboard className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <h2 className="text-lg font-black text-slate-800 dark:text-white">클립 추가</h2>
+            <div>
+              <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                {isEdit ? 'Edit Clip' : 'New Clip'}
+              </p>
+              <h2 className="text-lg font-black text-slate-800 dark:text-white">
+                {isEdit ? '클립 수정' : '클립 추가'}
+              </h2>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -180,7 +203,7 @@ export default function CreateClipModal({
                 value={url}
                 onChange={(e) => handleUrlChange(e.target.value)}
                 placeholder="https://chzzk.naver.com/clips/..."
-                className="w-full pl-10 pr-10 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-medium text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700 transition-all"
+                className={twMerge(inputClass, 'pl-10 pr-10')}
               />
               {fetchingMeta && (
                 <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400 animate-spin" />
@@ -347,7 +370,7 @@ export default function CreateClipModal({
                 value={thumbnailUrl}
                 onChange={(e) => setThumbnailUrl(e.target.value)}
                 placeholder="https://..."
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-medium text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700 transition-all"
+                className={twMerge(inputClass, 'pl-10')}
               />
             </div>
           </div>
@@ -400,7 +423,7 @@ export default function CreateClipModal({
               disabled={submitting}
               className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200 dark:shadow-none"
             >
-              {submitting ? '추가 중...' : '클립 추가'}
+              {submitting ? (isEdit ? '수정 중...' : '추가 중...') : (isEdit ? '수정 완료' : '클립 추가')}
             </button>
           </div>
         </form>

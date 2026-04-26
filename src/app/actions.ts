@@ -14,6 +14,7 @@ import {
   getRevalidationPaths,
   getRevalidationPathsMulti,
 } from '@/constants/revalidation-paths';
+import type { CreateStreamerInput } from '@/types/models';
 
 /**
  * 일정 생성
@@ -212,7 +213,7 @@ export async function createStreamerAction(data: {
  * 스트리머 일괄 생성
  */
 export async function bulkCreateStreamersAction(
-  streamersData: any[],
+  streamersData: CreateStreamerInput[],
 ): Promise<ActionResult<{ created: number }>> {
   try {
     await requireAdmin();
@@ -300,6 +301,62 @@ export async function createClipAction(data: {
   } catch (error) {
     const { message, code } = getErrorMessage(error);
     logError('createClip', error);
+    return { success: false, error: message, errorCode: code };
+  }
+}
+
+/**
+ * 클립 수정
+ */
+export async function updateClipAction(
+  id: string,
+  data: {
+    title: string;
+    url: string;
+    streamerIds: string[];
+    thumbnailUrl?: string;
+    description?: string;
+    clipDate?: Date;
+    scheduleId?: string;
+  },
+): Promise<ActionResult> {
+  try {
+    await requireAuth();
+
+    if (!id?.trim()) throw new ValidationError('유효한 클립 ID가 필요합니다.');
+    if (!data.title?.trim()) throw new ValidationError('제목을 입력해주세요.');
+    if (!data.url?.trim()) throw new ValidationError('클립 URL을 입력해주세요.');
+    if (!data.streamerIds || data.streamerIds.length === 0)
+      throw new ValidationError('연관된 스트리머를 최소 1명 선택해주세요.');
+
+    await prisma.clip.update({
+      where: { id },
+      data: {
+        title: data.title.trim(),
+        url: data.url.trim(),
+        thumbnailUrl: data.thumbnailUrl?.trim() || null,
+        description: data.description?.trim() || null,
+        clipDate: data.clipDate ? new Date(data.clipDate) : null,
+        scheduleId: data.scheduleId || null,
+        participants: {
+          deleteMany: {},
+          create: data.streamerIds.map((streamerId) => ({
+            streamer: { connect: { id: streamerId } },
+          })),
+        },
+      },
+    });
+
+    const paths = getRevalidationPaths('clip');
+    await Promise.all([
+      ...paths.map((path: string) => revalidatePath(path)),
+      updateTag('clips'),
+    ]);
+
+    return { success: true, data: null };
+  } catch (error) {
+    const { message, code } = getErrorMessage(error);
+    logError('updateClip', error);
     return { success: false, error: message, errorCode: code };
   }
 }

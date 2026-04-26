@@ -1,15 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-function extractClipId(url: string): string | null {
-  try {
-    const { hostname, pathname } = new URL(url);
-    if (hostname !== 'chzzk.naver.com') return null;
-    const match = pathname.match(/^\/clips\/([A-Za-z0-9_-]+)/);
-    return match?.[1] ?? null;
-  } catch {
-    return null;
-  }
-}
+import { extractChzzkClipId } from '@/lib/chzzk';
 
 function findCoverUrl(obj: unknown): string | null {
   if (!obj || typeof obj !== 'object') return null;
@@ -43,7 +33,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'url 파라미터가 필요합니다.' }, { status: 400 });
   }
 
-  const clipId = extractClipId(url);
+  const clipId = extractChzzkClipId(url);
   if (!clipId) {
     return NextResponse.json({ error: '유효한 치지직 클립 URL이 아닙니다.' }, { status: 400 });
   }

@@ -1,6 +1,6 @@
 'use client';
 
-import { ExternalLink, Trash2, Play, Tv } from 'lucide-react';
+import { ExternalLink, Trash2, Play, Tv, Pencil } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import type { ClipWithParticipants } from '@/types/entities';
@@ -8,23 +8,14 @@ import { deleteClipAction } from '@/app/actions';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { useTheme } from 'next-themes';
 import { useSession } from 'next-auth/react';
+import { extractChzzkClipId } from '@/lib/chzzk';
 
 interface ClipCardProps {
   clip: ClipWithParticipants;
+  onEdit?: (clip: ClipWithParticipants) => void;
 }
 
-function extractChzzkClipId(url: string): string | null {
-  try {
-    const { hostname, pathname } = new URL(url);
-    if (hostname !== 'chzzk.naver.com') return null;
-    const match = pathname.match(/^\/clips\/([A-Za-z0-9_-]+)/);
-    return match?.[1] ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export default function ClipCard({ clip }: ClipCardProps) {
+export default function ClipCard({ clip, onEdit }: ClipCardProps) {
   const { data: session } = useSession();
   const { resolvedTheme } = useTheme();
   const [deleting, setDeleting] = useState(false);
@@ -143,14 +134,23 @@ export default function ClipCard({ clip }: ClipCardProps) {
               <ExternalLink className="w-4 h-4" />
             </a>
             {session && (
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="p-1.5 text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all disabled:opacity-50"
-                title="클립 삭제"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              <>
+                <button
+                  onClick={() => onEdit?.(clip)}
+                  className="p-1.5 text-slate-300 dark:text-slate-600 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-all"
+                  title="클립 수정"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="p-1.5 text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all disabled:opacity-50"
+                  title="클립 삭제"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </>
             )}
           </div>
         </div>
