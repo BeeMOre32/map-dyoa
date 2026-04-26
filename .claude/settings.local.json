@@ -6,7 +6,12 @@
       "Bash(npx prisma *)",
       "Bash(node -e ' *)",
       "WebFetch(domain:chzzk.gitbook.io)",
-      "Bash(grep -E \"\\\\.\\(tsx?|jsx?\\)$\")"
+      "Bash(grep -E \"\\\\.\\(tsx?|jsx?\\)$\")",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:gist.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl -s \"https://api.chzzk.naver.com/service/v1/play-info/clip/ukiH1i2Utj\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\")"
     ]
   }
 }
