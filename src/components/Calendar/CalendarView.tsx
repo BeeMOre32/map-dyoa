@@ -22,14 +22,13 @@ import {
   Plus,
   Calendar as CalendarIcon,
   LayoutGrid,
-  Settings,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
 
 import ScheduleFormModal from '@/components/Form/CreateScheduleModal';
 import ScheduleCard from '@/components/Calendar/ScheduleCard';
-import SettingsPanel from '@/components/Calendar/SettingsPanel';
+import FilterBar from '@/components/Calendar/FilterBar';
 
 import type { Streamer, Game } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
@@ -66,8 +65,8 @@ export default function CalendarView({
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>(
     'left',
   );
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [selectedStreamers, setSelectedStreamers] = useState<Set<string>>(new Set());
+  const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set());
   const [liveStreamerIds, setLiveStreamerIds] = useState<Set<string>>(new Set());
   const todayMobileRef = useRef<HTMLDivElement>(null);
 
@@ -92,6 +91,14 @@ export default function CalendarView({
 
   const handleStreamerToggle = useCallback((id: string) => {
     setSelectedStreamers((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleGameToggle = useCallback((id: string) => {
+    setSelectedGames((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
@@ -137,12 +144,20 @@ export default function CalendarView({
   }, [currentDate, viewMode]);
 
   const schedulesByDate = useMemo(() => {
-    const filtered =
-      selectedStreamers.size === 0
-        ? optimisticSchedules
-        : optimisticSchedules.filter((s) =>
-            s.participants.some((p) => selectedStreamers.has(p.id)),
-          );
+    let filtered = optimisticSchedules;
+
+    if (selectedStreamers.size > 0) {
+      filtered = filtered.filter((s) =>
+        s.participants.some((p) => selectedStreamers.has(p.id)),
+      );
+    }
+
+    if (selectedGames.size > 0) {
+      filtered = filtered.filter((s) =>
+        s.gameId != null && selectedGames.has(s.gameId),
+      );
+    }
+
     const map = new Map<string, FlattenedSchedule[]>();
     filtered.forEach((schedule) => {
       const dateKey = format(new Date(schedule.startTime), 'yyyy-MM-dd');
@@ -150,7 +165,7 @@ export default function CalendarView({
       map.get(dateKey)!.push(schedule);
     });
     return map;
-  }, [optimisticSchedules, selectedStreamers]);
+  }, [optimisticSchedules, selectedStreamers, selectedGames]);
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
   const handleDayClick = useCallback(
@@ -216,20 +231,6 @@ export default function CalendarView({
               <CalendarIcon className="w-4 h-4" /> 월간
             </button>
           </div>
-          <div className="relative">
-            <button
-              onClick={() => setIsSettingsOpen((v) => !v)}
-              className={`p-2 rounded-lg border transition-all shadow-sm ${isSettingsOpen ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800' : 'bg-white dark:bg-slate-900 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800'}`}
-              title="설정"
-            >
-              <Settings className="w-4 h-4" />
-              {selectedStreamers.size > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-indigo-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
-                  {selectedStreamers.size}
-                </span>
-              )}
-            </button>
-          </div>
           <button
             onClick={() => {
               setEditSchedule(undefined);
@@ -242,6 +243,16 @@ export default function CalendarView({
           </button>
         </div>
       </div>
+
+      <FilterBar
+        streamers={streamers}
+        games={games}
+        selectedStreamers={selectedStreamers}
+        selectedGames={selectedGames}
+        onStreamerToggle={handleStreamerToggle}
+        onGameToggle={handleGameToggle}
+        onClearAll={() => { setSelectedStreamers(new Set()); setSelectedGames(new Set()); }}
+      />
 
       {/* 캘린더 본체 */}
       <div className="flex-1 overflow-hidden bg-white dark:bg-slate-900 rounded-4xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col">
@@ -371,18 +382,6 @@ export default function CalendarView({
         </div>
 
       </div> {/* 캘린더 본체 */}
-
-      <AnimatePresence>
-        {isSettingsOpen && (
-          <SettingsPanel
-            streamers={streamers}
-            selectedStreamers={selectedStreamers}
-            onStreamerToggle={handleStreamerToggle}
-            onClearFilters={() => setSelectedStreamers(new Set())}
-            onClose={() => setIsSettingsOpen(false)}
-          />
-        )}
-      </AnimatePresence>
 
       <AnimatePresence>
         {isFormOpen && (
