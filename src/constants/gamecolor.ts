@@ -4,7 +4,7 @@
 // 4. crusader kings 3
 // 5. board games
 export const GAME_COLORS: Record<string, { light: string; dark: string }> = {
-  '1': { light: '#501f22', dark: '#c9666b' },
+  '1': { light: '#c0272c', dark: '#f87171' },
   '2': { light: '#b07d0e', dark: '#f5c842' },
   '3': { light: '#1e4e8c', dark: '#5b9bd5' },
   '4': { light: '#483d8b', dark: '#9b8fd4' },

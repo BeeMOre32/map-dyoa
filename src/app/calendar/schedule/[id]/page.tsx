@@ -14,7 +14,7 @@ export default async function FullSchedulePage({
   const { id } = await params;
 
   // 캘린더 배경 데이터는 캐시에서, 상세 일정만 DB 직접 조회 (최신 보장)
-  const [{ schedules: allSchedules, streamers, games }, targetSchedule] =
+  const [{ schedules: allSchedules, streamers, games }, targetSchedule, clips] =
     await Promise.all([
       getCalendarData(),
       prisma.schedule.findUnique({
@@ -23,6 +23,11 @@ export default async function FullSchedulePage({
           game: true,
           participants: { include: { streamer: true } },
         },
+      }),
+      prisma.clip.findMany({
+        where: { scheduleId: id },
+        include: { participants: { include: { streamer: true } } },
+        orderBy: { createdAt: 'asc' },
       }),
     ]);
 
@@ -42,6 +47,7 @@ export default async function FullSchedulePage({
         schedule={flattenedTarget}
         streamers={streamers}
         games={games}
+        clips={clips}
       />
     </div>
   );

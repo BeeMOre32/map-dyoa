@@ -11,7 +11,7 @@ export default async function InterceptedSchedulePage({
 }) {
   const { id } = await params;
 
-  const [schedule, streamers, games] = await Promise.all([
+  const [schedule, streamers, games, clips] = await Promise.all([
     prisma.schedule.findUnique({
       where: { id },
       include: {
@@ -21,6 +21,11 @@ export default async function InterceptedSchedulePage({
     }),
     getAllStreamers(),
     getAllGames(),
+    prisma.clip.findMany({
+      where: { scheduleId: id },
+      include: { participants: { include: { streamer: true } } },
+      orderBy: { createdAt: 'asc' },
+    }),
   ]);
 
   if (!schedule) return notFound();
@@ -32,6 +37,7 @@ export default async function InterceptedSchedulePage({
       schedule={flattenedSchedule}
       streamers={streamers}
       games={games}
+      clips={clips}
     />
   );
 }

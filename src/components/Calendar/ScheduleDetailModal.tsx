@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Play,
   Tv,
+  Clapperboard,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -30,16 +31,25 @@ import Link from 'next/link';
 import type { Streamer, Game } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 
+type ClipForSchedule = {
+  id: string;
+  title: string;
+  url: string;
+  participants: { streamer: { id: string; name: string; colorCode: string } }[];
+};
+
 interface ScheduleDetailViewProps {
   schedule: FlattenedSchedule;
   streamers: Streamer[];
   games: Game[];
+  clips?: ClipForSchedule[];
 }
 
 export default function ScheduleDetailView({
   schedule,
   streamers,
   games,
+  clips = [],
 }: ScheduleDetailViewProps) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -233,6 +243,56 @@ export default function ScheduleDetailView({
                   </div>
                 )}
               </div>
+
+              {/* 클립 섹션 */}
+              {clips.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 ml-1">
+                    <Clapperboard className="w-4 h-4 text-slate-300 dark:text-slate-600" />
+                    <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+                      Clips
+                    </span>
+                    <span className="text-[10px] font-black text-slate-300 dark:text-slate-600">
+                      {clips.length}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {clips.map((clip) => (
+                      <a
+                        key={clip.id}
+                        href={clip.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 hover:border-indigo-200 dark:hover:border-indigo-700 hover:bg-indigo-50/40 dark:hover:bg-indigo-900/10 transition-all group"
+                      >
+                        <Clapperboard className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0 group-hover:text-indigo-400 transition-colors" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                            {clip.title}
+                          </p>
+                          {clip.participants.length > 0 && (
+                            <div className="flex gap-1 mt-1 flex-wrap">
+                              {clip.participants.map((p) => (
+                                <span
+                                  key={p.streamer.id}
+                                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                                  style={((c) => ({
+                                    color: c,
+                                    backgroundColor: `${c}18`,
+                                  }))(getStreamerColor(p.streamer.id, resolvedTheme === 'dark') ?? p.streamer.colorCode)}
+                                >
+                                  {p.streamer.name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-indigo-500 transition-colors shrink-0" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* 하단 제어 버튼 */}
               {isUser && (
