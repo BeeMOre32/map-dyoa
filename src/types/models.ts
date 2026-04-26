@@ -116,3 +116,23 @@ export interface ScheduleFilterOptions {
   dateRange?: DateRangeQuery;
   search?: string;
 }
+
+/**
+ * 클립 생성 폼 데이터
+ */
+export interface CreateClipInput {
+  title: string;
+  url: string;
+  thumbnailUrl?: string;
+  description?: string;
+  clipDate?: Date;
+  streamerIds: string[];
+  scheduleId?: string;
+}
+
+/**
+ * 클립 수정 폼 데이터
+ */
+export interface UpdateClipInput extends Partial<CreateClipInput> {
+  id: string;
+}

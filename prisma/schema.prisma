@@ -24,8 +24,9 @@ model Streamer {
   colorCode  String  @default("#673AB7") // 캘린더 표시 색상
   chzzkUrl   String?
 
-  schedules ScheduleParticipant[]
-  createdAt DateTime              @default(now())
+  schedules        ScheduleParticipant[]
+  clipParticipants ClipParticipant[]
+  createdAt        DateTime              @default(now())
 }
 
 model Schedule {
@@ -39,6 +40,7 @@ model Schedule {
   liveUrl      String?
 
   participants ScheduleParticipant[]
+  clips        Clip[]
   createdAt    DateTime              @default(now())
   game         Game?                 @relation(fields: [gameId], references: [id])
   gameId       String?
@@ -58,6 +60,32 @@ model Game {
   id        String     @id @default(cuid())
   title     String     @unique
   schedules Schedule[]
+}
+
+model Clip {
+  id           String            @id @default(cuid())
+  title        String
+  url          String
+  thumbnailUrl String?
+  description  String?
+  clipDate     DateTime?
+  participants ClipParticipant[]
+  scheduleId   String?
+  schedule     Schedule?         @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  createdAt    DateTime          @default(now())
+
+  @@index([scheduleId])
+}
+
+model ClipParticipant {
+  id         String   @id @default(cuid())
+  clipId     String
+  streamerId String
+  clip       Clip     @relation(fields: [clipId], references: [id], onDelete: Cascade)
+  streamer   Streamer @relation(fields: [streamerId], references: [id], onDelete: Cascade)
+
+  @@unique([clipId, streamerId])
+  @@index([clipId, streamerId])
 }
 
 model Feedback {

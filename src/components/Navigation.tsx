@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, Users } from 'lucide-react';
+import { Calendar, Users, Clapperboard } from 'lucide-react';
 
 const tabs = [
   { id: 'calendar', label: '스케줄', href: '/calendar', icon: Calendar },
   { id: 'streamers', label: '지도동 멤버', href: '/streamers', icon: Users },
+  { id: 'clips', label: '클립 모음', href: '/clips', icon: Clapperboard },
 ];
 
 export default function Navigation() {

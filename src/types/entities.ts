@@ -11,6 +11,8 @@ export type {
   ScheduleParticipant,
   User,
   Feedback,
+  Clip,
+  ClipParticipant,
 } from '@prisma/client';
 
 /**
@@ -78,5 +80,20 @@ export type UserWithAccounts = Prisma.UserGetPayload<{
   include: {
     accounts: true;
     sessions: true;
+  };
+}>;
+
+/**
+ * 클립 + 참여 스트리머 목록 + 연결된 방송 일정
+ */
+export type ClipWithParticipants = Prisma.ClipGetPayload<{
+  include: {
+    participants: { include: { streamer: true } };
+    schedule: {
+      include: {
+        participants: { include: { streamer: true } };
+        game: true;
+      };
+    };
   };
 }>;

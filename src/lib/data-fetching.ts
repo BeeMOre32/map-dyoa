@@ -83,6 +83,28 @@ export async function getSchedulesByDateRange(startDate: Date, endDate: Date) {
 }
 
 /**
+ * 클립 목록 가져오기 (캐싱 적용)
+ */
+export const getAllClips = unstable_cache(
+  async () => {
+    return prisma.clip.findMany({
+      include: {
+        participants: { include: { streamer: true } },
+        schedule: {
+          include: {
+            participants: { include: { streamer: true } },
+            game: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  },
+  ['clips-all'],
+  { revalidate: 60, tags: ['clips'] },
+);
+
+/**
  * 피드백 목록 가져오기 (캐싱 적용)
  * 필요한 컬럼만 select해 전송량 최소화
  */

@@ -250,6 +250,88 @@ export async function bulkCreateStreamersAction(
 }
 
 /**
+ * 클립 생성
+ */
+export async function createClipAction(data: {
+  title: string;
+  url: string;
+  streamerIds: string[];
+  thumbnailUrl?: string;
+  description?: string;
+  clipDate?: Date;
+  scheduleId?: string;
+}): Promise<ActionResult<{ id: string }>> {
+  try {
+    await requireAuth();
+
+    if (!data.title?.trim()) {
+      throw new ValidationError('제목을 입력해주세요.');
+    }
+    if (!data.url?.trim()) {
+      throw new ValidationError('클립 URL을 입력해주세요.');
+    }
+    if (!data.streamerIds || data.streamerIds.length === 0) {
+      throw new ValidationError('연관된 스트리머를 최소 1명 선택해주세요.');
+    }
+
+    const created = await prisma.clip.create({
+      data: {
+        title: data.title.trim(),
+        url: data.url.trim(),
+        thumbnailUrl: data.thumbnailUrl?.trim() || null,
+        description: data.description?.trim() || null,
+        clipDate: data.clipDate ? new Date(data.clipDate) : null,
+        scheduleId: data.scheduleId || null,
+        participants: {
+          create: data.streamerIds.map((streamerId) => ({
+            streamer: { connect: { id: streamerId } },
+          })),
+        },
+      },
+    });
+
+    const paths = getRevalidationPaths('clip');
+    await Promise.all([
+      ...paths.map((path: string) => revalidatePath(path)),
+      updateTag('clips'),
+    ]);
+
+    return { success: true, data: { id: created.id } };
+  } catch (error) {
+    const { message, code } = getErrorMessage(error);
+    logError('createClip', error);
+    return { success: false, error: message, errorCode: code };
+  }
+}
+
+/**
+ * 클립 삭제
+ */
+export async function deleteClipAction(id: string): Promise<ActionResult> {
+  try {
+    await requireAuth();
+
+    if (!id?.trim()) {
+      throw new ValidationError('유효한 클립 ID가 필요합니다.');
+    }
+
+    await prisma.clip.delete({ where: { id } });
+
+    const paths = getRevalidationPaths('clip');
+    await Promise.all([
+      ...paths.map((path: string) => revalidatePath(path)),
+      updateTag('clips'),
+    ]);
+
+    return { success: true, data: null };
+  } catch (error) {
+    const { message, code } = getErrorMessage(error);
+    logError('deleteClip', error);
+    return { success: false, error: message, errorCode: code };
+  }
+}
+
+/**
  * 피드백 생성
  */
 export async function createFeedbackAction(formData: {

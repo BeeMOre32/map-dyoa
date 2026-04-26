@@ -8,6 +8,7 @@ export const REVALIDATION_PATHS = {
   schedule: ['/calendar'],
   streamer: ['/calendar', '/streamers'],
   admin: ['/admin', '/admin/feedbacks'],
+  clip: ['/clips'],
 } as const;
 
 export type RevalidationType = keyof typeof REVALIDATION_PATHS;
