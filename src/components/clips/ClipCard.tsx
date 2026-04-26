@@ -22,7 +22,7 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
   const [iframeActive, setIframeActive] = useState(false);
 
   const chzzkClipId = extractChzzkClipId(clip.url);
-  const useIframe = chzzkClipId !== null && !clip.thumbnailUrl;
+  const canPlayInline = chzzkClipId !== null;
 
   const formattedDate = clip.clipDate
     ? new Date(clip.clipDate).toLocaleDateString('ko-KR', {
@@ -47,8 +47,8 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
       {/* ── 미디어 영역 ── */}
       <div className="relative aspect-video bg-black overflow-hidden">
 
-        {/* 케이스 1: iframe 활성화된 상태 */}
-        {useIframe && iframeActive && (
+        {/* 케이스 1: iframe 활성 */}
+        {canPlayInline && iframeActive && (
           <iframe
             src={`https://chzzk.naver.com/embed/clip/${chzzkClipId}`}
             title={clip.title}
@@ -58,8 +58,29 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
           />
         )}
 
-        {/* 케이스 2: 정적 썸네일 */}
-        {clip.thumbnailUrl && !iframeActive && (
+        {/* 케이스 2: 썸네일 있음 + 인라인 재생 가능 → 클릭 시 iframe 활성 */}
+        {clip.thumbnailUrl && !iframeActive && canPlayInline && (
+          <button
+            onClick={() => setIframeActive(true)}
+            className="absolute inset-0 w-full h-full group/thumb"
+          >
+            <Image
+              src={clip.thumbnailUrl}
+              alt={clip.title}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              unoptimized
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/20 transition-colors flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+                <Play className="w-6 h-6 text-white fill-white ml-0.5" />
+              </div>
+            </div>
+          </button>
+        )}
+
+        {/* 케이스 3: 썸네일 있음 + 인라인 재생 불가 → 외부 링크 */}
+        {clip.thumbnailUrl && !iframeActive && !canPlayInline && (
           <a href={clip.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0">
             <Image
               src={clip.thumbnailUrl}
@@ -76,13 +97,12 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
           </a>
         )}
 
-        {/* 케이스 3: 치지직 클립이지만 iframe 비활성 → 클릭해서 활성화 */}
-        {useIframe && !iframeActive && (
+        {/* 케이스 4: 썸네일 없음 + 치지직 클립 → 다크 재생 버튼 */}
+        {canPlayInline && !iframeActive && !clip.thumbnailUrl && (
           <button
             onClick={() => setIframeActive(true)}
             className="absolute inset-0 w-full h-full flex flex-col items-center justify-center gap-2 bg-[#0B0E13] group/play"
           >
-            {/* 치지직 로고 색상 그라디언트 배경 */}
             <div className="absolute inset-0 bg-linear-to-br from-[#00FFA3]/10 to-transparent" />
             <div className="relative w-14 h-14 rounded-full bg-white/10 group-hover/play:bg-[#00FFA3]/20 border border-white/20 group-hover/play:border-[#00FFA3]/50 flex items-center justify-center transition-all duration-300">
               <Play className="w-7 h-7 text-white fill-white ml-1 group-hover/play:text-[#00FFA3] group-hover/play:fill-[#00FFA3] transition-colors" />
@@ -93,8 +113,8 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
           </button>
         )}
 
-        {/* 케이스 4: 썸네일도 없고 치지직도 아닌 경우 */}
-        {!clip.thumbnailUrl && !useIframe && (
+        {/* 케이스 5: 썸네일도 없고 치지직도 아닌 경우 */}
+        {!clip.thumbnailUrl && !canPlayInline && (
           <a
             href={clip.url}
             target="_blank"
@@ -105,7 +125,7 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
           </a>
         )}
 
-        {/* iframe 활성 시 닫기 버튼 */}
+        {/* iframe 닫기 버튼 */}
         {iframeActive && (
           <button
             onClick={() => setIframeActive(false)}

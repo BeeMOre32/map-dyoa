@@ -13,7 +13,6 @@ import {
   Gamepad2,
   Users,
   Mail,
-  GitBranch,
   LayoutGrid,
   Search,
   Zap,
@@ -25,6 +24,7 @@ import {
   ChevronRight,
   SlidersHorizontal,
   Radio,
+  Clapperboard,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -176,7 +176,7 @@ export default function GuidePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease, delay: 0.15 }}
           >
-            스트리머 합방 및 일정 캘린더를 100% 활용하는 방법
+            스트리머 합방 캘린더와 클립 모음을 100% 활용하는 방법
           </motion.p>
         </div>
 
@@ -345,11 +345,89 @@ export default function GuidePage() {
           </div>
         </SectionCard>
 
-        {/* ── 5. 로그인 ── */}
+        {/* ── 클립 모음 ── */}
+        <SectionCard
+          icon={<Clapperboard className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />}
+          iconBg="bg-indigo-50 dark:bg-indigo-900/20"
+          title={<>7. 클립 모음<NewBadge /></>}
+        >
+          <div className="space-y-4">
+            <Row icon={<Clapperboard className="w-5 h-5" />} delay={0}>
+              방송에서 나온 <strong>인상적인 순간을 클립</strong>으로 아카이빙합니다.
+              치지직 클립 URL을 붙여넣으면 <strong>썸네일·제목이 자동 추출</strong>됩니다.
+            </Row>
+            <Row icon={<SlidersHorizontal className="w-5 h-5" />} delay={0.07}>
+              상단 드롭다운으로 <strong>스트리머별 필터링</strong>이 가능합니다.
+              원하는 스트리머의 클립만 골라볼 수 있습니다.
+            </Row>
+            <Row icon={<ExternalLink className="w-5 h-5" />} delay={0.14}>
+              카드의 <strong>외부 링크 버튼</strong>으로 원본 클립 페이지로 이동하거나,
+              치지직 클립이라면 카드에서 <strong>바로 인라인 재생</strong>도 가능합니다.
+            </Row>
+            <div className="grid sm:grid-cols-3 gap-4 pt-1">
+              {[
+                {
+                  icon: <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />,
+                  label: '클립 추가',
+                  desc: (
+                    <>
+                      로그인 후 <strong>+ 클립 추가</strong> 버튼을 누릅니다.
+                      치지직 URL 입력 시 썸네일·제목이 자동 완성되며, 연관 스트리머와 방송 일정도 연결할 수 있습니다.
+                    </>
+                  ),
+                  delay: 0,
+                },
+                {
+                  icon: <Edit2 className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />,
+                  label: '클립 수정',
+                  desc: (
+                    <>
+                      카드의 <strong>연필 버튼</strong>을 누르면 제목, 스트리머, 방송, 날짜, 설명을 수정할 수 있습니다.
+                    </>
+                  ),
+                  delay: 0.07,
+                },
+                {
+                  icon: <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />,
+                  label: '클립 삭제',
+                  desc: (
+                    <>
+                      카드의 <strong>휴지통 버튼</strong>으로 삭제합니다. 삭제 후 복구 불가.
+                    </>
+                  ),
+                  delay: 0.14,
+                },
+              ].map(({ icon, label, desc, delay }) => (
+                <motion.div
+                  key={label}
+                  className="p-5 bg-slate-50 dark:bg-slate-700 rounded-3xl border border-slate-100 dark:border-slate-600"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.4, ease, delay }}
+                  whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
+                >
+                  <div className="flex items-center gap-2 mb-2 text-slate-800 dark:text-white font-black text-sm">
+                    {icon}
+                    {label}
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                    {desc}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+            <Tip>
+              치지직 클립 URL 입력 시 썸네일·제목이 자동 추출됩니다. 추출에 실패하면 직접 입력하세요.
+            </Tip>
+          </div>
+        </SectionCard>
+
+        {/* ── 로그인 ── */}
         <SectionCard
           icon={<LogIn className="w-6 h-6 text-amber-500 dark:text-amber-400" />}
           iconBg="bg-amber-50 dark:bg-amber-900/20"
-          title="7. 로그인과 편집 권한"
+          title="8. 로그인과 편집 권한"
         >
           <div className="space-y-4">
             <p className="text-slate-600 dark:text-slate-300 font-medium">
@@ -365,7 +443,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<Edit2 className="w-6 h-6 text-rose-500 dark:text-rose-400" />}
           iconBg="bg-rose-50 dark:bg-rose-900/20"
-          title="8. 일정 추가 · 수정 · 삭제"
+          title="9. 일정 추가 · 수정 · 삭제"
         >
           <div className="grid sm:grid-cols-3 gap-4">
             {[
@@ -427,7 +505,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<Keyboard className="w-6 h-6 text-slate-500 dark:text-slate-400" />}
           iconBg="bg-slate-100 dark:bg-slate-700"
-          title="9. 편의 기능"
+          title="10. 편의 기능"
         >
           <div className="space-y-4">
             <Row icon={<Keyboard className="w-5 h-5" />} delay={0}>
@@ -465,35 +543,15 @@ export default function GuidePage() {
           </motion.div>
 
           <div className="flex flex-col items-center gap-4">
-            <div className="flex items-center gap-4">
-              {[
-                {
-                  href: 'https://github.com/yourusername/your-repo',
-                  icon: <GitBranch className="w-5 h-5" />,
-                  title: 'GitHub Repository',
-                  hoverClass: 'hover:text-slate-900 dark:hover:text-white',
-                },
-                {
-                  href: 'mailto:windowssart01@gmail.com',
-                  icon: <Mail className="w-5 h-5" />,
-                  title: 'Send Email',
-                  hoverClass: 'hover:text-indigo-500 dark:hover:text-indigo-400',
-                },
-              ].map(({ href, icon, title, hoverClass }) => (
-                <motion.a
-                  key={title}
-                  href={href}
-                  target={href.startsWith('http') ? '_blank' : undefined}
-                  rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  title={title}
-                  className={`p-4 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-600 rounded-full shadow-sm border border-slate-100 dark:border-slate-700 transition-colors ${hoverClass}`}
-                  whileHover={{ y: -4, rotate: 8, transition: { duration: 0.2 } }}
-                  whileTap={{ scale: 0.92 }}
-                >
-                  {icon}
-                </motion.a>
-              ))}
-            </div>
+            <motion.a
+              href="mailto:windowssart01@gmail.com"
+              title="Send Email"
+              className="p-4 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-600 rounded-full shadow-sm border border-slate-100 dark:border-slate-700 transition-colors hover:text-indigo-500 dark:hover:text-indigo-400"
+              whileHover={{ y: -4, rotate: 8, transition: { duration: 0.2 } }}
+              whileTap={{ scale: 0.92 }}
+            >
+              <Mail className="w-5 h-5" />
+            </motion.a>
             <p className="text-xs font-bold text-slate-400 dark:text-slate-600 tracking-widest uppercase">
               Created by someone who loves map
             </p>
