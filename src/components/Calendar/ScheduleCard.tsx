@@ -10,12 +10,12 @@ import { getStreamerColor } from '@/constants/streamercolor';
 
 function LiveBadge() {
   return (
-    <span className="inline-flex items-center gap-1 shrink-0">
-      <span className="relative flex w-1.5 h-1.5">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-        <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-red-500" />
+    <span className="inline-flex items-center gap-1.5 shrink-0 px-2.5 py-1 bg-red-500 dark:bg-red-600 rounded-full shadow-md shadow-red-300/50 dark:shadow-red-900/60">
+      <span className="relative flex w-2 h-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80" />
+        <span className="relative inline-flex rounded-full w-2 h-2 bg-white" />
       </span>
-      <span className="text-[9px] font-black text-red-500 uppercase tracking-wide">live</span>
+      <span className="text-[10px] font-black text-white uppercase tracking-wider">LIVE</span>
     </span>
   );
 }
@@ -46,11 +46,17 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds }: Sch
         scroll={false}
         onClick={stopProp}
         className={`flex items-center gap-2.5 px-3 py-2.5 rounded-2xl border text-sm font-bold transition-all active:scale-95 ${
+          isLive
+            ? 'ring-1 ring-red-400/70 dark:ring-red-500/50 shadow-[0_2px_10px_rgba(239,68,68,0.18)]'
+            : ''
+        } ${
           gameColor
             ? ''
             : schedule.game
               ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800'
-              : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-100 dark:border-slate-700'
+              : isLive
+                ? 'bg-red-50/60 dark:bg-red-900/10 text-slate-600 dark:text-slate-300 border-red-200 dark:border-red-700/50'
+                : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-100 dark:border-slate-700'
         }`}
         style={
           gameColor
@@ -61,7 +67,7 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds }: Sch
         <span className="text-xs opacity-60 shrink-0 font-semibold">
           {schedule.isGuerrilla ? '미정' : format(new Date(schedule.startTime), 'HH:mm')}
         </span>
-        <span className="truncate">{schedule.title}</span>
+        <span className="truncate flex-1">{schedule.title}</span>
         {isLive && <LiveBadge />}
       </Link>
     );
@@ -71,12 +77,18 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds }: Sch
     return (
       <Link href={href} scroll={false} className="block" onClick={stopProp}>
         <div
-          className={`px-2 py-1 text-[11px] font-bold rounded-md truncate border shadow-sm shrink-0 ${
+          className={`flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-md border shadow-sm shrink-0 ${
+            isLive
+              ? 'ring-1 ring-red-400/60 dark:ring-red-500/40'
+              : ''
+          } ${
             gameColor
               ? ''
               : schedule.game
                 ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800'
-                : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-600'
+                : isLive
+                  ? 'bg-red-50/60 dark:bg-red-900/10 text-slate-500 dark:text-slate-300 border-red-200 dark:border-red-700/50'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-600'
           }`}
           style={
             gameColor
@@ -84,10 +96,10 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds }: Sch
               : undefined
           }
         >
-          <span className="opacity-70 mr-1 font-semibold">
+          <span className="opacity-70 shrink-0 font-semibold">
             {format(new Date(schedule.startTime), 'HH:mm')}
           </span>
-          {schedule.title}
+          <span className="truncate flex-1">{schedule.title}</span>
           {isLive && <LiveBadge />}
         </div>
       </Link>
@@ -99,11 +111,17 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds }: Sch
     <Link href={href} scroll={false} className="block" onClick={stopProp}>
       <div
         className={`px-2.5 py-2 rounded-xl border shadow-sm space-y-1.5 transition-all hover:shadow-md hover:-translate-y-px ${
+          isLive
+            ? 'ring-1 ring-red-400/70 dark:ring-red-500/50 shadow-[0_2px_12px_rgba(239,68,68,0.18)]'
+            : ''
+        } ${
           gameColor
             ? ''
             : schedule.game
               ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
-              : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+              : isLive
+                ? 'bg-red-50/50 dark:bg-red-900/10 border-red-200 dark:border-red-700/50'
+                : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
         }`}
         style={
           gameColor
@@ -111,6 +129,7 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds }: Sch
             : undefined
         }
       >
+        {/* 상단: 게임 배지 / 미정 배지 / 라이브 배지 */}
         <div className="flex items-center gap-1 flex-wrap">
           {schedule.game && (
             <span
@@ -133,6 +152,11 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds }: Sch
               시간 미정
             </span>
           )}
+          {isLive && (
+            <span className="ml-auto">
+              <LiveBadge />
+            </span>
+          )}
         </div>
 
         {!schedule.isGuerrilla && (
@@ -147,21 +171,18 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds }: Sch
           </div>
         )}
 
-        <div className="flex items-start gap-1">
-          <p
-            className={`text-sm font-bold line-clamp-2 leading-snug flex-1 ${
-              gameColor
-                ? ''
-                : schedule.game
-                  ? 'text-amber-800 dark:text-amber-300'
-                  : 'text-slate-700 dark:text-slate-200'
-            }`}
-            style={gameColor ? { color: gameColor } : undefined}
-          >
-            {schedule.title}
-          </p>
-          {isLive && <LiveBadge />}
-        </div>
+        <p
+          className={`text-sm font-bold line-clamp-2 leading-snug ${
+            gameColor
+              ? ''
+              : schedule.game
+                ? 'text-amber-800 dark:text-amber-300'
+                : 'text-slate-700 dark:text-slate-200'
+          }`}
+          style={gameColor ? { color: gameColor } : undefined}
+        >
+          {schedule.title}
+        </p>
 
         {schedule.participants.length > 0 && (
           <div className="flex items-center gap-1 flex-wrap">
