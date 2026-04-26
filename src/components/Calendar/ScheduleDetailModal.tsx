@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
   Edit2,
@@ -12,6 +12,7 @@ import {
   Gamepad2,
   Calendar,
   ChevronLeft,
+  ChevronRight,
   ExternalLink,
   Play,
   Tv,
@@ -35,8 +36,85 @@ type ClipForSchedule = {
   id: string;
   title: string;
   url: string;
+  description: string | null;
+  clipDate: Date | string | null;
   participants: { streamer: { id: string; name: string; colorCode: string } }[];
 };
+
+function ClipDetailPanel({
+  clip,
+  onClose,
+  isDark,
+}: {
+  clip: ClipForSchedule;
+  onClose: () => void;
+  isDark: boolean;
+}) {
+  return (
+    <div className="flex flex-col h-full">
+      <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3 shrink-0 bg-slate-50/50 dark:bg-slate-700/30">
+        <button
+          onClick={onClose}
+          className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-slate-400 dark:text-slate-500"
+        >
+          <X className="w-4 h-4" />
+        </button>
+        <Clapperboard className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+        <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+          Clip
+        </span>
+      </div>
+
+      <div className="flex-1 min-h-0 p-5 space-y-4 overflow-y-auto overscroll-y-contain custom-scrollbar">
+        <h3 className="text-lg font-black text-slate-900 dark:text-white leading-snug">
+          {clip.title}
+        </h3>
+
+        {clip.participants.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {clip.participants.map((p) => (
+              <span
+                key={p.streamer.id}
+                className="text-[11px] font-bold px-2.5 py-1 rounded-full"
+                style={((c) => ({
+                  color: c,
+                  backgroundColor: `${c}18`,
+                }))(getStreamerColor(p.streamer.id, isDark) ?? p.streamer.colorCode)}
+              >
+                {p.streamer.name}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {clip.clipDate && (
+          <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 font-bold">
+            <Calendar className="w-3.5 h-3.5" />
+            {format(new Date(clip.clipDate), 'yyyy년 M월 d일', { locale: ko })}
+          </div>
+        )}
+
+        {clip.description && (
+          <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed bg-slate-50 dark:bg-slate-700/50 rounded-2xl px-4 py-3.5">
+            {clip.description}
+          </p>
+        )}
+      </div>
+
+      <div className="p-5 border-t border-slate-100 dark:border-slate-700 shrink-0">
+        <a
+          href={clip.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm transition-all active:scale-95 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30"
+        >
+          클립 보러가기
+          <ExternalLink className="w-4 h-4" />
+        </a>
+      </div>
+    </div>
+  );
+}
 
 interface ScheduleDetailViewProps {
   schedule: FlattenedSchedule;
@@ -55,11 +133,15 @@ export default function ScheduleDetailView({
   const { data: session } = useSession();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedClip, setSelectedClip] = useState<ClipForSchedule | null>(null);
   const isUser = !!session;
   const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
 
   const handleClose = () => {
-    if (isEditing) {
+    if (selectedClip) {
+      setSelectedClip(null);
+    } else if (isEditing) {
       setIsEditing(false);
     } else {
       router.back();
@@ -79,7 +161,7 @@ export default function ScheduleDetailView({
   };
 
   const gameColor = schedule.game?.id
-    ? (getGameColor(schedule.game.id, resolvedTheme === 'dark') ?? '#4f46e5')
+    ? (getGameColor(schedule.game.id, isDark) ?? '#4f46e5')
     : '#4f46e5';
 
   const getLinkMeta = (url: string) => {
@@ -101,222 +183,275 @@ export default function ScheduleDetailView({
       className="fixed inset-0 z-70 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md"
       onClick={handleClose}
     >
-      <motion.div
-        variants={smoothModalVariants}
-        className="bg-white dark:bg-slate-800 w-full sm:max-w-lg rounded-t-4xl sm:rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] border border-slate-100 dark:border-slate-700"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {isEditing ? (
-          <div className="flex flex-col h-full overflow-hidden bg-white dark:bg-slate-800">
-            <div className="px-5 py-4 sm:px-8 sm:py-6 border-b border-slate-50 dark:border-slate-700 flex justify-between items-center shrink-0 bg-slate-50/50 dark:bg-slate-700/30">
-              <button
-                onClick={() => setIsEditing(false)}
-                className="flex items-center gap-2 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-bold transition-colors group"
+      {/* 모바일: 메인 모달만 / 데스크탑: 두 패널 나란히 */}
+      <div className="flex sm:flex-row sm:items-start sm:gap-3 w-full sm:w-auto">
+
+        {/* 메인 스케줄 모달 */}
+        <motion.div
+          variants={smoothModalVariants}
+          className="relative bg-white dark:bg-slate-800 w-full sm:max-w-lg rounded-t-4xl sm:rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] border border-slate-100 dark:border-slate-700"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {isEditing ? (
+            <div className="flex flex-col h-full overflow-hidden bg-white dark:bg-slate-800">
+              <div className="px-5 py-4 sm:px-8 sm:py-6 border-b border-slate-50 dark:border-slate-700 flex justify-between items-center shrink-0 bg-slate-50/50 dark:bg-slate-700/30">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="flex items-center gap-2 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-bold transition-colors group"
+                >
+                  <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                  상세보기
+                </button>
+                <h3 className="text-lg font-black text-slate-800 dark:text-white">
+                  일정 수정
+                </h3>
+                <div className="w-10" />
+              </div>
+
+              <div className="p-5 sm:p-8 overflow-y-auto flex-1 min-h-0 overscroll-y-contain custom-scrollbar">
+                <CreateScheduleModal
+                  initialData={schedule}
+                  isEdit={true}
+                  streamers={streamers}
+                  games={games}
+                  onClose={() => {
+                    setIsEditing(false);
+                    router.refresh();
+                  }}
+                />
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* 상단 컬러 배너 */}
+              <div
+                className="h-16 w-full shrink-0 relative transition-colors duration-500"
+                style={{ backgroundColor: gameColor }}
               >
-                <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                상세보기
-              </button>
-              <h3 className="text-lg font-black text-slate-800 dark:text-white">
-                일정 수정
-              </h3>
-              <div className="w-10" />
-            </div>
-
-            <div className="p-5 sm:p-8 overflow-y-auto flex-1 custom-scrollbar">
-              <CreateScheduleModal
-                initialData={schedule}
-                isEdit={true}
-                streamers={streamers}
-                games={games}
-                onClose={() => {
-                  setIsEditing(false);
-                  router.refresh();
-                }}
-              />
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* 🌟 상단 컬러 배너 (태그 제거됨) */}
-            <div
-              className="h-16 w-full shrink-0 relative transition-colors duration-500"
-              style={{ backgroundColor: gameColor }}
-            >
-              <button
-                onClick={() => router.back()}
-                className="absolute top-1/2 -translate-y-1/2 right-4 p-2 sm:p-2.5 bg-black/10 hover:bg-black/25 text-white rounded-full backdrop-blur-md transition-all"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* 메인 컨텐츠 */}
-            <div className="p-5 sm:p-8 space-y-6 sm:space-y-8 overflow-y-auto flex-1 custom-scrollbar bg-white dark:bg-slate-800">
-              <div className="space-y-4 sm:space-y-6">
-                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight">
-                  {schedule.title}
-                </h2>
-
-                {/* 🌟 날짜, 시간, 게임 태그 나란히 배치 */}
-                <div className="flex flex-wrap gap-2.5">
-                  {/* 게임 태그 */}
-                  <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-2xl font-bold text-sm border border-amber-100 dark:border-amber-800 shadow-sm">
-                    <Gamepad2 className="w-4 h-4" />
-                    <span className="uppercase tracking-tight">
-                      {schedule.game?.title || '기타 방송'}
-                    </span>
-                  </div>
-
-                  {/* 날짜 */}
-                  <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 font-bold text-sm border border-slate-100 dark:border-slate-600">
-                    <Calendar className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-                    {format(
-                      new Date(schedule.startTime),
-                      'yyyy년 M월 d일 (eee)',
-                      { locale: ko },
-                    )}
-                  </div>
-
-                  {/* 시간 */}
-                  <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 font-bold text-sm border border-slate-100 dark:border-slate-600">
-                    <Clock className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-                    {schedule.isGuerrilla
-                      ? '시간 미정'
-                      : format(new Date(schedule.startTime), 'a h:mm', { locale: ko })}
-                  </div>
-                </div>
+                <button
+                  onClick={() => router.back()}
+                  className="absolute top-1/2 -translate-y-1/2 right-4 p-2 sm:p-2.5 bg-black/10 hover:bg-black/25 text-white rounded-full backdrop-blur-md transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              {/* 참여 멤버 섹션 */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 ml-1">
-                  <Users className="w-4 h-4 text-slate-300 dark:text-slate-600" />
-                  <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
-                    Participants
-                  </span>
-                </div>
+              {/* 메인 컨텐츠 */}
+              <div className="p-5 sm:p-8 space-y-6 sm:space-y-8 overflow-y-auto flex-1 min-h-0 overscroll-y-contain custom-scrollbar bg-white dark:bg-slate-800">
+                <div className="space-y-4 sm:space-y-6">
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight">
+                    {schedule.title}
+                  </h2>
 
-                <div className="flex flex-wrap gap-2">
-                  {schedule.participants.map((p) => (
-                    <Link
-                      href={`/streamers/detail/${p.id}`}
-                      key={p.id}
-                      className="px-4 py-2.5 rounded-2xl border font-bold text-sm shadow-sm transition-all hover:scale-105"
-                      style={((c) => ({
-                        backgroundColor: `${c}08`,
-                        color: c,
-                        borderColor: `${c}25`,
-                      }))(getStreamerColor(p.id, resolvedTheme === 'dark') ?? p.colorCode)}
-                    >
-                      {p.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
+                  <div className="flex flex-wrap gap-2.5">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-2xl font-bold text-sm border border-amber-100 dark:border-amber-800 shadow-sm">
+                      <Gamepad2 className="w-4 h-4" />
+                      <span className="uppercase tracking-tight">
+                        {schedule.game?.title || '기타 방송'}
+                      </span>
+                    </div>
 
-              {/* 방송 링크 */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 ml-1">
-                  <ExternalLink className="w-4 h-4 text-slate-300 dark:text-slate-600" />
-                  <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
-                    VOD / Live
-                  </span>
-                </div>
-                {schedule.liveUrl ? (() => {
-                  const { label, icon: Icon, className } = getLinkMeta(schedule.liveUrl);
-                  return (
-                    <a
-                      href={schedule.liveUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl border font-bold text-sm transition-all active:scale-95 ${className}`}
-                    >
-                      <Icon className="w-4 h-4 shrink-0" />
-                      {label}
-                      <ExternalLink className="w-3 h-3 opacity-60" />
-                    </a>
-                  );
-                })() : (
-                  <div className="flex items-center gap-2.5 px-5 py-3 rounded-2xl border border-dashed border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500 text-sm font-bold">
-                    <ExternalLink className="w-4 h-4 shrink-0 opacity-50" />
-                    아직 등록된 링크가 없어요
+                    <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 font-bold text-sm border border-slate-100 dark:border-slate-600">
+                      <Calendar className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                      {format(new Date(schedule.startTime), 'yyyy년 M월 d일 (eee)', { locale: ko })}
+                    </div>
+
+                    <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 font-bold text-sm border border-slate-100 dark:border-slate-600">
+                      <Clock className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+                      {schedule.isGuerrilla
+                        ? '시간 미정'
+                        : format(new Date(schedule.startTime), 'a h:mm', { locale: ko })}
+                    </div>
                   </div>
-                )}
-              </div>
+                </div>
 
-              {/* 클립 섹션 */}
-              {clips.length > 0 && (
-                <div className="space-y-3">
+                {/* 참여 멤버 */}
+                <div className="space-y-4">
                   <div className="flex items-center gap-2 ml-1">
-                    <Clapperboard className="w-4 h-4 text-slate-300 dark:text-slate-600" />
+                    <Users className="w-4 h-4 text-slate-300 dark:text-slate-600" />
                     <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
-                      Clips
-                    </span>
-                    <span className="text-[10px] font-black text-slate-300 dark:text-slate-600">
-                      {clips.length}
+                      Participants
                     </span>
                   </div>
-                  <div className="space-y-2">
-                    {clips.map((clip) => (
-                      <a
-                        key={clip.id}
-                        href={clip.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 hover:border-indigo-200 dark:hover:border-indigo-700 hover:bg-indigo-50/40 dark:hover:bg-indigo-900/10 transition-all group"
+                  <div className="flex flex-wrap gap-2">
+                    {schedule.participants.map((p) => (
+                      <Link
+                        href={`/streamers/detail/${p.id}`}
+                        key={p.id}
+                        className="px-4 py-2.5 rounded-2xl border font-bold text-sm shadow-sm transition-all hover:scale-105"
+                        style={((c) => ({
+                          backgroundColor: `${c}08`,
+                          color: c,
+                          borderColor: `${c}25`,
+                        }))(getStreamerColor(p.id, isDark) ?? p.colorCode)}
                       >
-                        <Clapperboard className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0 group-hover:text-indigo-400 transition-colors" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                            {clip.title}
-                          </p>
-                          {clip.participants.length > 0 && (
-                            <div className="flex gap-1 mt-1 flex-wrap">
-                              {clip.participants.map((p) => (
-                                <span
-                                  key={p.streamer.id}
-                                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                                  style={((c) => ({
-                                    color: c,
-                                    backgroundColor: `${c}18`,
-                                  }))(getStreamerColor(p.streamer.id, resolvedTheme === 'dark') ?? p.streamer.colorCode)}
-                                >
-                                  {p.streamer.name}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        <ExternalLink className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-indigo-500 transition-colors shrink-0" />
-                      </a>
+                        {p.name}
+                      </Link>
                     ))}
                   </div>
                 </div>
-              )}
 
-              {/* 하단 제어 버튼 */}
-              {isUser && (
-                <div className="flex gap-3 pt-4 border-t border-slate-50 dark:border-slate-700">
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="flex-1 flex items-center justify-center gap-2 py-3.5 sm:py-4 bg-slate-900 dark:bg-indigo-600 text-white rounded-3xl font-black hover:bg-slate-800 dark:hover:bg-indigo-700 transition-all shadow-xl shadow-slate-200 dark:shadow-indigo-900/30 active:scale-95"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    내용 수정하기
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    className="p-3.5 sm:p-4 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-3xl border border-red-100 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all active:scale-95"
-                    title="삭제"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                {/* 방송 링크 */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 ml-1">
+                    <ExternalLink className="w-4 h-4 text-slate-300 dark:text-slate-600" />
+                    <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+                      VOD / Live
+                    </span>
+                  </div>
+                  {schedule.liveUrl ? (() => {
+                    const { label, icon: Icon, className } = getLinkMeta(schedule.liveUrl);
+                    return (
+                      <a
+                        href={schedule.liveUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl border font-bold text-sm transition-all active:scale-95 ${className}`}
+                      >
+                        <Icon className="w-4 h-4 shrink-0" />
+                        {label}
+                        <ExternalLink className="w-3 h-3 opacity-60" />
+                      </a>
+                    );
+                  })() : (
+                    <div className="flex items-center gap-2.5 px-5 py-3 rounded-2xl border border-dashed border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500 text-sm font-bold">
+                      <ExternalLink className="w-4 h-4 shrink-0 opacity-50" />
+                      아직 등록된 링크가 없어요
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </>
-        )}
-      </motion.div>
+
+                {/* 클립 섹션 */}
+                {clips.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 ml-1">
+                      <Clapperboard className="w-4 h-4 text-slate-300 dark:text-slate-600" />
+                      <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+                        Clips
+                      </span>
+                      <span className="text-[10px] font-black text-slate-300 dark:text-slate-600">
+                        {clips.length}
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {clips.map((clip) => {
+                        const isSelected = selectedClip?.id === clip.id;
+                        return (
+                          <button
+                            key={clip.id}
+                            onClick={() => setSelectedClip(isSelected ? null : clip)}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border text-left transition-all group ${
+                              isSelected
+                                ? 'border-indigo-200 dark:border-indigo-700 bg-indigo-50/60 dark:bg-indigo-900/20'
+                                : 'border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 hover:border-indigo-200 dark:hover:border-indigo-700 hover:bg-indigo-50/40 dark:hover:bg-indigo-900/10'
+                            }`}
+                          >
+                            <Clapperboard className={`w-4 h-4 shrink-0 transition-colors ${
+                              isSelected
+                                ? 'text-indigo-500 dark:text-indigo-400'
+                                : 'text-slate-300 dark:text-slate-600 group-hover:text-indigo-400'
+                            }`} />
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm font-bold truncate transition-colors ${
+                                isSelected
+                                  ? 'text-indigo-600 dark:text-indigo-400'
+                                  : 'text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
+                              }`}>
+                                {clip.title}
+                              </p>
+                              {clip.participants.length > 0 && (
+                                <div className="flex gap-1 mt-1 flex-wrap">
+                                  {clip.participants.map((p) => (
+                                    <span
+                                      key={p.streamer.id}
+                                      className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                                      style={((c) => ({
+                                        color: c,
+                                        backgroundColor: `${c}18`,
+                                      }))(getStreamerColor(p.streamer.id, isDark) ?? p.streamer.colorCode)}
+                                    >
+                                      {p.streamer.name}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <ChevronRight className={`w-4 h-4 shrink-0 transition-all ${
+                              isSelected
+                                ? 'text-indigo-400 sm:rotate-0 rotate-90'
+                                : 'text-slate-200 dark:text-slate-600 group-hover:text-indigo-400 group-hover:translate-x-0.5'
+                            }`} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* 하단 제어 버튼 */}
+                {isUser && (
+                  <div className="flex gap-3 pt-4 border-t border-slate-50 dark:border-slate-700">
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="flex-1 flex items-center justify-center gap-2 py-3.5 sm:py-4 bg-slate-900 dark:bg-indigo-600 text-white rounded-3xl font-black hover:bg-slate-800 dark:hover:bg-indigo-700 transition-all shadow-xl shadow-slate-200 dark:shadow-indigo-900/30 active:scale-95"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      내용 수정하기
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      className="p-3.5 sm:p-4 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-3xl border border-red-100 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all active:scale-95"
+                      title="삭제"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* 모바일: 클립 상세가 모달 위로 슬라이드업 */}
+          <AnimatePresence>
+            {selectedClip && !isEditing && (
+              <motion.div
+                className="sm:hidden absolute inset-0 bg-white dark:bg-slate-800 z-10 flex flex-col"
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 28, stiffness: 380 }}
+              >
+                <ClipDetailPanel
+                  clip={selectedClip}
+                  onClose={() => setSelectedClip(null)}
+                  isDark={isDark}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* 데스크탑: 클립 상세 패널이 오른쪽에 등장 */}
+        <AnimatePresence>
+          {selectedClip && !isEditing && (
+            <motion.div
+              className="hidden sm:flex flex-col bg-white dark:bg-slate-800 w-72 rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-700 overflow-hidden max-h-[90vh]"
+              initial={{ opacity: 0, x: 16, scale: 0.97 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 16, scale: 0.97 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ClipDetailPanel
+                clip={selectedClip}
+                onClose={() => setSelectedClip(null)}
+                isDark={isDark}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+      </div>
     </motion.div>
   );
 }
