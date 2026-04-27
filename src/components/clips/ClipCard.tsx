@@ -1,7 +1,8 @@
 'use client';
 
-import { ExternalLink, Trash2, Play, Tv, Pencil } from 'lucide-react';
+import { ExternalLink, Trash2, Play, Tv, Pencil, ArrowUpRight } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useState } from 'react';
 import type { ClipWithParticipants } from '@/types/entities';
 import { deleteClipAction } from '@/app/actions';
@@ -184,12 +185,16 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
 
         {/* 연결된 방송 */}
         {clip.schedule && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800">
+          <Link
+            href={`/calendar/schedule/${clip.schedule.id}`}
+            className="group/sched flex items-center gap-1.5 px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 hover:border-indigo-200 dark:hover:border-indigo-700 transition-all"
+          >
             <Tv className="w-3 h-3 text-indigo-500 dark:text-indigo-400 shrink-0" />
-            <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 line-clamp-1">
+            <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 line-clamp-1 flex-1">
               {clip.schedule.title}
             </span>
-          </div>
+            <ArrowUpRight className="w-3 h-3 text-indigo-400 dark:text-indigo-500 shrink-0 opacity-0 group-hover/sched:opacity-100 transition-opacity" />
+          </Link>
         )}
 
         {/* 연관 스트리머 뱃지 */}
