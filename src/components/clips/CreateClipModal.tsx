@@ -1,7 +1,16 @@
 'use client';
 
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { X, Link as LinkIcon, Clapperboard, Tv, Search, Users, Loader2, Check } from 'lucide-react';
+import {
+  X,
+  Link as LinkIcon,
+  Clapperboard,
+  Tv,
+  Search,
+  Users,
+  Loader2,
+  Check,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { twMerge } from 'tailwind-merge';
 import { format } from 'date-fns';
@@ -16,6 +25,7 @@ import type { Streamer } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import type { ClipWithParticipants } from '@/types/entities';
 import ScheduleSearchSelect from './ScheduleSearchSelect';
+import StreamerAvatar from '../streamer/StreamerAvatar';
 
 interface CreateClipModalProps {
   streamers: Streamer[];
@@ -35,10 +45,16 @@ export default function CreateClipModal({
 
   const [title, setTitle] = useState(initialData?.title ?? '');
   const [url, setUrl] = useState(initialData?.url ?? '');
-  const [thumbnailUrl, setThumbnailUrl] = useState(initialData?.thumbnailUrl ?? '');
-  const [description, setDescription] = useState(initialData?.description ?? '');
+  const [thumbnailUrl, setThumbnailUrl] = useState(
+    initialData?.thumbnailUrl ?? '',
+  );
+  const [description, setDescription] = useState(
+    initialData?.description ?? '',
+  );
   const [clipDate, setClipDate] = useState(
-    initialData?.clipDate ? format(new Date(initialData.clipDate), 'yyyy-MM-dd') : '',
+    initialData?.clipDate
+      ? format(new Date(initialData.clipDate), 'yyyy-MM-dd')
+      : '',
   );
   const [selectedIds, setSelectedIds] = useState<string[]>(
     initialData?.participants.map((p) => p.streamerId) ?? [],
@@ -60,7 +76,9 @@ export default function CreateClipModal({
     setFetchingMeta(true);
     setMetaStatus('idle');
     try {
-      const res = await fetch(`/api/chzzk/clip-meta?url=${encodeURIComponent(clipUrl)}`);
+      const res = await fetch(
+        `/api/chzzk/clip-meta?url=${encodeURIComponent(clipUrl)}`,
+      );
       const data = await res.json();
       if (res.ok) {
         if (data.thumbnailUrl) {
@@ -94,7 +112,9 @@ export default function CreateClipModal({
 
   const filteredStreamers = useMemo(() => {
     const q = streamerSearch.trim();
-    const base = q ? streamers.filter((s) => matchesChosung(s.name, q)) : streamers;
+    const base = q
+      ? streamers.filter((s) => matchesChosung(s.name, q))
+      : streamers;
     return [...base].sort((a, b) => {
       const aSelected = selectedIds.includes(a.id) ? 0 : 1;
       const bSelected = selectedIds.includes(b.id) ? 0 : 1;
@@ -127,7 +147,8 @@ export default function CreateClipModal({
     setError('');
     if (!title.trim()) return setError('제목을 입력해주세요.');
     if (!url.trim()) return setError('클립 URL을 입력해주세요.');
-    if (selectedIds.length === 0) return setError('연관된 스트리머를 최소 1명 선택해주세요.');
+    if (selectedIds.length === 0)
+      return setError('연관된 스트리머를 최소 1명 선택해주세요.');
 
     const payload = {
       title: title.trim(),
@@ -165,7 +186,10 @@ export default function CreateClipModal({
       animate="visible"
       exit="hidden"
     >
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
       <motion.div
         className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
         variants={smoothModalVariants}
@@ -197,7 +221,6 @@ export default function CreateClipModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
-
           {/* ── 클립 URL ── */}
           <div className="space-y-1.5">
             <label className={labelClass}>클립 URL *</label>
@@ -248,7 +271,9 @@ export default function CreateClipModal({
                     {selectedIds.map((id) => {
                       const s = streamers.find((x) => x.id === id);
                       if (!s) return null;
-                      const color = getStreamerColor(s.id, resolvedTheme === 'dark') ?? s.colorCode;
+                      const color =
+                        getStreamerColor(s.id, resolvedTheme === 'dark') ??
+                        s.colorCode;
                       return (
                         <motion.button
                           key={id}
@@ -256,25 +281,23 @@ export default function CreateClipModal({
                           initial={{ scale: 0.75, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           exit={{ scale: 0.75, opacity: 0 }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                          transition={{
+                            type: 'spring',
+                            stiffness: 400,
+                            damping: 25,
+                          }}
                           type="button"
                           onClick={() => toggleStreamer(id)}
-                          className="flex items-center gap-1 pl-1 pr-1.5 py-1 rounded-xl text-[11px] font-black text-white hover:opacity-80 transition-opacity"
+                          className="flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-xl text-[11px] font-black text-white hover:opacity-80 transition-opacity"
                           style={{ backgroundColor: color }}
                         >
-                          <div
-                            className="w-5 h-5 rounded-full overflow-hidden flex items-center justify-center text-white text-[10px] font-black shrink-0"
-                            style={{ backgroundColor: color }}
-                          >
-                            {s.profileImg ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={s.profileImg} alt={s.name} className="w-full h-full object-cover" />
-                            ) : (
-                              s.name[0]
-                            )}
-                          </div>
+                          <StreamerAvatar
+                            colorCode={color}
+                            name={s.name}
+                            size="small"
+                            imgSrc={s.profileImg}
+                          />
                           {s.name}
-                          <X className="w-3 h-3" />
                         </motion.button>
                       );
                     })}
@@ -299,12 +322,16 @@ export default function CreateClipModal({
             <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
               <div className="max-h-48 overflow-y-auto p-3">
                 {filteredStreamers.length === 0 ? (
-                  <p className="py-6 text-sm text-center text-slate-400 font-bold">검색 결과가 없습니다</p>
+                  <p className="py-6 text-sm text-center text-slate-400 font-bold">
+                    검색 결과가 없습니다
+                  </p>
                 ) : (
                   <div className="grid grid-cols-4 gap-1.5">
                     {filteredStreamers.map((s) => {
                       const isSelected = selectedIds.includes(s.id);
-                      const color = getStreamerColor(s.id, resolvedTheme === 'dark') ?? s.colorCode;
+                      const color =
+                        getStreamerColor(s.id, resolvedTheme === 'dark') ??
+                        s.colorCode;
                       return (
                         <button
                           key={s.id}
@@ -333,7 +360,10 @@ export default function CreateClipModal({
                             )}
                             {isSelected && (
                               <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center">
-                                <Check className="w-5 h-5 text-white" strokeWidth={3} />
+                                <Check
+                                  className="w-5 h-5 text-white"
+                                  strokeWidth={3}
+                                />
                               </div>
                             )}
                           </div>
@@ -361,7 +391,9 @@ export default function CreateClipModal({
               <span className="flex items-center gap-1.5">
                 <Tv className="w-3.5 h-3.5" />
                 진행된 방송{' '}
-                <span className="text-slate-300 normal-case font-bold">(선택)</span>
+                <span className="text-slate-300 normal-case font-bold">
+                  (선택)
+                </span>
               </span>
             </label>
             <ScheduleSearchSelect
@@ -388,7 +420,9 @@ export default function CreateClipModal({
           <div className="space-y-1.5">
             <label className={labelClass}>
               썸네일 URL{' '}
-              <span className="text-slate-300 normal-case font-bold">(선택 · 치지직 자동 추출)</span>
+              <span className="text-slate-300 normal-case font-bold">
+                (선택 · 치지직 자동 추출)
+              </span>
             </label>
             {thumbnailUrl && (
               <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
@@ -397,7 +431,10 @@ export default function CreateClipModal({
                   src={thumbnailUrl}
                   alt="썸네일 미리보기"
                   className="w-full h-full object-cover"
-                  onError={() => { setThumbnailUrl(''); setMetaStatus('fail'); }}
+                  onError={() => {
+                    setThumbnailUrl('');
+                    setMetaStatus('fail');
+                  }}
                 />
                 <button
                   type="button"
@@ -425,7 +462,9 @@ export default function CreateClipModal({
             <div className="space-y-1.5">
               <label className={labelClass}>
                 클립 날짜{' '}
-                <span className="text-slate-300 normal-case font-bold">(선택)</span>
+                <span className="text-slate-300 normal-case font-bold">
+                  (선택)
+                </span>
               </label>
               <input
                 type="date"
@@ -437,7 +476,9 @@ export default function CreateClipModal({
             <div className="space-y-1.5">
               <label className={labelClass}>
                 설명{' '}
-                <span className="text-slate-300 normal-case font-bold">(선택)</span>
+                <span className="text-slate-300 normal-case font-bold">
+                  (선택)
+                </span>
               </label>
               <input
                 type="text"
@@ -468,7 +509,13 @@ export default function CreateClipModal({
               disabled={submitting}
               className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200 dark:shadow-none"
             >
-              {submitting ? (isEdit ? '수정 중...' : '추가 중...') : (isEdit ? '수정 완료' : '클립 추가')}
+              {submitting
+                ? isEdit
+                  ? '수정 중...'
+                  : '추가 중...'
+                : isEdit
+                  ? '수정 완료'
+                  : '클립 추가'}
             </button>
           </div>
         </form>
