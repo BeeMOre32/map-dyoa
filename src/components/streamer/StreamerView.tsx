@@ -38,10 +38,10 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
   }, []);
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-800 relative overflow-hidden">
+    <div className="flex flex-col bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-800 relative">
 
-      {/* 헤더 */}
-      <div className="p-6 pb-4 border-b border-slate-50 dark:border-slate-700 shrink-0 bg-slate-50/30 dark:bg-slate-800/20">
+      {/* 헤더 — 페이지 스크롤 시 상단 고정 */}
+      <div className="sticky top-0 z-10 p-6 pb-4 border-b border-slate-50 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-t-3xl">
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-xl font-black text-slate-800 dark:text-white">
@@ -113,7 +113,7 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
       </div>
 
       {/* 카드 그리드 */}
-      <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+      <div className="p-6">
         {filtered.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
