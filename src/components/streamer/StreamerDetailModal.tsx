@@ -1,4 +1,3 @@
-// src/components/Streamer/StreamerDetailModal.tsx
 'use client';
 
 import { motion } from 'framer-motion';
@@ -6,22 +5,68 @@ import {
   X,
   ExternalLink,
   CalendarDays,
-  BarChart3,
   Gamepad2,
+  Users,
+  Clapperboard,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import Link from 'next/link';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import StreamerAvatar from './StreamerAvatar';
 import { getStreamerImagePath } from '@/lib/utils';
 import { getStreamerColor } from '@/constants/streamercolor';
+import { getGameColor } from '@/constants/gamecolor';
+import type { Streamer } from '@prisma/client';
 
-export default function StreamerDetailModal({ streamer }: any) {
+type ScheduleWithDetails = {
+  id: string;
+  title: string;
+  startTime: Date | string;
+  game: { id: string; title: string } | null;
+  participants: { streamer: { id: string; name: string; colorCode: string } }[];
+};
+
+interface StreamerDetailModalProps {
+  streamer: Streamer;
+  schedules?: ScheduleWithDetails[];
+  scheduleCount?: number;
+  clipCount?: number;
+}
+
+export default function StreamerDetailModal({
+  streamer,
+  schedules = [],
+  scheduleCount = 0,
+  clipCount = 0,
+}: StreamerDetailModalProps) {
   const router = useRouter();
   const imgSrc = getStreamerImagePath(streamer.name);
   const { resolvedTheme } = useTheme();
-  const streamerColor = getStreamerColor(streamer.id, resolvedTheme === 'dark') ?? streamer.colorCode;
+  const isDark = resolvedTheme === 'dark';
+  const streamerColor = getStreamerColor(streamer.id, isDark) ?? streamer.colorCode;
+
+  const games = [
+    ...new Map(
+      schedules
+        .filter((s) => s.game)
+        .map((s) => [s.game!.id, s.game!]),
+    ).values(),
+  ];
+
+  const collabs = [
+    ...new Map(
+      schedules
+        .flatMap((s) => s.participants)
+        .filter((p) => p.streamer.id !== streamer.id)
+        .map((p) => [p.streamer.id, p.streamer]),
+    ).values(),
+  ];
+
+  const recentSchedules = schedules.slice(0, 5);
 
   useEscapeKey(() => router.back());
 
@@ -36,95 +81,244 @@ export default function StreamerDetailModal({ streamer }: any) {
     >
       <motion.div
         variants={smoothModalVariants}
-        // max-w-3xl로 시원시원한 크기 부여
-        className="bg-white dark:bg-slate-800 w-full max-w-3xl rounded-[3rem] shadow-[0_0_50px_rgba(0,0,0,0.15)] dark:shadow-slate-900/50 overflow-hidden flex flex-col max-h-[90vh] border border-slate-100 dark:border-slate-700"
+        className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/60 overflow-hidden flex flex-col max-h-[90vh] border border-slate-100 dark:border-slate-800"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 상단 프로필 배너 (가로 스크롤 카드 스타일 확장) */}
-        <div className="p-10 border-b border-slate-100 dark:border-slate-700 shrink-0 relative flex gap-8 items-center bg-slate-50 dark:bg-slate-700/30">
+        {/* ── 히어로 배너 ── */}
+        <div
+          className="relative h-28 shrink-0"
+          style={{
+            background: `linear-gradient(135deg, ${streamerColor}CC 0%, ${streamerColor}44 100%)`,
+          }}
+        >
           <button
             onClick={() => router.back()}
-            className="absolute top-6 right-6 p-2.5 bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 rounded-full text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-all shadow-sm border border-slate-100 dark:border-slate-600"
+            className="absolute top-4 right-4 p-2 bg-black/15 hover:bg-black/30 text-white rounded-full backdrop-blur-sm transition-all"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
 
-          {/* 원형 아바타 (더 크게) */}
-          <StreamerAvatar
-            size="large"
-            colorCode=""
-            name={streamer.name}
-            imgSrc={imgSrc}
-          />
-
-          {/* 이름 및 슬로건 */}
-          <div className="flex-1 space-y-1.5">
-            <h2 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-              {streamer.name}
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 font-bold text-sm tracking-wide uppercase">
-              지도동의 매력덩어리 스트리머입니다!
-            </p>
-            {/* 소셜 링크 */}
+          {/* 아바타 — 배너 아래로 겹침 */}
+          <div className="absolute -bottom-10 left-8">
+            <div
+              className="rounded-[1.25rem] shadow-xl ring-4"
+              style={{ '--tw-ring-color': isDark ? '#0f172a' : '#ffffff' } as React.CSSProperties}
+            >
+              <div className="ring-4 ring-white dark:ring-slate-900 rounded-[1.25rem]">
+                <StreamerAvatar
+                  size="large"
+                  colorCode={streamer.colorCode}
+                  name={streamer.name}
+                  imgSrc={imgSrc}
+                  streamerId={streamer.id}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* 메인 본체 (스크롤 가능) */}
-        <div className="p-10 space-y-10 overflow-y-auto custom-scrollbar flex-1 bg-white dark:bg-slate-800">
-          {/* 스트리머 소개 섹션 */}
-          <div className="space-y-4 px-2">
-            <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-2">
-              <span
-                className="w-1.5 h-1.5 rounded-full"
-                style={{ backgroundColor: streamerColor }}
-              ></span>
-              스트리머 소개
-            </h4>
-            <div className="bg-slate-50/50 dark:bg-slate-700/30 p-8 rounded-3xl border border-slate-100/50 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold leading-relaxed text-sm">
-              <p>아직 준비중입니다.</p>
+        {/* ── 프로필 헤더 ── */}
+        <div className="px-8 pt-14 pb-6 border-b border-slate-100 dark:border-slate-800 shrink-0">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2 min-w-0">
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white leading-tight truncate">
+                {streamer.name}
+              </h2>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {streamer.generation > 0 && (
+                  <span className="text-xs font-black px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                    {streamer.generation}기
+                  </span>
+                )}
+                {streamer.role && (
+                  <span
+                    className="text-xs font-black px-2.5 py-1 rounded-full"
+                    style={{
+                      backgroundColor: `${streamerColor}20`,
+                      color: streamerColor,
+                    }}
+                  >
+                    {streamer.role}
+                  </span>
+                )}
+                <span className="text-xs font-black px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                  {streamer.platform}
+                </span>
+              </div>
+            </div>
+
+            {/* 스탯 */}
+            <div className="flex items-center gap-6 shrink-0">
+              <div className="text-center">
+                <p className="text-2xl font-black" style={{ color: streamerColor }}>
+                  {scheduleCount}
+                </p>
+                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-0.5">
+                  방송
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-black" style={{ color: streamerColor }}>
+                  {clipCount}
+                </p>
+                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-0.5">
+                  클립
+                </p>
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* 최근 방송 이력 (플레이한 게임) */}
-          <div className="space-y-4 px-2 pt-2">
-            <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-2">
-              <span
-                className="w-1.5 h-1.5 rounded-full"
-                style={{ backgroundColor: streamerColor }}
-              ></span>
-              최근 플레이한 게임
-            </h4>
-            {/* 가로 스크롤 게임 배지 리스트 */}
-            <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar px-1">
-              {['공사중', 'test'].map((game) => (
-                <div
-                  key={game}
-                  className="flex-none flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-700 rounded-xl border border-slate-100 dark:border-slate-600 text-slate-500 dark:text-slate-400 font-bold text-xs shadow-sm hover:border-slate-200 dark:hover:border-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-all"
-                >
-                  <Gamepad2 className="w-4 h-4" />
-                  {game}
+        {/* ── 스크롤 본문 ── */}
+        <div className="overflow-y-auto flex-1 min-h-0 custom-scrollbar">
+          <div className="p-8 space-y-8">
+
+            {/* 게임 이력 */}
+            {games.length > 0 && (
+              <section className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Gamepad2 className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
+                  <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+                    게임 이력
+                  </span>
                 </div>
-              ))}
-            </div>
+                <div className="flex flex-wrap gap-2">
+                  {games.map((game) => {
+                    const color = getGameColor(game.id, isDark);
+                    return (
+                      <span
+                        key={game.id}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border"
+                        style={
+                          color
+                            ? {
+                                color,
+                                borderColor: `${color}40`,
+                                backgroundColor: `${color}15`,
+                              }
+                            : {
+                                color: '#94a3b8',
+                                borderColor: '#e2e8f0',
+                                backgroundColor: '#f8fafc',
+                              }
+                        }
+                      >
+                        <Gamepad2 className="w-3 h-3" />
+                        {game.title}
+                      </span>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* 함께한 멤버 */}
+            {collabs.length > 0 && (
+              <section className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Users className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
+                  <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+                    함께한 멤버
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {collabs.map((s) => {
+                    const c = getStreamerColor(s.id, isDark) ?? s.colorCode;
+                    return (
+                      <span
+                        key={s.id}
+                        className="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold border"
+                        style={{
+                          color: c,
+                          borderColor: `${c}40`,
+                          backgroundColor: `${c}15`,
+                        }}
+                      >
+                        {s.name}
+                      </span>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* 최근 일정 */}
+            {recentSchedules.length > 0 && (
+              <section className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
+                  <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+                    최근 일정
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {recentSchedules.map((s) => {
+                    const gameColor = s.game ? getGameColor(s.game.id, isDark) : null;
+                    return (
+                      <Link
+                        key={s.id}
+                        href={`/calendar/schedule/${s.id}`}
+                        className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:border-indigo-200 dark:hover:border-indigo-700 hover:bg-indigo-50/40 dark:hover:bg-indigo-900/10 transition-all group"
+                      >
+                        <div className="shrink-0 w-10 text-center">
+                          <p className="text-xs font-black text-slate-400 dark:text-slate-500">
+                            {format(new Date(s.startTime), 'M/d', { locale: ko })}
+                          </p>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                            {s.title}
+                          </p>
+                          {s.game && (
+                            <p
+                              className="text-[10px] font-bold mt-0.5"
+                              style={{ color: gameColor ?? '#94a3b8' }}
+                            >
+                              {s.game.title}
+                            </p>
+                          )}
+                        </div>
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 group-hover:text-indigo-400 transition-colors shrink-0" />
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* 데이터 없을 때 */}
+            {schedules.length === 0 && games.length === 0 && (
+              <div className="py-16 text-center">
+                <Clapperboard className="w-10 h-10 text-slate-200 dark:text-slate-700 mx-auto mb-3" />
+                <p className="text-sm font-bold text-slate-400 dark:text-slate-500">
+                  아직 등록된 방송 이력이 없어요
+                </p>
+              </div>
+            )}
+
           </div>
         </div>
 
-        {/* 하단 닫기 버튼 */}
-        <div className="p-8 bg-slate-50 dark:bg-slate-700 border-t border-slate-100 dark:border-slate-700 flex gap-3 shrink-0">
+        {/* ── 하단 버튼 ── */}
+        <div className="px-8 py-5 border-t border-slate-100 dark:border-slate-800 flex gap-3 shrink-0 bg-slate-50/50 dark:bg-slate-800/30">
           <button
-            className="flex-1 py-4 bg-white dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-2xl font-black border border-slate-200 dark:border-slate-500 hover:bg-slate-100 dark:hover:bg-slate-500 transition-all flex items-center justify-center gap-2"
             onClick={() => router.back()}
+            className="flex-1 py-3.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-black border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all"
           >
             돌아가기
           </button>
-          <a
-            target={streamer.chzzkUrl ? '_blank' : '_self'}
-            rel="noopener noreferrer"
-            href={streamer.chzzkUrl || '#'}
-            className="flex-1 py-4 bg-indigo-600 dark:bg-indigo-600 text-white dark:text-white rounded-2xl font-black hover:bg-indigo-700 dark:hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 flex items-center justify-center gap-2"
-          >
-            채널 방문 <ExternalLink className="w-4 h-4" />
-          </a>
+          {streamer.chzzkUrl && (
+            <a
+              href={streamer.chzzkUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 py-3.5 text-white rounded-2xl font-black transition-all shadow-lg flex items-center justify-center gap-2 hover:opacity-90 active:scale-95"
+              style={{ backgroundColor: streamerColor }}
+            >
+              채널 방문
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          )}
         </div>
       </motion.div>
     </motion.div>

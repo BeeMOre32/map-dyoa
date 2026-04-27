@@ -10,13 +10,29 @@ export default async function InterceptedStreamerDetailPage({
 }) {
   const { id } = await params;
 
-  // 1. 스트리머 데이터 조회
-  const streamer = await prisma.streamer.findUnique({
-    where: { id },
-  });
+  const [streamer, schedules, scheduleCount, clipCount] = await Promise.all([
+    prisma.streamer.findUnique({ where: { id } }),
+    prisma.schedule.findMany({
+      where: { participants: { some: { streamerId: id } } },
+      include: {
+        game: true,
+        participants: { include: { streamer: true } },
+      },
+      orderBy: { startTime: 'desc' },
+      take: 20,
+    }),
+    prisma.scheduleParticipant.count({ where: { streamerId: id } }),
+    prisma.clip.count({ where: { participants: { some: { streamerId: id } } } }),
+  ]);
 
   if (!streamer) return notFound();
 
-  // 2. 대형 모달 렌더링
-  return <StreamerDetailModal streamer={streamer} />;
+  return (
+    <StreamerDetailModal
+      streamer={streamer}
+      schedules={schedules}
+      scheduleCount={scheduleCount}
+      clipCount={clipCount}
+    />
+  );
 }
