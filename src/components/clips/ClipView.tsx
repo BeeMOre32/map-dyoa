@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Clapperboard, Plus, Construction, X } from 'lucide-react';
+import { useState, useCallback, useMemo } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { Clapperboard, Plus, Sparkles } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import type { ClipWithParticipants } from '@/types/entities';
 import type { Streamer } from '@prisma/client';
@@ -21,13 +21,6 @@ export default function ClipView({ clips, streamers, schedules }: ClipViewProps)
   const [showModal, setShowModal] = useState(false);
   const [editingClip, setEditingClip] = useState<ClipWithParticipants | null>(null);
   const [filterStreamerId, setFilterStreamerId] = useState('');
-  const [showDevToast, setShowDevToast] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowDevToast(true), 400);
-    const autoClose = setTimeout(() => setShowDevToast(false), 5000);
-    return () => { clearTimeout(timer); clearTimeout(autoClose); };
-  }, []);
 
   const filtered = useMemo(
     () =>
@@ -84,6 +77,25 @@ export default function ClipView({ clips, streamers, schedules }: ClipViewProps)
         </div>
       </div>
 
+      {/* 환영 배너 */}
+      {session && (
+        <div className="px-6 pt-4 shrink-0">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800">
+            <Sparkles className="w-4 h-4 text-indigo-400 dark:text-indigo-500 shrink-0" />
+            <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400 flex-1">
+              명장면을 직접 등록해 클립 모음을 채워주세요!
+            </p>
+            <button
+              onClick={handleOpen}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl transition-all active:scale-95"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              클립 추가
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 클립 그리드 */}
       <div className="flex-1 overflow-y-auto p-6">
         {filtered.length === 0 ? (
@@ -133,33 +145,6 @@ export default function ClipView({ clips, streamers, schedules }: ClipViewProps)
         )}
       </AnimatePresence>
 
-      {/* 개발중 토스트 */}
-      <AnimatePresence>
-        {showDevToast && (
-          <motion.div
-            initial={{ opacity: 0, y: 80, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 60, scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-            className="fixed bottom-6 right-4 sm:right-6 z-200 w-[calc(100vw-2rem)] max-w-xs sm:w-72"
-          >
-            <div className="bg-white dark:bg-slate-800 rounded-[1.75rem] shadow-2xl shadow-slate-300/40 dark:shadow-black/50 border border-slate-100 dark:border-slate-700 p-4 flex items-center gap-3">
-              <div className="shrink-0 p-2.5 bg-amber-50 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400 rounded-2xl">
-                <Construction className="w-5 h-5" />
-              </div>
-              <p className="flex-1 text-sm font-black text-slate-700 dark:text-slate-200">
-                아직 열심히 개발중입니다. 🚧
-              </p>
-              <button
-                onClick={() => setShowDevToast(false)}
-                className="shrink-0 p-1.5 text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
