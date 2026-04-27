@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { AnimatePresence } from 'framer-motion';
-import { Clapperboard, Plus, Sparkles } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Clapperboard, Plus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import type { ClipWithParticipants } from '@/types/entities';
 import type { Streamer } from '@prisma/client';
@@ -66,35 +66,23 @@ export default function ClipView({ clips, streamers, schedules }: ClipViewProps)
 
           {/* 클립 추가 버튼 (로그인 시만) */}
           {session && (
-            <button
+            <motion.button
               onClick={handleOpen}
-              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black rounded-2xl shadow-lg shadow-indigo-200 dark:shadow-none transition-all"
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              className="relative flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black rounded-2xl shadow-lg shadow-indigo-300/50 dark:shadow-indigo-900/40 transition-colors overflow-hidden"
             >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">클립 추가</span>
-            </button>
+              <motion.div
+                className="absolute inset-0 bg-white/10"
+                animate={{ x: ['-100%', '100%'] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 }}
+              />
+              <Plus className="w-4 h-4 relative z-10" />
+              <span className="relative z-10">클립 추가</span>
+            </motion.button>
           )}
         </div>
       </div>
-
-      {/* 환영 배너 */}
-      {session && (
-        <div className="px-6 pt-4 shrink-0">
-          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800">
-            <Sparkles className="w-4 h-4 text-indigo-400 dark:text-indigo-500 shrink-0" />
-            <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400 flex-1">
-              명장면을 직접 등록해 클립 모음을 채워주세요!
-            </p>
-            <button
-              onClick={handleOpen}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl transition-all active:scale-95"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              클립 추가
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* 클립 그리드 */}
       <div className="flex-1 overflow-y-auto p-6">

@@ -1,9 +1,8 @@
 // src/app/streamers/detail/[id]/page.tsx
-import { prisma } from '@/lib/prisma';
 import StreamerView from '@/components/streamer/StreamerView';
 import StreamerDetailModal from '@/components/streamer/StreamerDetailModal';
-import { getAllStreamers } from '@/lib/data-fetching';
 import { notFound } from 'next/navigation';
+import { getAllStreamers, getStreamerDetail } from '@/lib/data-fetching';
 
 export default async function FullStreamerDetailPage({
   params,
@@ -12,19 +11,9 @@ export default async function FullStreamerDetailPage({
 }) {
   const { id } = await params;
 
-  const [streamers, schedules, scheduleCount, clipCount] = await Promise.all([
+  const [streamers, { schedules, scheduleCount, clipCount }] = await Promise.all([
     getAllStreamers(),
-    prisma.schedule.findMany({
-      where: { participants: { some: { streamerId: id } } },
-      include: {
-        game: true,
-        participants: { include: { streamer: true } },
-      },
-      orderBy: { startTime: 'desc' },
-      take: 20,
-    }),
-    prisma.scheduleParticipant.count({ where: { streamerId: id } }),
-    prisma.clip.count({ where: { participants: { some: { streamerId: id } } } }),
+    getStreamerDetail(id),
   ]);
 
   const streamer = streamers.find((s) => s.id === id);

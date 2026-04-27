@@ -1,10 +1,9 @@
 // src/app/calendar/schedule/[id]/page.tsx
-import { prisma } from '@/lib/prisma';
 import ScheduleDetailView from '@/components/Calendar/ScheduleDetailModal';
 import { notFound } from 'next/navigation';
 import CalendarView from '@/components/Calendar/CalendarView';
 import { flattenScheduleParticipants } from '@/lib/schedule-formatters';
-import { getCalendarData } from '@/lib/data-fetching';
+import { getCalendarData, getScheduleDetail, getScheduleClips } from '@/lib/data-fetching';
 
 export default async function FullSchedulePage({
   params,
@@ -13,27 +12,14 @@ export default async function FullSchedulePage({
 }) {
   const { id } = await params;
 
-  // 캘린더 배경 데이터는 캐시에서, 상세 일정만 DB 직접 조회 (최신 보장)
   const [{ schedules: allSchedules, streamers, games }, targetSchedule, clips] =
     await Promise.all([
       getCalendarData(),
-      prisma.schedule.findUnique({
-        where: { id },
-        include: {
-          game: true,
-          participants: { include: { streamer: true } },
-        },
-      }),
-      prisma.clip.findMany({
-        where: { scheduleId: id },
-        include: { participants: { include: { streamer: true } } },
-        orderBy: { createdAt: 'asc' },
-      }),
+      getScheduleDetail(id),
+      getScheduleClips(id),
     ]);
 
   if (!targetSchedule) return notFound();
-
-  const flattenedTarget = flattenScheduleParticipants(targetSchedule);
 
   return (
     <div className="relative w-full h-full min-h-screen">
@@ -42,9 +28,8 @@ export default async function FullSchedulePage({
         streamers={streamers}
         games={games}
       />
-
       <ScheduleDetailView
-        schedule={flattenedTarget}
+        schedule={flattenScheduleParticipants(targetSchedule)}
         streamers={streamers}
         games={games}
         clips={clips}

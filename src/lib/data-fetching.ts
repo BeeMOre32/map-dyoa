@@ -105,6 +105,64 @@ export const getAllClips = unstable_cache(
 );
 
 /**
+ * 특정 스케줄 상세 가져오기 (캐싱 적용)
+ * 스케줄 ID별로 별도 캐시 엔트리 생성
+ */
+export const getScheduleDetail = unstable_cache(
+  async (scheduleId: string) => {
+    return prisma.schedule.findUnique({
+      where: { id: scheduleId },
+      include: {
+        game: true,
+        participants: { include: { streamer: true } },
+      },
+    });
+  },
+  ['schedule-detail'],
+  { revalidate: 60, tags: ['calendar'] },
+);
+
+/**
+ * 특정 스케줄의 클립 목록 가져오기 (캐싱 적용)
+ */
+export const getScheduleClips = unstable_cache(
+  async (scheduleId: string) => {
+    return prisma.clip.findMany({
+      where: { scheduleId },
+      include: { participants: { include: { streamer: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+  },
+  ['schedule-clips'],
+  { revalidate: 60, tags: ['clips'] },
+);
+
+/**
+ * 스트리머 상세 데이터 가져오기 (캐싱 적용)
+ * 스트리머 ID별로 별도 캐시 엔트리 생성
+ */
+export const getStreamerDetail = unstable_cache(
+  async (streamerId: string) => {
+    const [schedules, scheduleCount, clipCount] = await Promise.all([
+      prisma.schedule.findMany({
+        where: { participants: { some: { streamerId } } },
+        include: {
+          game: true,
+          participants: { include: { streamer: true } },
+        },
+        orderBy: { startTime: 'desc' },
+        take: 20,
+      }),
+      prisma.scheduleParticipant.count({ where: { streamerId } }),
+      prisma.clip.count({ where: { participants: { some: { streamerId } } } }),
+    ]);
+    return { schedules, scheduleCount, clipCount };
+  },
+  ['streamer-detail'],
+  { revalidate: 120, tags: ['streamers', 'calendar', 'clips'] },
+);
+
+/**
  * 피드백 목록 가져오기 (캐싱 적용)
  * 필요한 컬럼만 select해 전송량 최소화
  */
