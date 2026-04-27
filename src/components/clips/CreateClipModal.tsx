@@ -259,9 +259,20 @@ export default function CreateClipModal({
                           transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                           type="button"
                           onClick={() => toggleStreamer(id)}
-                          className="flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-xl text-[11px] font-black text-white hover:opacity-80 transition-opacity"
+                          className="flex items-center gap-1 pl-1 pr-1.5 py-1 rounded-xl text-[11px] font-black text-white hover:opacity-80 transition-opacity"
                           style={{ backgroundColor: color }}
                         >
+                          <div
+                            className="w-5 h-5 rounded-full overflow-hidden flex items-center justify-center text-white text-[10px] font-black shrink-0"
+                            style={{ backgroundColor: color }}
+                          >
+                            {s.profileImg ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={s.profileImg} alt={s.name} className="w-full h-full object-cover" />
+                            ) : (
+                              s.name[0]
+                            )}
+                          </div>
                           {s.name}
                           <X className="w-3 h-3" />
                         </motion.button>
