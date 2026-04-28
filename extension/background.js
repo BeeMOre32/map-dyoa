@@ -1,5 +1,6 @@
 const TOP_LEVEL_SITES = [
-  'https://map-dyoa.site',
+  'https://map-doya.site',
+  'https://www.map-doya.site',
   'http://localhost',
 ];
 
@@ -18,13 +19,23 @@ async function setPartitionedCookie(cookie, url, topLevelSite) {
     await chrome.cookies.set({
       ...c,
       sameSite: 'no_restriction',
-      secure: topLevelSite.startsWith('https'),
+      secure: true,
       url,
       partitionKey: { topLevelSite },
     });
-    console.log('[map-dyoa] 파티셔닝 쿠키 설정 완료:', cookie.name, '→', topLevelSite);
+    console.log(
+      '[map-dyoa] 파티셔닝 쿠키 설정 완료:',
+      cookie.name,
+      '→',
+      topLevelSite,
+    );
   } catch (e) {
-    console.error('[map-dyoa] 쿠키 파티셔닝 실패:', cookie.name, topLevelSite, e);
+    console.error(
+      '[map-dyoa] 쿠키 파티셔닝 실패:',
+      cookie.name,
+      topLevelSite,
+      e,
+    );
   }
 }
 
@@ -49,7 +60,7 @@ chrome.runtime.onStartup.addListener(init);
 chrome.cookies.onChanged.addListener(({ cookie, removed }) => {
   if (removed) return;
   const target = NAVER_COOKIE_TARGETS.find(
-    t => t.name === cookie.name && cookie.domain.endsWith('naver.com')
+    (t) => t.name === cookie.name && cookie.domain.endsWith('naver.com'),
   );
   if (target) {
     for (const site of TOP_LEVEL_SITES) {
