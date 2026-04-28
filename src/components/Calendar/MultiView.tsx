@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -13,7 +13,7 @@ import { getStreamerColor } from '@/constants/streamercolor';
 import type { Streamer } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 
-const MAX_STREAMS = 8;
+const MAX_STREAMS = 9;
 
 interface MultiViewProps {
   schedule: FlattenedSchedule;
@@ -34,16 +34,186 @@ function getLiveUrl(streamer: Streamer): string {
   return base;
 }
 
-const GRID_COLS: Record<number, string> = {
-  1: 'grid-cols-1',
-  2: 'grid-cols-1 sm:grid-cols-2',
-  3: 'grid-cols-1 sm:grid-cols-2',
-  4: 'grid-cols-1 sm:grid-cols-2',
-  5: 'grid-cols-1 sm:grid-cols-3',
-  6: 'grid-cols-1 sm:grid-cols-3',
-  7: 'grid-cols-2 sm:grid-cols-4',
-  8: 'grid-cols-2 sm:grid-cols-4',
-};
+function getPanelRows<T>(panels: T[]): T[][] {
+  const n = panels.length;
+  if (n <= 2) return [panels];
+  if (n === 9) return [panels.slice(0, 3), panels.slice(3, 6), panels.slice(6)];
+  const half = Math.ceil(n / 2);
+  return [panels.slice(0, half), panels.slice(half)];
+}
+
+function startDrag(
+  e: React.MouseEvent,
+  axis: 'x' | 'y',
+  containerRef: React.RefObject<HTMLDivElement | null>,
+  onDelta: (pct: number) => void,
+) {
+  e.preventDefault();
+  document.body.classList.add('is-resizing');
+  let prev = axis === 'x' ? e.clientX : e.clientY;
+  const onMove = (ev: MouseEvent) => {
+    const cur = axis === 'x' ? ev.clientX : ev.clientY;
+    const size = axis === 'x'
+      ? (containerRef.current?.offsetWidth ?? 1)
+      : (containerRef.current?.offsetHeight ?? 1);
+    onDelta((cur - prev) / size * 100);
+    prev = cur;
+  };
+  const onUp = () => {
+    document.body.classList.remove('is-resizing');
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+  };
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+}
+
+// ── 그리드 리사이즈 레이아웃 ───────────────────────────────
+function ResizableGrid({
+  rows,
+  renderPanel,
+}: {
+  rows: Streamer[][];
+  renderPanel: (s: Streamer) => React.ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const rowKey = rows.map(r => r.map(s => s.id).join(',')).join('|');
+
+  const [rowH, setRowH] = useState<number[]>(() => rows.map(() => 100 / rows.length));
+  const [colB, setColB] = useState<number[][]>(() =>
+    rows.map(row => Array.from({ length: row.length - 1 }, (_, i) => (i + 1) * 100 / row.length))
+  );
+
+  useEffect(() => {
+    setRowH(rows.map(() => 100 / rows.length));
+    setColB(rows.map(row => Array.from({ length: row.length - 1 }, (_, i) => (i + 1) * 100 / row.length)));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rowKey]);
+
+  const rowTops: number[] = [];
+  let cumH = 0;
+  for (const h of rowH) { rowTops.push(cumH); cumH += h; }
+
+  const HANDLE = 'absolute z-20 bg-slate-900 hover:bg-indigo-500/60 transition-colors';
+
+  return (
+    <div ref={ref} className="relative flex-1 min-h-0 overflow-hidden">
+      {rows.map((row, ri) => {
+        const bounds = colB[ri] ?? [];
+        const left = (ci: number) => ci === 0 ? 0 : bounds[ci - 1];
+        const right = (ci: number) => ci >= bounds.length ? 100 : bounds[ci];
+
+        return (
+          <Fragment key={ri}>
+            {row.map((s, ci) => (
+              <div
+                key={s.id}
+                className="absolute overflow-hidden"
+                style={{ top: `${rowTops[ri]}%`, left: `${left(ci)}%`, width: `${right(ci) - left(ci)}%`, height: `${rowH[ri]}%` }}
+              >
+                {renderPanel(s)}
+              </div>
+            ))}
+
+            {bounds.map((bound, ci) => (
+              <div
+                key={`cv-${ri}-${ci}`}
+                className={`${HANDLE} w-1 cursor-col-resize`}
+                style={{ top: `${rowTops[ri]}%`, left: `${bound}%`, height: `${rowH[ri]}%`, transform: 'translateX(-50%)' }}
+                onMouseDown={(e) => startDrag(e, 'x', ref, (d) => setColB(prev => {
+                  const next = prev.map(r => [...r]);
+                  const lo = ci > 0 ? next[ri][ci - 1] : 0;
+                  const hi = ci + 1 < next[ri].length ? next[ri][ci + 1] : 100;
+                  const nv = next[ri][ci] + d;
+                  if (nv - lo < 10 || hi - nv < 10) return prev;
+                  next[ri][ci] = nv;
+                  return next;
+                }))}
+              />
+            ))}
+
+            {ri < rows.length - 1 && (
+              <div
+                key={`rh-${ri}`}
+                className={`${HANDLE} left-0 right-0 h-1 cursor-row-resize`}
+                style={{ top: `${rowTops[ri] + rowH[ri]}%`, transform: 'translateY(-50%)' }}
+                onMouseDown={(e) => startDrag(e, 'y', ref, (d) => setRowH(prev => {
+                  const next = [...prev];
+                  if (next[ri] + d < 10 || next[ri + 1] - d < 10) return prev;
+                  next[ri] += d; next[ri + 1] -= d;
+                  return next;
+                }))}
+              />
+            )}
+          </Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── 포커스 리사이즈 레이아웃 ───────────────────────────────
+function ResizableFocusLayout({
+  focused,
+  others,
+  renderPanel,
+}: {
+  focused: Streamer;
+  others: Streamer[];
+  renderPanel: (s: Streamer, isFocused: boolean) => React.ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [split, setSplit] = useState(66);
+  const [sideH, setSideH] = useState<number[]>(() => others.map(() => 100 / others.length));
+
+  useEffect(() => {
+    setSideH(others.map(() => 100 / others.length));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [others.map(s => s.id).join(',')]);
+
+  const sideTops: number[] = [];
+  let cumH = 0;
+  for (const h of sideH) { sideTops.push(cumH); cumH += h; }
+
+  const HANDLE = 'absolute z-20 bg-slate-900 hover:bg-indigo-500/60 transition-colors';
+
+  return (
+    <div ref={ref} className="relative flex-1 min-h-0 overflow-hidden">
+      <div className="absolute overflow-hidden" style={{ top: 0, left: 0, width: `${split}%`, height: '100%' }}>
+        {renderPanel(focused, true)}
+      </div>
+
+      <div
+        className={`${HANDLE} top-0 bottom-0 w-1 cursor-col-resize`}
+        style={{ left: `${split}%`, transform: 'translateX(-50%)' }}
+        onMouseDown={(e) => startDrag(e, 'x', ref, (d) => setSplit(p => Math.max(20, Math.min(80, p + d))))}
+      />
+
+      {others.map((s, i) => (
+        <Fragment key={s.id}>
+          <div
+            className="absolute overflow-hidden"
+            style={{ top: `${sideTops[i]}%`, left: `${split}%`, width: `${100 - split}%`, height: `${sideH[i]}%` }}
+          >
+            {renderPanel(s, false)}
+          </div>
+          {i < others.length - 1 && (
+            <div
+              className={`${HANDLE} h-1 cursor-row-resize`}
+              style={{ top: `${sideTops[i] + sideH[i]}%`, left: `${split}%`, width: `${100 - split}%`, transform: 'translateY(-50%)' }}
+              onMouseDown={(e) => startDrag(e, 'y', ref, (d) => setSideH(prev => {
+                const next = [...prev];
+                if (next[i] + d < 10 || next[i + 1] - d < 10) return prev;
+                next[i] += d; next[i + 1] -= d;
+                return next;
+              }))}
+            />
+          )}
+        </Fragment>
+      ))}
+    </div>
+  );
+}
 
 // ── 선택 화면 ──────────────────────────────────────────────
 function SelectionScreen({
@@ -317,12 +487,16 @@ export default function MultiView({ schedule }: MultiViewProps) {
   const load = (id: string) => setLoaded((prev) => new Set([...prev, id]));
   const loadAll = () => setLoaded(new Set([...visible]));
 
-  const swapAt = (idx: number, dir: -1 | 1) => {
+  const swapVisible = (id: string, dir: -1 | 1) => {
+    const visIdx = orderedVisible.findIndex((p) => p.id === id);
+    const targetIdx = visIdx + dir;
+    if (targetIdx < 0 || targetIdx >= orderedVisible.length) return;
+    const targetId = orderedVisible[targetIdx].id;
     setOrder((prev) => {
       const next = [...prev];
-      const target = idx + dir;
-      if (target < 0 || target >= next.length) return prev;
-      [next[idx], next[target]] = [next[target], next[idx]];
+      const a = next.indexOf(id);
+      const b = next.indexOf(targetId);
+      [next[a], next[b]] = [next[b], next[a]];
       return next;
     });
   };
@@ -343,7 +517,6 @@ export default function MultiView({ schedule }: MultiViewProps) {
     : [];
 
   const allLoaded = orderedVisible.length > 0 && orderedVisible.every((s) => loaded.has(s.id));
-  const gridColClass = GRID_COLS[Math.min(orderedVisible.length, 8)] ?? 'grid-cols-2 sm:grid-cols-4';
   const focusedStreamer = focusedId ? orderedVisible.find((p) => p.id === focusedId) ?? null : null;
   const otherStreamers = focusedStreamer ? orderedVisible.filter((p) => p.id !== focusedId) : [];
 
@@ -474,66 +647,46 @@ export default function MultiView({ schedule }: MultiViewProps) {
                 <p className="text-xs font-medium text-slate-700">위의 칩을 눌러 스트리머를 복원하세요</p>
               </div>
             ) : focusedStreamer ? (
-              <div className="flex-1 flex min-h-0 gap-px bg-slate-800">
-                <div className="flex-2 min-w-0 min-h-0">
+              <ResizableFocusLayout
+                focused={focusedStreamer}
+                others={otherStreamers}
+                renderPanel={(streamer, isFocused) => (
                   <StreamPanel
-                    streamer={focusedStreamer}
-                    color={getStreamerColor(focusedStreamer.id, isDark) ?? focusedStreamer.colorCode}
-                    isLoaded={loaded.has(focusedStreamer.id)}
-                    isFocused={true}
-                    canLeft={orderedVisible.indexOf(focusedStreamer) > 0}
-                    canRight={orderedVisible.indexOf(focusedStreamer) < orderedVisible.length - 1}
-                    onLoad={() => load(focusedStreamer.id)}
-                    onHide={() => hidePanel(focusedStreamer.id)}
-                    onFocus={() => {}}
+                    streamer={streamer}
+                    color={getStreamerColor(streamer.id, isDark) ?? streamer.colorCode}
+                    isLoaded={loaded.has(streamer.id)}
+                    isFocused={isFocused}
+                    canLeft={orderedVisible.indexOf(streamer) > 0}
+                    canRight={orderedVisible.indexOf(streamer) < orderedVisible.length - 1}
+                    onLoad={() => load(streamer.id)}
+                    onHide={() => hidePanel(streamer.id)}
+                    onFocus={() => setFocusedId(streamer.id)}
                     onUnfocus={() => setFocusedId(null)}
-                    onSwapLeft={() => swapAt(order.indexOf(focusedStreamer.id), -1)}
-                    onSwapRight={() => swapAt(order.indexOf(focusedStreamer.id), 1)}
+                    onSwapLeft={() => swapVisible(streamer.id, -1)}
+                    onSwapRight={() => swapVisible(streamer.id, 1)}
                   />
-                </div>
-                {otherStreamers.length > 0 && (
-                  <div className="flex-1 flex flex-col gap-px min-w-0 min-h-0">
-                    {otherStreamers.map((streamer) => (
-                      <div key={streamer.id} className="flex-1 min-h-0">
-                        <StreamPanel
-                          streamer={streamer}
-                          color={getStreamerColor(streamer.id, isDark) ?? streamer.colorCode}
-                          isLoaded={loaded.has(streamer.id)}
-                          isFocused={false}
-                          canLeft={orderedVisible.indexOf(streamer) > 0}
-                          canRight={orderedVisible.indexOf(streamer) < orderedVisible.length - 1}
-                          onLoad={() => load(streamer.id)}
-                          onHide={() => hidePanel(streamer.id)}
-                          onFocus={() => setFocusedId(streamer.id)}
-                          onUnfocus={() => setFocusedId(null)}
-                          onSwapLeft={() => swapAt(order.indexOf(streamer.id), -1)}
-                          onSwapRight={() => swapAt(order.indexOf(streamer.id), 1)}
-                        />
-                      </div>
-                    ))}
-                  </div>
                 )}
-              </div>
+              />
             ) : (
-              <div className={`flex-1 grid ${gridColClass} gap-px bg-slate-800 min-h-0`}>
-                {orderedVisible.map((streamer, idx) => (
+              <ResizableGrid
+                rows={getPanelRows(orderedVisible)}
+                renderPanel={(streamer) => (
                   <StreamPanel
-                    key={streamer.id}
                     streamer={streamer}
                     color={getStreamerColor(streamer.id, isDark) ?? streamer.colorCode}
                     isLoaded={loaded.has(streamer.id)}
                     isFocused={false}
-                    canLeft={idx > 0}
-                    canRight={idx < orderedVisible.length - 1}
+                    canLeft={orderedVisible.indexOf(streamer) > 0}
+                    canRight={orderedVisible.indexOf(streamer) < orderedVisible.length - 1}
                     onLoad={() => load(streamer.id)}
                     onHide={() => hidePanel(streamer.id)}
                     onFocus={() => setFocusedId(streamer.id)}
                     onUnfocus={() => {}}
-                    onSwapLeft={() => swapAt(order.indexOf(streamer.id), -1)}
-                    onSwapRight={() => swapAt(order.indexOf(streamer.id), 1)}
+                    onSwapLeft={() => swapVisible(streamer.id, -1)}
+                    onSwapRight={() => swapVisible(streamer.id, 1)}
                   />
-                ))}
-              </div>
+                )}
+              />
             )}
           </motion.div>
         )}
