@@ -25,6 +25,9 @@ import {
   SlidersHorizontal,
   Radio,
   Clapperboard,
+  Puzzle,
+  Move,
+  Maximize2,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -423,11 +426,50 @@ export default function GuidePage() {
           </div>
         </SectionCard>
 
+        {/* ── 멀티뷰 ── */}
+        <SectionCard
+          icon={<LayoutGrid className="w-6 h-6 text-cyan-500 dark:text-cyan-400" />}
+          iconBg="bg-cyan-50 dark:bg-cyan-900/20"
+          title={<>8. 멀티뷰<NewBadge /></>}
+        >
+          <div className="space-y-4">
+            <Row icon={<LayoutGrid className="w-5 h-5" />} delay={0}>
+              일정 상세 모달 하단의 <strong>멀티뷰로 보기</strong> 버튼을 누르면 해당 합방에 참여한 스트리머들의
+              방송을 한 화면에서 동시에 시청할 수 있습니다.
+            </Row>
+            <Row icon={<Users className="w-5 h-5" />} delay={0.07}>
+              최대 <strong>9개</strong> 패널을 추가할 수 있습니다.
+              하단 선택 바에서 스트리머를 클릭해 켜고 끄며, 끈 패널은 목록에서 숨겨집니다.
+            </Row>
+            <Row icon={<ChevronLeft className="w-5 h-5" />} delay={0.14}>
+              각 패널 상단의 <strong>← →</strong> 버튼으로 패널 순서를 바꿀 수 있습니다.
+            </Row>
+            <Row icon={<Move className="w-5 h-5" />} delay={0.21}>
+              패널 사이의 <strong>드래그 핸들</strong>을 잡아 끌면 각 패널 크기를 자유롭게 조절할 수 있습니다.
+            </Row>
+            <Row icon={<Maximize2 className="w-5 h-5" />} delay={0.28}>
+              패널 상단의 <strong>집중 모드 버튼</strong>을 누르면 해당 방송을 좌측에 크게, 나머지를 우측에 세로로 배치합니다.
+            </Row>
+            <motion.div
+              {...fadeLeft}
+              transition={{ duration: 0.4, ease, delay: 0.3 }}
+              className="flex items-start gap-3 p-4 bg-cyan-50 dark:bg-cyan-900/10 rounded-2xl border border-cyan-100 dark:border-cyan-800/40"
+            >
+              <Puzzle className="w-4 h-4 text-cyan-500 dark:text-cyan-400 shrink-0 mt-0.5" />
+              <span className="text-sm font-bold text-cyan-800 dark:text-cyan-300">
+                치지직 로그인 상태를 유지하려면{' '}
+                <strong>Map-Dyoa 멀티뷰 도우미 Chrome 확장 프로그램</strong>이 필요합니다.
+                설치 후 네이버에 로그인된 상태라면 멀티뷰 iframe에서도 자동으로 로그인이 유지됩니다.
+              </span>
+            </motion.div>
+          </div>
+        </SectionCard>
+
         {/* ── 로그인 ── */}
         <SectionCard
           icon={<LogIn className="w-6 h-6 text-amber-500 dark:text-amber-400" />}
           iconBg="bg-amber-50 dark:bg-amber-900/20"
-          title="8. 로그인과 편집 권한"
+          title="9. 로그인과 편집 권한"
         >
           <div className="space-y-4">
             <p className="text-slate-600 dark:text-slate-300 font-medium">
@@ -443,7 +485,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<Edit2 className="w-6 h-6 text-rose-500 dark:text-rose-400" />}
           iconBg="bg-rose-50 dark:bg-rose-900/20"
-          title="9. 일정 추가 · 수정 · 삭제"
+          title="10. 일정 추가 · 수정 · 삭제"
         >
           <div className="grid sm:grid-cols-3 gap-4">
             {[
@@ -505,7 +547,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<Keyboard className="w-6 h-6 text-slate-500 dark:text-slate-400" />}
           iconBg="bg-slate-100 dark:bg-slate-700"
-          title="10. 편의 기능"
+          title="11. 편의 기능"
         >
           <div className="space-y-4">
             <Row icon={<Keyboard className="w-5 h-5" />} delay={0}>
