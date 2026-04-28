@@ -9,7 +9,8 @@ import {
   Map,
   UserCheck,
   Sun,
-  Moon, // 🌟 아이콘 추가
+  Moon,
+  Shield,
 } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion'; // 🌟 애니메이션용
@@ -98,6 +99,14 @@ export default function Header() {
           >
             <FileQuestionMark className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
             <span className="text-xs font-black hidden md:inline">도움말</span>
+          </Link>
+
+          <Link
+            href="/privacy"
+            className="p-2 sm:p-3 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm hover:shadow-md group"
+            title="개인정보처리방침"
+          >
+            <Shield className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
           </Link>
 
           {session ? (
