@@ -19,6 +19,7 @@ import {
   Clapperboard,
   ArrowUpRight,
   Plus,
+  LayoutGrid,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -328,6 +329,17 @@ export default function ScheduleDetailView({
                 className="h-16 w-full shrink-0 relative transition-colors duration-500"
                 style={{ backgroundColor: gameColor }}
               >
+                {schedule.participants.length >= 2 && (
+                  <Link
+                    href={`/calendar/schedule/${schedule.id}/multiview`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-1/2 -translate-y-1/2 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-black/15 hover:bg-black/30 text-white rounded-full backdrop-blur-sm transition-all text-xs font-black"
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    멀티뷰
+                  </Link>
+                )}
                 <button
                   onClick={() => router.back()}
                   className="absolute top-1/2 -translate-y-1/2 right-4 p-2 sm:p-2.5 bg-black/10 hover:bg-black/25 text-white rounded-full backdrop-blur-md transition-all"
