@@ -329,17 +329,6 @@ export default function ScheduleDetailView({
                 className="h-16 w-full shrink-0 relative transition-colors duration-500"
                 style={{ backgroundColor: gameColor }}
               >
-                {schedule.participants.length >= 2 && (
-                  <Link
-                    href={`/calendar/schedule/${schedule.id}/multiview`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="absolute top-1/2 -translate-y-1/2 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-black/15 hover:bg-black/30 text-white rounded-full backdrop-blur-sm transition-all text-xs font-black"
-                  >
-                    <LayoutGrid className="w-3.5 h-3.5" />
-                    멀티뷰
-                  </Link>
-                )}
                 <button
                   onClick={() => router.back()}
                   className="absolute top-1/2 -translate-y-1/2 right-4 p-2 sm:p-2.5 bg-black/10 hover:bg-black/25 text-white rounded-full backdrop-blur-md transition-all"
@@ -401,6 +390,27 @@ export default function ScheduleDetailView({
                       </Link>
                     ))}
                   </div>
+
+                  {/* 멀티뷰 버튼 */}
+                  {schedule.participants.length >= 2 && (
+                    <Link
+                      href={`/calendar/schedule/${schedule.id}/multiview`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl border border-indigo-100 dark:border-indigo-900/40 bg-indigo-50/60 dark:bg-indigo-900/10 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all group"
+                    >
+                      <div className="p-1.5 bg-indigo-100 dark:bg-indigo-900/50 rounded-xl shrink-0">
+                        <LayoutGrid className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-black text-indigo-600 dark:text-indigo-400">멀티뷰로 함께 보기</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                          {schedule.participants.length}명의 방송을 한 화면에서
+                        </p>
+                      </div>
+                      <ExternalLink className="w-4 h-4 text-indigo-400 shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    </Link>
+                  )}
                 </div>
 
                 {/* 방송 링크 */}

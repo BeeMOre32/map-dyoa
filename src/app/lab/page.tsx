@@ -3,7 +3,6 @@ import { FlaskConical, LayoutGrid, ExternalLink, ChevronRight } from 'lucide-rea
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import Link from 'next/link';
-import Navigation from '@/components/Navigation';
 
 export const metadata = {
   title: '실험실 | Map-Dyoa',
@@ -20,7 +19,6 @@ export default async function LabPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <Navigation />
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
         <div className="max-w-xl mx-auto space-y-6 pb-6">
 

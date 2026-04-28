@@ -24,6 +24,7 @@ export default function RootLayout({
     <html lang="ko" suppressHydrationWarning>
       <body
         className={`${inter.className} antialiased text-slate-900 dark:text-slate-100 transition-colors duration-300`}
+        suppressHydrationWarning
       >
         <ThemeProvider>
           <AuthProvider>

@@ -34,7 +34,7 @@ export default function Navigation() {
             <Link
               key={tab.id}
               href={tab.href}
-              className={`relative flex items-center gap-1.5 px-3 py-2 sm:px-6 sm:py-2.5 md:px-8 rounded-2xl text-sm font-black transition-all z-10 ${
+              className={`relative flex items-center gap-1.5 px-2.5 py-2 sm:px-4 md:px-5 rounded-2xl text-sm font-black transition-all z-10 ${
                 isActive
                   ? isLab ? 'text-amber-600 dark:text-amber-400' : 'text-indigo-600 dark:text-indigo-400'
                   : isClip
@@ -79,7 +79,7 @@ export default function Navigation() {
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: 'spring', damping: 14, stiffness: 300, delay: 0.3 }}
-                  className="z-20 text-[9px] font-black px-1.5 py-px rounded-full bg-indigo-500 text-white leading-none tracking-wide"
+                  className="z-20 hidden sm:inline text-[9px] font-black px-1.5 py-px rounded-full bg-indigo-500 text-white leading-none tracking-wide"
                 >
                   NEW
                 </motion.span>
@@ -91,7 +91,7 @@ export default function Navigation() {
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: 'spring', damping: 14, stiffness: 300, delay: 0.4 }}
-                  className="z-20 text-[9px] font-black px-1.5 py-px rounded-full bg-amber-500 text-white leading-none tracking-wide"
+                  className="z-20 hidden sm:inline text-[9px] font-black px-1.5 py-px rounded-full bg-amber-500 text-white leading-none tracking-wide"
                 >
                   BETA
                 </motion.span>

@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Map-Dyoa 멀티뷰 도우미",
+  "description": "map-dyoa 멀티뷰에서 치지직 방송을 시청할 수 있도록 iframe 제한을 해제합니다.",
+  "version": "1.0.0",
+  "permissions": [
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "*://chzzk.naver.com/*"
+  ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_chzzk",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
