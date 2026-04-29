@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getScheduleDetail } from '@/lib/data-fetching';
 import { flattenScheduleParticipants } from '@/lib/schedule-formatters';
-import MultiView from '@/components/Calendar/MultiView';
+import MultiView from '@/components/multiview/MultiView';
 
 export default async function MultiViewPage({
   params,
