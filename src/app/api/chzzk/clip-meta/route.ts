@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     // Step 1: play-info 로 videoId, inKey 가져오기 (인증 불필요)
     const playInfoRes = await fetch(
       `https://api.chzzk.naver.com/service/v1/play-info/clip/${clipId}`,
-      { headers: { 'User-Agent': UA }, next: { revalidate: 0 } },
+      { headers: { 'User-Agent': UA }, next: { revalidate: 3600 } },
     );
 
     if (!playInfoRes.ok) {
@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
 
     const vodRes = await fetch(vodUrl, {
       headers: { 'User-Agent': UA },
-      next: { revalidate: 0 },
+      next: { revalidate: 3600 },
     });
 
     if (!vodRes.ok) {

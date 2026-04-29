@@ -24,10 +24,13 @@ const fetchLiveStreamerIds = unstable_cache(
         if (!channelId) return null;
 
         try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 4000);
           const res = await fetch(
             `https://api.chzzk.naver.com/service/v2/channels/${channelId}/live-detail`,
-            { headers: { 'User-Agent': 'Mozilla/5.0' }, cache: 'no-store' },
+            { headers: { 'User-Agent': 'Mozilla/5.0' }, cache: 'no-store', signal: controller.signal },
           );
+          clearTimeout(timer);
           const json = await res.json();
           return json?.content?.status === 'OPEN' ? s.id : null;
         } catch {

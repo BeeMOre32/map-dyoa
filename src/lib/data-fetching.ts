@@ -91,9 +91,10 @@ export const getAllClips = unstable_cache(
       include: {
         participants: { include: { streamer: true } },
         schedule: {
-          include: {
-            participants: { include: { streamer: true } },
-            game: true,
+          select: {
+            id: true,
+            title: true,
+            game: { select: { id: true, title: true } },
           },
         },
       },
@@ -141,14 +142,28 @@ export const getScheduleClips = unstable_cache(
  * 스트리머 상세 데이터 가져오기 (캐싱 적용)
  * 스트리머 ID별로 별도 캐시 엔트리 생성
  */
+export const getStreamerById = unstable_cache(
+  async (streamerId: string) => {
+    return prisma.streamer.findUnique({ where: { id: streamerId } });
+  },
+  ['streamer-by-id'],
+  { revalidate: 120, tags: ['streamers'] },
+);
+
 export const getStreamerDetail = unstable_cache(
   async (streamerId: string) => {
     const [schedules, scheduleCount, clipCount] = await Promise.all([
       prisma.schedule.findMany({
         where: { participants: { some: { streamerId } } },
         include: {
-          game: true,
-          participants: { include: { streamer: true } },
+          game: { select: { id: true, title: true, isHoi4: true } },
+          participants: {
+            select: {
+              nation: true,
+              result: true,
+              streamer: { select: { id: true, name: true, colorCode: true } },
+            },
+          },
         },
         orderBy: { startTime: 'desc' },
         take: 20,

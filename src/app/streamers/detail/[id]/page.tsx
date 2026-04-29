@@ -2,7 +2,7 @@
 import StreamerView from '@/components/streamer/StreamerView';
 import StreamerDetailModal from '@/components/streamer/StreamerDetailModal';
 import { notFound } from 'next/navigation';
-import { getAllStreamers, getStreamerDetail } from '@/lib/data-fetching';
+import { getAllStreamers, getStreamerById, getStreamerDetail } from '@/lib/data-fetching';
 
 export default async function FullStreamerDetailPage({
   params,
@@ -11,12 +11,12 @@ export default async function FullStreamerDetailPage({
 }) {
   const { id } = await params;
 
-  const [streamers, { schedules, scheduleCount, clipCount }] = await Promise.all([
+  const [streamers, streamer, { schedules, scheduleCount, clipCount }] = await Promise.all([
     getAllStreamers(),
+    getStreamerById(id),
     getStreamerDetail(id),
   ]);
 
-  const streamer = streamers.find((s) => s.id === id);
   if (!streamer) return notFound();
 
   return (

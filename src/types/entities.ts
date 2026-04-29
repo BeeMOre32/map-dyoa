@@ -90,9 +90,10 @@ export type ClipWithParticipants = Prisma.ClipGetPayload<{
   include: {
     participants: { include: { streamer: true } };
     schedule: {
-      include: {
-        participants: { include: { streamer: true } };
-        game: true;
+      select: {
+        id: true;
+        title: true;
+        game: { select: { id: true; title: true } };
       };
     };
   };

@@ -58,6 +58,7 @@ model ScheduleParticipant {
 
   @@unique([scheduleId, streamerId])
   @@index([scheduleId])
+  @@index([streamerId])
 }
 
 model Game {
@@ -90,7 +91,8 @@ model ClipParticipant {
   streamer   Streamer @relation(fields: [streamerId], references: [id], onDelete: Cascade)
 
   @@unique([clipId, streamerId])
-  @@index([clipId, streamerId])
+  @@index([clipId])
+  @@index([streamerId])
 }
 
 model Feedback {
