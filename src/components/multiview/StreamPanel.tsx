@@ -74,36 +74,42 @@ export function StreamPanel({
         />
       )}
 
-      <div className="absolute top-0 left-0 right-0 flex items-center gap-1 px-2 py-2 bg-linear-to-b from-black/75 to-transparent opacity-0 group-hover/panel:opacity-100 transition-opacity duration-200">
-        <button onClick={onSwapLeft} disabled={!canLeft}
-          className="p-1 rounded hover:bg-white/20 text-white/70 hover:text-white transition-colors disabled:opacity-20 disabled:cursor-not-allowed">
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <button onClick={onSwapRight} disabled={!canRight}
-          className="p-1 rounded hover:bg-white/20 text-white/70 hover:text-white transition-colors disabled:opacity-20 disabled:cursor-not-allowed">
-          <ChevronRight className="w-4 h-4" />
-        </button>
-        <span className="w-2 h-2 rounded-full shrink-0 ml-0.5" style={{ backgroundColor: color }} />
-        <span className="text-white text-xs font-black flex-1 truncate mx-1">{streamer.name}</span>
-        <button onClick={onToggleFocus}
-          className="p-1 rounded hover:bg-white/20 text-white/70 hover:text-white transition-colors"
-          title={isFocused ? '원래 크기로' : '크게 보기'}>
-          {isFocused ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-        </button>
-        <button onClick={onOpenChat}
-          className="p-1 rounded hover:bg-white/20 text-white/70 hover:text-white transition-colors"
-          title="채팅 열기">
-          <MessageSquare className="w-3.5 h-3.5" />
-        </button>
-        <a href={liveUrl} target="_blank" rel="noopener noreferrer"
-          className="p-1 rounded hover:bg-white/20 text-white/70 hover:text-white transition-colors">
-          <ExternalLink className="w-3.5 h-3.5" />
-        </a>
-        <button onClick={onHide}
-          className="p-1 rounded hover:bg-red-500/40 text-white/50 hover:text-white transition-colors"
-          title="패널 숨기기">
-          <X className="w-3.5 h-3.5" />
-        </button>
+      <div className="absolute top-0 left-0 right-0 flex items-start justify-between p-2 gap-2 pointer-events-none">
+        <div className="flex gap-1 pointer-events-auto">
+          <button onClick={onSwapLeft} disabled={!canLeft}
+            className="p-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white/80 hover:text-white hover:bg-black/70 transition-all shadow-sm disabled:opacity-20 disabled:cursor-not-allowed"
+            title="왼쪽으로">
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button onClick={onSwapRight} disabled={!canRight}
+            className="p-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white/80 hover:text-white hover:bg-black/70 transition-all shadow-sm disabled:opacity-20 disabled:cursor-not-allowed"
+            title="오른쪽으로">
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="flex gap-1 pointer-events-auto">
+          <button onClick={onToggleFocus}
+            className="p-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white/80 hover:text-white hover:bg-black/70 transition-all shadow-sm"
+            title={isFocused ? '원래 크기로' : '크게 보기'}>
+            {isFocused ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </button>
+          <button onClick={onOpenChat}
+            className="p-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white/80 hover:text-white hover:bg-black/70 transition-all shadow-sm"
+            title="채팅 열기">
+            <MessageSquare className="w-4 h-4" />
+          </button>
+          <a href={liveUrl} target="_blank" rel="noopener noreferrer"
+            className="p-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white/80 hover:text-white hover:bg-black/70 transition-all shadow-sm"
+            title="새 탭으로 열기">
+            <ExternalLink className="w-4 h-4" />
+          </a>
+          <button onClick={onHide}
+            className="p-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white/60 hover:text-white hover:bg-red-500/60 transition-all shadow-sm"
+            title="패널 숨기기">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       <div className="absolute bottom-2 left-2 flex items-center gap-1.5 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-lg pointer-events-none">

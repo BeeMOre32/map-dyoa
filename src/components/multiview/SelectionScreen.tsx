@@ -126,7 +126,7 @@ export function SelectionScreen({
               </span>
             )}
             <button
-              onClick={selected.length === participants.length ? clearAll : selectAll}
+              onClick={selected.length > 0 ? clearAll : selectAll}
               className="text-[11px] font-black text-slate-600 hover:text-slate-400 transition-colors"
             >
               {selected.length > 0 ? '전체 해제' : '전체 선택'}
