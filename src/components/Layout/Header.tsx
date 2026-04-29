@@ -2,19 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import {
-  FileQuestionMark,
-  LogIn,
-  LogOut,
-  Map,
-  UserCheck,
-  Sun,
-  Moon,
-  Shield,
-} from 'lucide-react';
+import { LogIn, LogOut, Map, UserCheck, Sun, Moon } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
-import { motion, AnimatePresence } from 'framer-motion'; // 🌟 애니메이션용
-import { useTheme } from 'next-themes'; // 🌟 만약 next-themes를 쓴다면
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from 'next-themes';
 import Navigation from '../Navigation';
 
 export default function Header() {
@@ -32,7 +23,6 @@ export default function Header() {
 
   return (
     <header className="py-3 px-6 md:px-8 border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md flex justify-between items-center shrink-0 sticky top-0 z-40 transition-all duration-500">
-      {/* 🚀 로고 영역 */}
       <Link href="/" className="flex items-center gap-2.5 group">
         <div className="w-9 h-9 sm:w-10 sm:h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:rotate-6 transition-all duration-300">
           <Map className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -47,92 +37,56 @@ export default function Header() {
         </div>
       </Link>
 
-      {/* 🚀 내비게이션 */}
       <div className="shrink-0">
         <Navigation />
       </div>
 
-      {/* 🚀 우측 영역 */}
-      <div className="flex items-center gap-2 md:gap-5">
-        <motion.p
-          className="text-sm font-black hidden lg:block select-none"
-          style={{
-            background: 'linear-gradient(90deg, #94a3b8, #818cf8, #a78bfa, #818cf8, #94a3b8)',
-            backgroundSize: '300% auto',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}
-          animate={{ backgroundPosition: ['0% center', '100% center', '0% center'] }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+      {/* 우측 영역 */}
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        <button
+          onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+          className="relative p-2 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm overflow-hidden"
+          title={resolvedTheme === 'dark' ? '라이트 모드' : '다크 모드'}
         >
-          &ldquo;우왕 나도 지도동 됴아행&rdquo;
-        </motion.p>
-
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* 🌟 다크모드 전환 버튼 */}
-          <button
-            onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-            className="relative p-2 sm:p-3 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm overflow-hidden group"
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={resolvedTheme}
-                initial={{ y: 20, opacity: 0, rotate: 45 }}
-                animate={{ y: 0, opacity: 1, rotate: 0 }}
-                exit={{ y: -20, opacity: 0, rotate: -45 }}
-                transition={{ duration: 0.3, ease: 'backOut' }}
-              >
-                {resolvedTheme === 'dark' ? (
-                  <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 fill-amber-400" />
-                ) : (
-                  <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 fill-indigo-500" />
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </button>
-
-          <Link
-            href="/help"
-            className="flex items-center gap-1.5 px-2.5 py-2 sm:px-3 sm:py-3 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm hover:shadow-md group"
-            title="이용 가이드"
-          >
-            <FileQuestionMark className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-black hidden md:inline">도움말</span>
-          </Link>
-
-          <Link
-            href="/privacy"
-            className="p-2 sm:p-3 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm hover:shadow-md group"
-            title="개인정보처리방침"
-          >
-            <Shield className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
-          </Link>
-
-          {session ? (
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-2xl border border-emerald-100 dark:border-emerald-800 text-[10px] font-black uppercase">
-                <UserCheck className="w-3 h-3" /> Admin
-              </div>
-
-              <button
-                onClick={() => signOut()}
-                className="p-2 sm:p-3 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-white dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm hover:shadow-md group"
-                title="로그아웃"
-              >
-                <LogOut className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
-              </button>
-            </div>
-          ) : (
-            <Link
-              href="/login"
-              className="p-2 sm:p-3 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm hover:shadow-md group"
-              title="관리자 로그인"
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={resolvedTheme}
+              initial={{ y: 16, opacity: 0, rotate: 45 }}
+              animate={{ y: 0, opacity: 1, rotate: 0 }}
+              exit={{ y: -16, opacity: 0, rotate: -45 }}
+              transition={{ duration: 0.25, ease: 'backOut' }}
             >
-              <LogIn className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
-            </Link>
-          )}
-        </div>
+              {resolvedTheme === 'dark' ? (
+                <Sun className="w-4 h-4 text-amber-400 fill-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-indigo-500 fill-indigo-500" />
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </button>
+
+        {session ? (
+          <>
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-100 dark:border-emerald-800 text-[10px] font-black uppercase">
+              <UserCheck className="w-3 h-3" /> Admin
+            </div>
+            <button
+              onClick={() => signOut()}
+              className="p-2 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm"
+              title="로그아웃"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </>
+        ) : (
+          <Link
+            href="/login"
+            className="p-2 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm"
+            title="관리자 로그인"
+          >
+            <LogIn className="w-4 h-4" />
+          </Link>
+        )}
       </div>
     </header>
   );

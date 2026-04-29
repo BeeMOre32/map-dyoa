@@ -3,14 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, Users, Clapperboard, FlaskConical, Radio } from 'lucide-react';
+import { Calendar, Users, Clapperboard, Radio } from 'lucide-react';
 
 const tabs = [
   { id: 'live', label: '라이브', href: '/live', icon: Radio, isLive: true },
   { id: 'calendar', label: '스케줄', href: '/calendar', icon: Calendar },
-  { id: 'streamers', label: '지도동 멤버', href: '/streamers', icon: Users },
-  { id: 'clips', label: '클립 모음', href: '/clips', icon: Clapperboard, isNew: true },
-  { id: 'lab', label: '실험실', href: '/lab', icon: FlaskConical, isLab: true },
+  { id: 'streamers', label: '멤버', href: '/streamers', icon: Users },
+  { id: 'clips', label: '클립', href: '/clips', icon: Clapperboard, isNew: true },
 ];
 
 export default function Navigation() {
@@ -29,7 +28,6 @@ export default function Navigation() {
         {tabs.map((tab) => {
           const isActive = pathname.startsWith(tab.href);
           const isClip = tab.id === 'clips';
-          const isLab = tab.id === 'lab';
           const isLive = tab.id === 'live';
 
           return (
@@ -38,16 +36,13 @@ export default function Navigation() {
               href={tab.href}
               className={`relative flex items-center gap-1.5 px-2.5 py-2 sm:px-4 md:px-5 rounded-2xl text-sm font-black transition-all z-10 ${
                 isActive
-                  ? isLab ? 'text-amber-600 dark:text-amber-400'
-                    : isLive ? 'text-red-600 dark:text-red-400'
-                    : 'text-indigo-600 dark:text-indigo-400'
+                  ? isLive ? 'text-red-600 dark:text-red-400'
+                  : 'text-indigo-600 dark:text-indigo-400'
                   : isLive
                     ? 'text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300'
                     : isClip
                       ? 'text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300'
-                      : isLab
-                        ? 'text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300'
-                        : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                      : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
               }`}
             >
               {isActive && (
@@ -76,16 +71,7 @@ export default function Navigation() {
                 />
               )}
 
-              {/* 실험실 탭 배경 강조 (비활성 시) */}
-              {isLab && !isActive && (
-                <motion.div
-                  className="absolute inset-0 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-700/50"
-                  animate={{ opacity: [0.6, 1, 0.6] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                />
-              )}
-
-              <tab.icon className="w-4 h-4 z-20" />
+<tab.icon className="w-4 h-4 z-20" />
               <span className="z-20 hidden sm:inline">{tab.label}</span>
 
               {/* NEW 뱃지 */}
@@ -100,17 +86,6 @@ export default function Navigation() {
                 </motion.span>
               )}
 
-              {/* BETA 뱃지 */}
-              {isLab && !isActive && (
-                <motion.span
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', damping: 14, stiffness: 300, delay: 0.4 }}
-                  className="z-20 hidden sm:inline text-[9px] font-black px-1.5 py-px rounded-full bg-amber-500 text-white leading-none tracking-wide"
-                >
-                  BETA
-                </motion.span>
-              )}
             </Link>
           );
         })}
