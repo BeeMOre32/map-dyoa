@@ -375,20 +375,40 @@ export default function ScheduleDetailView({
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {schedule.participants.map((p) => (
-                      <Link
-                        href={`/streamers/detail/${p.id}`}
-                        key={p.id}
-                        className="px-4 py-2.5 rounded-2xl border font-bold text-sm shadow-sm transition-all hover:scale-105"
-                        style={((c) => ({
-                          backgroundColor: `${c}08`,
-                          color: c,
-                          borderColor: `${c}25`,
-                        }))(getStreamerColor(p.id, isDark) ?? p.colorCode)}
-                      >
-                        {p.name}
-                      </Link>
-                    ))}
+                    {schedule.participants.map((p) => {
+                      const color = getStreamerColor(p.id, isDark) ?? p.colorCode;
+                      const resultLabel: Record<string, string> = { WIN: '승', LOSE: '패', DNF: '미완' };
+                      const resultStyle: Record<string, string> = {
+                        WIN: 'bg-emerald-500 text-white',
+                        LOSE: 'bg-red-500 text-white',
+                        DNF: 'bg-slate-400 text-white',
+                      };
+                      return (
+                        <div key={p.id} className="flex flex-col items-start gap-1">
+                          <Link
+                            href={`/streamers/detail/${p.id}`}
+                            className="px-4 py-2.5 rounded-2xl border font-bold text-sm shadow-sm transition-all hover:scale-105"
+                            style={{ backgroundColor: `${color}08`, color, borderColor: `${color}25` }}
+                          >
+                            {p.name}
+                          </Link>
+                          {(p.nation || p.result) && (
+                            <div className="flex items-center gap-1 pl-1">
+                              {p.nation && (
+                                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                                  {p.nation}
+                                </span>
+                              )}
+                              {p.result && (
+                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none ${resultStyle[p.result] ?? 'bg-slate-400 text-white'}`}>
+                                  {resultLabel[p.result] ?? p.result}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* 멀티뷰 버튼 */}

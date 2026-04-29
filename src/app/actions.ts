@@ -22,7 +22,7 @@ import type { CreateStreamerInput } from '@/types/models';
 export async function createScheduleAction(data: {
   title: string;
   startTime: Date;
-  streamerIds: string[];
+  participants: { id: string; nation?: string; result?: string }[];
   gameId?: string;
   liveUrl?: string;
   isGuerrilla?: boolean;
@@ -37,7 +37,7 @@ export async function createScheduleAction(data: {
     if (!data.startTime || isNaN(new Date(data.startTime).getTime())) {
       throw new ValidationError('올바른 시간을 입력해주세요.');
     }
-    if (!data.streamerIds || data.streamerIds.length === 0) {
+    if (!data.participants || data.participants.length === 0) {
       throw new ValidationError('참여자를 최소 1명 이상 선택해주세요.');
     }
 
@@ -46,8 +46,10 @@ export async function createScheduleAction(data: {
         title: data.title.trim(),
         startTime: new Date(data.startTime),
         participants: {
-          create: data.streamerIds.map((id) => ({
+          create: data.participants.map(({ id, nation, result }) => ({
             streamer: { connect: { id } },
+            nation: nation?.trim() || null,
+            result: result || null,
           })),
         },
         ...(data.gameId ? { game: { connect: { id: data.gameId } } } : {}),
@@ -105,7 +107,7 @@ export async function updateScheduleAction(
   data: {
     title: string;
     startTime: Date;
-    streamerIds: string[];
+    participants: { id: string; nation?: string; result?: string }[];
     gameId?: string;
     liveUrl?: string;
     isGuerrilla?: boolean;
@@ -124,7 +126,7 @@ export async function updateScheduleAction(
     if (!data.startTime || isNaN(new Date(data.startTime).getTime())) {
       throw new ValidationError('올바른 시간을 입력해주세요.');
     }
-    if (!data.streamerIds || data.streamerIds.length === 0) {
+    if (!data.participants || data.participants.length === 0) {
       throw new ValidationError('참여자를 최소 1명 이상 선택해주세요.');
     }
 
@@ -139,8 +141,10 @@ export async function updateScheduleAction(
         isLiveEnded: data.isLiveEnded ?? false,
         participants: {
           deleteMany: {},
-          create: data.streamerIds.map((streamerId) => ({
+          create: data.participants.map(({ id: streamerId, nation, result }) => ({
             streamer: { connect: { id: streamerId } },
+            nation: nation?.trim() || null,
+            result: result || null,
           })),
         },
       },

@@ -24,6 +24,15 @@ const scheduleSchema = z.object({
 
 type ScheduleErrors = Partial<Record<keyof z.infer<typeof scheduleSchema> | 'submit', string>>;
 
+type ParticipantEntry = { id: string; nation: string; result: string };
+
+const RESULT_LABELS: Record<string, string> = { WIN: '승', LOSE: '패', DNF: '미완' };
+const RESULT_STYLES: Record<string, string> = {
+  WIN: 'bg-emerald-500 text-white',
+  LOSE: 'bg-red-500 text-white',
+  DNF: 'bg-slate-400 text-white',
+};
+
 
 type CreateScheduleModalProps = ModalProps & {
   streamers: Streamer[];
@@ -50,8 +59,12 @@ export default function ScheduleFormModal({
   const [selectedGameId, setSelectedGameId] = useState(
     initialData?.gameId || '',
   );
-  const [selectedStreamers, setSelectedStreamers] = useState<string[]>(
-    initialData?.participants?.map((p) => p.id) || [],
+  const [participants, setParticipants] = useState<ParticipantEntry[]>(
+    initialData?.participants?.map((p) => ({
+      id: p.id,
+      nation: p.nation ?? '',
+      result: p.result ?? '',
+    })) || [],
   );
   const [liveUrl, setLiveUrl] = useState(initialData?.liveUrl || '');
   const [isTimeTBD, setIsTimeTBD] = useState(initialData?.isGuerrilla || false);
@@ -67,17 +80,27 @@ export default function ScheduleFormModal({
     a.name.localeCompare(b.name, 'ko-KR'),
   );
 
+  const selectedStreamers = participants.map((p) => p.id);
+  const isHoi4Game = games.find((g) => g.id === selectedGameId)?.isHoi4 ?? false;
+
   const toggleStreamer = (id: string) => {
-    setSelectedStreamers((prev) =>
-      prev.includes(id) ? prev.filter((sId) => sId !== id) : [...prev, id],
+    setParticipants((prev) =>
+      prev.some((p) => p.id === id)
+        ? prev.filter((p) => p.id !== id)
+        : [...prev, { id, nation: '', result: '' }],
     );
     if (errors.streamerIds) setErrors((e) => ({ ...e, streamerIds: undefined }));
+  };
+
+  const updateParticipant = (id: string, field: 'nation' | 'result', value: string) => {
+    setParticipants((prev) => prev.map((p) => p.id === id ? { ...p, [field]: value } : p));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const parsed = scheduleSchema.safeParse({ title, startTime, streamerIds: selectedStreamers, liveUrl: liveUrl || undefined });
+
     if (!parsed.success) {
       const fieldErrors: ScheduleErrors = {};
       for (const issue of parsed.error.issues) {
@@ -97,7 +120,11 @@ export default function ScheduleFormModal({
     const payload = {
       title,
       startTime: resolvedStartTime,
-      streamerIds: selectedStreamers,
+      participants: participants.map(({ id, nation, result }) => ({
+        id,
+        nation: nation.trim() || undefined,
+        result: result || undefined,
+      })),
       gameId: selectedGameId === '' ? undefined : selectedGameId,
       liveUrl: liveUrl.trim() || undefined,
       isGuerrilla: isTimeTBD,
@@ -111,7 +138,12 @@ export default function ScheduleFormModal({
     if (result.success) {
       if (!isEdit && onOptimisticCreate) {
         const selectedGame = games.find((g) => g.id === selectedGameId) ?? null;
-        const participants = streamers.filter((s) => selectedStreamers.includes(s.id));
+        const flatParticipants = streamers
+          .filter((s) => selectedStreamers.includes(s.id))
+          .map((s) => {
+            const p = participants.find((x) => x.id === s.id);
+            return { ...s, nation: p?.nation.trim() || null, result: p?.result || null };
+          });
         const startDate = new Date(startTime);
         onOptimisticCreate({
           id: result.data?.id ?? `optimistic-${Date.now()}`,
@@ -124,7 +156,7 @@ export default function ScheduleFormModal({
           startTime: startDate,
           endTime: null,
           createdAt: new Date(),
-          participants,
+          participants: flatParticipants,
           game: selectedGame,
           formattedDate: format(startDate, 'yyyy년 MM월 dd일(EEEE)', { locale: ko }),
           formattedTime: format(startDate, 'HH:mm'),
@@ -340,6 +372,50 @@ export default function ScheduleFormModal({
               </div>
             </div>
           </div>
+
+          {isHoi4Game && participants.length > 0 && (
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+                HOI4 · 국가 / 결과
+              </label>
+              <div className="space-y-2">
+                {participants.map(({ id, nation, result }) => {
+                  const streamer = streamers.find((s) => s.id === id);
+                  if (!streamer) return null;
+                  return (
+                    <div key={id} className="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200 w-16 shrink-0 truncate">
+                        {streamer.name}
+                      </span>
+                      <input
+                        type="text"
+                        value={nation}
+                        onChange={(e) => updateParticipant(id, 'nation', e.target.value)}
+                        placeholder="국가명"
+                        className="flex-1 min-w-0 px-2.5 py-1.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500/40"
+                      />
+                      <div className="flex gap-1 shrink-0">
+                        {(['WIN', 'LOSE', 'DNF'] as const).map((r) => (
+                          <button
+                            key={r}
+                            type="button"
+                            onClick={() => updateParticipant(id, 'result', result === r ? '' : r)}
+                            className={`px-2 py-1 rounded-lg text-xs font-black transition-colors ${
+                              result === r
+                                ? RESULT_STYLES[r]
+                                : 'bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-500'
+                            }`}
+                          >
+                            {RESULT_LABELS[r]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </form>
 
         <div className="p-6 md:p-8 bg-slate-50 dark:bg-slate-800 flex flex-col gap-3 border-t border-slate-100 dark:border-slate-700 shrink-0">

@@ -25,8 +25,12 @@ type ScheduleWithDetails = {
   id: string;
   title: string;
   startTime: Date | string;
-  game: { id: string; title: string } | null;
-  participants: { streamer: { id: string; name: string; colorCode: string } }[];
+  game: { id: string; title: string; isHoi4: boolean } | null;
+  participants: {
+    streamer: { id: string; name: string; colorCode: string };
+    nation?: string | null;
+    result?: string | null;
+  }[];
 };
 
 interface StreamerDetailModalProps {
@@ -182,6 +186,13 @@ export default function StreamerDetailModal({
                 <div className="space-y-2">
                   {recentSchedules.map((s) => {
                     const gameColor = s.game ? getGameColor(s.game.id, isDark) : null;
+                    const myEntry = s.participants.find((p) => p.streamer.id === streamer.id);
+                    const resultLabel: Record<string, string> = { WIN: '승', LOSE: '패', DNF: '미완' };
+                    const resultStyle: Record<string, string> = {
+                      WIN: 'bg-emerald-500 text-white',
+                      LOSE: 'bg-red-500 text-white',
+                      DNF: 'bg-slate-400 text-white',
+                    };
                     return (
                       <Link
                         key={s.id}
@@ -197,14 +208,23 @@ export default function StreamerDetailModal({
                           <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                             {s.title}
                           </p>
-                          {s.game && (
-                            <p
-                              className="text-[10px] font-bold mt-0.5"
-                              style={{ color: gameColor ?? '#94a3b8' }}
-                            >
-                              {s.game.title}
-                            </p>
-                          )}
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            {s.game && (
+                              <p className="text-[10px] font-bold" style={{ color: gameColor ?? '#94a3b8' }}>
+                                {s.game.title}
+                              </p>
+                            )}
+                            {s.game?.isHoi4 && myEntry?.nation && (
+                              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                                · {myEntry.nation}
+                              </span>
+                            )}
+                            {s.game?.isHoi4 && myEntry?.result && (
+                              <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none ${resultStyle[myEntry.result] ?? 'bg-slate-400 text-white'}`}>
+                                {resultLabel[myEntry.result] ?? myEntry.result}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <ExternalLink className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 group-hover:text-indigo-400 transition-colors shrink-0" />
                       </Link>

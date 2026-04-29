@@ -18,6 +18,14 @@ export type ScheduleWithRelations = Schedule & {
 };
 
 /**
+ * 참여자 정보 (스트리머 + HOI4 국가/결과)
+ */
+export type ParticipantFlat = Streamer & {
+  nation: string | null;
+  result: string | null;
+};
+
+/**
  * 평탄화된 스케줄 타입 (참여자가 배열로)
  */
 export type FlattenedSchedule = Omit<
@@ -27,7 +35,7 @@ export type FlattenedSchedule = Omit<
   startTime: Date;
   endTime: Date | null;
   createdAt: Date;
-  participants: Streamer[];
+  participants: ParticipantFlat[];
   game?: Game | null;
   formattedDate: string;
   formattedTime: string;
@@ -53,8 +61,8 @@ export function flattenScheduleParticipants(
     endTime: schedule.endTime ? new Date(schedule.endTime) : null,
     createdAt: new Date(schedule.createdAt),
     participants: schedule.participants
-      .map((p) => p.streamer)
-      .filter((s): s is Streamer => s !== null),
+      .filter((p) => p.streamer !== null)
+      .map((p) => ({ ...p.streamer, nation: p.nation ?? null, result: p.result ?? null })) as ParticipantFlat[],
     formattedDate: format(
       new Date(schedule.startTime),
       'yyyy년 MM월 dd일(EEEE)',

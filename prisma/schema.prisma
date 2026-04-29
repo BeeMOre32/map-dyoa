@@ -51,6 +51,8 @@ model ScheduleParticipant {
   id         String   @id @default(cuid())
   scheduleId String
   streamerId String
+  nation     String?
+  result     String?
   schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
   streamer   Streamer @relation(fields: [streamerId], references: [id], onDelete: Cascade)
 
@@ -60,6 +62,7 @@ model ScheduleParticipant {
 model Game {
   id        String     @id @default(cuid())
   title     String     @unique
+  isHoi4    Boolean    @default(false)
   schedules Schedule[]
 }
 
