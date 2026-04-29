@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Radio, LayoutGrid, Wifi, WifiOff } from 'lucide-react';
@@ -8,29 +8,15 @@ import { useTheme } from 'next-themes';
 import { getStreamerColor } from '@/constants/streamercolor';
 import type { Streamer } from '@prisma/client';
 import { MAX_STREAMS } from '@/components/multiview/utils';
+import { useLiveStatus } from '@/hooks/useLiveStatus';
 
 export default function LiveView({ streamers }: { streamers: Streamer[] }) {
   const router = useRouter();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
-  const [liveIds, setLiveIds] = useState<Set<string>>(new Set());
+  const { liveIds, isLoading: loading } = useLiveStatus();
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchLive = async () => {
-      try {
-        const res = await fetch('/api/chzzk/live-status');
-        const data: { liveStreamerIds: string[] } = await res.json();
-        setLiveIds(new Set(data.liveStreamerIds));
-      } catch {}
-      setLoading(false);
-    };
-    fetchLive();
-    const interval = setInterval(fetchLive, 60_000);
-    return () => clearInterval(interval);
-  }, []);
 
   const toggle = (id: string) => {
     setSelected((prev) => {

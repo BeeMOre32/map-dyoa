@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useOptimistic, useTransition, useRef } from 'react';
+import { useLiveStatus } from '@/hooks/useLiveStatus';
 import {
   format,
   addMonths,
@@ -67,21 +68,8 @@ export default function CalendarView({
   );
   const [selectedStreamers, setSelectedStreamers] = useState<Set<string>>(new Set());
   const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set());
-  const [liveStreamerIds, setLiveStreamerIds] = useState<Set<string>>(new Set());
+  const { liveIds: liveStreamerIds } = useLiveStatus();
   const todayMobileRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const fetchLive = async () => {
-      try {
-        const res = await fetch('/api/chzzk/live-status');
-        const data = await res.json();
-        setLiveStreamerIds(new Set(data.liveStreamerIds));
-      } catch {}
-    };
-    fetchLive();
-    const interval = setInterval(fetchLive, 60_000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     if (viewMode === 'weekly' && todayMobileRef.current) {
