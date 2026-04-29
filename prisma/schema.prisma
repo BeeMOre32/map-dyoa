@@ -56,7 +56,8 @@ model ScheduleParticipant {
   schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
   streamer   Streamer @relation(fields: [streamerId], references: [id], onDelete: Cascade)
 
-  @@index([scheduleId, streamerId])
+  @@unique([scheduleId, streamerId])
+  @@index([scheduleId])
 }
 
 model Game {

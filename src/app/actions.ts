@@ -130,25 +130,34 @@ export async function updateScheduleAction(
       throw new ValidationError('참여자를 최소 1명 이상 선택해주세요.');
     }
 
-    await prisma.schedule.update({
-      where: { id },
-      data: {
-        title: data.title.trim(),
-        startTime: new Date(data.startTime),
-        game: data.gameId ? { connect: { id: data.gameId } } : { disconnect: true },
-        liveUrl: data.liveUrl?.trim() || null,
-        isGuerrilla: data.isGuerrilla ?? false,
-        isLiveEnded: data.isLiveEnded ?? false,
-        participants: {
-          deleteMany: {},
-          create: data.participants.map(({ id: streamerId, nation, result }) => ({
-            streamer: { connect: { id: streamerId } },
-            nation: nation?.trim() || null,
-            result: result || null,
-          })),
+    const newStreamerIds = data.participants.map((p) => p.id);
+
+    await prisma.$transaction([
+      // 메타데이터 업데이트
+      prisma.schedule.update({
+        where: { id },
+        data: {
+          title: data.title.trim(),
+          startTime: new Date(data.startTime),
+          game: data.gameId ? { connect: { id: data.gameId } } : { disconnect: true },
+          liveUrl: data.liveUrl?.trim() || null,
+          isGuerrilla: data.isGuerrilla ?? false,
+          isLiveEnded: data.isLiveEnded ?? false,
         },
-      },
-    });
+      }),
+      // 제거된 참여자만 삭제
+      prisma.scheduleParticipant.deleteMany({
+        where: { scheduleId: id, streamerId: { notIn: newStreamerIds } },
+      }),
+      // 추가/변경된 참여자 upsert
+      ...data.participants.map(({ id: streamerId, nation, result }) =>
+        prisma.scheduleParticipant.upsert({
+          where: { scheduleId_streamerId: { scheduleId: id, streamerId } },
+          create: { scheduleId: id, streamerId, nation: nation?.trim() || null, result: result || null },
+          update: { nation: nation?.trim() || null, result: result || null },
+        }),
+      ),
+    ]);
 
     const paths = getRevalidationPaths('schedule');
     await Promise.all([

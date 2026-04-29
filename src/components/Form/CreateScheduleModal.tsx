@@ -81,7 +81,10 @@ export default function ScheduleFormModal({
   );
 
   const selectedStreamers = participants.map((p) => p.id);
-  const isHoi4Game = games.find((g) => g.id === selectedGameId)?.isHoi4 ?? false;
+  const isHoi4Game =
+    games.find((g) => g.id === selectedGameId)?.isHoi4 ||
+    (initialData?.gameId === selectedGameId && initialData?.game?.isHoi4) ||
+    false;
 
   const toggleStreamer = (id: string) => {
     setParticipants((prev) =>
