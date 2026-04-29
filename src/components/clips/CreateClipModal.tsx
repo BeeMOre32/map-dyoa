@@ -19,6 +19,7 @@ import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { createClipAction, updateClipAction } from '@/app/actions';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { isChzzkClipUrl } from '@/lib/chzzk';
+import { isYouTubeUrl } from '@/lib/youtube';
 import { matchesChosung } from '@/lib/chosung';
 import { useTheme } from 'next-themes';
 import type { Streamer } from '@prisma/client';
@@ -72,13 +73,14 @@ export default function CreateClipModal({
 
   useEscapeKey(onClose);
 
-  const fetchChzzkMeta = useCallback(async (clipUrl: string) => {
+  const fetchMeta = useCallback(async (clipUrl: string) => {
     setFetchingMeta(true);
     setMetaStatus('idle');
     try {
-      const res = await fetch(
-        `/api/chzzk/clip-meta?url=${encodeURIComponent(clipUrl)}`,
-      );
+      const apiUrl = isChzzkClipUrl(clipUrl)
+        ? `/api/chzzk/clip-meta?url=${encodeURIComponent(clipUrl)}`
+        : `/api/youtube/clip-meta?url=${encodeURIComponent(clipUrl)}`;
+      const res = await fetch(apiUrl);
       const data = await res.json();
       if (res.ok) {
         if (data.thumbnailUrl) {
@@ -103,11 +105,11 @@ export default function CreateClipModal({
       setUrl(value);
       setMetaStatus('idle');
       if (fetchDebounceRef.current) clearTimeout(fetchDebounceRef.current);
-      if (isChzzkClipUrl(value)) {
-        fetchDebounceRef.current = setTimeout(() => fetchChzzkMeta(value), 600);
+      if (isChzzkClipUrl(value) || isYouTubeUrl(value)) {
+        fetchDebounceRef.current = setTimeout(() => fetchMeta(value), 600);
       }
     },
-    [fetchChzzkMeta],
+    [fetchMeta],
   );
 
   const filteredStreamers = useMemo(() => {
