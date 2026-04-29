@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, Users, Clapperboard, FlaskConical } from 'lucide-react';
+import { Calendar, Users, Clapperboard, FlaskConical, Radio } from 'lucide-react';
 
 const tabs = [
+  { id: 'live', label: '라이브', href: '/live', icon: Radio, isLive: true },
   { id: 'calendar', label: '스케줄', href: '/calendar', icon: Calendar },
   { id: 'streamers', label: '지도동 멤버', href: '/streamers', icon: Users },
   { id: 'clips', label: '클립 모음', href: '/clips', icon: Clapperboard, isNew: true },
@@ -29,6 +30,7 @@ export default function Navigation() {
           const isActive = pathname.startsWith(tab.href);
           const isClip = tab.id === 'clips';
           const isLab = tab.id === 'lab';
+          const isLive = tab.id === 'live';
 
           return (
             <Link
@@ -36,12 +38,16 @@ export default function Navigation() {
               href={tab.href}
               className={`relative flex items-center gap-1.5 px-2.5 py-2 sm:px-4 md:px-5 rounded-2xl text-sm font-black transition-all z-10 ${
                 isActive
-                  ? isLab ? 'text-amber-600 dark:text-amber-400' : 'text-indigo-600 dark:text-indigo-400'
-                  : isClip
-                    ? 'text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300'
-                    : isLab
-                      ? 'text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300'
-                      : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                  ? isLab ? 'text-amber-600 dark:text-amber-400'
+                    : isLive ? 'text-red-600 dark:text-red-400'
+                    : 'text-indigo-600 dark:text-indigo-400'
+                  : isLive
+                    ? 'text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300'
+                    : isClip
+                      ? 'text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300'
+                      : isLab
+                        ? 'text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300'
+                        : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
               }`}
             >
               {isActive && (
@@ -49,6 +55,15 @@ export default function Navigation() {
                   layoutId="activeTab"
                   className="absolute inset-0 bg-white dark:bg-slate-800 rounded-2xl shadow-md border border-slate-200/50 dark:border-slate-700"
                   transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+
+              {/* 라이브 탭 배경 강조 (비활성 시) */}
+              {isLive && !isActive && (
+                <motion.div
+                  className="absolute inset-0 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200/60 dark:border-red-700/50"
+                  animate={{ opacity: [0.6, 1, 0.6] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
                 />
               )}
 

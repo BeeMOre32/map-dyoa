@@ -12,5 +12,12 @@ export default async function MultiViewPage({
   const schedule = await getScheduleDetail(id);
   if (!schedule) return notFound();
 
-  return <MultiView schedule={flattenScheduleParticipants(schedule)} />;
+  const flat = flattenScheduleParticipants(schedule);
+  return (
+    <MultiView
+      participants={flat.participants}
+      title={flat.title}
+      backHref={`/calendar/schedule/${flat.id}`}
+    />
+  );
 }

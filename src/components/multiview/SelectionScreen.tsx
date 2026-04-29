@@ -7,15 +7,14 @@ import { motion } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { getStreamerColor } from '@/constants/streamercolor';
 import type { Streamer } from '@prisma/client';
-import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { MAX_STREAMS } from './utils';
 
 export function SelectionScreen({
-  schedule,
+  title,
   participants,
   onStart,
 }: {
-  schedule: FlattenedSchedule;
+  title: string;
   participants: Streamer[];
   onStart: (ids: string[]) => void;
 }) {
@@ -54,7 +53,7 @@ export function SelectionScreen({
             <LayoutGrid className="w-5 h-5 text-indigo-400 shrink-0" />
             <h2 className="text-lg font-black text-white">멀티뷰 시청</h2>
           </div>
-          <p className="text-sm text-slate-400 font-medium truncate pl-7">{schedule.title}</p>
+          <p className="text-sm text-slate-400 font-medium truncate pl-7">{title}</p>
           <p className="text-xs text-slate-600 font-medium pl-7">
             시청할 스트리머를 선택하세요 · 최대 {MAX_STREAMS}명
           </p>

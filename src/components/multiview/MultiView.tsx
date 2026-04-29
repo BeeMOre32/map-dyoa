@@ -10,7 +10,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { getStreamerColor } from '@/constants/streamercolor';
 import type { Streamer } from '@prisma/client';
-import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { getLiveUrl, getPanelRows } from './utils';
 import { SelectionScreen } from './SelectionScreen';
 import { StreamPanel } from './StreamPanel';
@@ -19,15 +18,17 @@ import { ResizableGrid } from './ResizableGrid';
 import { ResizableFocusLayout } from './ResizableFocusLayout';
 
 interface MultiViewProps {
-  schedule: FlattenedSchedule;
+  participants: Streamer[];
+  title: string;
+  backHref: string;
 }
 
-export default function MultiView({ schedule }: MultiViewProps) {
+export default function MultiView({ participants, title, backHref }: MultiViewProps) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
   const [phase, setPhase] = useState<'select' | 'watch'>('select');
-  const [order, setOrder] = useState<string[]>(schedule.participants.map((p) => p.id));
+  const [order, setOrder] = useState<string[]>(participants.map((p) => p.id));
   const [visible, setVisible] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState<Set<string>>(new Set());
   const [focusedId, setFocusedId] = useState<string | null>(null);
@@ -43,13 +44,13 @@ export default function MultiView({ schedule }: MultiViewProps) {
   const orderedVisible = useMemo(
     () => order
       .filter((id) => visible.has(id))
-      .map((id) => schedule.participants.find((p) => p.id === id))
+      .map((id) => participants.find((p) => p.id === id))
       .filter((p): p is Streamer => !!p),
-    [order, visible, schedule.participants],
+    [order, visible, participants],
   );
 
   const hiddenInWatch = phase === 'watch'
-    ? schedule.participants.filter((p) => !visible.has(p.id))
+    ? participants.filter((p) => !visible.has(p.id))
     : [];
 
   const allLoaded = orderedVisible.length > 0 && orderedVisible.every((s) => loaded.has(s.id));
@@ -88,7 +89,7 @@ export default function MultiView({ schedule }: MultiViewProps) {
   };
 
   const openAll = () => {
-    schedule.participants
+    participants
       .filter((s) => visible.has(s.id))
       .forEach((s) => window.open(getLiveUrl(s), '_blank', 'noopener,noreferrer'));
   };
@@ -143,7 +144,7 @@ export default function MultiView({ schedule }: MultiViewProps) {
     <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col">
       <div className="shrink-0 flex items-center gap-2 px-3 h-12 bg-slate-900/80 backdrop-blur-sm border-b border-slate-800">
         {phase === 'select' ? (
-          <Link href={`/calendar/schedule/${schedule.id}`}
+          <Link href={backHref}
             className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -158,7 +159,7 @@ export default function MultiView({ schedule }: MultiViewProps) {
         )}
 
         <LayoutGrid className="w-4 h-4 text-indigo-400 shrink-0" />
-        <span className="text-sm font-black text-white truncate min-w-0 flex-1">{schedule.title}</span>
+        <span className="text-sm font-black text-white truncate min-w-0 flex-1">{title}</span>
 
         {phase === 'watch' && (
           <AnimatePresence mode="popLayout">
@@ -240,8 +241,8 @@ export default function MultiView({ schedule }: MultiViewProps) {
             transition={{ duration: 0.15 }}
           >
             <SelectionScreen
-              schedule={schedule}
-              participants={schedule.participants}
+              title={title}
+              participants={participants}
               onStart={handleStart}
             />
           </motion.div>
