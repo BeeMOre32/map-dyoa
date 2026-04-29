@@ -23,6 +23,7 @@ model Streamer {
   profileImg String?
   colorCode  String  @default("#673AB7") // 캘린더 표시 색상
   chzzkUrl   String?
+  bio        String? @db.Text
 
   schedules        ScheduleParticipant[]
   clipParticipants ClipParticipant[]

@@ -41,6 +41,7 @@ export default function CreateStreamerModal({
   const [colorCode, setColorCode] = useState(PASTEL_COLORS[0].hex);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [chzzkUrl, setChzzkUrl] = useState('');
+  const [bio, setBio] = useState('');
   const [errors, setErrors] = useState<StreamerErrors>({});
 
   useEscapeKey(onClose);
@@ -61,7 +62,7 @@ export default function CreateStreamerModal({
     setErrors({});
     setIsSubmitting(true);
 
-    const payload = { name, handle, generation, role, platform: 'chzzk', colorCode, chzzkUrl };
+    const payload = { name, handle, generation, role, platform: 'chzzk', colorCode, chzzkUrl, bio };
     const result = await createStreamerAction(payload);
 
     setIsSubmitting(false);
@@ -191,6 +192,19 @@ export default function CreateStreamerModal({
               onChange={(e) => setChzzkUrl(e.target.value)}
               placeholder="https://chzzk.naver.com/..."
               className="w-full p-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-400/50 outline-none transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
+              자기소개 (선택)
+            </label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="간단한 자기소개를 입력하세요"
+              rows={3}
+              className="w-full p-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-400/50 outline-none transition-all resize-none"
             />
           </div>
 

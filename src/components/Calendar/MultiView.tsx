@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, ExternalLink, LayoutGrid, FlaskConical, X,
-  PlayCircle, ChevronLeft, ChevronRight, Maximize2, Minimize2, Play, Plus, Check, Puzzle,
+  PlayCircle, ChevronLeft, ChevronRight, Maximize2, Minimize2, Play, Plus, Check, Puzzle, MessageSquare,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
@@ -32,6 +32,10 @@ function getLiveUrl(streamer: Streamer): string {
     // URL 파싱 실패 시 원본 사용
   }
   return base;
+}
+
+function getChatUrl(streamer: Streamer): string {
+  return `${getLiveUrl(streamer)}/chat`;
 }
 
 function getPanelRows<T>(panels: T[]): T[][] {
@@ -362,16 +366,84 @@ function SelectionScreen({
   );
 }
 
+// ── 채팅 패널 ──────────────────────────────────────────────
+function ChatPanel({
+  streamers,
+  chatStreamerId,
+  onClose,
+  onSwitch,
+}: {
+  streamers: Streamer[];
+  chatStreamerId: string;
+  onClose: () => void;
+  onSwitch: (id: string) => void;
+}) {
+  const [width, setWidth] = useState(320);
+  const chatStreamer = streamers.find((s) => s.id === chatStreamerId);
+  if (!chatStreamer) return null;
+
+  return (
+    <div className="relative flex shrink-0" style={{ width }}>
+      <div
+        className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize z-10 bg-slate-800 hover:bg-indigo-500/60 transition-colors"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          const startX = e.clientX;
+          const startW = width;
+          const onMove = (ev: MouseEvent) => {
+            setWidth(Math.max(200, Math.min(600, startW - (ev.clientX - startX))));
+          };
+          const onUp = () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+          };
+          window.addEventListener('mousemove', onMove);
+          window.addEventListener('mouseup', onUp);
+        }}
+      />
+      <div className="flex-1 flex flex-col bg-slate-950 border-l border-slate-800 overflow-hidden pl-1">
+        <div className="shrink-0 flex items-center gap-2 px-3 h-10 bg-slate-900 border-b border-slate-800">
+          <MessageSquare className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+          <select
+            value={chatStreamerId}
+            onChange={(e) => onSwitch(e.target.value)}
+            className="flex-1 bg-transparent text-white text-xs font-black outline-none min-w-0 cursor-pointer"
+          >
+            {streamers.map((s) => (
+              <option key={s.id} value={s.id} className="bg-slate-900 text-white">
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={onClose}
+            className="p-1 rounded hover:bg-slate-700 text-slate-500 hover:text-white transition-colors shrink-0"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        <iframe
+          key={chatStreamerId}
+          src={getChatUrl(chatStreamer)}
+          className="flex-1 border-none"
+          title={`${chatStreamer.name} 채팅`}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ── 스트림 패널 ────────────────────────────────────────────
 function StreamPanel({
   streamer, color, isLoaded, isFocused, canLeft, canRight,
-  onLoad, onHide, onFocus, onUnfocus, onSwapLeft, onSwapRight,
+  onLoad, onHide, onFocus, onUnfocus, onSwapLeft, onSwapRight, onOpenChat,
 }: {
   streamer: Streamer; color: string;
   isLoaded: boolean; isFocused: boolean; canLeft: boolean; canRight: boolean;
   onLoad: () => void; onHide: () => void;
   onFocus: () => void; onUnfocus: () => void;
   onSwapLeft: () => void; onSwapRight: () => void;
+  onOpenChat: () => void;
 }) {
   const liveUrl = getLiveUrl(streamer);
 
@@ -434,6 +506,11 @@ function StreamPanel({
           title={isFocused ? '원래 크기로' : '크게 보기'}>
           {isFocused ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
         </button>
+        <button onClick={onOpenChat}
+          className="p-1 rounded hover:bg-white/20 text-white/70 hover:text-white transition-colors"
+          title="채팅 열기">
+          <MessageSquare className="w-3.5 h-3.5" />
+        </button>
         <a href={liveUrl} target="_blank" rel="noopener noreferrer"
           className="p-1 rounded hover:bg-white/20 text-white/70 hover:text-white transition-colors">
           <ExternalLink className="w-3.5 h-3.5" />
@@ -463,6 +540,7 @@ export default function MultiView({ schedule }: MultiViewProps) {
   const [visible, setVisible] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState<Set<string>>(new Set());
   const [focusedId, setFocusedId] = useState<string | null>(null);
+  const [chatStreamerId, setChatStreamerId] = useState<string | null>(null);
   const [toast, setToast] = useState(false);
 
   useEffect(() => {
@@ -481,6 +559,7 @@ export default function MultiView({ schedule }: MultiViewProps) {
     setVisible((prev) => { const n = new Set(prev); n.delete(id); return n; });
     setLoaded((prev) => { const n = new Set(prev); n.delete(id); return n; });
     if (focusedId === id) setFocusedId(null);
+    if (chatStreamerId === id) setChatStreamerId(null);
   };
 
   const restore = (id: string) => setVisible((prev) => new Set([...prev, id]));
@@ -531,7 +610,7 @@ export default function MultiView({ schedule }: MultiViewProps) {
           </Link>
         ) : (
           <button
-            onClick={() => { setPhase('select'); setLoaded(new Set()); setFocusedId(null); }}
+            onClick={() => { setPhase('select'); setLoaded(new Set()); setFocusedId(null); setChatStreamerId(null); }}
             className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors shrink-0"
             title="스트리머 다시 선택"
           >
@@ -634,58 +713,70 @@ export default function MultiView({ schedule }: MultiViewProps) {
         ) : (
           <motion.div
             key="watch"
-            className="flex-1 flex flex-col min-h-0"
+            className="flex-1 flex min-h-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
           >
-            {orderedVisible.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center gap-4 text-slate-600">
-                <LayoutGrid className="w-10 h-10" />
-                <p className="text-sm font-black">표시할 패널이 없습니다</p>
-                <p className="text-xs font-medium text-slate-700">위의 칩을 눌러 스트리머를 복원하세요</p>
-              </div>
-            ) : focusedStreamer ? (
-              <ResizableFocusLayout
-                focused={focusedStreamer}
-                others={otherStreamers}
-                renderPanel={(streamer, isFocused) => (
-                  <StreamPanel
-                    streamer={streamer}
-                    color={getStreamerColor(streamer.id, isDark) ?? streamer.colorCode}
-                    isLoaded={loaded.has(streamer.id)}
-                    isFocused={isFocused}
-                    canLeft={orderedVisible.indexOf(streamer) > 0}
-                    canRight={orderedVisible.indexOf(streamer) < orderedVisible.length - 1}
-                    onLoad={() => load(streamer.id)}
-                    onHide={() => hidePanel(streamer.id)}
-                    onFocus={() => setFocusedId(streamer.id)}
-                    onUnfocus={() => setFocusedId(null)}
-                    onSwapLeft={() => swapVisible(streamer.id, -1)}
-                    onSwapRight={() => swapVisible(streamer.id, 1)}
-                  />
-                )}
-              />
-            ) : (
-              <ResizableGrid
-                rows={getPanelRows(orderedVisible)}
-                renderPanel={(streamer) => (
-                  <StreamPanel
-                    streamer={streamer}
-                    color={getStreamerColor(streamer.id, isDark) ?? streamer.colorCode}
-                    isLoaded={loaded.has(streamer.id)}
-                    isFocused={false}
-                    canLeft={orderedVisible.indexOf(streamer) > 0}
-                    canRight={orderedVisible.indexOf(streamer) < orderedVisible.length - 1}
-                    onLoad={() => load(streamer.id)}
-                    onHide={() => hidePanel(streamer.id)}
-                    onFocus={() => setFocusedId(streamer.id)}
-                    onUnfocus={() => {}}
-                    onSwapLeft={() => swapVisible(streamer.id, -1)}
-                    onSwapRight={() => swapVisible(streamer.id, 1)}
-                  />
-                )}
+            <div className="flex-1 flex flex-col min-h-0 min-w-0">
+              {orderedVisible.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center gap-4 text-slate-600">
+                  <LayoutGrid className="w-10 h-10" />
+                  <p className="text-sm font-black">표시할 패널이 없습니다</p>
+                  <p className="text-xs font-medium text-slate-700">위의 칩을 눌러 스트리머를 복원하세요</p>
+                </div>
+              ) : focusedStreamer ? (
+                <ResizableFocusLayout
+                  focused={focusedStreamer}
+                  others={otherStreamers}
+                  renderPanel={(streamer, isFocused) => (
+                    <StreamPanel
+                      streamer={streamer}
+                      color={getStreamerColor(streamer.id, isDark) ?? streamer.colorCode}
+                      isLoaded={loaded.has(streamer.id)}
+                      isFocused={isFocused}
+                      canLeft={orderedVisible.indexOf(streamer) > 0}
+                      canRight={orderedVisible.indexOf(streamer) < orderedVisible.length - 1}
+                      onLoad={() => load(streamer.id)}
+                      onHide={() => hidePanel(streamer.id)}
+                      onFocus={() => setFocusedId(streamer.id)}
+                      onUnfocus={() => setFocusedId(null)}
+                      onSwapLeft={() => swapVisible(streamer.id, -1)}
+                      onSwapRight={() => swapVisible(streamer.id, 1)}
+                      onOpenChat={() => setChatStreamerId(streamer.id)}
+                    />
+                  )}
+                />
+              ) : (
+                <ResizableGrid
+                  rows={getPanelRows(orderedVisible)}
+                  renderPanel={(streamer) => (
+                    <StreamPanel
+                      streamer={streamer}
+                      color={getStreamerColor(streamer.id, isDark) ?? streamer.colorCode}
+                      isLoaded={loaded.has(streamer.id)}
+                      isFocused={false}
+                      canLeft={orderedVisible.indexOf(streamer) > 0}
+                      canRight={orderedVisible.indexOf(streamer) < orderedVisible.length - 1}
+                      onLoad={() => load(streamer.id)}
+                      onHide={() => hidePanel(streamer.id)}
+                      onFocus={() => setFocusedId(streamer.id)}
+                      onUnfocus={() => {}}
+                      onSwapLeft={() => swapVisible(streamer.id, -1)}
+                      onSwapRight={() => swapVisible(streamer.id, 1)}
+                      onOpenChat={() => setChatStreamerId(streamer.id)}
+                    />
+                  )}
+                />
+              )}
+            </div>
+            {chatStreamerId && (
+              <ChatPanel
+                streamers={orderedVisible}
+                chatStreamerId={chatStreamerId}
+                onClose={() => setChatStreamerId(null)}
+                onSwitch={setChatStreamerId}
               />
             )}
           </motion.div>

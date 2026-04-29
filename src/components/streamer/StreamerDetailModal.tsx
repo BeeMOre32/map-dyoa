@@ -5,9 +5,8 @@ import {
   X,
   ExternalLink,
   CalendarDays,
-  Gamepad2,
-  Users,
   Clapperboard,
+  FileText,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
@@ -48,23 +47,6 @@ export default function StreamerDetailModal({
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const streamerColor = getStreamerColor(streamer.id, isDark) ?? streamer.colorCode;
-
-  const games = [
-    ...new Map(
-      schedules
-        .filter((s) => s.game)
-        .map((s) => [s.game!.id, s.game!]),
-    ).values(),
-  ];
-
-  const collabs = [
-    ...new Map(
-      schedules
-        .flatMap((s) => s.participants)
-        .filter((p) => p.streamer.id !== streamer.id)
-        .map((p) => [p.streamer.id, p.streamer]),
-    ).values(),
-  ];
 
   const recentSchedules = schedules.slice(0, 5);
 
@@ -173,82 +155,28 @@ export default function StreamerDetailModal({
         <div className="overflow-y-auto flex-1 min-h-0 custom-scrollbar">
           <div className="p-8 space-y-8">
 
-            {/* 게임 이력 */}
-            {games.length > 0 && (
+            {/* 자기소개 */}
+            {streamer.bio && (
               <section className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <Gamepad2 className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
+                  <FileText className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
                   <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
-                    게임 이력
+                    자기소개
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {games.map((game) => {
-                    const color = getGameColor(game.id, isDark);
-                    return (
-                      <span
-                        key={game.id}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border"
-                        style={
-                          color
-                            ? {
-                                color,
-                                borderColor: `${color}40`,
-                                backgroundColor: `${color}15`,
-                              }
-                            : {
-                                color: '#94a3b8',
-                                borderColor: '#e2e8f0',
-                                backgroundColor: '#f8fafc',
-                              }
-                        }
-                      >
-                        <Gamepad2 className="w-3 h-3" />
-                        {game.title}
-                      </span>
-                    );
-                  })}
-                </div>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+                  {streamer.bio}
+                </p>
               </section>
             )}
 
-            {/* 함께한 멤버 */}
-            {collabs.length > 0 && (
-              <section className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Users className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
-                  <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
-                    함께한 멤버
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {collabs.map((s) => {
-                    const c = getStreamerColor(s.id, isDark) ?? s.colorCode;
-                    return (
-                      <span
-                        key={s.id}
-                        className="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold border"
-                        style={{
-                          color: c,
-                          borderColor: `${c}40`,
-                          backgroundColor: `${c}15`,
-                        }}
-                      >
-                        {s.name}
-                      </span>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-
-            {/* 최근 일정 */}
+            {/* 참여한 합방 */}
             {recentSchedules.length > 0 && (
               <section className="space-y-3">
                 <div className="flex items-center gap-2">
                   <CalendarDays className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
                   <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
-                    최근 일정
+                    참여한 합방
                   </span>
                 </div>
                 <div className="space-y-2">
@@ -287,7 +215,7 @@ export default function StreamerDetailModal({
             )}
 
             {/* 데이터 없을 때 */}
-            {schedules.length === 0 && games.length === 0 && (
+            {schedules.length === 0 && !streamer.bio && (
               <div className="py-16 text-center">
                 <Clapperboard className="w-10 h-10 text-slate-200 dark:text-slate-700 mx-auto mb-3" />
                 <p className="text-sm font-bold text-slate-400 dark:text-slate-500">

@@ -171,6 +171,7 @@ export async function createStreamerAction(data: {
   platform: string;
   colorCode: string;
   chzzkUrl: string;
+  bio?: string;
 }): Promise<ActionResult> {
   try {
     await requireAdmin();
@@ -191,6 +192,7 @@ export async function createStreamerAction(data: {
         platform: data.platform || 'CHZZK',
         colorCode: data.colorCode || '#673AB7',
         chzzkUrl: data.chzzkUrl?.trim() || null,
+        bio: data.bio?.trim() || null,
       },
     });
 
