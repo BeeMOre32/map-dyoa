@@ -173,7 +173,7 @@ export default function CalendarView({
   }
 
   return (
-    <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden h-full max-h-[calc(100vh-100px)]">
+    <div className="flex flex-col p-4 md:p-6 sm:flex-1 sm:overflow-hidden sm:h-full">
       {/* 상단 컨트롤 영역 */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center shrink-0 mb-4">
         <div className="flex items-center gap-3">
@@ -243,13 +243,13 @@ export default function CalendarView({
       />
 
       {/* 캘린더 본체 */}
-      <div className="flex-1 overflow-hidden bg-white dark:bg-slate-900 rounded-4xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col">
+      <div className="sm:flex-1 sm:overflow-hidden bg-white dark:bg-slate-900 rounded-4xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col">
 
         {/* ── 모바일 주간 리스트 (sm 미만 + weekly) ── */}
         {viewMode === 'weekly' && (
           <div
             key={`mobile-${currentDate.toISOString()}`}
-            className="sm:hidden flex-1 overflow-y-auto custom-scrollbar animate-in fade-in duration-300"
+            className="sm:hidden animate-in fade-in duration-300"
           >
             {days.map((day) => {
               const today = isToday(day);
@@ -293,7 +293,7 @@ export default function CalendarView({
         )}
 
         {/* ── 데스크탑 그리드 / 모바일 월간 그리드 ── */}
-        <div className={`${viewMode === 'weekly' ? 'hidden sm:flex' : 'flex'} flex-col flex-1 overflow-hidden`}>
+        <div className={`${viewMode === 'weekly' ? 'hidden sm:flex' : 'flex'} flex-col sm:flex-1 sm:overflow-hidden`}>
           {/* 요일 헤더 */}
           <div className="grid grid-cols-7 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/30 dark:bg-slate-800/60">
             {weekDays.map((day, idx) => (
@@ -308,10 +308,10 @@ export default function CalendarView({
 
           <div
             key={`${currentDate.toISOString()}-${viewMode}`}
-            className={`flex-1 overflow-y-auto custom-scrollbar animate-in fade-in duration-500 ease-out fill-mode-forwards ${slideDirection === 'left' ? 'slide-in-from-right-10' : 'slide-in-from-left-10'}`}
+            className={`sm:flex-1 overflow-y-auto custom-scrollbar animate-in fade-in duration-500 ease-out fill-mode-forwards ${slideDirection === 'left' ? 'slide-in-from-right-10' : 'slide-in-from-left-10'}`}
           >
             <div
-              className="grid grid-cols-7 h-full"
+              className="grid grid-cols-7 sm:h-full"
               style={{
                 gridTemplateRows:
                   viewMode === 'monthly'

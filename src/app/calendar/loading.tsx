@@ -1,7 +1,7 @@
 export default function CalendarLoading() {
   return (
-    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors">
-      <div className="flex-1 flex flex-col p-4 md:p-6 h-full max-h-[calc(100vh-100px)]">
+    <div className="min-h-dvh bg-slate-50/50 dark:bg-slate-950 transition-colors">
+      <div className="flex flex-col p-4 md:p-6 sm:flex-1 sm:h-full">
         {/* 상단 컨트롤 */}
         <div className="flex justify-between items-center mb-4 shrink-0">
           <div className="flex items-center gap-3">

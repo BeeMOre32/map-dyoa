@@ -8,7 +8,7 @@ export default async function CalendarPage() {
   const { schedules, streamers, games } = await getCalendarData();
 
   return (
-    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors">
+    <div className="min-h-dvh bg-slate-50/50 dark:bg-slate-950 transition-colors">
       <CalendarView
         initialSchedules={schedules}
         streamers={streamers}

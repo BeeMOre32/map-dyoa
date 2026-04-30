@@ -37,7 +37,7 @@ export default function RootLayout({
           <AuthProvider>
             <main className="h-dvh w-full bg-slate-50/50 dark:bg-slate-950 flex flex-col overflow-hidden transition-colors duration-300">
               <Header />
-              <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 flex flex-col overflow-y-auto sm:overflow-hidden">
                 {children}
               </div>
               <HelpToast />
