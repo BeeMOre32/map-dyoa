@@ -10,7 +10,7 @@ interface StreamerAvatarProps {
   imgSrc?: string | null;
   colorCode: string;
   streamerId?: string;
-  size: 'small' | 'medium' | 'large';
+  size: 'xs' | 'small' | 'medium' | 'large';
 }
 
 export default function StreamerAvatar({
@@ -31,6 +31,7 @@ export default function StreamerAvatar({
 
   const shouldShowFallback = !imgSrc || imgSrc.trim() === '' || imgError;
   const sizeClasses = {
+    xs: 'w-7 h-7',
     small: 'w-10 h-10',
     medium: 'w-14 h-14',
     large: 'w-20 h-20',

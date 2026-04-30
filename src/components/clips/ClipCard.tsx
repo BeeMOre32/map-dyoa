@@ -6,8 +6,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import type { ClipWithParticipants } from '@/types/entities';
 import { deleteClipAction } from '@/app/actions';
-import { getStreamerColor } from '@/constants/streamercolor';
-import { useTheme } from 'next-themes';
+import StreamerAvatar from '@/components/streamer/StreamerAvatar';
 import { useSession } from 'next-auth/react';
 import { extractChzzkClipId } from '@/lib/chzzk';
 
@@ -18,7 +17,6 @@ interface ClipCardProps {
 
 export default function ClipCard({ clip, onEdit }: ClipCardProps) {
   const { data: session } = useSession();
-  const { resolvedTheme } = useTheme();
   const [deleting, setDeleting] = useState(false);
   const [iframeActive, setIframeActive] = useState(false);
 
@@ -197,22 +195,22 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
           </Link>
         )}
 
-        {/* 연관 스트리머 뱃지 */}
-        <div className="flex flex-wrap gap-1 mt-auto pt-2">
-          {clip.participants.map(({ streamer }) => {
-            const color =
-              getStreamerColor(streamer.id, resolvedTheme === 'dark') ??
-              streamer.colorCode;
-            return (
-              <span
-                key={streamer.id}
-                className="px-2 py-0.5 text-white rounded-lg text-[10px] font-black shadow-sm"
-                style={{ backgroundColor: color }}
-              >
+        {/* 연관 스트리머 */}
+        <div className="flex flex-wrap gap-2 mt-auto pt-2 items-center">
+          {clip.participants.map(({ streamer }) => (
+            <div key={streamer.id} className="flex items-center gap-1.5 group">
+              <StreamerAvatar
+                name={streamer.name}
+                imgSrc={streamer.profileImg}
+                colorCode={streamer.colorCode}
+                streamerId={streamer.id}
+                size="xs"
+              />
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
                 {streamer.name}
               </span>
-            );
-          })}
+            </div>
+          ))}
           {formattedDate && (
             <span className="ml-auto text-[10px] font-bold text-slate-400 dark:text-slate-500 self-center">
               {formattedDate}

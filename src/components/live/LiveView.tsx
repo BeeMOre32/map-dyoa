@@ -4,16 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Radio, LayoutGrid, Wifi, WifiOff } from 'lucide-react';
-import { useTheme } from 'next-themes';
-import { getStreamerColor } from '@/constants/streamercolor';
 import type { Streamer } from '@prisma/client';
 import { MAX_STREAMS } from '@/components/multiview/utils';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
+import StreamerAvatar from '@/components/streamer/StreamerAvatar';
 
 export default function LiveView({ streamers }: { streamers: Streamer[] }) {
   const router = useRouter();
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
 
   const { liveIds, isLoading: loading } = useLiveStatus();
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -40,7 +37,6 @@ export default function LiveView({ streamers }: { streamers: Streamer[] }) {
   const offlineStreamers = streamers.filter((s) => !liveIds.has(s.id));
 
   const StreamerCard = ({ streamer, isLive }: { streamer: Streamer; isLive: boolean }) => {
-    const color = getStreamerColor(streamer.id, isDark) ?? streamer.colorCode;
     const isSelected = selected.has(streamer.id);
     const isDisabled = !isSelected && selected.size >= MAX_STREAMS;
 
@@ -62,17 +58,13 @@ export default function LiveView({ streamers }: { streamers: Streamer[] }) {
         }`}
       >
         <div className="relative">
-          <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-md overflow-hidden"
-            style={{ backgroundColor: color }}
-          >
-            {streamer.profileImg ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={streamer.profileImg} alt={streamer.name} className="w-full h-full object-cover" />
-            ) : (
-              streamer.name[0]
-            )}
-          </div>
+          <StreamerAvatar
+            name={streamer.name}
+            imgSrc={streamer.profileImg}
+            colorCode={streamer.colorCode}
+            streamerId={streamer.id}
+            size="medium"
+          />
           {isLive && (
             <span className="absolute -bottom-1 -right-1 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[9px] font-black leading-none shadow-sm">
               <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
