@@ -105,7 +105,7 @@ export default function CreateStreamerModal({
 
         <form
           onSubmit={handleSubmit}
-          className="p-8 space-y-6 max-h-[60vh] overflow-y-auto"
+          className="p-8 space-y-6 max-h-[60dvh] overflow-y-auto"
         >
           <div className="grid grid-cols-2 gap-4">
             <div>

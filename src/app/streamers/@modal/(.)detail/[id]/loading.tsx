@@ -1,7 +1,7 @@
 export default function StreamerDetailLoading() {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-slate-950/70 dark:bg-slate-950/80 backdrop-blur-xl">
-      <div className="animate-pulse bg-white dark:bg-slate-800 w-full max-w-3xl rounded-[3rem] shadow-[0_0_50px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col max-h-[90vh] border border-slate-100 dark:border-slate-700">
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 md:p-8 bg-slate-950/70 dark:bg-slate-950/80 backdrop-blur-xl">
+      <div className="animate-pulse bg-white dark:bg-slate-800 w-full max-w-3xl rounded-[3rem] shadow-[0_0_50px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col max-h-[90dvh] border border-slate-100 dark:border-slate-700">
         {/* 상단 프로필 배너 */}
         <div className="p-10 border-b border-slate-100 dark:border-slate-700 shrink-0 relative flex gap-8 items-center bg-slate-50 dark:bg-slate-700/30">
           <div className="absolute top-6 right-6 w-11 h-11 rounded-full bg-slate-200 dark:bg-slate-600" />

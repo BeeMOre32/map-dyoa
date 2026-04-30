@@ -2,7 +2,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { revalidatePath, updateTag } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { requireAdmin, requireAuth } from '@/lib/auth-helpers';
 import { ActionResult } from '@/types/api-response';
 import {
@@ -61,7 +61,7 @@ export async function createScheduleAction(data: {
     const paths = getRevalidationPaths('schedule');
     await Promise.all([
       ...paths.map((path: string) => revalidatePath(path)),
-      updateTag('calendar'),
+      revalidateTag('calendar'),
     ]);
 
     return { success: true, data: { id: created.id } };
@@ -88,7 +88,7 @@ export async function deleteScheduleAction(id: string): Promise<ActionResult> {
     const paths = getRevalidationPaths('schedule');
     await Promise.all([
       ...paths.map((path: string) => revalidatePath(path)),
-      updateTag('calendar'),
+      revalidateTag('calendar'),
     ]);
 
     return { success: true, data: null };
@@ -162,7 +162,7 @@ export async function updateScheduleAction(
     const paths = getRevalidationPaths('schedule');
     await Promise.all([
       ...paths.map((path: string) => revalidatePath(path)),
-      updateTag('calendar'),
+      revalidateTag('calendar'),
     ]);
 
     return { success: true, data: null };
@@ -212,8 +212,8 @@ export async function createStreamerAction(data: {
     const paths = getRevalidationPathsMulti(['streamer', 'schedule']);
     await Promise.all([
       ...paths.map((path: string) => revalidatePath(path)),
-      updateTag('calendar'),
-      updateTag('streamers'),
+      revalidateTag('calendar'),
+      revalidateTag('streamers'),
     ]);
 
     return { success: true, data: null };
@@ -253,8 +253,8 @@ export async function bulkCreateStreamersAction(
     const paths = getRevalidationPathsMulti(['streamer', 'schedule']);
     await Promise.all([
       ...paths.map((path: string) => revalidatePath(path)),
-      updateTag('calendar'),
-      updateTag('streamers'),
+      revalidateTag('calendar'),
+      revalidateTag('streamers'),
     ]);
 
     return { success: true, data: { created: result.count } };
@@ -309,7 +309,7 @@ export async function createClipAction(data: {
     const paths = getRevalidationPaths('clip');
     await Promise.all([
       ...paths.map((path: string) => revalidatePath(path)),
-      updateTag('clips'),
+      revalidateTag('clips'),
     ]);
 
     return { success: true, data: { id: created.id } };
@@ -365,7 +365,7 @@ export async function updateClipAction(
     const paths = getRevalidationPaths('clip');
     await Promise.all([
       ...paths.map((path: string) => revalidatePath(path)),
-      updateTag('clips'),
+      revalidateTag('clips'),
     ]);
 
     return { success: true, data: null };
@@ -392,7 +392,7 @@ export async function deleteClipAction(id: string): Promise<ActionResult> {
     const paths = getRevalidationPaths('clip');
     await Promise.all([
       ...paths.map((path: string) => revalidatePath(path)),
-      updateTag('clips'),
+      revalidateTag('clips'),
     ]);
 
     return { success: true, data: null };
@@ -433,7 +433,7 @@ export async function createFeedbackAction(formData: {
     const paths = getRevalidationPaths('admin');
     await Promise.all([
       ...paths.map((path: string) => revalidatePath(path)),
-      updateTag('admin'),
+      revalidateTag('admin'),
     ]);
 
     return { success: true, data: null };

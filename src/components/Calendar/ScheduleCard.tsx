@@ -21,6 +21,15 @@ function LiveBadge() {
   );
 }
 
+function EndedBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 shrink-0 px-2.5 py-1 bg-slate-400 dark:bg-slate-600 rounded-full">
+      <span className="w-1.5 h-1.5 rounded-full bg-white/80" />
+      <span className="text-[10px] font-black text-white tracking-wider">종료</span>
+    </span>
+  );
+}
+
 interface ScheduleCardProps {
   schedule: FlattenedSchedule;
   variant: 'weekly' | 'monthly' | 'mobile';
@@ -32,11 +41,13 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds, index
   const href = `/calendar/schedule/${schedule.id}`;
   const stopProp = (e: React.MouseEvent) => e.stopPropagation();
   const { resolvedTheme } = useTheme();
+  const isToday_ = isToday(new Date(schedule.startTime));
   const isLive =
     !schedule.isLiveEnded &&
     liveStreamerIds !== undefined &&
-    isToday(new Date(schedule.startTime)) &&
+    isToday_ &&
     schedule.participants.some((p) => liveStreamerIds.has(p.id));
+  const isEnded = schedule.isLiveEnded && isToday_;
   const gameColor = schedule.game
     ? getGameColor(schedule.game.id, resolvedTheme === 'dark')
     : null;
@@ -77,6 +88,7 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds, index
           </span>
           <span className="truncate flex-1">{schedule.title}</span>
           {isLive && <LiveBadge />}
+          {isEnded && <EndedBadge />}
         </Link>
       </motion.div>
     );
@@ -117,6 +129,7 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds, index
             </span>
             <span className="truncate flex-1">{schedule.title}</span>
             {isLive && <LiveBadge />}
+            {isEnded && <EndedBadge />}
           </div>
         </Link>
       </motion.div>
@@ -176,9 +189,9 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds, index
               시간 미정
             </span>
           )}
-          {isLive && (
+          {(isLive || isEnded) && (
             <span className="ml-auto">
-              <LiveBadge />
+              {isLive ? <LiveBadge /> : <EndedBadge />}
             </span>
           )}
         </div>

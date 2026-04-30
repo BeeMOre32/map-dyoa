@@ -96,7 +96,7 @@ export default function ScheduleDetailView({
         {/* 메인 모달 */}
         <motion.div
           variants={smoothModalVariants}
-          className="relative bg-white dark:bg-slate-800 w-full sm:max-w-lg rounded-t-4xl sm:rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] border border-slate-100 dark:border-slate-700"
+          className="relative bg-white dark:bg-slate-800 w-full sm:max-w-lg rounded-t-4xl sm:rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90dvh] border border-slate-100 dark:border-slate-700"
           onClick={(e) => e.stopPropagation()}
         >
           {isEditing ? (
@@ -128,7 +128,7 @@ export default function ScheduleDetailView({
           {!isEditing && (
             <motion.div
               key="side-panel"
-              className="hidden sm:flex flex-col bg-white dark:bg-slate-800 w-72 rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-700 overflow-hidden max-h-[90vh]"
+              className="hidden sm:flex flex-col bg-white dark:bg-slate-800 w-72 rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-700 overflow-hidden max-h-[90dvh]"
               initial={{ opacity: 0, x: 16, scale: 0.97 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 16, scale: 0.97 }}
@@ -153,7 +153,7 @@ export default function ScheduleDetailView({
               onClick={() => setSheetOpen(false)}
             />
             <motion.div
-              className="sm:hidden fixed inset-x-0 bottom-0 z-85 bg-white dark:bg-slate-800 rounded-t-3xl shadow-2xl border-t border-slate-100 dark:border-slate-700 flex flex-col max-h-[75vh]"
+              className="sm:hidden fixed inset-x-0 bottom-0 z-85 bg-white dark:bg-slate-800 rounded-t-3xl shadow-2xl border-t border-slate-100 dark:border-slate-700 flex flex-col max-h-[75dvh]"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -354,7 +354,7 @@ function DetailView({
       </div>
 
       {/* 모바일 하단 버튼 바 */}
-      <div className="sm:hidden shrink-0 px-5 pb-5 pt-3 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex gap-2">
+      <div className="sm:hidden shrink-0 px-5 pt-3 pb-safe border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex gap-2">
         <button
           onClick={() => onOpenSheet('clips')}
           className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 hover:border-indigo-200 dark:hover:border-indigo-700 transition-all"

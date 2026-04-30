@@ -102,3 +102,11 @@ html.dark ::selection {
   background-color: #4f46e5;
   color: #ffffff;
 }
+
+/* iOS safe-area 하단 여백 (홈 인디케이터 영역) */
+.pb-safe {
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+}
+.pb-safe-sm {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}

@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useState } from 'react';
 import type { ClipWithParticipants } from '@/types/entities';
 import { deleteClipAction } from '@/app/actions';
-import StreamerAvatar from '@/components/streamer/StreamerAvatar';
 import { useSession } from 'next-auth/react';
 import { extractChzzkClipId } from '@/lib/chzzk';
 
@@ -196,20 +195,19 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
         )}
 
         {/* 연관 스트리머 */}
-        <div className="flex flex-wrap gap-2 mt-auto pt-2 items-center">
+        <div className="flex flex-wrap gap-1.5 mt-auto pt-2 items-center">
           {clip.participants.map(({ streamer }) => (
-            <div key={streamer.id} className="flex items-center gap-1.5 group">
-              <StreamerAvatar
-                name={streamer.name}
-                imgSrc={streamer.profileImg}
-                colorCode={streamer.colorCode}
-                streamerId={streamer.id}
-                size="xs"
-              />
-              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
-                {streamer.name}
-              </span>
-            </div>
+            <span
+              key={streamer.id}
+              className="text-[11px] font-bold px-2 py-0.5 rounded-full border"
+              style={{
+                backgroundColor: `${streamer.colorCode}20`,
+                borderColor: `${streamer.colorCode}50`,
+                color: streamer.colorCode,
+              }}
+            >
+              {streamer.name}
+            </span>
           ))}
           {formattedDate && (
             <span className="ml-auto text-[10px] font-bold text-slate-400 dark:text-slate-500 self-center">

@@ -1,7 +1,7 @@
 export default function ScheduleModalLoading() {
   return (
     <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md">
-      <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 overflow-hidden flex flex-col max-h-[90vh] border border-slate-100 dark:border-slate-700">
+      <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 overflow-hidden flex flex-col max-h-[90dvh] border border-slate-100 dark:border-slate-700">
         {/* 컬러 배너 */}
         <div className="h-32 w-full shrink-0 bg-slate-200 dark:bg-slate-700 animate-pulse" />
 

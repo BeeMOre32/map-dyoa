@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { getStreamerColor } from '@/constants/streamercolor';
+import { log } from 'console';
 
 interface StreamerAvatarProps {
   name: string;
@@ -23,7 +24,9 @@ export default function StreamerAvatar({
   const [imgError, setImgError] = useState(false);
   const { resolvedTheme } = useTheme();
   const resolvedColor =
-    (streamerId ? getStreamerColor(streamerId, resolvedTheme === 'dark') : null) ?? colorCode;
+    (streamerId
+      ? getStreamerColor(streamerId, resolvedTheme === 'dark')
+      : null) ?? colorCode;
 
   useEffect(() => {
     setImgError(false);

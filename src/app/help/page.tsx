@@ -28,6 +28,8 @@ import {
   Puzzle,
   Move,
   Maximize2,
+  Sword,
+  Wifi,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -248,11 +250,35 @@ export default function GuidePage() {
           </div>
         </SectionCard>
 
-        {/* ── 3. 라이브 뱃지 ── */}
+        {/* ── 3. 라이브 탭 ── */}
+        <SectionCard
+          icon={<Wifi className="w-6 h-6 text-red-500 dark:text-red-400" />}
+          iconBg="bg-red-50 dark:bg-red-900/20"
+          title="3. 라이브 탭"
+        >
+          <div className="space-y-4">
+            <Row icon={<Radio className="w-5 h-5" />} delay={0}>
+              상단 <strong>라이브</strong> 탭에서 지금 치지직에서 방송 중인 멤버를 실시간으로 확인할 수 있습니다.
+            </Row>
+            <Row icon={<LayoutGrid className="w-5 h-5" />} delay={0.07}>
+              라이브 중인 멤버를 <strong>클릭해 선택</strong>하면 하단에 멀티뷰 시작 버튼이 나타납니다.
+              최대 {9}명까지 선택해 한 화면에서 동시 시청이 가능합니다.
+            </Row>
+            <Row icon={<Clock className="w-5 h-5" />} delay={0.14}>
+              라이브 상태는 <strong>60초마다</strong> 자동 갱신됩니다. 탭을 다른 곳으로 이동하면 폴링이 일시 중지되고,
+              돌아오면 즉시 최신 상태로 갱신됩니다.
+            </Row>
+            <Tip>
+              라이브 중이 아닌 멤버도 오프라인 섹션에 표시되어 전체 멤버를 한눈에 볼 수 있습니다.
+            </Tip>
+          </div>
+        </SectionCard>
+
+        {/* ── 4. 라이브 뱃지 ── */}
         <SectionCard
           icon={<Radio className="w-6 h-6 text-red-500 dark:text-red-400" />}
           iconBg="bg-red-50 dark:bg-red-900/20"
-          title={<>3. 라이브 뱃지<NewBadge /></>}
+          title={<>4. 라이브 뱃지<NewBadge /></>}
         >
           <div className="space-y-4">
             <Row icon={<Radio className="w-5 h-5" />} delay={0}>
@@ -284,7 +310,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<Palette className="w-6 h-6 text-violet-500 dark:text-violet-400" />}
           iconBg="bg-violet-50 dark:bg-violet-900/20"
-          title="4. 일정 카드 색상의 의미"
+          title="5. 일정 카드 색상의 의미"
         >
           <div className="space-y-4">
             <Row icon={<Gamepad2 className="w-5 h-5" />} delay={0}>
@@ -306,7 +332,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<MousePointerClick className="w-6 h-6 text-sky-500 dark:text-sky-400" />}
           iconBg="bg-sky-50 dark:bg-sky-900/20"
-          title="5. 일정 상세 보기"
+          title="6. 일정 상세 보기"
         >
           <div className="space-y-4">
             <Row icon={<Clock className="w-5 h-5" />} delay={0}>
@@ -325,7 +351,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<Users className="w-6 h-6 text-emerald-500 dark:text-emerald-400" />}
           iconBg="bg-emerald-50 dark:bg-emerald-900/20"
-          title="6. 스트리머 페이지"
+          title="7. 스트리머 페이지"
         >
           <div className="space-y-4">
             <Row icon={<Users className="w-5 h-5" />} delay={0}>
@@ -348,11 +374,39 @@ export default function GuidePage() {
           </div>
         </SectionCard>
 
+        {/* ── HOI4 전적 ── */}
+        <SectionCard
+          icon={<Sword className="w-6 h-6 text-amber-500 dark:text-amber-400" />}
+          iconBg="bg-amber-50 dark:bg-amber-900/20"
+          title={<>8. HOI4 전적 기록<NewBadge /></>}
+        >
+          <div className="space-y-4">
+            <Row icon={<Sword className="w-5 h-5" />} delay={0}>
+              HOI4 게임이 포함된 합방 일정에는 <strong>전적 탭</strong>이 추가됩니다.
+              일정 상세 우측 패널(데스크탑) 또는 하단 버튼(모바일)에서 <strong>⚔ 전적</strong>을 눌러 확인하세요.
+            </Row>
+            <Row icon={<Gamepad2 className="w-5 h-5" />} delay={0.07}>
+              전적 탭에서 참여 스트리머별 <strong>담당 국가</strong>와{' '}
+              <strong className="text-emerald-600 dark:text-emerald-400">승</strong>{' · '}
+              <strong className="text-red-500 dark:text-red-400">패</strong>{' · '}
+              <strong className="text-slate-500">미완</strong>{' '}
+              결과를 확인할 수 있습니다.
+            </Row>
+            <Row icon={<Edit2 className="w-5 h-5" />} delay={0.14}>
+              로그인 후 일정 수정 화면에서 각 참여자의 <strong>국가명</strong>과 <strong>결과</strong>를 입력할 수 있습니다.
+              HOI4 게임 일정 선택 시 자동으로 입력 필드가 표시됩니다.
+            </Row>
+            <Tip>
+              전적 데이터는 스트리머 프로필의 "참여한 합방" 목록에서도 국가·결과와 함께 표시됩니다.
+            </Tip>
+          </div>
+        </SectionCard>
+
         {/* ── 클립 모음 ── */}
         <SectionCard
           icon={<Clapperboard className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />}
           iconBg="bg-indigo-50 dark:bg-indigo-900/20"
-          title={<>7. 클립 모음<NewBadge /></>}
+          title={<>9. 클립 모음<NewBadge /></>}
         >
           <div className="space-y-4">
             <Row icon={<Clapperboard className="w-5 h-5" />} delay={0}>
@@ -430,7 +484,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<LayoutGrid className="w-6 h-6 text-cyan-500 dark:text-cyan-400" />}
           iconBg="bg-cyan-50 dark:bg-cyan-900/20"
-          title={<>8. 멀티뷰<NewBadge /></>}
+          title={<>9. 멀티뷰<NewBadge /></>}
         >
           <div className="space-y-4">
             <Row icon={<LayoutGrid className="w-5 h-5" />} delay={0}>
@@ -469,7 +523,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<LogIn className="w-6 h-6 text-amber-500 dark:text-amber-400" />}
           iconBg="bg-amber-50 dark:bg-amber-900/20"
-          title="9. 로그인과 편집 권한"
+          title="10. 로그인과 편집 권한"
         >
           <div className="space-y-4">
             <p className="text-slate-600 dark:text-slate-300 font-medium">
@@ -485,7 +539,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<Edit2 className="w-6 h-6 text-rose-500 dark:text-rose-400" />}
           iconBg="bg-rose-50 dark:bg-rose-900/20"
-          title="10. 일정 추가 · 수정 · 삭제"
+          title="11. 일정 추가 · 수정 · 삭제"
         >
           <div className="grid sm:grid-cols-3 gap-4">
             {[
@@ -547,7 +601,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<Keyboard className="w-6 h-6 text-slate-500 dark:text-slate-400" />}
           iconBg="bg-slate-100 dark:bg-slate-700"
-          title="11. 편의 기능"
+          title="12. 편의 기능"
         >
           <div className="space-y-4">
             <Row icon={<Keyboard className="w-5 h-5" />} delay={0}>

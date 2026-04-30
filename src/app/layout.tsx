@@ -16,6 +16,12 @@ export const metadata = {
   description: '지도동 멤버들의 방송 일정을 한눈에 확인하세요.',
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -29,7 +35,7 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <AuthProvider>
-            <main className="h-screen w-full bg-slate-50/50 dark:bg-slate-950 flex flex-col overflow-hidden transition-colors duration-300">
+            <main className="h-dvh w-full bg-slate-50/50 dark:bg-slate-950 flex flex-col overflow-hidden transition-colors duration-300">
               <Header />
               <div className="flex-1 flex flex-col overflow-hidden">
                 {children}

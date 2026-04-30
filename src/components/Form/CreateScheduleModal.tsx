@@ -182,7 +182,7 @@ export default function ScheduleFormModal({
     >
       <motion.div
         variants={smoothModalVariants}
-        className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 flex flex-col max-h-[90vh] border border-slate-100 dark:border-slate-700"
+        className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 flex flex-col max-h-[90dvh] border border-slate-100 dark:border-slate-700"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6 md:p-8 border-b border-slate-50 dark:border-slate-700 flex justify-between items-start shrink-0 bg-slate-50/50 dark:bg-slate-700/30">

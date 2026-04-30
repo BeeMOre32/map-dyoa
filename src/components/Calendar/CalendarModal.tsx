@@ -107,7 +107,7 @@ export default function ScheduleModal({
     >
       <motion.div
         variants={smoothModalVariants}
-        className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-[2.5rem] shadow-2xl dark:shadow-black/60 overflow-hidden flex flex-col max-h-[90vh] border border-slate-100 dark:border-slate-800"
+        className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-[2.5rem] shadow-2xl dark:shadow-black/60 overflow-hidden flex flex-col max-h-[90dvh] border border-slate-100 dark:border-slate-800"
         onClick={(e) => e.stopPropagation()}
       >
         {editingSchedule ? (

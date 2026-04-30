@@ -8,6 +8,7 @@ import type { Streamer } from '@prisma/client';
 import { MAX_STREAMS } from '@/components/multiview/utils';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
 import StreamerAvatar from '@/components/streamer/StreamerAvatar';
+import { getStreamerImagePath } from '@/lib/utils';
 
 export default function LiveView({ streamers }: { streamers: Streamer[] }) {
   const router = useRouter();
@@ -49,7 +50,7 @@ export default function LiveView({ streamers }: { streamers: Streamer[] }) {
         transition={{ type: 'spring', stiffness: 300, damping: 24 }}
         onClick={() => toggle(streamer.id)}
         disabled={isDisabled}
-        className={`relative flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all text-left ${
+        className={`group relative flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all text-left ${
           isSelected
             ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
             : isDisabled
@@ -60,7 +61,7 @@ export default function LiveView({ streamers }: { streamers: Streamer[] }) {
         <div className="relative">
           <StreamerAvatar
             name={streamer.name}
-            imgSrc={streamer.profileImg}
+            imgSrc={getStreamerImagePath(streamer.name)}
             colorCode={streamer.colorCode}
             streamerId={streamer.id}
             size="medium"

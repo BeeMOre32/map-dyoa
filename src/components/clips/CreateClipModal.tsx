@@ -21,6 +21,7 @@ import { getStreamerColor } from '@/constants/streamercolor';
 import { isChzzkClipUrl } from '@/lib/chzzk';
 import { isYouTubeUrl } from '@/lib/youtube';
 import { matchesChosung } from '@/lib/chosung';
+import { getStreamerImagePath } from '@/lib/utils';
 import { useTheme } from 'next-themes';
 import type { Streamer } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
@@ -193,7 +194,7 @@ export default function CreateClipModal({
         onClick={onClose}
       />
       <motion.div
-        className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+        className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col"
         variants={smoothModalVariants}
         initial="hidden"
         animate="visible"
@@ -296,8 +297,8 @@ export default function CreateClipModal({
                           <StreamerAvatar
                             colorCode={color}
                             name={s.name}
-                            size="small"
-                            imgSrc={s.profileImg}
+                            size="xs"
+                            imgSrc={getStreamerImagePath(s.name)}
                           />
                           {s.name}
                         </motion.button>
@@ -339,33 +340,22 @@ export default function CreateClipModal({
                           key={s.id}
                           type="button"
                           onClick={() => toggleStreamer(s.id)}
-                          className="flex flex-col items-center gap-1.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                          className="group flex flex-col items-center gap-1.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                         >
                           <div
-                            className="relative w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-base shrink-0 transition-all duration-200"
-                            style={{
-                              backgroundColor: color,
-                              boxShadow: isSelected
-                                ? `0 0 0 2px white, 0 0 0 4px ${color}`
-                                : 'none',
-                            }}
+                            className="relative shrink-0"
+                            style={isSelected ? { outline: `3px solid ${color}`, outlineOffset: 2, borderRadius: 14 } : undefined}
                           >
-                            {s.profileImg ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={s.profileImg}
-                                alt={s.name}
-                                className="w-full h-full object-cover rounded-full"
-                              />
-                            ) : (
-                              s.name[0]
-                            )}
+                            <StreamerAvatar
+                              name={s.name}
+                              imgSrc={getStreamerImagePath(s.name)}
+                              colorCode={s.colorCode}
+                              streamerId={s.id}
+                              size="medium"
+                            />
                             {isSelected && (
-                              <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center">
-                                <Check
-                                  className="w-5 h-5 text-white"
-                                  strokeWidth={3}
-                                />
+                              <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center">
+                                <Check className="w-5 h-5 text-white" strokeWidth={3} />
                               </div>
                             )}
                           </div>
