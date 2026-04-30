@@ -3,7 +3,6 @@ import './globals.css';
 import { Inter } from 'next/font/google';
 import AuthProvider from '@/providers/AuthProvider';
 import Header from '@/components/Layout/Header';
-import Footer from '@/components/Layout/Footer';
 import HelpToast from '@/components/Common/HelpToast';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -41,7 +40,6 @@ export default function RootLayout({
                 {children}
               </div>
               <HelpToast />
-              <Footer />
             </main>
           </AuthProvider>
         </ThemeProvider>

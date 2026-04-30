@@ -249,7 +249,7 @@ export default function CalendarView({
         {viewMode === 'weekly' && (
           <div
             key={`mobile-${currentDate.toISOString()}`}
-            className="sm:hidden animate-in fade-in duration-300"
+            className="sm:hidden animate-in fade-in duration-300 pb-4"
           >
             {days.map((day) => {
               const today = isToday(day);
@@ -308,10 +308,10 @@ export default function CalendarView({
 
           <div
             key={`${currentDate.toISOString()}-${viewMode}`}
-            className={`sm:flex-1 overflow-y-auto custom-scrollbar animate-in fade-in duration-500 ease-out fill-mode-forwards ${slideDirection === 'left' ? 'slide-in-from-right-10' : 'slide-in-from-left-10'}`}
+            className={`sm:flex-1 overflow-y-auto custom-scrollbar animate-in fade-in duration-500 ease-out fill-mode-forwards pb-4 sm:pb-0 ${slideDirection === 'left' ? 'slide-in-from-right-10' : 'slide-in-from-left-10'}`}
           >
             <div
-              className="grid grid-cols-7 sm:h-full"
+              className={`grid grid-cols-7 ${viewMode === 'monthly' ? 'sm:h-full' : ''}`}
               style={{
                 gridTemplateRows:
                   viewMode === 'monthly'

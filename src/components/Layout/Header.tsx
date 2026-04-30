@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { LogIn, LogOut, Map, UserCheck, Sun, Moon } from 'lucide-react';
+import { LogIn, LogOut, Map, UserCheck, Sun, Moon, HelpCircle, Shield } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
@@ -43,6 +43,21 @@ export default function Header() {
 
       {/* 우측 영역 */}
       <div className="flex items-center gap-1.5 sm:gap-2">
+        <Link
+          href="/help"
+          className="p-2 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm"
+          title="도움말"
+        >
+          <HelpCircle className="w-4 h-4" />
+        </Link>
+        <Link
+          href="/privacy"
+          className="p-2 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm"
+          title="개인정보처리방침"
+        >
+          <Shield className="w-4 h-4" />
+        </Link>
+
         <button
           onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
           className="relative p-2 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm overflow-hidden"
