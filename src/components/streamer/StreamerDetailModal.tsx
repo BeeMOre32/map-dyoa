@@ -9,6 +9,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useGoBack } from '@/hooks/useGoBack';
 import { useTheme } from 'next-themes';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -47,6 +48,7 @@ export default function StreamerDetailModal({
   clipCount = 0,
 }: StreamerDetailModalProps) {
   const router = useRouter();
+  const goBack = useGoBack('/streamers');
   const imgSrc = getStreamerImagePath(streamer.name);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
@@ -54,7 +56,7 @@ export default function StreamerDetailModal({
 
   const recentSchedules = schedules.slice(0, 5);
 
-  useEscapeKey(() => router.back());
+  useEscapeKey(goBack);
 
   return (
     <motion.div
@@ -63,7 +65,7 @@ export default function StreamerDetailModal({
       exit="hidden"
       variants={backdropVariants}
       className="fixed inset-0 z-100 flex items-center justify-center p-4 md:p-8 bg-slate-950/70 dark:bg-slate-950/80 backdrop-blur-xl"
-      onClick={() => router.back()}
+      onClick={goBack}
     >
       <motion.div
         variants={smoothModalVariants}
@@ -78,7 +80,7 @@ export default function StreamerDetailModal({
           }}
         >
           <button
-            onClick={() => router.back()}
+            onClick={goBack}
             className="absolute top-4 right-4 p-2 bg-black/15 hover:bg-black/30 text-white rounded-full backdrop-blur-sm transition-all"
           >
             <X className="w-5 h-5" />
@@ -250,7 +252,7 @@ export default function StreamerDetailModal({
         {/* ── 하단 버튼 ── */}
         <div className="px-8 py-5 border-t border-slate-100 dark:border-slate-800 flex gap-3 shrink-0 bg-slate-50/50 dark:bg-slate-800/30">
           <button
-            onClick={() => router.back()}
+            onClick={goBack}
             className="flex-1 py-3.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-black border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all"
           >
             돌아가기

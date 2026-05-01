@@ -31,6 +31,7 @@ const fetchLiveStreamerIds = unstable_cache(
             { headers: { 'User-Agent': 'Mozilla/5.0' }, cache: 'no-store', signal: controller.signal },
           );
           clearTimeout(timer);
+          if (!res.ok) return null;
           const json = await res.json();
           return json?.content?.status === 'OPEN' ? s.id : null;
         } catch {

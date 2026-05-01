@@ -10,6 +10,7 @@ import {
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
+import { useGoBack } from '@/hooks/useGoBack';
 import { useSession } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { deleteScheduleAction } from '@/app/actions';
@@ -58,10 +59,12 @@ export default function ScheduleDetailView({
   const isHoi4 = schedule.game?.isHoi4 ?? false;
   const gameColor = schedule.game?.id ? (getGameColor(schedule.game.id, isDark) ?? '#4f46e5') : '#4f46e5';
 
+  const goBack = useGoBack('/calendar');
+
   const handleClose = () => {
     if (sheetOpen) setSheetOpen(false);
     else if (isEditing) setIsEditing(false);
-    else router.back();
+    else goBack();
   };
 
   useEscapeKey(handleClose);
@@ -69,7 +72,7 @@ export default function ScheduleDetailView({
   const handleDelete = async () => {
     if (confirm('정말로 이 일정을 삭제하시겠습니까?')) {
       const result = await deleteScheduleAction(schedule.id);
-      if (result.success) { router.refresh(); router.back(); }
+      if (result.success) { router.refresh(); router.push('/calendar'); }
     }
   };
 
@@ -117,7 +120,7 @@ export default function ScheduleDetailView({
               clips={clips}
               onEdit={() => setIsEditing(true)}
               onDelete={handleDelete}
-              onBack={() => router.back()}
+              onBack={goBack}
               onOpenSheet={openSheet}
             />
           )}

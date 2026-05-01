@@ -14,6 +14,7 @@ async function fetchLiveStatus() {
   isFetching = true;
   try {
     const res = await fetch('/api/chzzk/live-status');
+    if (!res.ok) return;
     const data: { liveStreamerIds: string[] } = await res.json();
     cache = new Set(data.liveStreamerIds);
     lastFetchedAt = Date.now();

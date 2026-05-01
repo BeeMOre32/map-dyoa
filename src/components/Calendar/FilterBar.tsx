@@ -9,7 +9,7 @@ import StreamerAvatar from '@/components/streamer/StreamerAvatar';
 import { getStreamerImagePath } from '@/lib/utils';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { getGameColor } from '@/constants/gamecolor';
-import { matchesChosung } from '@/lib/chosung';
+import { useChosungSearch } from '@/hooks/useChosungSearch';
 
 type Tab = 'streamer' | 'game';
 
@@ -35,11 +35,7 @@ function FilterPanel({
   onClose,
 }: FilterPanelProps) {
   const [tab, setTab] = useState<Tab>('streamer');
-  const [search, setSearch] = useState('');
-
-  const filteredStreamers = search
-    ? streamers.filter((s) => matchesChosung(s.name, search))
-    : streamers;
+  const { search, setSearch, filtered: filteredStreamers } = useChosungSearch(streamers);
 
   return (
     <div className="flex flex-col">

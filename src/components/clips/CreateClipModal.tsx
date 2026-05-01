@@ -21,6 +21,7 @@ import { getStreamerColor } from '@/constants/streamercolor';
 import { isChzzkClipUrl } from '@/lib/chzzk';
 import { isYouTubeUrl } from '@/lib/youtube';
 import { matchesChosung } from '@/lib/chosung';
+import { clipClientSchema } from '@/lib/schemas';
 import { getStreamerImagePath } from '@/lib/utils';
 import { useTheme } from 'next-themes';
 import type { Streamer } from '@prisma/client';
@@ -148,10 +149,12 @@ export default function CreateClipModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    if (!title.trim()) return setError('제목을 입력해주세요.');
-    if (!url.trim()) return setError('클립 URL을 입력해주세요.');
-    if (selectedIds.length === 0)
-      return setError('연관된 스트리머를 최소 1명 선택해주세요.');
+
+    const parsed = clipClientSchema.safeParse({ title, url, streamerIds: selectedIds });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0].message);
+      return;
+    }
 
     const payload = {
       title: title.trim(),

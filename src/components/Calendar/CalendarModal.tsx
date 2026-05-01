@@ -18,6 +18,7 @@ import {
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
+import { useGoBack } from '@/hooks/useGoBack';
 import Link from 'next/link';
 import { deleteScheduleAction } from '@/app/actions';
 import CreateScheduleModal from '../Form/CreateScheduleModal';
@@ -38,6 +39,7 @@ export default function ScheduleModal({
   games,
 }: CalendarModalProps) {
   const router = useRouter();
+  const goBack = useGoBack('/calendar');
   const { data: session } = useSession();
   const { editingSchedule, toggleEditMode, exitEditMode } = useScheduleModal();
   const { resolvedTheme } = useTheme();
@@ -50,18 +52,8 @@ export default function ScheduleModal({
       exitEditMode();
       return;
     }
-
-    const isDeepLinked =
-      window.location.pathname.includes('/day/') ||
-      window.location.pathname.includes('/schedule/');
-
-    if (isDeepLinked) {
-      router.back();
-    } else if (onClose) {
-      onClose();
-    } else {
-      router.push('/calendar');
-    }
+    if (onClose) onClose();
+    else goBack();
   };
 
   useEscapeKey(handleClose);

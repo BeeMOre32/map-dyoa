@@ -2,8 +2,9 @@
 import { getFeedbacks } from '@/lib/data-fetching';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { CheckCircle2, Clock, AlertCircle, MessageSquare } from 'lucide-react';
+import { Clock, AlertCircle, MessageSquare } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
+import ResolveFeedbackButton from '@/components/admin/ResolveFeedbackButton';
 
 export default async function AdminFeedbackPage() {
   const feedbacks = await getFeedbacks();
@@ -61,11 +62,11 @@ export default async function AdminFeedbackPage() {
                 </p>
               </div>
 
-              {/* 오른쪽: 액션 버튼 (나중에 처리 로직 추가) */}
               <div className="shrink-0 pt-2">
-                <button className="px-5 py-2.5 bg-slate-900 dark:bg-indigo-600 text-white rounded-xl text-xs font-black hover:bg-slate-800 dark:hover:bg-indigo-700 transition-colors">
-                  처리 완료하기
-                </button>
+                <ResolveFeedbackButton
+                  feedbackId={item.id}
+                  resolved={item.status === 'RESOLVED'}
+                />
               </div>
             </div>
           ))

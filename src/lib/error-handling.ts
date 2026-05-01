@@ -1,3 +1,5 @@
+import { ZodError } from 'zod';
+import { log } from 'next-axiom';
 import { ErrorCode } from '@/types/api-response';
 
 export class ValidationError extends Error {
@@ -39,6 +41,13 @@ export function getErrorMessage(error: unknown): {
   message: string;
   code: string;
 } {
+  if (error instanceof ZodError) {
+    return {
+      message: error.issues[0]?.message ?? '입력값을 확인해주세요.',
+      code: 'VALIDATION_ERROR',
+    };
+  }
+
   if (error instanceof ValidationError) {
     return {
       message: error.message,
@@ -88,5 +97,6 @@ export function getErrorMessage(error: unknown): {
 }
 
 export function logError(context: string, error: unknown): void {
-  console.error(`[${context}]`, error);
+  const message = error instanceof Error ? error.message : String(error);
+  log.error(`[${context}] ${message}`, { error: String(error) });
 }

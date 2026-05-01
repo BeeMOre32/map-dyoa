@@ -4,16 +4,13 @@
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { X, Send, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
-import { z } from 'zod';
 import { useTheme } from 'next-themes';
 import { createFeedbackAction } from '@/app/actions';
+import { feedbackSchema } from '@/lib/schemas';
 import { backdropVariants, defaultModalVariants } from '@/lib/modalVariants';
 import { getStreamerColor } from '@/constants/streamercolor';
 import type { Streamer } from '@prisma/client';
 
-const feedbackSchema = z.object({
-  content: z.string().min(1, '상세 내용을 입력해주세요.'),
-});
 
 interface RequestEditModalProps {
   streamer: Streamer;
@@ -36,7 +33,7 @@ export default function RequestEditModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const parsed = feedbackSchema.safeParse({ content });
+    const parsed = feedbackSchema.pick({ content: true }).safeParse({ content });
     if (!parsed.success) {
       setContentError(parsed.error.issues[0].message);
       return;

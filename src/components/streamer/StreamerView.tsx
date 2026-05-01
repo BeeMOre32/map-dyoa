@@ -7,11 +7,10 @@ import { Search, X } from 'lucide-react';
 import { Streamer } from '@prisma/client';
 import RequestEditModal from '../Form/RequestEdit';
 import StreamerCard from './StreamerCard';
-import { matchesChosung } from '@/lib/chosung';
+import { useChosungSearch } from '@/hooks/useChosungSearch';
 
 export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
   const [requestTarget, setRequestTarget] = useState<Streamer | null>(null);
-  const [search, setSearch] = useState('');
   const [activeGen, setActiveGen] = useState<number | null>(null);
 
   const generations = useMemo(
@@ -19,15 +18,12 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
     [streamers],
   );
 
-  const filtered = useMemo(
-    () =>
-      streamers.filter((s) => {
-        const matchSearch = !search || matchesChosung(s.name, search);
-        const matchGen = activeGen === null || s.generation === activeGen;
-        return matchSearch && matchGen;
-      }),
-    [streamers, search, activeGen],
+  const genFilter = useCallback(
+    (s: Streamer) => activeGen === null || s.generation === activeGen,
+    [activeGen],
   );
+
+  const { search, setSearch, filtered } = useChosungSearch(streamers, genFilter);
 
   const handleRequestEdit = useCallback((streamer: Streamer) => {
     setRequestTarget(streamer);
