@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Map, Settings, LogIn, LogOut, UserCheck } from 'lucide-react';
+import { Map, Settings, LogIn, LogOut, UserCheck, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signOut, useSession } from 'next-auth/react';
+import { useTheme } from 'next-themes';
 import Navigation from '../Navigation';
 import SettingsModal from './SettingsModal';
 
 export default function Header() {
   const { data: session } = useSession();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -65,6 +67,26 @@ export default function Header() {
               <LogIn className="w-4 h-4" />
             </Link>
           )}
+
+          <button
+            onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+            className="relative p-2 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm overflow-hidden"
+            title={resolvedTheme === 'dark' ? '라이트 모드' : '다크 모드'}
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={resolvedTheme}
+                initial={{ y: 12, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -12, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {resolvedTheme === 'dark'
+                  ? <Sun className="w-4 h-4 text-amber-400" />
+                  : <Moon className="w-4 h-4 text-indigo-500" />}
+              </motion.div>
+            </AnimatePresence>
+          </button>
 
           <motion.button
             onClick={() => setSettingsOpen(true)}

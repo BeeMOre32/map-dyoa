@@ -248,6 +248,13 @@ export default function CalendarView({
         onClearAll={() => { setSelectedStreamers(new Set()); setSelectedGames(new Set()); }}
       />
 
+      {hideEnded && (
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl w-fit text-xs font-black text-amber-600 dark:text-amber-400 shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 dark:bg-amber-500" />
+          종료된 방송 숨김 중
+        </div>
+      )}
+
       {/* 캘린더 본체 */}
       <div className="sm:flex-1 sm:overflow-hidden bg-white dark:bg-slate-900 rounded-4xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col">
 

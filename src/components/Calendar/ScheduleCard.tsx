@@ -167,32 +167,34 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds, index
         }
       >
         {/* 상단: 게임 배지 / 미정 배지 / 라이브 배지 */}
-        <div className="flex items-center gap-1 flex-wrap">
-          {schedule.game && (
-            <span
-              className={`inline-flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
-                gameColor ? '' : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400'
-              }`}
-              style={
-                gameColor
-                  ? { backgroundColor: `${gameColor}40`, color: gameColor }
-                  : undefined
-              }
-            >
-              <Gamepad2 className="w-3 h-3" />
-              {schedule.game.title}
-            </span>
-          )}
-          {schedule.isGuerrilla && (
-            <span className="inline-flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 shrink-0">
-              <Zap className="w-3 h-3" />
-              시간 미정
-            </span>
-          )}
+        <div className="flex items-start justify-between gap-1">
+          <div className="flex items-center gap-1 flex-wrap min-w-0">
+            {schedule.game && (
+              <span
+                className={`inline-flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                  gameColor ? '' : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400'
+                }`}
+                style={
+                  gameColor
+                    ? { backgroundColor: `${gameColor}40`, color: gameColor }
+                    : undefined
+                }
+              >
+                <Gamepad2 className="w-3 h-3" />
+                {schedule.game.title}
+              </span>
+            )}
+            {schedule.isGuerrilla && (
+              <span className="inline-flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 shrink-0">
+                <Zap className="w-3 h-3" />
+                시간 미정
+              </span>
+            )}
+          </div>
           {(isLive || isEnded) && (
-            <span className="ml-auto">
+            <div className="shrink-0">
               {isLive ? <LiveBadge /> : <EndedBadge />}
-            </span>
+            </div>
           )}
         </div>
 
