@@ -173,7 +173,7 @@ export default function CalendarView({
   }
 
   return (
-    <div className="flex flex-col p-4 md:p-6 sm:flex-1 sm:overflow-hidden sm:h-full">
+    <div className="flex flex-col p-4 md:p-6 sm:flex-1 sm:min-h-0 sm:overflow-hidden">
       {/* 상단 컨트롤 영역 */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center shrink-0 mb-4">
         <div className="flex items-center gap-3">
