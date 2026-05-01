@@ -24,8 +24,8 @@ export default function Header() {
 
   return (
     <>
-      <header className="py-3 px-6 md:px-8 border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md flex justify-between items-center shrink-0 sticky top-0 z-40 transition-all duration-500">
-        <Link href="/" className="flex items-center gap-2.5 group">
+      <header className="py-3 px-6 md:px-8 border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md flex items-center shrink-0 sticky top-0 z-40 transition-all duration-500">
+        <Link href="/" className="flex items-center gap-2.5 group flex-1">
           <div className="w-9 h-9 sm:w-10 sm:h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:rotate-6 transition-all duration-300">
             <Map className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
@@ -44,7 +44,7 @@ export default function Header() {
         </div>
 
         {/* 우측 버튼 영역 */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center justify-end gap-1.5 sm:gap-2 flex-1">
           {session ? (
             <>
               <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-100 dark:border-emerald-800 text-[10px] font-black uppercase">
