@@ -1,3 +1,4 @@
+import React from 'react';
 import Link from 'next/link';
 import { MessageSquare, Users, Calendar, Clapperboard, Bell } from 'lucide-react';
 import { auth } from '@/auth';
@@ -23,12 +24,13 @@ export default async function AdminDashboard() {
 
   const { scheduleCount, clipCount, streamerCount, pendingFeedbackCount } = await getAdminStats();
 
-  const stats = [
+  type StatColor = 'blue' | 'violet' | 'emerald' | 'amber';
+  const stats: { label: string; value: number; icon: React.ElementType; color: StatColor; urgent?: boolean }[] = [
     { label: '총 일정', value: scheduleCount, icon: Calendar, color: 'blue' },
     { label: '총 클립', value: clipCount, icon: Clapperboard, color: 'violet' },
     { label: '스트리머', value: streamerCount, icon: Users, color: 'emerald' },
     { label: '미처리 요청', value: pendingFeedbackCount, icon: Bell, color: 'amber', urgent: pendingFeedbackCount > 0 },
-  ] as const;
+  ];
 
   const colorMap = {
     blue: { bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-600 dark:text-blue-400', val: 'text-blue-700 dark:text-blue-300' },
