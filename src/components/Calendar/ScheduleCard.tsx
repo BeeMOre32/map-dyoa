@@ -146,100 +146,106 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds, index
       whileTap={{ scale: 0.97 }}
     >
       <Link href={href} scroll={false} className="block" onClick={stopProp}>
-        <div
-          className={`px-2.5 py-2 rounded-xl border shadow-sm flex gap-2 items-center transition-shadow hover:shadow-md ${
-            isLive
-              ? 'ring-1 ring-red-400/70 dark:ring-red-500/50 shadow-[0_2px_12px_rgba(239,68,68,0.18)]'
-              : ''
-          } ${
+      <div
+        className={`relative px-2.5 py-2 rounded-xl border shadow-sm space-y-1.5 transition-shadow hover:shadow-md ${
+          isLive
+            ? 'ring-1 ring-red-400/70 dark:ring-red-500/50 shadow-[0_2px_12px_rgba(239,68,68,0.18)]'
+            : ''
+        } ${
+          gameColor
+            ? ''
+            : schedule.game
+              ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+              : isLive
+                ? 'bg-red-50/50 dark:bg-red-900/10 border-red-200 dark:border-red-700/50'
+                : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+        }`}
+        style={
+          gameColor
+            ? { backgroundColor: `${gameColor}25`, borderColor: `${gameColor}70` }
+            : undefined
+        }
+      >
+        {(isLive || isEnded) && (
+          <span className="absolute top-2 right-2.5">
+            {isLive ? <LiveBadge /> : <EndedBadge />}
+          </span>
+        )}
+
+        {/* 상단: 게임 배지 / 미정 배지 */}
+        <div className={`flex items-center gap-1 flex-wrap ${isLive || isEnded ? 'pr-16' : ''}`}>
+          {schedule.game && (
+            <span
+              className={`inline-flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                gameColor ? '' : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400'
+              }`}
+              style={
+                gameColor
+                  ? { backgroundColor: `${gameColor}40`, color: gameColor }
+                  : undefined
+              }
+            >
+              <Gamepad2 className="w-3 h-3" />
+              {schedule.game.title}
+            </span>
+          )}
+          {schedule.isGuerrilla && (
+            <span className="inline-flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 shrink-0">
+              <Zap className="w-3 h-3" />
+              시간 미정
+            </span>
+          )}
+        </div>
+
+        {!schedule.isGuerrilla && (
+          <div className="flex items-center gap-1 text-[13px] font-semibold text-slate-400 dark:text-slate-500">
+            <Clock className="w-3 h-3 shrink-0" />
+            {format(new Date(schedule.startTime), 'HH:mm')}
+            {schedule.endTime && (
+              <span className="opacity-70">
+                → {format(new Date(schedule.endTime), 'HH:mm')}
+              </span>
+            )}
+          </div>
+        )}
+
+        <p
+          className={`text-sm font-bold line-clamp-2 leading-snug ${
             gameColor
               ? ''
               : schedule.game
-                ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
-                : isLive
-                  ? 'bg-red-50/50 dark:bg-red-900/10 border-red-200 dark:border-red-700/50'
-                  : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                ? 'text-amber-800 dark:text-amber-300'
+                : 'text-slate-700 dark:text-slate-200'
           }`}
-          style={
-            gameColor
-              ? { backgroundColor: `${gameColor}25`, borderColor: `${gameColor}70` }
-              : undefined
-          }
+          style={gameColor ? { color: gameColor } : undefined}
         >
-          {/* 왼쪽 콘텐츠 */}
-          <div className="flex-1 min-w-0 space-y-1.5">
-            {/* 게임 / 게릴라 배지 */}
-            {(schedule.game || schedule.isGuerrilla) && (
-              <div className="flex items-center gap-1 flex-wrap">
-                {schedule.game && (
-                  <span
-                    className={`inline-flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
-                      gameColor ? '' : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400'
-                    }`}
-                    style={gameColor ? { backgroundColor: `${gameColor}40`, color: gameColor } : undefined}
-                  >
-                    <Gamepad2 className="w-3 h-3" />
-                    {schedule.game.title}
-                  </span>
-                )}
-                {schedule.isGuerrilla && (
-                  <span className="inline-flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 shrink-0">
-                    <Zap className="w-3 h-3" />
-                    시간 미정
-                  </span>
-                )}
-              </div>
-            )}
+          {schedule.title}
+        </p>
 
-            {!schedule.isGuerrilla && (
-              <div className="flex items-center gap-1 text-[13px] font-semibold text-slate-400 dark:text-slate-500">
-                <Clock className="w-3 h-3 shrink-0" />
-                {format(new Date(schedule.startTime), 'HH:mm')}
-                {schedule.endTime && (
-                  <span className="opacity-70">→ {format(new Date(schedule.endTime), 'HH:mm')}</span>
-                )}
-              </div>
-            )}
-
-            <p
-              className={`text-sm font-bold line-clamp-2 leading-snug ${
-                gameColor ? '' : schedule.game ? 'text-amber-800 dark:text-amber-300' : 'text-slate-700 dark:text-slate-200'
-              }`}
-              style={gameColor ? { color: gameColor } : undefined}
-            >
-              {schedule.title}
-            </p>
-
-            {schedule.participants.length > 0 && (
-              <div className="flex items-center gap-1 flex-wrap">
-                {schedule.participants.slice(0, 3).map((p) => (
-                  <span
-                    key={p.id}
-                    className="text-[11px] font-bold px-1.5 py-0.5 rounded-full border shrink-0"
-                    style={((c) => ({ borderColor: `${c}60`, color: c, backgroundColor: `${c}18` }))(
-                      getStreamerColor(p.id, resolvedTheme === 'dark') ?? p.colorCode
-                    )}
-                  >
-                    {p.name}
-                  </span>
-                ))}
-                {schedule.participants.length > 3 && (
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500 font-bold">
-                    +{schedule.participants.length - 3}
-                  </span>
-                )}
-              </div>
+        {schedule.participants.length > 0 && (
+          <div className="flex items-center gap-1 flex-wrap">
+            {schedule.participants.slice(0, 3).map((p) => (
+              <span
+                key={p.id}
+                className="text-[11px] font-bold px-1.5 py-0.5 rounded-full border shrink-0"
+                style={((c) => ({
+                  borderColor: `${c}60`,
+                  color: c,
+                  backgroundColor: `${c}18`,
+                }))(getStreamerColor(p.id, resolvedTheme === 'dark') ?? p.colorCode)}
+              >
+                {p.name}
+              </span>
+            ))}
+            {schedule.participants.length > 3 && (
+              <span className="text-[11px] text-slate-400 dark:text-slate-500 font-bold">
+                +{schedule.participants.length - 3}
+              </span>
             )}
           </div>
-
-          {/* 오른쪽: LIVE / 종료 배지 (세로 중앙) */}
-          {(isLive || isEnded) && (
-            <div className="shrink-0 self-center">
-              {isLive ? <LiveBadge /> : <EndedBadge />}
-            </div>
-          )}
-        </div>
-      </Link>
+        )}
+      </div>
+    </Link>
     </motion.div>
   );
 }

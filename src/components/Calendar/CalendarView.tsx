@@ -159,7 +159,7 @@ export default function CalendarView({
       map.get(dateKey)!.push(schedule);
     });
     return map;
-  }, [optimisticSchedules, selectedStreamers, selectedGames]);
+  }, [optimisticSchedules, selectedStreamers, selectedGames, hideEnded]);
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
   const handleDayClick = useCallback(
