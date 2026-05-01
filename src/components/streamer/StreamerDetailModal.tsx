@@ -8,7 +8,6 @@ import {
   Clapperboard,
   FileText,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useTheme } from 'next-themes';
 import { format } from 'date-fns';
@@ -47,7 +46,6 @@ export default function StreamerDetailModal({
   scheduleCount = 0,
   clipCount = 0,
 }: StreamerDetailModalProps) {
-  const router = useRouter();
   const goBack = useGoBack('/streamers');
   const imgSrc = getStreamerImagePath(streamer.name);
   const { resolvedTheme } = useTheme();

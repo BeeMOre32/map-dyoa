@@ -5,8 +5,5 @@ import { useCallback } from 'react';
 
 export function useGoBack(fallback: string) {
   const router = useRouter();
-  return useCallback(() => {
-    if (window.history.length > 2) router.back();
-    else router.push(fallback);
-  }, [router, fallback]);
+  return useCallback(() => router.push(fallback), [router, fallback]);
 }

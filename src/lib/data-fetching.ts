@@ -178,6 +178,23 @@ export const getStreamerDetail = unstable_cache(
 );
 
 /**
+ * 관리자 대시보드 통계
+ */
+export const getAdminStats = unstable_cache(
+  async () => {
+    const [scheduleCount, clipCount, streamerCount, pendingFeedbackCount] = await Promise.all([
+      prisma.schedule.count(),
+      prisma.clip.count(),
+      prisma.streamer.count(),
+      prisma.feedback.count({ where: { status: 'PENDING' } }),
+    ]);
+    return { scheduleCount, clipCount, streamerCount, pendingFeedbackCount };
+  },
+  ['admin-stats'],
+  { revalidate: 60, tags: ['admin', 'calendar', 'clips', 'streamers'] },
+);
+
+/**
  * 피드백 목록 가져오기 (캐싱 적용)
  * 필요한 컬럼만 select해 전송량 최소화
  */

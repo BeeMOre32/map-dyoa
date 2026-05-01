@@ -400,6 +400,28 @@ export async function createFeedbackAction(formData: {
   }
 }
 
+export async function rejectFeedbackAction(feedbackId: string): Promise<ActionResult> {
+  try {
+    await requireAuth();
+    await prisma.feedback.update({
+      where: { id: feedbackId },
+      data: { status: 'REJECTED' },
+    });
+
+    const paths = getRevalidationPaths('admin');
+    await Promise.all([
+      ...paths.map((path: string) => revalidatePath(path)),
+      updateTag('admin'),
+    ]);
+
+    return { success: true, data: null };
+  } catch (error) {
+    const { message, code } = getErrorMessage(error);
+    logError('rejectFeedback', error);
+    return { success: false, error: message, errorCode: code };
+  }
+}
+
 export async function resolveFeedbackAction(feedbackId: string): Promise<ActionResult> {
   try {
     await requireAuth();
