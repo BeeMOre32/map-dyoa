@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useOptimistic, useTransition, useRef } from 'react';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
+import { useHideEndedStreams } from '@/hooks/useHideEndedStreams';
 import {
   format,
   addMonths,
@@ -69,6 +70,7 @@ export default function CalendarView({
   const [selectedStreamers, setSelectedStreamers] = useState<Set<string>>(new Set());
   const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set());
   const { liveIds: liveStreamerIds } = useLiveStatus();
+  const [hideEnded] = useHideEndedStreams();
   const todayMobileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -133,6 +135,10 @@ export default function CalendarView({
 
   const schedulesByDate = useMemo(() => {
     let filtered = optimisticSchedules;
+
+    if (hideEnded) {
+      filtered = filtered.filter((s) => !s.isLiveEnded);
+    }
 
     if (selectedStreamers.size > 0) {
       filtered = filtered.filter((s) =>
