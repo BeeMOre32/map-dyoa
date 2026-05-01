@@ -311,7 +311,7 @@ export default function CalendarView({
             className={`sm:flex-1 overflow-y-auto custom-scrollbar animate-in fade-in duration-500 ease-out fill-mode-forwards pb-4 sm:pb-0 ${slideDirection === 'left' ? 'slide-in-from-right-10' : 'slide-in-from-left-10'}`}
           >
             <div
-              className={`grid grid-cols-7 ${viewMode === 'monthly' ? 'sm:h-full' : ''}`}
+              className="grid grid-cols-7 sm:h-full"
               style={{
                 gridTemplateRows:
                   viewMode === 'monthly'
@@ -329,9 +329,9 @@ export default function CalendarView({
                   <div
                     key={day.toString()}
                     onClick={() => handleDayClick(day)}
-                    className={`p-2 border-b border-r border-slate-100 dark:border-slate-800 relative group cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/80 transition-all duration-300 overflow-hidden ${!isSelectedMonth && viewMode === 'monthly' ? 'bg-slate-50/30 dark:bg-slate-950/60 opacity-50' : ''} ${idx % 7 === 6 ? 'border-r-0' : ''}`}
+                    className={`flex flex-col p-2 border-b border-r border-slate-100 dark:border-slate-800 group cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/80 transition-all duration-300 overflow-hidden ${!isSelectedMonth && viewMode === 'monthly' ? 'bg-slate-50/30 dark:bg-slate-950/60 opacity-50' : ''} ${idx % 7 === 6 ? 'border-r-0' : ''}`}
                   >
-                    <div className="flex justify-between items-start mb-1">
+                    <div className="flex justify-between items-start mb-1 shrink-0">
                       <span
                         className={`w-7 h-7 flex items-center justify-center text-[13px] font-bold rounded-full transition-colors duration-300 ${today ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'}`}
                       >
@@ -341,7 +341,7 @@ export default function CalendarView({
 
                     {/* 월간 모바일: 점 */}
                     {daySchedules.length > 0 && (
-                      <div className="flex sm:hidden flex-col items-start gap-1 mt-0.5">
+                      <div className="flex sm:hidden flex-col items-start gap-1 mt-0.5 shrink-0">
                         <div className="flex flex-wrap gap-0.5">
                           {daySchedules.slice(0, 3).map((schedule) => (
                             <div
@@ -356,8 +356,8 @@ export default function CalendarView({
                       </div>
                     )}
 
-                    {/* 데스크탑: 텍스트 카드 */}
-                    <div className="hidden sm:flex flex-col gap-1.5 overflow-y-auto max-h-[calc(100%-35px)] custom-scrollbar">
+                    {/* 데스크탑: 텍스트 카드 (셀 남은 높이 채우고 독립 스크롤) */}
+                    <div className="hidden sm:flex flex-col flex-1 min-h-0 gap-1.5 overflow-y-auto custom-scrollbar">
                       {daySchedules.map((schedule, i) => (
                         <ScheduleCard key={schedule.id} schedule={schedule} variant={viewMode} liveStreamerIds={liveStreamerIds} index={i} />
                       ))}
