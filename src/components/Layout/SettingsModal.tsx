@@ -1,6 +1,6 @@
 'use client';
 
-import { Sun, Moon, HelpCircle, Shield, LogIn, LogOut, UserCheck, X, LayoutDashboard, EyeOff } from 'lucide-react';
+import { Sun, Moon, HelpCircle, Shield, LogIn, LogOut, UserCheck, X, LayoutDashboard, EyeOff, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { useSession, signOut } from 'next-auth/react';
@@ -106,6 +106,20 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               <Toggle on={hideEnded} />
             </button>
           </div>
+
+          {/* 후원 */}
+          <a
+            href="https://ctee.kr/place/mapdoya"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-4 py-3 mx-2 bg-pink-50 dark:bg-pink-900/20 hover:bg-pink-100 dark:hover:bg-pink-900/30 border border-pink-200 dark:border-pink-800/50 rounded-2xl transition-colors"
+          >
+            <Heart className="w-4 h-4 text-pink-500 dark:text-pink-400 shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-pink-600 dark:text-pink-400">후원하기</p>
+              <p className="text-xs text-pink-400 dark:text-pink-500 font-medium mt-0.5">서버비 제외 전액 기부됩니다</p>
+            </div>
+          </a>
 
           {/* 링크 */}
           <div className="px-2 py-1">

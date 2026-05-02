@@ -6,7 +6,7 @@
 import { prisma } from '@/lib/prisma';
 import { unstable_cache } from 'next/cache';
 import { flattenSchedules } from './schedule-formatters';
-import type { Streamer } from '@prisma/client';
+import type { Streamer, Prisma } from '@prisma/client';
 
 /**
  * 캘린더 데이터 가져오기 (캐싱 적용)
@@ -104,6 +104,90 @@ export const getAllClips = unstable_cache(
   ['clips-all'],
   { revalidate: 60, tags: ['clips'] },
 );
+
+/**
+ * 클립 연월 목록 (필터 드롭다운용)
+ */
+export const getClipMonths = unstable_cache(
+  async () => {
+    const clips = await prisma.clip.findMany({
+      select: { clipDate: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    const months = new Set<string>();
+    for (const c of clips) {
+      const d = new Date(c.clipDate ?? c.createdAt);
+      months.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+    }
+    return Array.from(months).sort().reverse();
+  },
+  ['clip-months'],
+  { revalidate: 60, tags: ['clips'] },
+);
+
+const CLIP_INCLUDE = {
+  participants: { include: { streamer: true } },
+  schedule: { select: { id: true, title: true, game: { select: { id: true, title: true } } } },
+} as const;
+
+/**
+ * 클립 페이지네이션 (서버사이드 필터링 포함)
+ */
+export async function getClipsPaginated({
+  page = 1,
+  pageSize = 20,
+  streamerId,
+  month,
+  q,
+}: {
+  page?: number;
+  pageSize?: number;
+  streamerId?: string;
+  month?: string;
+  q?: string;
+}) {
+  const conditions: Prisma.ClipWhereInput[] = [];
+
+  if (streamerId) {
+    conditions.push({ participants: { some: { streamerId } } });
+  }
+
+  if (month) {
+    const [year, monthNum] = month.split('-').map(Number);
+    const start = new Date(year, monthNum - 1, 1);
+    const end = new Date(year, monthNum, 1);
+    conditions.push({
+      OR: [
+        { clipDate: { gte: start, lt: end } },
+        { clipDate: null, createdAt: { gte: start, lt: end } },
+      ],
+    });
+  }
+
+  if (q) {
+    conditions.push({
+      OR: [
+        { title: { contains: q, mode: 'insensitive' } },
+        { participants: { some: { streamer: { name: { contains: q, mode: 'insensitive' } } } } },
+      ],
+    });
+  }
+
+  const where: Prisma.ClipWhereInput = conditions.length > 0 ? { AND: conditions } : {};
+
+  const [clips, total] = await Promise.all([
+    prisma.clip.findMany({
+      where,
+      include: CLIP_INCLUDE,
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.clip.count({ where }),
+  ]);
+
+  return { clips, total, totalPages: Math.ceil(total / pageSize) };
+}
 
 /**
  * 특정 스케줄 상세 가져오기 (캐싱 적용)

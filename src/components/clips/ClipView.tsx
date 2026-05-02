@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useTransition } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Clapperboard, Plus, Search, X } from 'lucide-react';
+import { Clapperboard, Plus, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import type { ClipWithParticipants } from '@/types/entities';
@@ -16,50 +17,82 @@ interface ClipViewProps {
   clips: ClipWithParticipants[];
   streamers: Streamer[];
   schedules: FlattenedSchedule[];
+  monthOptions: string[];
+  total: number;
+  totalPages: number;
+  currentPage: number;
+  currentFilters: { streamerId: string; month: string; q: string };
 }
 
-export default function ClipView({ clips, streamers, schedules }: ClipViewProps) {
+export default function ClipView({
+  clips,
+  streamers,
+  schedules,
+  monthOptions,
+  total,
+  totalPages,
+  currentPage,
+  currentFilters,
+}: ClipViewProps) {
   const { data: session } = useSession();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [showModal, setShowModal] = useState(false);
   const [editingClip, setEditingClip] = useState<ClipWithParticipants | null>(null);
-  const [filterStreamerId, setFilterStreamerId] = useState('');
-  const [filterMonth, setFilterMonth] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchValue, setSearchValue] = useState(currentFilters.q);
 
-  const monthOptions = useMemo(() => {
-    const months = new Set<string>();
-    clips.forEach((c) => {
-      const date = new Date(c.clipDate ?? c.createdAt);
-      months.add(format(date, 'yyyy-MM'));
-    });
-    return Array.from(months).sort().reverse();
-  }, [clips]);
+  useEffect(() => {
+    setSearchValue(currentFilters.q);
+  }, [currentFilters.q]);
 
-  const filtered = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    return clips.filter((c) => {
-      if (filterStreamerId && !c.participants.some((p) => p.streamerId === filterStreamerId)) return false;
-      if (filterMonth) {
-        const clipMonth = format(new Date(c.clipDate ?? c.createdAt), 'yyyy-MM');
-        if (clipMonth !== filterMonth) return false;
-      }
-      if (q) {
-        const inTitle = c.title.toLowerCase().includes(q);
-        const inStreamer = c.participants.some((p) => p.streamer.name.toLowerCase().includes(q));
-        if (!inTitle && !inStreamer) return false;
-      }
-      return true;
-    });
-  }, [clips, filterStreamerId, filterMonth, searchQuery]);
+  const buildUrl = useCallback(
+    (updates: Partial<{ page: number; streamer: string; month: string; q: string }>) => {
+      const merged = {
+        streamer: currentFilters.streamerId,
+        month: currentFilters.month,
+        q: currentFilters.q,
+        page: currentPage,
+        ...updates,
+      };
+      const params = new URLSearchParams();
+      if (merged.streamer) params.set('streamer', merged.streamer);
+      if (merged.month) params.set('month', merged.month);
+      if (merged.q) params.set('q', merged.q);
+      if (merged.page && merged.page > 1) params.set('page', String(merged.page));
+      const qs = params.toString();
+      return qs ? `/clips?${qs}` : '/clips';
+    },
+    [currentFilters, currentPage],
+  );
 
-  const hasFilter = filterStreamerId || filterMonth || searchQuery;
+  const navigate = useCallback(
+    (url: string) => startTransition(() => router.push(url)),
+    [router],
+  );
 
+  useEffect(() => {
+    if (searchValue === currentFilters.q) return;
+    const timer = setTimeout(() => navigate(buildUrl({ q: searchValue, page: 1 })), 400);
+    return () => clearTimeout(timer);
+  }, [searchValue, currentFilters.q, navigate, buildUrl]);
+
+  const hasFilter = !!(currentFilters.streamerId || currentFilters.month || currentFilters.q);
+  const clearFilters = () => navigate('/clips');
   const handleOpen = useCallback(() => setShowModal(true), []);
   const handleClose = useCallback(() => setShowModal(false), []);
-  const clearFilters = () => { setFilterStreamerId(''); setFilterMonth(''); setSearchQuery(''); };
+
+  const pageItems = Array.from({ length: totalPages }, (_, i) => i + 1)
+    .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+    .reduce<(number | 'ellipsis')[]>((acc, p, i, arr) => {
+      if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('ellipsis');
+      acc.push(p);
+      return acc;
+    }, []);
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-800 relative overflow-hidden">
+    <div
+      className={`h-full flex flex-col bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-800 relative overflow-hidden transition-opacity ${isPending ? 'opacity-60' : ''}`}
+    >
       {/* 헤더 */}
       <div className="p-6 border-b border-slate-50 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-800/20 shrink-0 space-y-4">
         <div className="flex justify-between items-center gap-4">
@@ -69,7 +102,7 @@ export default function ClipView({ clips, streamers, schedules }: ClipViewProps)
               클립 모음
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
-              총 {filtered.length}개의 클립{hasFilter && ` (전체 ${clips.length}개 중)`}
+              총 {total}개의 클립
             </p>
           </div>
 
@@ -93,22 +126,20 @@ export default function ClipView({ clips, streamers, schedules }: ClipViewProps)
 
         {/* 필터 행 */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* 검색 */}
           <div className="relative flex-1 min-w-36">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
             <input
               type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
               placeholder="제목 · 스트리머 검색"
               className="w-full pl-9 pr-3 py-2 text-sm font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700 transition-all"
             />
           </div>
 
-          {/* 연월 필터 */}
           <select
-            value={filterMonth}
-            onChange={(e) => setFilterMonth(e.target.value)}
+            value={currentFilters.month}
+            onChange={(e) => navigate(buildUrl({ month: e.target.value, page: 1 }))}
             className="px-3 py-2 text-sm font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700 transition-all"
           >
             <option value="">전체 기간</option>
@@ -119,10 +150,9 @@ export default function ClipView({ clips, streamers, schedules }: ClipViewProps)
             ))}
           </select>
 
-          {/* 스트리머 필터 */}
           <select
-            value={filterStreamerId}
-            onChange={(e) => setFilterStreamerId(e.target.value)}
+            value={currentFilters.streamerId}
+            onChange={(e) => navigate(buildUrl({ streamer: e.target.value, page: 1 }))}
             className="px-3 py-2 text-sm font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700 transition-all"
           >
             <option value="">전체 스트리머</option>
@@ -133,7 +163,6 @@ export default function ClipView({ clips, streamers, schedules }: ClipViewProps)
             ))}
           </select>
 
-          {/* 초기화 */}
           {hasFilter && (
             <button
               onClick={clearFilters}
@@ -148,7 +177,7 @@ export default function ClipView({ clips, streamers, schedules }: ClipViewProps)
 
       {/* 클립 그리드 */}
       <div className="flex-1 overflow-y-auto p-6">
-        {filtered.length === 0 ? (
+        {clips.length === 0 ? (
           <div className="py-20 text-center border-2 border-dashed border-slate-100 dark:border-slate-700 rounded-3xl">
             <Clapperboard className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
             <p className="text-slate-400 dark:text-slate-500 font-bold">
@@ -163,27 +192,67 @@ export default function ClipView({ clips, streamers, schedules }: ClipViewProps)
               </button>
             )}
             {hasFilter && (
-              <button onClick={clearFilters} className="mt-4 text-sm font-bold text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400">
+              <button
+                onClick={clearFilters}
+                className="mt-4 text-sm font-bold text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400"
+              >
                 필터 초기화
               </button>
             )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filtered.map((clip) => (
+            {clips.map((clip) => (
               <ClipCard key={clip.id} clip={clip} onEdit={setEditingClip} />
             ))}
           </div>
         )}
       </div>
 
+      {/* 페이지네이션 */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 px-6 py-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
+          <button
+            onClick={() => navigate(buildUrl({ page: currentPage - 1 }))}
+            disabled={currentPage <= 1}
+            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          {pageItems.map((item, i) =>
+            item === 'ellipsis' ? (
+              <span key={`e${i}`} className="px-1 text-slate-400 dark:text-slate-500 text-sm">
+                …
+              </span>
+            ) : (
+              <button
+                key={item}
+                onClick={() => navigate(buildUrl({ page: item as number }))}
+                className={`w-9 h-9 rounded-xl text-sm font-bold transition-colors ${
+                  item === currentPage
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-300/50 dark:shadow-indigo-900/40'
+                    : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                }`}
+              >
+                {item}
+              </button>
+            ),
+          )}
+
+          <button
+            onClick={() => navigate(buildUrl({ page: currentPage + 1 }))}
+            disabled={currentPage >= totalPages}
+            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       <AnimatePresence>
         {showModal && (
-          <CreateClipModal
-            streamers={streamers}
-            schedules={schedules}
-            onClose={handleClose}
-          />
+          <CreateClipModal streamers={streamers} schedules={schedules} onClose={handleClose} />
         )}
       </AnimatePresence>
 
@@ -197,7 +266,6 @@ export default function ClipView({ clips, streamers, schedules }: ClipViewProps)
           />
         )}
       </AnimatePresence>
-
     </div>
   );
 }

@@ -18,6 +18,12 @@ backend : next.js
 
 게임별로 필러팅 하는 기능 추가할 예정 아마 합방만 한거에 추가할듯?
 
+## 후원
+
+서버 유지비에 도움이 됩니다 🙏 → https://ctee.kr/place/mapdoya
+
+서버비를 제외한 금액은 전부 기부됩니다.
+
 ## 피드백
 
 피드백 혹은 급한 이슈 및 건의 사항은 혹은 windowssart01@gmail.com 이쪽으로
