@@ -12,6 +12,7 @@ import type { Streamer } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import ClipCard from './ClipCard';
 import CreateClipModal from './CreateClipModal';
+import { ClipSkeletonCard } from './ClipSkeleton';
 
 interface ClipViewProps {
   clips: ClipWithParticipants[];
@@ -91,7 +92,7 @@ export default function ClipView({
 
   return (
     <div
-      className={`h-full flex flex-col bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-800 relative overflow-hidden transition-opacity ${isPending ? 'opacity-60' : ''}`}
+          className="h-full flex flex-col bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-800 relative overflow-hidden"
     >
       {/* 헤더 */}
       <div className="p-6 border-b border-slate-50 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-800/20 shrink-0 space-y-4">
@@ -177,7 +178,13 @@ export default function ClipView({
 
       {/* 클립 그리드 */}
       <div className="flex-1 overflow-y-auto p-6">
-        {clips.length === 0 ? (
+        {isPending ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {Array.from({ length: clips.length || 8 }).map((_, i) => (
+              <ClipSkeletonCard key={i} />
+            ))}
+          </div>
+        ) : clips.length === 0 ? (
           <div className="py-20 text-center border-2 border-dashed border-slate-100 dark:border-slate-700 rounded-3xl">
             <Clapperboard className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
             <p className="text-slate-400 dark:text-slate-500 font-bold">
