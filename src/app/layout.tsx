@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import AuthProvider from '@/providers/AuthProvider';
 import Header from '@/components/Layout/Header';
 import HelpToast from '@/components/Common/HelpToast';
+import { ToastProvider } from '@/components/Common/Toaster';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ThemeProvider } from '@/providers/ThemeProvider';
@@ -34,13 +35,15 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <AuthProvider>
-            <main className="h-dvh w-full bg-slate-50/50 dark:bg-slate-950 flex flex-col overflow-hidden transition-colors duration-300">
-              <Header />
-              <div className="flex-1 flex flex-col overflow-y-auto sm:overflow-hidden">
-                {children}
-              </div>
-              <HelpToast />
-            </main>
+            <ToastProvider>
+              <main className="h-dvh w-full bg-slate-50/50 dark:bg-slate-950 flex flex-col overflow-hidden transition-colors duration-300">
+                <Header />
+                <div className="flex-1 flex flex-col overflow-y-auto sm:overflow-hidden">
+                  {children}
+                </div>
+                <HelpToast />
+              </main>
+            </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
         <Analytics />

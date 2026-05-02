@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
   Trash2,
@@ -22,6 +22,8 @@ import { useGoBack } from '@/hooks/useGoBack';
 import Link from 'next/link';
 import { deleteScheduleAction } from '@/app/actions';
 import CreateScheduleModal from '../Form/CreateScheduleModal';
+import { useToast } from '@/components/Common/Toaster';
+import ConfirmModal from '@/components/Common/ConfirmModal';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { CalendarModalProps } from '@/types/props';
 import { useScheduleModal } from '@/hooks/useScheduleModal';
@@ -43,7 +45,10 @@ export default function ScheduleModal({
   const { data: session } = useSession();
   const { editingSchedule, toggleEditMode, exitEditMode } = useScheduleModal();
   const { resolvedTheme } = useTheme();
+  const toast = useToast();
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isAdmin = session;
 
@@ -58,21 +63,25 @@ export default function ScheduleModal({
 
   useEscapeKey(handleClose);
 
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
+  const handleDelete = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!isAdmin) { setPermissionError('로그인이 필요합니다.'); return; }
+    setConfirmId(id);
+  };
 
-    if (!isAdmin) {
-      setPermissionError('로그인이 필요합니다.');
-      return;
-    }
-
-    if (confirm('정말로 이 일정을 삭제하시겠습니까?')) {
-      const result = await deleteScheduleAction(id);
-      if (result.success) {
-        router.refresh();
-        onClose?.();
-      }
+  const handleConfirmDelete = async () => {
+    if (!confirmId) return;
+    setIsDeleting(true);
+    const result = await deleteScheduleAction(confirmId);
+    setIsDeleting(false);
+    setConfirmId(null);
+    if (result.success) {
+      toast.success('일정이 삭제되었습니다.');
+      router.refresh();
+      onClose?.();
+    } else {
+      toast.error('삭제에 실패했습니다.');
     }
   };
 
@@ -267,6 +276,17 @@ export default function ScheduleModal({
           </>
         )}
       </motion.div>
+
+      <AnimatePresence>
+        {confirmId && (
+          <ConfirmModal
+            message="정말로 이 일정을 삭제할까요? 되돌릴 수 없습니다."
+            isLoading={isDeleting}
+            onConfirm={handleConfirmDelete}
+            onCancel={() => setConfirmId(null)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

@@ -15,6 +15,8 @@ import { useSession } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { deleteScheduleAction } from '@/app/actions';
 import CreateScheduleModal from '../Form/CreateScheduleModal';
+import { useToast } from '@/components/Common/Toaster';
+import ConfirmModal from '@/components/Common/ConfirmModal';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
@@ -50,7 +52,10 @@ export default function ScheduleDetailView({
   const { data: session } = useSession();
   const { resolvedTheme } = useTheme();
 
+  const toast = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetTab, setSheetTab] = useState<SideTab>('clips');
 
@@ -69,10 +74,19 @@ export default function ScheduleDetailView({
 
   useEscapeKey(handleClose);
 
-  const handleDelete = async () => {
-    if (confirm('정말로 이 일정을 삭제하시겠습니까?')) {
-      const result = await deleteScheduleAction(schedule.id);
-      if (result.success) { router.refresh(); router.push('/calendar'); }
+  const handleDelete = () => setShowConfirm(true);
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    const result = await deleteScheduleAction(schedule.id);
+    setIsDeleting(false);
+    setShowConfirm(false);
+    if (result.success) {
+      toast.success('일정이 삭제되었습니다.');
+      router.refresh();
+      router.push('/calendar');
+    } else {
+      toast.error('삭제에 실패했습니다.');
     }
   };
 
@@ -143,6 +157,17 @@ export default function ScheduleDetailView({
           )}
         </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {showConfirm && (
+          <ConfirmModal
+            message="정말로 이 일정을 삭제할까요? 되돌릴 수 없습니다."
+            isLoading={isDeleting}
+            onConfirm={handleConfirmDelete}
+            onCancel={() => setShowConfirm(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* 모바일 바텀시트 */}
       <AnimatePresence>

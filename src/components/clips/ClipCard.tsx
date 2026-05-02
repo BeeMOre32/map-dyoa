@@ -4,10 +4,13 @@ import { ExternalLink, Trash2, Play, Tv, Pencil, ArrowUpRight } from 'lucide-rea
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import type { ClipWithParticipants } from '@/types/entities';
 import { deleteClipAction } from '@/app/actions';
 import { useSession } from 'next-auth/react';
 import { extractChzzkClipId } from '@/lib/chzzk';
+import { useToast } from '@/components/Common/Toaster';
+import ConfirmModal from '@/components/Common/ConfirmModal';
 
 interface ClipCardProps {
   clip: ClipWithParticipants;
@@ -16,7 +19,9 @@ interface ClipCardProps {
 
 export default function ClipCard({ clip, onEdit }: ClipCardProps) {
   const { data: session } = useSession();
+  const toast = useToast();
   const [deleting, setDeleting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [iframeActive, setIframeActive] = useState(false);
 
   const chzzkClipId = extractChzzkClipId(clip.url);
@@ -30,16 +35,23 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
       })
     : null;
 
-  async function handleDelete(e: React.MouseEvent) {
+  function handleDelete(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm('이 클립을 삭제하시겠습니까?')) return;
+    setShowConfirm(true);
+  }
+
+  async function handleConfirmDelete() {
     setDeleting(true);
-    await deleteClipAction(clip.id);
+    const result = await deleteClipAction(clip.id);
     setDeleting(false);
+    setShowConfirm(false);
+    if (result.success) toast.success('클립이 삭제되었습니다.');
+    else toast.error('삭제에 실패했습니다.');
   }
 
   return (
+    <>
     <div className="group flex flex-col rounded-3xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden hover:border-indigo-200 dark:hover:border-indigo-700 hover:shadow-xl hover:shadow-indigo-50 dark:hover:shadow-indigo-950/50 transition-all">
 
       {/* ── 미디어 영역 ── */}
@@ -217,5 +229,16 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
         </div>
       </div>
     </div>
+      <AnimatePresence>
+        {showConfirm && (
+          <ConfirmModal
+            message="이 클립을 삭제할까요? 되돌릴 수 없습니다."
+            isLoading={deleting}
+            onConfirm={handleConfirmDelete}
+            onCancel={() => setShowConfirm(false)}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }
