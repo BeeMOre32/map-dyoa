@@ -42,7 +42,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 8 }}
         transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-        className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl dark:shadow-black/60 border border-slate-100 dark:border-slate-800 overflow-hidden"
+        className="w-full max-w-sm max-h-[90dvh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl dark:shadow-black/60 border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 헤더 */}
@@ -56,7 +56,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           </button>
         </div>
 
-        <div className="p-4 space-y-2">
+        <div className="p-4 space-y-2 overflow-y-auto">
 
           {/* 테마 */}
           <div className="px-2 py-1">
