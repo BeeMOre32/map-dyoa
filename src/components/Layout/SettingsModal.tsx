@@ -1,6 +1,6 @@
 'use client';
 
-import { Sun, Moon, HelpCircle, Shield, LogIn, LogOut, UserCheck, X, LayoutDashboard, EyeOff, Heart } from 'lucide-react';
+import { Sun, Moon, HelpCircle, Shield, LogIn, LogOut, UserCheck, X, LayoutDashboard, EyeOff, Heart, Megaphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { useSession, signOut } from 'next-auth/react';
@@ -125,6 +125,14 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           <div className="px-2 py-1">
             <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">정보</p>
             <div className="space-y-1">
+              <Link
+                href="/announcements"
+                onClick={onClose}
+                className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
+              >
+                <Megaphone className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">공지사항</span>
+              </Link>
               <Link
                 href="/help"
                 onClick={onClose}
