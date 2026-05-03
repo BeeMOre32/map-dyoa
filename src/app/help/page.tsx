@@ -30,6 +30,7 @@ import {
   Maximize2,
   Sword,
   Wifi,
+  EyeOff,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -414,8 +415,11 @@ export default function GuidePage() {
               치지직 클립 URL을 붙여넣으면 <strong>썸네일·제목이 자동 추출</strong>됩니다.
             </Row>
             <Row icon={<SlidersHorizontal className="w-5 h-5" />} delay={0.07}>
-              상단 드롭다운으로 <strong>스트리머별 필터링</strong>이 가능합니다.
-              원하는 스트리머의 클립만 골라볼 수 있습니다.
+              상단 필터로 <strong>스트리머</strong>와 <strong>월별</strong> 필터링이 가능합니다.
+              검색창에서 <strong>제목 또는 스트리머 이름</strong>으로 클립을 검색할 수 있습니다.
+            </Row>
+            <Row icon={<ChevronRight className="w-5 h-5" />} delay={0.11}>
+              클립은 한 페이지에 <strong>20개씩</strong> 표시됩니다. 하단 페이지네이션으로 이동하거나, 필터를 바꾸면 자동으로 첫 페이지로 돌아갑니다.
             </Row>
             <Row icon={<ExternalLink className="w-5 h-5" />} delay={0.14}>
               카드의 <strong>외부 링크 버튼</strong>으로 원본 클립 페이지로 이동하거나,
@@ -523,7 +527,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<Puzzle className="w-6 h-6 text-cyan-500 dark:text-cyan-400" />}
           iconBg="bg-cyan-50 dark:bg-cyan-900/20"
-          title={<>11. Chrome 확장 프로그램 설치<NewBadge /></>}
+          title={<>11. Chrome 확장 프로그램 설치</>}
         >
           <div className="space-y-4">
             <p className="text-slate-600 dark:text-slate-300 font-medium">
@@ -569,7 +573,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<LogIn className="w-6 h-6 text-amber-500 dark:text-amber-400" />}
           iconBg="bg-amber-50 dark:bg-amber-900/20"
-          title="11. 로그인과 편집 권한"
+          title="12. 로그인과 편집 권한"
         >
           <div className="space-y-4">
             <p className="text-slate-600 dark:text-slate-300 font-medium">
@@ -585,7 +589,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<Edit2 className="w-6 h-6 text-rose-500 dark:text-rose-400" />}
           iconBg="bg-rose-50 dark:bg-rose-900/20"
-          title="12. 일정 추가 · 수정 · 삭제"
+          title="13. 일정 추가 · 수정 · 삭제"
         >
           <div className="grid sm:grid-cols-3 gap-4">
             {[
@@ -647,7 +651,7 @@ export default function GuidePage() {
         <SectionCard
           icon={<Keyboard className="w-6 h-6 text-slate-500 dark:text-slate-400" />}
           iconBg="bg-slate-100 dark:bg-slate-700"
-          title="13. 편의 기능"
+          title="14. 편의 기능"
         >
           <div className="space-y-4">
             <Row icon={<Keyboard className="w-5 h-5" />} delay={0}>
@@ -657,7 +661,11 @@ export default function GuidePage() {
               우측 상단 <strong>라이트/다크 모드</strong> 토글로 테마를 전환합니다.
               스트리머·게임 색상도 모드에 맞게 자동 조정됩니다.
             </Row>
-            <Row icon={<ChevronRight className="w-5 h-5" />} delay={0.14}>
+            <Row icon={<EyeOff className="w-5 h-5" />} delay={0.14}>
+              설정에서 <strong>종료된 방송 숨기기</strong>를 켜면 방송이 끝난 일정 카드가 캘린더에서 사라집니다.
+              다시 끄면 즉시 복원됩니다.
+            </Row>
+            <Row icon={<ChevronRight className="w-5 h-5" />} delay={0.21}>
               모바일에서는 주간 뷰가 <strong>리스트 형식</strong>으로 표시되어 일정을 더 편하게 확인할 수 있습니다.
             </Row>
           </div>
