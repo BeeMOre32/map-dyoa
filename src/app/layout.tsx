@@ -3,7 +3,9 @@ import './globals.css';
 import { Inter } from 'next/font/google';
 import AuthProvider from '@/providers/AuthProvider';
 import Header from '@/components/Layout/Header';
+import AnnouncementBanner from '@/components/Layout/AnnouncementBanner';
 import HelpToast from '@/components/Common/HelpToast';
+import AnnouncementToast from '@/components/Common/AnnouncementToast';
 import { ToastProvider } from '@/components/Common/Toaster';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -38,9 +40,11 @@ export default function RootLayout({
             <ToastProvider>
               <main className="h-dvh w-full bg-slate-50/50 dark:bg-slate-950 flex flex-col overflow-hidden transition-colors duration-300">
                 <Header />
+                <AnnouncementBanner />
                 <div className="flex-1 flex flex-col overflow-y-auto sm:overflow-hidden">
                   {children}
                 </div>
+                <AnnouncementToast />
                 <HelpToast />
               </main>
             </ToastProvider>

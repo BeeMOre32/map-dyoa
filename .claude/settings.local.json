@@ -14,7 +14,9 @@
       "Bash(curl -s \"https://api.chzzk.naver.com/service/v1/play-info/clip/ukiH1i2Utj\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\")",
       "Bash(powershell -Command \"Compress-Archive -Path 'extension/*' -DestinationPath 'public/map-dyoa-extension.zip' -Force\")",
       "Bash(node -e \"const a = require\\('c:/Users/chs44/Desktop/code/map-dyoa/node_modules/next-axiom'\\); console.log\\(Object.keys\\(a\\)\\)\")",
-      "Bash(node -e \"const { log } = require\\('c:/Users/chs44/Desktop/code/map-dyoa/node_modules/next-axiom'\\); console.log\\(typeof log.error, typeof log.warn, typeof log.info\\)\")"
+      "Bash(node -e \"const { log } = require\\('c:/Users/chs44/Desktop/code/map-dyoa/node_modules/next-axiom'\\); console.log\\(typeof log.error, typeof log.warn, typeof log.info\\)\")",
+      "Bash(Remove-Item -Recurse -Force \"c:\\\\Users\\\\chs44\\\\Desktop\\\\code\\\\map-dyoa\\\\src\\\\app\\\\admin\\\\announcements\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\chs44\\\\Desktop\\\\code\\\\map-dyoa\\\\src\\\\app\\\\announcements\")"
     ]
   }
 }
