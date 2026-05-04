@@ -282,6 +282,79 @@ export const getAdminStats = unstable_cache(
  * 피드백 목록 가져오기 (캐싱 적용)
  * 필요한 컬럼만 select해 전송량 최소화
  */
+/**
+ * HOI4 누적 리더보드
+ */
+export const getHoi4Leaderboard = unstable_cache(
+  async () => {
+    const rows = await prisma.scheduleParticipant.findMany({
+      where: { schedule: { game: { isHoi4: true }, isNaeJeon: true } },
+      select: {
+        scheduleId: true,
+        streamerId: true,
+        nation: true,
+        result: true,
+        streamer: { select: { id: true, name: true, colorCode: true } },
+        schedule: {
+          select: {
+            title: true,
+            startTime: true,
+            game: { select: { title: true } },
+          },
+        },
+      },
+      orderBy: { schedule: { startTime: 'desc' } },
+    });
+
+    type StatEntry = {
+      streamer: { id: string; name: string; colorCode: string };
+      total: number;
+      nations: string[];
+    };
+    type SessionEntry = {
+      id: string; title: string; startTime: Date | string;
+      game: { title: string } | null;
+      participants: { streamer: { id: string; name: string; colorCode: string }; nation: string | null }[];
+    };
+
+    const statsMap = new Map<string, StatEntry>();
+    const sessionMap = new Map<string, SessionEntry>();
+
+    for (const row of rows) {
+      if (!statsMap.has(row.streamerId)) {
+        statsMap.set(row.streamerId, { streamer: row.streamer, total: 0, nations: [] });
+      }
+      const stat = statsMap.get(row.streamerId)!;
+      stat.total++;
+      if (row.nation && !stat.nations.includes(row.nation)) stat.nations.push(row.nation);
+
+      if (!sessionMap.has(row.scheduleId)) {
+        sessionMap.set(row.scheduleId, {
+          id: row.scheduleId,
+          title: row.schedule.title,
+          startTime: row.schedule.startTime,
+          game: row.schedule.game,
+          participants: [],
+        });
+      }
+      sessionMap.get(row.scheduleId)!.participants.push({
+        streamer: row.streamer,
+        nation: row.nation,
+      });
+    }
+
+    const leaderboard = Array.from(statsMap.values()).sort((a, b) => b.total - a.total);
+
+    const sessions = Array.from(sessionMap.values())
+      .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+      .slice(0, 8);
+
+    return { leaderboard, sessions, totalSessions: sessionMap.size };
+  },
+  ['hoi4-leaderboard'],
+  { revalidate: 120, tags: ['calendar'] },
+);
+
 export const getFeedbacks = unstable_cache(
   async () => {
     return prisma.feedback.findMany({

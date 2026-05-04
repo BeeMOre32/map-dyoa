@@ -3,13 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, Users, Clapperboard, Radio } from 'lucide-react';
+import { Calendar, Users, Clapperboard, Radio, Sword } from 'lucide-react';
 
 const tabs = [
   { id: 'live', label: '라이브', href: '/live', icon: Radio, isLive: true },
   { id: 'calendar', label: '스케줄', href: '/calendar', icon: Calendar },
   { id: 'streamers', label: '멤버', href: '/streamers', icon: Users },
-  { id: 'clips', label: '클립', href: '/clips', icon: Clapperboard, isNew: true },
+  { id: 'clips', label: '클립', href: '/clips', icon: Clapperboard },
+  { id: 'hoi4', label: '전적', href: '/hoi4', icon: Sword, isHoi4: true },
 ];
 
 export default function Navigation() {
@@ -27,8 +28,8 @@ export default function Navigation() {
       <div className="rounded-xl flex bg-slate-100 dark:bg-slate-900 p-1.5 border-2 border-slate-200 dark:border-slate-800 relative shadow-inner">
         {tabs.map((tab) => {
           const isActive = pathname.startsWith(tab.href);
-          const isClip = tab.id === 'clips';
           const isLive = tab.id === 'live';
+          const isHoi4 = tab.id === 'hoi4';
 
           return (
             <Link
@@ -36,12 +37,15 @@ export default function Navigation() {
               href={tab.href}
               className={`relative flex items-center gap-1.5 px-2.5 py-2 sm:px-4 md:px-5 rounded-2xl text-sm font-black transition-all z-10 ${
                 isActive
-                  ? isLive ? 'text-red-600 dark:text-red-400'
-                  : 'text-indigo-600 dark:text-indigo-400'
+                  ? isLive
+                    ? 'text-red-600 dark:text-red-400'
+                    : isHoi4
+                      ? 'text-amber-600 dark:text-amber-400'
+                      : 'text-indigo-600 dark:text-indigo-400'
                   : isLive
                     ? 'text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300'
-                    : isClip
-                      ? 'text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300'
+                    : isHoi4
+                      ? 'text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300'
                       : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
               }`}
             >
@@ -58,34 +62,29 @@ export default function Navigation() {
                 <motion.div
                   className="absolute inset-0 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200/60 dark:border-red-700/50"
                   animate={{ opacity: [0.6, 1, 0.6] }}
-                  transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+                  transition={{
+                    duration: 1.8,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
                 />
               )}
 
-              {/* 클립 탭 배경 강조 (비활성 시) */}
-              {isClip && !isActive && (
+              {/* HOI4 탭 배경 강조 (비활성 시) */}
+              {isHoi4 && !isActive && (
                 <motion.div
-                  className="absolute inset-0 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200/60 dark:border-indigo-700/50"
+                  className="absolute inset-0 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-700/50"
                   animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                  transition={{
+                    duration: 2.8,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
                 />
               )}
 
-<tab.icon className="w-4 h-4 z-20" />
+              <tab.icon className="w-4 h-4 z-20" />
               <span className="z-20 hidden sm:inline">{tab.label}</span>
-
-              {/* NEW 뱃지 */}
-              {tab.isNew && !isActive && (
-                <motion.span
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', damping: 14, stiffness: 300, delay: 0.3 }}
-                  className="z-20 hidden sm:inline text-[9px] font-black px-1.5 py-px rounded-full bg-indigo-500 text-white leading-none tracking-wide"
-                >
-                  NEW
-                </motion.span>
-              )}
-
             </Link>
           );
         })}

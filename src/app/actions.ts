@@ -32,6 +32,7 @@ export async function createScheduleAction(data: {
   gameId?: string;
   liveUrl?: string;
   isGuerrilla?: boolean;
+  isNaeJeon?: boolean;
 }): Promise<ActionResult<{ id: string }>> {
   try {
     await requireAuth();
@@ -51,6 +52,7 @@ export async function createScheduleAction(data: {
         ...(validated.gameId ? { game: { connect: { id: validated.gameId } } } : {}),
         liveUrl: validated.liveUrl?.trim() || null,
         isGuerrilla: validated.isGuerrilla ?? false,
+        isNaeJeon: validated.isNaeJeon ?? false,
       },
     });
 
@@ -107,6 +109,7 @@ export async function updateScheduleAction(
     gameId?: string;
     liveUrl?: string;
     isGuerrilla?: boolean;
+    isNaeJeon?: boolean;
     isLiveEnded?: boolean;
   },
 ): Promise<ActionResult> {
@@ -124,6 +127,7 @@ export async function updateScheduleAction(
           game: validated.gameId ? { connect: { id: validated.gameId } } : { disconnect: true },
           liveUrl: validated.liveUrl?.trim() || null,
           isGuerrilla: validated.isGuerrilla ?? false,
+          isNaeJeon: validated.isNaeJeon ?? false,
           isLiveEnded: validated.isLiveEnded ?? false,
         },
       }),

@@ -26,13 +26,6 @@ type ScheduleErrors = Partial<Record<keyof z.infer<typeof scheduleSchema> | 'sub
 
 type ParticipantEntry = { id: string; nation: string; result: string };
 
-const RESULT_LABELS: Record<string, string> = { WIN: '승', LOSE: '패', DNF: '미완' };
-const RESULT_STYLES: Record<string, string> = {
-  WIN: 'bg-emerald-500 text-white',
-  LOSE: 'bg-red-500 text-white',
-  DNF: 'bg-slate-400 text-white',
-};
-
 
 type CreateScheduleModalProps = ModalProps & {
   streamers: Streamer[];
@@ -68,6 +61,7 @@ export default function ScheduleFormModal({
   );
   const [liveUrl, setLiveUrl] = useState(initialData?.liveUrl || '');
   const [isTimeTBD, setIsTimeTBD] = useState(initialData?.isGuerrilla || false);
+  const [isNaeJeon, setIsNaeJeon] = useState(initialData?.isNaeJeon || false);
   const [isLiveEnded, setIsLiveEnded] = useState(initialData?.isLiveEnded || false);
   const [errors, setErrors] = useState<ScheduleErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -131,6 +125,7 @@ export default function ScheduleFormModal({
       gameId: selectedGameId === '' ? undefined : selectedGameId,
       liveUrl: liveUrl.trim() || undefined,
       isGuerrilla: isTimeTBD,
+      isNaeJeon: isHoi4Game ? isNaeJeon : false,
       isLiveEnded: isEdit ? isLiveEnded : false,
     };
 
@@ -154,6 +149,7 @@ export default function ScheduleFormModal({
           content: null,
           gameId: selectedGameId || null,
           isGuerrilla: isTimeTBD,
+          isNaeJeon: isHoi4Game ? isNaeJeon : false,
           isLiveEnded: false,
           liveUrl: liveUrl.trim() || null,
           startTime: startDate,
@@ -376,13 +372,30 @@ export default function ScheduleFormModal({
             </div>
           </div>
 
+          {isHoi4Game && (
+            <label className="flex items-center justify-between gap-3 px-4 py-3 bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-800/50 rounded-2xl cursor-pointer">
+              <div>
+                <p className="text-sm font-bold text-amber-700 dark:text-amber-400">내전 세션</p>
+                <p className="text-xs font-medium text-amber-500 dark:text-amber-600 mt-0.5">
+                  체크 시 HOI4 참전 기록 페이지에 집계됩니다
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={isNaeJeon}
+                onChange={(e) => setIsNaeJeon(e.target.checked)}
+                className="w-4 h-4 rounded accent-amber-500 shrink-0"
+              />
+            </label>
+          )}
+
           {isHoi4Game && participants.length > 0 && (
             <div className="space-y-3">
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
-                HOI4 · 국가 / 결과
+                HOI4 · 국가
               </label>
               <div className="space-y-2">
-                {participants.map(({ id, nation, result }) => {
+                {participants.map(({ id, nation }) => {
                   const streamer = streamers.find((s) => s.id === id);
                   if (!streamer) return null;
                   return (
@@ -397,22 +410,6 @@ export default function ScheduleFormModal({
                         placeholder="국가명"
                         className="flex-1 min-w-0 px-2.5 py-1.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500/40"
                       />
-                      <div className="flex gap-1 shrink-0">
-                        {(['WIN', 'LOSE', 'DNF'] as const).map((r) => (
-                          <button
-                            key={r}
-                            type="button"
-                            onClick={() => updateParticipant(id, 'result', result === r ? '' : r)}
-                            className={`px-2 py-1 rounded-lg text-xs font-black transition-colors ${
-                              result === r
-                                ? RESULT_STYLES[r]
-                                : 'bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-500'
-                            }`}
-                          >
-                            {RESULT_LABELS[r]}
-                          </button>
-                        ))}
-                      </div>
                     </div>
                   );
                 })}

@@ -37,6 +37,7 @@ model Schedule {
   startTime   DateTime
   endTime     DateTime?
   isGuerrilla  Boolean   @default(false)
+  isNaeJeon    Boolean   @default(false)
   isLiveEnded  Boolean   @default(false)
   liveUrl      String?
 

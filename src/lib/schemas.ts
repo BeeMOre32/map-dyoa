@@ -13,6 +13,7 @@ export const scheduleServerSchema = z.object({
   gameId: z.string().optional(),
   liveUrl: z.string().optional(),
   isGuerrilla: z.boolean().optional(),
+  isNaeJeon: z.boolean().optional(),
   isLiveEnded: z.boolean().optional(),
 });
 
