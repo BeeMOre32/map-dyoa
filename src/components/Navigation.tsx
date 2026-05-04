@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Calendar, Users, Clapperboard, Radio, Sword } from 'lucide-react';
-
 const tabs = [
   { id: 'live', label: '라이브', href: '/live', icon: Radio, isLive: true },
   { id: 'calendar', label: '스케줄', href: '/calendar', icon: Calendar },
