@@ -1,4 +1,4 @@
-import ScheduleDetailModal from '@/components/Calendar/ScheduleDetailModal';
+import ScheduleDetailModal from '@/components/Calendar/ScheduleDetailModalWrapper';
 import { notFound } from 'next/navigation';
 import { flattenScheduleParticipants } from '@/lib/schedule-formatters';
 import { getAllStreamers, getAllGames, getScheduleDetail, getScheduleClips } from '@/lib/data-fetching';

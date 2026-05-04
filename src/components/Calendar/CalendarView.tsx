@@ -30,7 +30,9 @@ import { AnimatePresence } from 'framer-motion';
 
 import ScheduleFormModal from '@/components/Form/CreateScheduleModal';
 import ScheduleCard from '@/components/Calendar/ScheduleCard';
+import ScheduleCardV2 from '@/components/Calendar/ScheduleCardV2';
 import FilterBar from '@/components/Calendar/FilterBar';
+import { useExperimentalFeatures } from '@/hooks/useExperimentalFeatures';
 
 import type { Streamer, Game } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
@@ -71,6 +73,7 @@ export default function CalendarView({
   const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set());
   const { liveIds: liveStreamerIds } = useLiveStatus();
   const [hideEnded] = useHideEndedStreams();
+  const { flags } = useExperimentalFeatures();
   const todayMobileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -174,6 +177,8 @@ export default function CalendarView({
     setMounted(true);
   }, []);
 
+  const isV2Weekly = flags.newCalendarUI && viewMode === 'weekly';
+
   if (!mounted) {
     return <div className="flex-1 bg-slate-50/50 dark:bg-slate-950" />;
   }
@@ -256,7 +261,7 @@ export default function CalendarView({
       )}
 
       {/* 캘린더 본체 */}
-      <div className="sm:flex-1 sm:overflow-hidden bg-white dark:bg-slate-900 rounded-4xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col">
+      <div className={`sm:flex-1 sm:overflow-hidden flex flex-col ${isV2Weekly ? '' : 'bg-white dark:bg-slate-900 rounded-4xl shadow-sm border border-slate-100 dark:border-slate-800'}`}>
 
         {/* ── 모바일 주간 리스트 (sm 미만 + weekly) ── */}
         {viewMode === 'weekly' && (
@@ -307,79 +312,126 @@ export default function CalendarView({
 
         {/* ── 데스크탑 그리드 / 모바일 월간 그리드 ── */}
         <div className={`${viewMode === 'weekly' ? 'hidden sm:flex' : 'flex'} flex-col sm:flex-1 sm:overflow-hidden`}>
-          {/* 요일 헤더 */}
-          <div className="grid grid-cols-7 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/30 dark:bg-slate-800/60">
-            {weekDays.map((day, idx) => (
-              <div
-                key={day}
-                className={`py-3 text-center text-[13px] font-black tracking-wide ${idx === 0 ? 'text-red-400' : idx === 6 ? 'text-blue-400' : 'text-slate-400'}`}
-              >
-                {day}
-              </div>
-            ))}
-          </div>
-
-          <div
-            key={`${currentDate.toISOString()}-${viewMode}`}
-            className={`sm:flex-1 overflow-y-auto custom-scrollbar animate-in fade-in duration-500 ease-out fill-mode-forwards pb-4 sm:pb-0 ${slideDirection === 'left' ? 'slide-in-from-right-10' : 'slide-in-from-left-10'}`}
-          >
+          {isV2Weekly ? (
+            /* V2 weekly — 카드형 컬럼 레이아웃 */
             <div
-              className="grid grid-cols-7 sm:h-full"
-              style={{
-                gridTemplateRows:
-                  viewMode === 'monthly'
-                    ? `repeat(${days.length / 7}, minmax(100px, 1fr))`
-                    : `repeat(1, 1fr)`,
-              }}
+              key={`v2-${currentDate.toISOString()}`}
+              className="flex-1 overflow-y-auto custom-scrollbar p-3 animate-in fade-in duration-300"
             >
-              {days.map((day, idx) => {
-                const isSelectedMonth = isSameMonth(day, currentDate);
-                const today = isToday(day);
-                const dateKey = format(day, 'yyyy-MM-dd');
-                const daySchedules = schedulesByDate.get(dateKey) || [];
+              <div className="grid grid-cols-7 gap-2.5 min-h-full">
+                {days.map((day) => {
+                  const today = isToday(day);
+                  const dateKey = format(day, 'yyyy-MM-dd');
+                  const daySchedules = schedulesByDate.get(dateKey) || [];
+                  const dayIdx = day.getDay();
+                  const dayNameColor = dayIdx === 0 ? 'text-red-400' : dayIdx === 6 ? 'text-blue-500' : 'text-slate-400 dark:text-slate-500';
 
-                return (
-                  <div
-                    key={day.toString()}
-                    onClick={() => handleDayClick(day)}
-                    className={`flex flex-col p-2 border-b border-r border-slate-100 dark:border-slate-800 group cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/80 transition-all duration-300 overflow-hidden ${!isSelectedMonth && viewMode === 'monthly' ? 'bg-slate-50/30 dark:bg-slate-950/60 opacity-50' : ''} ${idx % 7 === 6 ? 'border-r-0' : ''}`}
-                  >
-                    <div className="flex justify-between items-start mb-1 shrink-0">
-                      <span
-                        className={`w-7 h-7 flex items-center justify-center text-[13px] font-bold rounded-full transition-colors duration-300 ${today ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'}`}
-                      >
-                        {format(day, 'd')}
-                      </span>
+                  return (
+                    <div
+                      key={day.toString()}
+                      onClick={() => handleDayClick(day)}
+                      className={`flex flex-col rounded-2xl border cursor-pointer transition-all min-h-120 overflow-hidden ${
+                        today
+                          ? 'bg-linear-to-b from-indigo-50/60 dark:from-indigo-950/30 to-white dark:to-slate-900 border-indigo-200 dark:border-indigo-800/50'
+                          : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
+                      }`}
+                    >
+                      <div className={`px-3 pt-3 pb-2 shrink-0 border-b ${today ? 'border-indigo-100 dark:border-indigo-900/40' : 'border-slate-100 dark:border-slate-800'}`}>
+                        <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${dayNameColor}`}>
+                          {weekDays[dayIdx]}
+                        </p>
+                        <p className={`text-2xl font-black leading-none ${today ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200'}`}>
+                          {format(day, 'd')}
+                        </p>
+                      </div>
+                      <div className="flex flex-col flex-1 gap-1.5 p-2 overflow-y-auto custom-scrollbar">
+                        {daySchedules.map((schedule, i) => (
+                          <ScheduleCardV2 key={schedule.id} schedule={schedule} variant="weekly" liveStreamerIds={liveStreamerIds} index={i} />
+                        ))}
+                      </div>
                     </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            /* V1 — 기존 그리드 레이아웃 */
+            <>
+              {/* 요일 헤더 */}
+              <div className="grid grid-cols-7 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/30 dark:bg-slate-800/60">
+                {weekDays.map((day, idx) => (
+                  <div
+                    key={day}
+                    className={`py-3 text-center text-[13px] font-black tracking-wide ${idx === 0 ? 'text-red-400' : idx === 6 ? 'text-blue-400' : 'text-slate-400'}`}
+                  >
+                    {day}
+                  </div>
+                ))}
+              </div>
 
-                    {/* 월간 모바일: 점 */}
-                    {daySchedules.length > 0 && (
-                      <div className="flex sm:hidden flex-col items-start gap-1 mt-0.5 shrink-0">
-                        <div className="flex flex-wrap gap-0.5">
-                          {daySchedules.slice(0, 3).map((schedule) => (
-                            <div
-                              key={schedule.id}
-                              className={`w-1.5 h-1.5 rounded-full ${schedule.game ? 'bg-amber-400' : 'bg-slate-400 dark:bg-slate-500'}`}
-                            />
+              <div
+                key={`${currentDate.toISOString()}-${viewMode}`}
+                className={`sm:flex-1 overflow-y-auto custom-scrollbar animate-in fade-in duration-500 ease-out fill-mode-forwards pb-4 sm:pb-0 ${slideDirection === 'left' ? 'slide-in-from-right-10' : 'slide-in-from-left-10'}`}
+              >
+                <div
+                  className="grid grid-cols-7 sm:h-full"
+                  style={{
+                    gridTemplateRows:
+                      viewMode === 'monthly'
+                        ? `repeat(${days.length / 7}, minmax(100px, 1fr))`
+                        : `repeat(1, 1fr)`,
+                  }}
+                >
+                  {days.map((day, idx) => {
+                    const isSelectedMonth = isSameMonth(day, currentDate);
+                    const today = isToday(day);
+                    const dateKey = format(day, 'yyyy-MM-dd');
+                    const daySchedules = schedulesByDate.get(dateKey) || [];
+
+                    return (
+                      <div
+                        key={day.toString()}
+                        onClick={() => handleDayClick(day)}
+                        className={`flex flex-col p-2 border-b border-r border-slate-100 dark:border-slate-800 group cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/80 transition-all duration-300 overflow-hidden ${!isSelectedMonth && viewMode === 'monthly' ? 'bg-slate-50/30 dark:bg-slate-950/60 opacity-50' : ''} ${idx % 7 === 6 ? 'border-r-0' : ''}`}
+                      >
+                        <div className="flex justify-between items-start mb-1 shrink-0">
+                          <span
+                            className={`w-7 h-7 flex items-center justify-center text-[13px] font-bold rounded-full transition-colors duration-300 ${today ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'}`}
+                          >
+                            {format(day, 'd')}
+                          </span>
+                        </div>
+
+                        {/* 월간 모바일: 점 */}
+                        {daySchedules.length > 0 && (
+                          <div className="flex sm:hidden flex-col items-start gap-1 mt-0.5 shrink-0">
+                            <div className="flex flex-wrap gap-0.5">
+                              {daySchedules.slice(0, 3).map((schedule) => (
+                                <div
+                                  key={schedule.id}
+                                  className={`w-1.5 h-1.5 rounded-full ${schedule.game ? 'bg-amber-400' : 'bg-slate-400 dark:bg-slate-500'}`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">
+                              {daySchedules.length}개
+                            </span>
+                          </div>
+                        )}
+
+                        {/* 데스크탑: 텍스트 카드 */}
+                        <div className="hidden sm:flex flex-col flex-1 min-h-0 gap-1.5 overflow-y-auto custom-scrollbar">
+                          {daySchedules.map((schedule, i) => (
+                            <ScheduleCard key={schedule.id} schedule={schedule} variant={viewMode} liveStreamerIds={liveStreamerIds} index={i} />
                           ))}
                         </div>
-                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">
-                          {daySchedules.length}개
-                        </span>
                       </div>
-                    )}
-
-                    {/* 데스크탑: 텍스트 카드 (셀 남은 높이 채우고 독립 스크롤) */}
-                    <div className="hidden sm:flex flex-col flex-1 min-h-0 gap-1.5 overflow-y-auto custom-scrollbar">
-                      {daySchedules.map((schedule, i) => (
-                        <ScheduleCard key={schedule.id} schedule={schedule} variant={viewMode} liveStreamerIds={liveStreamerIds} index={i} />
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
       </div> {/* 캘린더 본체 */}

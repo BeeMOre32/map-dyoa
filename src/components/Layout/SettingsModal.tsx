@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sun, Moon, HelpCircle, Shield, LogIn, LogOut, UserCheck, X, LayoutDashboard, EyeOff, Heart, Megaphone, FlaskConical, Sword } from 'lucide-react';
+import { Sun, Moon, HelpCircle, Shield, LogIn, LogOut, UserCheck, X, LayoutDashboard, EyeOff, Heart, Megaphone, FlaskConical, PanelRight, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { useSession, signOut } from 'next-auth/react';
@@ -254,20 +254,37 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">기능</p>
 
                   <button
-                    onClick={() => setFlag('showHoi4Tab', !flags.showHoi4Tab)}
+                    onClick={() => setFlag('newScheduleModal', !flags.newScheduleModal)}
                     className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <Sword className="w-4 h-4 text-amber-400 shrink-0" />
+                      <PanelRight className="w-4 h-4 text-violet-400 shrink-0" />
                       <div className="text-left">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">HOI4 전적 탭</p>
-                          <span className="px-1.5 py-px bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 text-[9px] font-black rounded uppercase tracking-wide">Beta</span>
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">새 일정 모달 UI</p>
+                          <span className="px-1.5 py-px bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 text-[9px] font-black rounded uppercase tracking-wide">Beta</span>
                         </div>
-                        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">네비게이션에 HOI4 참전 기록 탭을 표시합니다</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">일정 카드 클릭 시 새 디자인 모달을 사용합니다</p>
                       </div>
                     </div>
-                    <Toggle on={flags.showHoi4Tab} color="violet" />
+                    <Toggle on={flags.newScheduleModal} color="violet" />
+                  </button>
+
+                  <button
+                    onClick={() => setFlag('newCalendarUI', !flags.newCalendarUI)}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <LayoutGrid className="w-4 h-4 text-violet-400 shrink-0" />
+                      <div className="text-left">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">새 캘린더 UI</p>
+                          <span className="px-1.5 py-px bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 text-[9px] font-black rounded uppercase tracking-wide">Beta</span>
+                        </div>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">주간 보기에서 카드형 캘린더 레이아웃을 사용합니다</p>
+                      </div>
+                    </div>
+                    <Toggle on={flags.newCalendarUI} color="violet" />
                   </button>
                 </div>
               </motion.div>

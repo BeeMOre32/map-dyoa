@@ -4,10 +4,14 @@ import { useState, useEffect } from 'react';
 
 export type ExperimentalFlags = {
   showHoi4Tab: boolean;
+  newScheduleModal: boolean;
+  newCalendarUI: boolean;
 };
 
 const DEFAULTS: ExperimentalFlags = {
   showHoi4Tab: false,
+  newScheduleModal: false,
+  newCalendarUI: false,
 };
 
 const KEY = 'experimentalFeatures';

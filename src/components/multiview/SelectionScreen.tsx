@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LayoutGrid, Check, Play, Puzzle } from 'lucide-react';
+import { LayoutGrid, Check, Play, Puzzle, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { getStreamerColor } from '@/constants/streamercolor';
@@ -104,16 +104,19 @@ export function SelectionScreen({
           })}
         </div>
 
-        <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20">
-          <Puzzle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-          <div className="text-[11px] text-amber-300/80 font-medium leading-relaxed">
-            <span className="font-black text-amber-400">채팅 기능</span>을 사용하려면{' '}
-            <span className="font-black text-amber-400">확장 프로그램</span> 설치가 필요합니다.{' '}
-            <code className="bg-amber-900/40 px-1 rounded text-amber-300 font-mono text-[10px]">chrome://extensions</code>{' '}
-            → 개발자 모드 → 압축 해제된 확장 프로그램 로드 →{' '}
-            <code className="bg-amber-900/40 px-1 rounded text-amber-300 font-mono text-[10px]">/extension</code> 폴더 선택
+        <a
+          href="https://chromewebstore.google.com/detail/jmehpmfkiciefbgoebiljadeamohkgfb"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 transition-colors group"
+        >
+          <Puzzle className="w-4 h-4 text-amber-400 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-black text-amber-400 leading-none mb-0.5">채팅 확장 프로그램 설치</p>
+            <p className="text-[10px] text-amber-300/60 font-medium">채팅 기능을 사용하려면 Chrome 확장 프로그램이 필요합니다</p>
           </div>
-        </div>
+          <ExternalLink className="w-3.5 h-3.5 text-amber-500 group-hover:text-amber-300 shrink-0 transition-colors" />
+        </a>
 
         <div className="flex items-center justify-between pt-1">
           <div className="flex items-center gap-2">

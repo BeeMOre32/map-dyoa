@@ -1,5 +1,5 @@
 // src/app/calendar/schedule/[id]/page.tsx
-import ScheduleDetailView from '@/components/Calendar/ScheduleDetailModal';
+import ScheduleDetailView from '@/components/Calendar/ScheduleDetailModalWrapper';
 import { notFound } from 'next/navigation';
 import CalendarView from '@/components/Calendar/CalendarView';
 import { flattenScheduleParticipants } from '@/lib/schedule-formatters';
