@@ -26,7 +26,8 @@
       "Read(//c/Users/chs44/AppData/Local/Temp/**)",
       "WebFetch(domain:chromewebstore.google.com)",
       "Bash(Get-ChildItem -Force)",
-      "Bash(Select-Object Name, Mode)"
+      "Bash(Select-Object Name, Mode)",
+      "Read(//c/Users/chs44/.claude/projects/c--Users-chs44-Desktop-code-map-dyoa/**)"
     ]
   }
 }
