@@ -11,6 +11,7 @@ import { useSession } from 'next-auth/react';
 import { extractChzzkClipId } from '@/lib/chzzk';
 import { useToast } from '@/components/Common/Toaster';
 import ConfirmModal from '@/components/Common/ConfirmModal';
+import { track } from '@vercel/analytics';
 
 interface ClipCardProps {
   clip: ClipWithParticipants;
@@ -26,6 +27,15 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
 
   const chzzkClipId = extractChzzkClipId(clip.url);
   const canPlayInline = chzzkClipId !== null;
+
+  const trackClipView = (method: 'inline' | 'external') => {
+    track('clip_viewed', {
+      clip_id: clip.id,
+      clip_title: clip.title,
+      method,
+      streamer: clip.participants.map((p) => p.streamer.name).join(', '),
+    });
+  };
 
   const formattedDate = clip.clipDate
     ? new Date(clip.clipDate).toLocaleDateString('ko-KR', {
@@ -71,7 +81,7 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
         {/* 케이스 2: 썸네일 있음 + 인라인 재생 가능 → 클릭 시 iframe 활성 */}
         {clip.thumbnailUrl && !iframeActive && canPlayInline && (
           <button
-            onClick={() => setIframeActive(true)}
+            onClick={() => { setIframeActive(true); trackClipView('inline'); }}
             className="absolute inset-0 w-full h-full group/thumb"
           >
             <Image
@@ -91,7 +101,7 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
 
         {/* 케이스 3: 썸네일 있음 + 인라인 재생 불가 → 외부 링크 */}
         {clip.thumbnailUrl && !iframeActive && !canPlayInline && (
-          <a href={clip.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0">
+          <a href={clip.url} target="_blank" rel="noopener noreferrer" onClick={() => trackClipView('external')} className="absolute inset-0">
             <Image
               src={clip.thumbnailUrl}
               alt={clip.title}
@@ -110,7 +120,7 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
         {/* 케이스 4: 썸네일 없음 + 치지직 클립 → 다크 재생 버튼 */}
         {canPlayInline && !iframeActive && !clip.thumbnailUrl && (
           <button
-            onClick={() => setIframeActive(true)}
+            onClick={() => { setIframeActive(true); trackClipView('inline'); }}
             className="absolute inset-0 w-full h-full flex flex-col items-center justify-center gap-2 bg-[#0B0E13] group/play"
           >
             <div className="absolute inset-0 bg-linear-to-br from-[#00FFA3]/10 to-transparent" />
@@ -129,6 +139,7 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
             href={clip.url}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackClipView('external')}
             className="absolute inset-0 flex items-center justify-center bg-slate-100 dark:bg-slate-800"
           >
             <Play className="w-12 h-12 text-slate-300 dark:text-slate-600" />

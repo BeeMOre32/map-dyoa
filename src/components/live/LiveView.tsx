@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Radio, LayoutGrid, Wifi, WifiOff, Puzzle, ExternalLink } from 'lucide-react';
+import { track } from '@vercel/analytics';
 import type { Streamer } from '@prisma/client';
 import { MAX_STREAMS } from '@/components/multiview/utils';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
@@ -106,6 +107,7 @@ export default function LiveView({ streamers }: { streamers: Streamer[] }) {
             href={EXTENSION_URL}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => track('extension_banner_clicked')}
             className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors group"
           >
             <Puzzle className="w-4 h-4 text-amber-500 shrink-0" />

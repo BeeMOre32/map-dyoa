@@ -7,6 +7,7 @@ import { useTheme } from 'next-themes';
 import { getStreamerImagePath } from '@/lib/utils';
 import { getStreamerColor } from '@/constants/streamercolor';
 import StreamerAvatar from './StreamerAvatar';
+import { track } from '@vercel/analytics';
 
 interface StreamerCardProps {
   streamer: Streamer;
@@ -80,7 +81,15 @@ export default function StreamerCard({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              if (canSelect) onToggleMultiview?.();
+              if (!canSelect) return;
+              if (!isSelected) {
+                track('multiview_streamer_added', {
+                  streamer_name: streamer.name,
+                  streamer_id: streamer.id,
+                  is_live: isLive,
+                });
+              }
+              onToggleMultiview?.();
             }}
             title={isSelected ? '멀티뷰에서 제거' : '멀티뷰에 추가'}
             className={`p-1.5 rounded-lg transition-all ${

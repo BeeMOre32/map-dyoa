@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   X,
@@ -13,6 +14,7 @@ import { useTheme } from 'next-themes';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import Link from 'next/link';
+import { track } from '@vercel/analytics';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import StreamerAvatar from './StreamerAvatar';
@@ -53,6 +55,14 @@ export default function StreamerDetailModal({
   const streamerColor = getStreamerColor(streamer.id, isDark) ?? streamer.colorCode;
 
   const recentSchedules = schedules.slice(0, 5);
+
+  useEffect(() => {
+    track('streamer_detail_viewed', {
+      streamer_name: streamer.name,
+      streamer_id: streamer.id,
+      generation: streamer.generation,
+    });
+  }, [streamer.id]); // streamer.id를 dep으로 넣어 모달 교체 시에도 재발화
 
   useEscapeKey(goBack);
 

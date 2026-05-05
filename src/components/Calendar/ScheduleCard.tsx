@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
+import { track } from '@vercel/analytics';
 
 function LiveBadge() {
   return (
@@ -41,6 +42,14 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds, index
   const href = `/calendar/schedule/${schedule.id}`;
   const stopProp = (e: React.MouseEvent) => e.stopPropagation();
   const { resolvedTheme } = useTheme();
+
+  const trackOpen = () => {
+    track('schedule_opened', {
+      schedule_id: schedule.id,
+      game: schedule.game?.title ?? null,
+      variant,
+    });
+  };
   const isToday_ = isToday(new Date(schedule.startTime));
   const isLive =
     !schedule.isLiveEnded &&
@@ -63,7 +72,7 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds, index
         <Link
           href={href}
           scroll={false}
-          onClick={stopProp}
+          onClick={(e) => { stopProp(e); trackOpen(); }}
           className={`flex items-center gap-2.5 px-3 py-2.5 rounded-2xl border text-sm font-bold transition-shadow ${
             isLive
               ? 'ring-1 ring-red-400/70 dark:ring-red-500/50 shadow-[0_2px_10px_rgba(239,68,68,0.18)]'
@@ -103,7 +112,7 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds, index
         whileHover={{ scale: 1.03, transition: { duration: 0.1 } }}
         whileTap={{ scale: 0.96 }}
       >
-        <Link href={href} scroll={false} className="block" onClick={stopProp}>
+        <Link href={href} scroll={false} className="block" onClick={(e) => { stopProp(e); trackOpen(); }}>
           <div
             className={`flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-md border shadow-sm shrink-0 ${
               isLive
@@ -145,7 +154,7 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds, index
       whileHover={{ y: -2, transition: { duration: 0.12, ease: 'easeOut' } }}
       whileTap={{ scale: 0.97 }}
     >
-      <Link href={href} scroll={false} className="block" onClick={stopProp}>
+      <Link href={href} scroll={false} className="block" onClick={(e) => { stopProp(e); trackOpen(); }}>
       <div
         className={`relative px-2.5 py-2 rounded-xl border shadow-sm space-y-1.5 transition-shadow hover:shadow-md ${
           isLive

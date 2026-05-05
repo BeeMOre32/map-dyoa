@@ -11,6 +11,7 @@ import StreamerCard from './StreamerCard';
 import { useChosungSearch } from '@/hooks/useChosungSearch';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
 import { MAX_STREAMS } from '@/components/multiview/utils';
+import { track } from '@vercel/analytics';
 
 export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
   const router = useRouter();
@@ -59,6 +60,10 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
 
   const startMultiview = () => {
     if (selected.size === 0) return;
+    track('multiview_started', {
+      streamer_count: selected.size,
+      live_count: [...selected].filter((id) => liveIds.has(id)).length,
+    });
     router.push(`/live/multiview?ids=${[...selected].join(',')}`);
   };
 
