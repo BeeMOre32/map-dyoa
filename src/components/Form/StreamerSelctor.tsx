@@ -12,12 +12,14 @@ interface StreamerSelectorProps {
   streamers: Streamer[];
   selectedStreamers: string[];
   toggleStreamer: (id: string) => void;
+  compact?: boolean;
 }
 
 export default function StreamerSelector({
   streamers,
   selectedStreamers,
   toggleStreamer,
+  compact = false,
 }: StreamerSelectorProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const { resolvedTheme } = useTheme();
@@ -35,26 +37,28 @@ export default function StreamerSelector({
   }, [streamers, searchTerm]);
 
   return (
-    <div className="w-full space-y-6">
-      <div className="relative group px-1 mb-4">
+    <div className="w-full space-y-3">
+      <div className="relative group">
         <input
           type="text"
           placeholder="스트리머 검색..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-12 pr-10 py-4 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl text-sm font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-600 focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-sm"
+          className={`w-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl text-sm font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-600 focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-sm ${
+            compact ? 'pl-3 pr-3 py-2' : 'pl-12 pr-10 py-4 px-4'
+          }`}
         />
       </div>
 
-      {/* 📋 스트리머 그리드 영역 */}
-      <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 pt-6 pb-8 px-6 shadow-sm overflow-hidden">
+      {/* 스트리머 그리드 */}
+      <div className={`bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden ${compact ? 'rounded-2xl px-3 pt-3 pb-4' : 'rounded-[2.5rem] px-6 pt-6 pb-8'}`}>
         <div
-          className="grid grid-cols-3 gap-4 max-h-120 overflow-y-auto pr-2 custom-scrollbar py-2"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            alignItems: 'start',
-          }}
+          className={`grid overflow-y-auto custom-scrollbar ${
+            compact
+              ? 'grid-cols-4 gap-2 max-h-40 py-1'
+              : 'grid-cols-3 gap-4 max-h-120 py-2'
+          }`}
+          style={{ alignItems: 'start' }}
         >
           <AnimatePresence mode="popLayout">
             {filteredStreamers.map((streamer) => {
@@ -68,12 +72,12 @@ export default function StreamerSelector({
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className="flex flex-col items-center justify-start min-h-27.5"
+                  className={compact ? 'flex flex-col items-center' : 'flex flex-col items-center justify-start min-h-27.5'}
                 >
                   <button
                     type="button"
                     onClick={() => toggleStreamer(streamer.id)}
-                    className="flex flex-col items-center gap-4 w-full group outline-none"
+                    className={`flex flex-col items-center w-full group outline-none ${compact ? 'gap-1.5' : 'gap-4'}`}
                   >
                     <div
                       className={`relative shrink-0 rounded-2xl transition-all duration-300 ${
@@ -83,10 +87,7 @@ export default function StreamerSelector({
                       }`}
                       style={
                         isSelected
-                          ? {
-                              outline: `2.5px solid ${streamerColor}`,
-                              outlineOffset: '3px',
-                            }
+                          ? { outline: `2.5px solid ${streamerColor}`, outlineOffset: '3px' }
                           : undefined
                       }
                     >
@@ -95,20 +96,19 @@ export default function StreamerSelector({
                         imgSrc={getStreamerImagePath(streamer.name)}
                         colorCode={streamerColor}
                         streamerId={streamer.id}
-                        size="medium"
+                        size={compact ? 'small' : 'medium'}
                       />
                     </div>
 
-                    {/* 닉네임 */}
                     <span
-                      className={`text-[13px] font-black text-center truncate w-full px-1 leading-tight transition-colors ${
+                      className={`font-black text-center truncate w-full leading-tight transition-colors ${
+                        compact ? 'text-[11px] px-0.5' : 'text-[13px] px-1'
+                      } ${
                         isSelected
                           ? 'text-slate-900 dark:text-slate-100'
                           : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'
                       }`}
-                      style={{
-                        color: isSelected ? streamerColor : undefined,
-                      }}
+                      style={{ color: isSelected ? streamerColor : undefined }}
                     >
                       {streamer.name}
                     </span>
