@@ -18,6 +18,7 @@ import { Streamer, Game } from '@prisma/client';
 import { FlattenedSchedule } from '@/lib/schedule-formatters';
 import StreamerSelector from './StreamerSelctor';
 import { matchChzzkCategory } from '@/constants/chzzkGameMap';
+import ImageScheduleModal from './ImageScheduleModal';
 
 // ── Schemas ────────────────────────────────────────────────────────────────
 
@@ -132,6 +133,7 @@ export default function ScheduleFormModal({
   const [expandedKey, setExpandedKey] = useState<string | null>(firstKeyRef.current);
   const [batchSubmitError, setBatchSubmitError] = useState<string | null>(null);
   const [createMode, setCreateMode] = useState<'single' | 'batch'>('single');
+  const [showImageModal, setShowImageModal] = useState(false);
 
   // ── Shared state ──────────────────────────────────────────────────────────
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -374,6 +376,7 @@ export default function ScheduleFormModal({
 
   // ── Modal wrapper (shared) ────────────────────────────────────────────────
   return (
+    <>
     <motion.div
       initial="hidden"
       animate="visible"
@@ -824,15 +827,25 @@ export default function ScheduleFormModal({
                   );
                 })}
 
-                {/* Add slot button */}
-                <button
-                  type="button"
-                  onClick={addSlot}
-                  className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-bold text-slate-400 dark:text-slate-500 hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all flex items-center justify-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  일정 추가
-                </button>
+                {/* Add slot / image upload buttons */}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={addSlot}
+                    className="flex-1 py-3 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-bold text-slate-400 dark:text-slate-500 hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    일정 추가
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowImageModal(true)}
+                    className="flex-1 py-3 border-2 border-dashed border-violet-200 dark:border-violet-800 rounded-2xl text-sm font-bold text-violet-400 dark:text-violet-500 hover:border-violet-400 dark:hover:border-violet-600 hover:text-violet-600 dark:hover:text-violet-400 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    이미지로 등록 <span className="text-[10px] font-black px-1 py-0.5 rounded bg-violet-100 dark:bg-violet-900/50">β</span>
+                  </button>
+                </div>
               </div>
             </form>
 
@@ -859,5 +872,16 @@ export default function ScheduleFormModal({
         )}
       </motion.div>
     </motion.div>
+
+    <AnimatePresence>
+      {showImageModal && (
+        <ImageScheduleModal
+          streamers={streamers}
+          games={games}
+          onClose={() => setShowImageModal(false)}
+        />
+      )}
+    </AnimatePresence>
+    </>
   );
 }
