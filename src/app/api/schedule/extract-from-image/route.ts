@@ -4,14 +4,21 @@ import { prisma } from '@/lib/prisma';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
+// 에러 객체의 타입을 정의합니다. (status 코드가 포함된 에러)
+interface ApiError extends Error {
+  status?: number;
+}
+
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const file = formData.get('image') as File | null;
-  if (!file)
+
+  if (!file) {
     return NextResponse.json(
       { error: '이미지 파일이 필요합니다.' },
       { status: 400 },
     );
+  }
 
   if (!file.type.startsWith('image/')) {
     return NextResponse.json(
@@ -46,6 +53,7 @@ export async function POST(req: NextRequest) {
 
 알려진 스트리머 목록: ${streamerList}
 알려진 게임 목록: ${gameList}
+그리고 YYYY의 값은 현재 연도인 ${new Date().getFullYear()}로 가정해주세요.
 
 아래 JSON 배열 형식으로만 응답해주세요:
 [
@@ -76,6 +84,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ schedules });
   } catch (err) {
     console.error('[extract-from-image]', err);
+
+    const apiError = err as ApiError;
+
+    if (apiError.status === 503) {
+      return NextResponse.json(
+        {
+          error: 'AI 모델이 현재 사용 불가능합니다. 잠시 후 다시 시도해주세요.',
+        },
+        { status: 503 },
+      );
+    }
+
     return NextResponse.json(
       { error: '이미지 분석에 실패했습니다.' },
       { status: 500 },

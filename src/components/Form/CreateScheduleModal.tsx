@@ -1174,8 +1174,7 @@ export default function ScheduleFormModal({
                       className="flex-1 py-3 border-2 border-dashed border-violet-200 dark:border-violet-800 rounded-2xl text-sm font-bold text-violet-400 dark:text-violet-500 hover:border-violet-400 dark:hover:border-violet-600 hover:text-violet-600 dark:hover:text-violet-400 transition-all flex items-center justify-center gap-2"
                     >
                       <Sparkles className="w-4 h-4" />
-                      현재 년도를 제대로 인식하지 못하는 문제가 발견되었습니다.
-                      지금은 사용불가합니다.
+                      이미지에서 추출
                       <span className="text-[10px] font-black px-1 py-0.5 rounded bg-violet-100 dark:bg-violet-900/50">
                         β
                       </span>
@@ -1218,13 +1217,13 @@ export default function ScheduleFormModal({
       </motion.div>
 
       <AnimatePresence>
-        {/* {showImageModal && (
+        {showImageModal && (
           <ImageScheduleModal
             streamers={streamers}
             games={games}
             onClose={() => setShowImageModal(false)}
           />
-        )} */}
+        )}
       </AnimatePresence>
     </>
   );
