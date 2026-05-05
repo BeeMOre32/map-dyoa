@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Radio, LayoutGrid, Wifi, WifiOff } from 'lucide-react';
+import { Radio, LayoutGrid, Wifi, WifiOff, Puzzle, ExternalLink } from 'lucide-react';
 import type { Streamer } from '@prisma/client';
 import { MAX_STREAMS } from '@/components/multiview/utils';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
 import StreamerAvatar from '@/components/streamer/StreamerAvatar';
 import { getStreamerImagePath } from '@/lib/utils';
+
+const EXTENSION_URL = 'https://chromewebstore.google.com/detail/jmehpmfkiciefbgoebiljadeamohkgfb';
 
 export default function LiveView({ streamers }: { streamers: Streamer[] }) {
   const router = useRouter();
@@ -58,30 +60,31 @@ export default function LiveView({ streamers }: { streamers: Streamer[] }) {
               : 'border-transparent hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50'
         }`}
       >
+        {/* avatar + 체크 오버레이를 overflow-hidden으로 감싸서 hover 확대 시 삐져나오지 않게 */}
         <div className="relative">
-          <StreamerAvatar
-            name={streamer.name}
-            imgSrc={getStreamerImagePath(streamer.name)}
-            colorCode={streamer.colorCode}
-            streamerId={streamer.id}
-            size="medium"
-          />
+          <div className="relative w-14 h-14 rounded-2xl overflow-hidden">
+            <StreamerAvatar
+              name={streamer.name}
+              imgSrc={getStreamerImagePath(streamer.name)}
+              colorCode={streamer.colorCode}
+              streamerId={streamer.id}
+              size="medium"
+            />
+            {isSelected && (
+              <div className="absolute inset-0 border-2 border-indigo-500 flex items-center justify-center bg-indigo-500/20">
+                <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center">
+                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+            )}
+          </div>
           {isLive && (
             <span className="absolute -bottom-1 -right-1 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[9px] font-black leading-none shadow-sm">
               <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
               LIVE
             </span>
-          )}
-          {isSelected && (
-            <div
-              className="absolute inset-0 rounded-2xl border-2 border-indigo-500 flex items-center justify-center bg-indigo-500/20"
-            >
-              <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center">
-                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-            </div>
           )}
         </div>
         <span className={`text-xs font-bold text-center leading-tight line-clamp-1 w-full ${
@@ -97,6 +100,21 @@ export default function LiveView({ streamers }: { streamers: Streamer[] }) {
     <div className="flex-1 flex flex-col min-h-0">
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto px-4 py-6 space-y-8">
+
+          {/* 확장 프로그램 배너 */}
+          <a
+            href={EXTENSION_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors group"
+          >
+            <Puzzle className="w-4 h-4 text-amber-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-black text-amber-700 dark:text-amber-400 leading-none mb-0.5">채팅 확장 프로그램 설치</p>
+              <p className="text-[10px] text-amber-500/70 dark:text-amber-500/60 font-medium">멀티뷰 채팅 기능을 사용하려면 Chrome 확장 프로그램이 필요합니다</p>
+            </div>
+            <ExternalLink className="w-3.5 h-3.5 text-amber-400 shrink-0 group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors" />
+          </a>
 
           {/* 라이브 중 */}
           <section className="space-y-3">

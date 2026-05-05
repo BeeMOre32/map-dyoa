@@ -8,10 +8,12 @@ import { Streamer } from '@prisma/client';
 import RequestEditModal from '../Form/RequestEdit';
 import StreamerCard from './StreamerCard';
 import { useChosungSearch } from '@/hooks/useChosungSearch';
+import { useLiveStatus } from '@/hooks/useLiveStatus';
 
 export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
   const [requestTarget, setRequestTarget] = useState<Streamer | null>(null);
   const [activeGen, setActiveGen] = useState<number | null>(null);
+  const { liveIds } = useLiveStatus();
 
   const generations = useMemo(
     () => [...new Set(streamers.map((s) => s.generation))].sort((a, b) => a - b),
@@ -136,6 +138,7 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
                   <StreamerCard
                     streamer={streamer}
                     onRequestEdit={handleRequestEdit}
+                    isLive={liveIds.has(streamer.id)}
                   />
                 </motion.div>
               ))}

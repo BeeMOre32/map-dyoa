@@ -11,11 +11,13 @@ import StreamerAvatar from './StreamerAvatar';
 interface StreamerCardProps {
   streamer: Streamer;
   onRequestEdit: (streamer: Streamer) => void;
+  isLive?: boolean;
 }
 
 export default function StreamerCard({
   streamer,
   onRequestEdit,
+  isLive = false,
 }: StreamerCardProps) {
   const imgSrc = getStreamerImagePath(streamer.name);
   const { resolvedTheme } = useTheme();
@@ -29,13 +31,21 @@ export default function StreamerCard({
       className="group flex flex-col p-5 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-700 hover:shadow-xl hover:shadow-indigo-50 dark:hover:shadow-indigo-950/50 transition-all bg-white dark:bg-slate-900 cursor-pointer relative"
     >
       <div className="flex justify-between items-start mb-4">
-        <StreamerAvatar
-          name={streamer.name}
-          imgSrc={imgSrc}
-          colorCode={streamerColor}
-          streamerId={streamer.id}
-          size="medium"
-        />
+        <div className="relative">
+          <StreamerAvatar
+            name={streamer.name}
+            imgSrc={imgSrc}
+            colorCode={streamerColor}
+            streamerId={streamer.id}
+            size="medium"
+          />
+          {isLive && (
+            <span className="absolute -bottom-1 -right-1 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[9px] font-black leading-none shadow-sm">
+              <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
+              LIVE
+            </span>
+          )}
+        </div>
         <button
           onClick={(e) => {
             e.preventDefault();

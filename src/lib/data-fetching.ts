@@ -347,7 +347,13 @@ export const getHoi4Leaderboard = unstable_cache(
 
     const sessions = Array.from(sessionMap.values())
       .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
-      .slice(0, 8);
+      .slice(0, 8)
+      .map((s) => ({
+        ...s,
+        participants: [...s.participants].sort((a, b) =>
+          a.streamer.name.localeCompare(b.streamer.name, 'ko'),
+        ),
+      }));
 
     return { leaderboard, sessions, totalSessions: sessionMap.size };
   },

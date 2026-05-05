@@ -63,7 +63,8 @@ export function flattenScheduleParticipants(
     createdAt: new Date(schedule.createdAt),
     participants: schedule.participants
       .filter((p) => p.streamer !== null)
-      .map((p) => ({ ...p.streamer, nation: p.nation ?? null, result: p.result ?? null })) as ParticipantFlat[],
+      .map((p) => ({ ...p.streamer, nation: p.nation ?? null, result: p.result ?? null }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'ko')) as ParticipantFlat[],
     formattedDate: format(
       new Date(schedule.startTime),
       'yyyy년 MM월 dd일(EEEE)',
