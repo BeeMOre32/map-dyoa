@@ -3,8 +3,18 @@
 import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, ImageIcon, Loader2, CheckCircle2, AlertCircle,
-  Sparkles, Trash2, CalendarDays, Clock, Gamepad2, Users, RefreshCw,
+  X,
+  ImageIcon,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  Sparkles,
+  Trash2,
+  CalendarDays,
+  Clock,
+  Gamepad2,
+  Users,
+  RefreshCw,
 } from 'lucide-react';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
@@ -51,7 +61,9 @@ export default function ImageScheduleModal({
 
   useEscapeKey(onClose);
 
-  const sortedStreamers = [...streamers].sort((a, b) => a.name.localeCompare(b.name, 'ko-KR'));
+  const sortedStreamers = [...streamers].sort((a, b) =>
+    a.name.localeCompare(b.name, 'ko-KR'),
+  );
 
   // ── 이미지 처리 ───────────────────────────────────────────────────────────
 
@@ -123,7 +135,9 @@ export default function ImageScheduleModal({
   // ── 추출 결과 편집 ────────────────────────────────────────────────────────
 
   const updateSchedule = (key: string, updates: Partial<ExtractedSchedule>) => {
-    setExtracted((prev) => prev.map((s) => s.key === key ? { ...s, ...updates } : s));
+    setExtracted((prev) =>
+      prev.map((s) => (s.key === key ? { ...s, ...updates } : s)),
+    );
   };
 
   const removeSchedule = (key: string) => {
@@ -157,7 +171,9 @@ export default function ImageScheduleModal({
     );
 
     const failCount = results.filter(
-      (r) => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success),
+      (r) =>
+        r.status === 'rejected' ||
+        (r.status === 'fulfilled' && !r.value.success),
     ).length;
 
     if (failCount === 0) {
@@ -193,8 +209,12 @@ export default function ImageScheduleModal({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">이미지로 일정 등록</h3>
-                <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/50 text-violet-600 dark:text-violet-400">BETA</span>
+                <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">
+                  이미지로 일정 등록
+                </h3>
+                <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/50 text-violet-600 dark:text-violet-400">
+                  BETA
+                </span>
               </div>
               <p className="text-xs font-medium text-slate-400 dark:text-slate-500">
                 {step === 'upload' && '일정표 이미지를 업로드하세요'}
@@ -203,7 +223,10 @@ export default function ImageScheduleModal({
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-600 rounded-full transition-colors">
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-600 rounded-full transition-colors"
+          >
             <X className="w-5 h-5 text-slate-400" />
           </button>
         </div>
@@ -239,12 +262,14 @@ export default function ImageScheduleModal({
 
         {/* ── Body ── */}
         <div className="flex-1 overflow-y-auto min-h-0">
-
           {/* STEP: upload */}
           {step === 'upload' && (
             <div className="p-6 md:p-8 space-y-4">
               <div
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOver(true);
+                }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
@@ -258,15 +283,26 @@ export default function ImageScheduleModal({
                   <ImageIcon className="w-8 h-8 text-slate-400 dark:text-slate-500" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-black text-slate-700 dark:text-slate-200">이미지를 드래그하거나 클릭하여 업로드</p>
-                  <p className="text-xs font-medium text-slate-400 dark:text-slate-500 mt-1">PNG, JPG, WEBP 지원</p>
+                  <p className="text-sm font-black text-slate-700 dark:text-slate-200">
+                    이미지를 드래그하거나 클릭하여 업로드
+                  </p>
+                  <p className="text-xs font-medium text-slate-400 dark:text-slate-500 mt-1">
+                    PNG, JPG, WEBP 지원
+                  </p>
                 </div>
               </div>
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+              />
 
               {errorMsg && (
                 <p className="flex items-center gap-1.5 text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2.5">
-                  <AlertCircle className="w-4 h-4 shrink-0" />{errorMsg}
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {errorMsg}
                 </p>
               )}
             </div>
@@ -278,7 +314,11 @@ export default function ImageScheduleModal({
               {previewUrl && (
                 <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-900">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={previewUrl} alt="분석 중인 이미지" className="w-full max-h-56 object-contain" />
+                  <img
+                    src={previewUrl}
+                    alt="분석 중인 이미지"
+                    className="w-full max-h-56 object-contain"
+                  />
                 </div>
               )}
               <div className="flex items-center gap-4 px-4 py-4 bg-violet-50 dark:bg-violet-900/20 rounded-2xl border border-violet-100 dark:border-violet-800">
@@ -286,8 +326,12 @@ export default function ImageScheduleModal({
                   <Loader2 className="w-5 h-5 text-violet-600 dark:text-violet-400 animate-spin" />
                 </div>
                 <div>
-                  <p className="text-sm font-black text-violet-700 dark:text-violet-300">AI가 이미지를 분석하는 중</p>
-                  <p className="text-xs font-medium text-violet-500 dark:text-violet-400 mt-0.5">일정 정보를 추출하고 있어요...</p>
+                  <p className="text-sm font-black text-violet-700 dark:text-violet-300">
+                    AI가 이미지를 분석하는 중
+                  </p>
+                  <p className="text-xs font-medium text-violet-500 dark:text-violet-400 mt-0.5">
+                    일정 정보를 추출하고 있어요...
+                  </p>
                 </div>
               </div>
             </div>
@@ -298,8 +342,13 @@ export default function ImageScheduleModal({
             <div className="p-4 md:p-5 space-y-3">
               {extracted.length === 0 ? (
                 <div className="py-10 text-center space-y-3">
-                  <p className="text-sm font-bold text-slate-400 dark:text-slate-500">이미지에서 일정을 찾지 못했습니다.</p>
-                  <button onClick={handleReset} className="text-sm font-bold text-violet-500 hover:text-violet-600 transition-colors">
+                  <p className="text-sm font-bold text-slate-400 dark:text-slate-500">
+                    이미지에서 일정을 찾지 못했습니다.
+                  </p>
+                  <button
+                    onClick={handleReset}
+                    className="text-sm font-bold text-violet-500 hover:text-violet-600 transition-colors"
+                  >
                     다시 시도
                   </button>
                 </div>
@@ -309,20 +358,28 @@ export default function ImageScheduleModal({
                   <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                     <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                      {extracted.length}개 일정 추출됨 · 내용을 확인하고 필요 시 수정하세요
+                      {extracted.length}개 일정 추출됨 · 내용을 확인하고 필요 시
+                      수정하세요
                     </p>
                   </div>
 
                   {/* 일정 카드 목록 */}
                   {extracted.map((s, idx) => (
-                    <div key={s.key} className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div
+                      key={s.key}
+                      className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
+                    >
                       {/* 카드 헤더 */}
                       <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700">
-                        <span className="text-xs font-black text-slate-400 dark:text-slate-500 w-4 shrink-0 text-center">{idx + 1}</span>
+                        <span className="text-xs font-black text-slate-400 dark:text-slate-500 w-4 shrink-0 text-center">
+                          {idx + 1}
+                        </span>
                         <input
                           type="text"
                           value={s.title}
-                          onChange={(e) => updateSchedule(s.key, { title: e.target.value })}
+                          onChange={(e) =>
+                            updateSchedule(s.key, { title: e.target.value })
+                          }
                           placeholder="방송 제목"
                           className="flex-1 min-w-0 bg-transparent text-sm font-bold text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none"
                         />
@@ -343,7 +400,11 @@ export default function ImageScheduleModal({
                             <input
                               type="date"
                               value={s.date ?? ''}
-                              onChange={(e) => updateSchedule(s.key, { date: e.target.value || null })}
+                              onChange={(e) =>
+                                updateSchedule(s.key, {
+                                  date: e.target.value || null,
+                                })
+                              }
                               className="flex-1 min-w-0 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent outline-none scheme-light dark:scheme-dark"
                             />
                           </label>
@@ -352,7 +413,11 @@ export default function ImageScheduleModal({
                             <input
                               type="time"
                               value={s.time ?? ''}
-                              onChange={(e) => updateSchedule(s.key, { time: e.target.value || null })}
+                              onChange={(e) =>
+                                updateSchedule(s.key, {
+                                  time: e.target.value || null,
+                                })
+                              }
                               className="flex-1 min-w-0 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent outline-none scheme-light dark:scheme-dark"
                             />
                           </label>
@@ -363,14 +428,24 @@ export default function ImageScheduleModal({
                           <Gamepad2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <select
                             value={s.gameId ?? ''}
-                            onChange={(e) => updateSchedule(s.key, { gameId: e.target.value || null })}
+                            onChange={(e) =>
+                              updateSchedule(s.key, {
+                                gameId: e.target.value || null,
+                              })
+                            }
                             className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent outline-none"
                           >
                             <option value="">게임 선택 안 함</option>
-                            {games.map((g) => <option key={g.id} value={g.id}>{g.title}</option>)}
+                            {games.map((g) => (
+                              <option key={g.id} value={g.id}>
+                                {g.title}
+                              </option>
+                            ))}
                           </select>
                           {s.gameName && !s.gameId && (
-                            <span className="text-[11px] text-slate-400 dark:text-slate-500 shrink-0 italic">감지: {s.gameName}</span>
+                            <span className="text-[11px] text-slate-400 dark:text-slate-500 shrink-0 italic">
+                              감지: {s.gameName}
+                            </span>
                           )}
                         </label>
 
@@ -378,19 +453,32 @@ export default function ImageScheduleModal({
                         <div>
                           <button
                             type="button"
-                            onClick={() => updateSchedule(s.key, { editingStreamers: !s.editingStreamers })}
+                            onClick={() =>
+                              updateSchedule(s.key, {
+                                editingStreamers: !s.editingStreamers,
+                              })
+                            }
                             className="flex items-center gap-2 w-full text-left py-0.5"
                           >
                             <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             <span className="text-sm font-medium text-slate-600 dark:text-slate-300 flex-1 min-w-0 truncate">
-                              {s.streamerIds.length > 0
-                                ? streamers.filter((st) => s.streamerIds.includes(st.id)).map((st) => st.name).join(', ')
-                                : <span className="text-slate-400 dark:text-slate-500 italic text-xs">멤버 미선택 — 탭하여 선택</span>
-                              }
+                              {s.streamerIds.length > 0 ? (
+                                streamers
+                                  .filter((st) => s.streamerIds.includes(st.id))
+                                  .map((st) => st.name)
+                                  .join(', ')
+                              ) : (
+                                <span className="text-slate-400 dark:text-slate-500 italic text-xs">
+                                  멤버 미선택 — 탭하여 선택
+                                </span>
+                              )}
                             </span>
-                            {s.streamerNames.length > 0 && s.streamerIds.length === 0 && (
-                              <span className="text-[11px] text-slate-400 shrink-0 italic">감지: {s.streamerNames.join(', ')}</span>
-                            )}
+                            {s.streamerNames.length > 0 &&
+                              s.streamerIds.length === 0 && (
+                                <span className="text-[11px] text-slate-400 shrink-0 italic">
+                                  감지: {s.streamerNames.join(', ')}
+                                </span>
+                              )}
                           </button>
 
                           <AnimatePresence>
@@ -433,7 +521,8 @@ export default function ImageScheduleModal({
           <div className="p-5 md:p-6 bg-slate-50 dark:bg-slate-800 flex flex-col gap-3 border-t border-slate-100 dark:border-slate-700 shrink-0">
             {submitError && (
               <p className="flex items-center gap-1.5 text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2.5">
-                <AlertCircle className="w-4 h-4 shrink-0" />{submitError}
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                {submitError}
               </p>
             )}
             <div className="flex gap-3">
@@ -450,10 +539,17 @@ export default function ImageScheduleModal({
                 disabled={step === 'submitting' || extracted.length === 0}
                 className="flex-1 py-3.5 bg-violet-600 text-white rounded-2xl font-bold hover:bg-violet-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {step === 'submitting'
-                  ? <><Loader2 className="w-4 h-4 animate-spin" />등록 중...</>
-                  : <><Sparkles className="w-4 h-4" />{extracted.length}개 일정 등록</>
-                }
+                {step === 'submitting' ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    등록 중...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    {extracted.length}개 일정 등록
+                  </>
+                )}
               </button>
             </div>
           </div>
