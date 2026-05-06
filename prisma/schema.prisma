@@ -5,7 +5,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  
 }
 
 datasource db {
@@ -36,10 +35,10 @@ model Schedule {
   content     String?
   startTime   DateTime
   endTime     DateTime?
-  isGuerrilla  Boolean   @default(false)
-  isNaeJeon    Boolean   @default(false)
-  isLiveEnded  Boolean   @default(false)
-  liveUrl      String?
+  isGuerrilla Boolean   @default(false)
+  isNaeJeon   Boolean   @default(false)
+  isLiveEnded Boolean   @default(false)
+  liveUrl     String?
 
   participants ScheduleParticipant[]
   clips        Clip[]
@@ -97,18 +96,18 @@ model ClipParticipant {
 }
 
 model Feedback {
-  id           String   @id @default(cuid())
-  type         String   // 예: "EDIT_REQUEST" (수정 요청), "GENERAL" (일반 피드백)
-  category     String   // 예: "닉네임 오류", "정보 수정" 등
-  content      String   @db.Text
-  
+  id       String @id @default(cuid())
+  type     String // 예: "EDIT_REQUEST" (수정 요청), "GENERAL" (일반 피드백)
+  category String // 예: "닉네임 오류", "정보 수정" 등
+  content  String @db.Text
+
   // 어떤 스트리머에 대한 요청인지 (선택 사항)
   streamerId   String?
-  streamerName String?  // 스트리머가 삭제될 경우를 대비한 스냅샷
-  
-  status       String   @default("PENDING") // PENDING, IN_PROGRESS, RESOLVED, REJECTED
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  streamerName String? // 스트리머가 삭제될 경우를 대비한 스냅샷
+
+  status    String   @default("PENDING") // PENDING, IN_PROGRESS, RESOLVED, REJECTED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([streamerId])
 }
@@ -162,4 +161,3 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
-

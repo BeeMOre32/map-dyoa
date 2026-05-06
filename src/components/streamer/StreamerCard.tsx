@@ -1,6 +1,6 @@
 'use client';
 
-import { MoreHorizontal, LayoutGrid, Check } from 'lucide-react';
+import { MoreHorizontal, LayoutGrid } from 'lucide-react';
 import Link from 'next/link';
 import { Streamer } from '@prisma/client';
 import { useTheme } from 'next-themes';
@@ -16,6 +16,20 @@ interface StreamerCardProps {
   isSelected?: boolean;
   isMaxReached?: boolean;
   onToggleMultiview?: () => void;
+  selectionIndex?: number;
+}
+
+function getChzzkChannelUrl(streamer: Streamer): string {
+  const base = streamer.chzzkUrl ?? `https://chzzk.naver.com/${streamer.handle}`;
+  try {
+    const url = new URL(base);
+    const segments = url.pathname.split('/').filter(Boolean);
+    const channelId = segments[segments.length - 1];
+    if (channelId && channelId !== 'live') {
+      return `https://chzzk.naver.com/${channelId}`;
+    }
+  } catch {}
+  return base;
 }
 
 export default function StreamerCard({
@@ -25,10 +39,12 @@ export default function StreamerCard({
   isSelected = false,
   isMaxReached = false,
   onToggleMultiview,
+  selectionIndex,
 }: StreamerCardProps) {
   const imgSrc = getStreamerImagePath(streamer.name);
   const { resolvedTheme } = useTheme();
   const streamerColor = getStreamerColor(streamer.id, resolvedTheme === 'dark') ?? streamer.colorCode;
+  const channelUrl = getChzzkChannelUrl(streamer);
 
   const canSelect = isSelected || !isMaxReached;
 
@@ -74,50 +90,17 @@ export default function StreamerCard({
           )}
         </div>
 
-        {/* 우상단 버튼 그룹 */}
-        <div className="flex items-center gap-1">
-          {/* 멀티뷰 토글 버튼 */}
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (!canSelect) return;
-              if (!isSelected) {
-                track('multiview_streamer_added', {
-                  streamer_name: streamer.name,
-                  streamer_id: streamer.id,
-                  is_live: isLive,
-                });
-              }
-              onToggleMultiview?.();
-            }}
-            title={isSelected ? '멀티뷰에서 제거' : '멀티뷰에 추가'}
-            className={`p-1.5 rounded-lg transition-all ${
-              isSelected
-                ? 'bg-indigo-500 text-white hover:bg-indigo-600'
-                : canSelect
-                  ? 'text-slate-300 dark:text-slate-600 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30'
-                  : 'text-slate-200 dark:text-slate-700 cursor-not-allowed'
-            }`}
-          >
-            {isSelected
-              ? <Check className="w-4 h-4" />
-              : <LayoutGrid className="w-4 h-4" />
-            }
-          </button>
-
-          {/* 더보기 버튼 */}
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onRequestEdit(streamer);
-            }}
-            className="p-1.5 text-slate-300 dark:text-slate-600 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-all"
-          >
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
-        </div>
+        {/* 우상단 - 더보기 버튼 */}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRequestEdit(streamer);
+          }}
+          className="p-1.5 text-slate-300 dark:text-slate-600 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-all"
+        >
+          <MoreHorizontal className="w-4 h-4" />
+        </button>
       </div>
 
       <div className="space-y-1">
@@ -135,7 +118,7 @@ export default function StreamerCard({
         </p>
       </div>
 
-      <div className="flex gap-2 mt-6">
+      <div className="flex items-center gap-2 mt-6">
         <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-700 rounded-xl text-[10px] font-black text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 uppercase tracking-tighter">
           {streamer.generation}기
         </span>
@@ -144,12 +127,54 @@ export default function StreamerCard({
             {streamer.role}
           </span>
         )}
-        <span
-          className="px-2.5 py-1 text-white rounded-xl text-[10px] font-black ml-auto shadow-sm"
-          style={{ backgroundColor: streamerColor }}
-        >
-          {streamer.platform || 'CHZZK'}
-        </span>
+
+        <div className="ml-auto flex items-center gap-1.5">
+          {/* 치지직 채널 바로가기 */}
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              window.open(channelUrl, '_blank', 'noopener,noreferrer');
+            }}
+            title="치지직 채널 방문"
+            className="px-2.5 py-1 text-white rounded-xl text-[10px] font-black shadow-sm hover:opacity-80 active:scale-95 transition-all"
+            style={{ backgroundColor: streamerColor }}
+          >
+            {streamer.platform || 'CHZZK'}
+          </button>
+
+          {/* 멀티뷰 토글 버튼 */}
+          {onToggleMultiview && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!canSelect) return;
+                if (!isSelected) {
+                  track('multiview_streamer_added', {
+                    streamer_name: streamer.name,
+                    streamer_id: streamer.id,
+                    is_live: isLive,
+                  });
+                }
+                onToggleMultiview();
+              }}
+              title={isSelected ? '멀티뷰에서 제거' : '멀티뷰에 추가'}
+              className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all text-[13px] font-black ${
+                isSelected
+                  ? 'bg-indigo-500 text-white hover:bg-indigo-600'
+                  : canSelect
+                    ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-200 dark:text-slate-700 cursor-not-allowed'
+              }`}
+            >
+              {isSelected && selectionIndex != null
+                ? selectionIndex
+                : <LayoutGrid className="w-4 h-4" />
+              }
+            </button>
+          )}
+        </div>
       </div>
     </Link>
   );

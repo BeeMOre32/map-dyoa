@@ -115,36 +115,35 @@ export default function ScheduleCardV2({ schedule, variant, liveStreamerIds, ind
     >
       <Link href={href} scroll={false} className="block" onClick={stopProp}>
         <div
-          className={`relative px-[10px] py-[10px] rounded-xl border flex flex-col gap-1.5 transition-shadow hover:shadow-md cursor-pointer ${
+          className={`px-2.5 py-2.5 rounded-xl border flex flex-col gap-1.5 transition-shadow hover:shadow-md cursor-pointer ${
             gameColor
               ? isLive ? 'shadow-[0_2px_10px_rgba(239,68,68,0.15)]' : ''
               : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
           }`}
           style={cardBg}
         >
-          {/* LIVE / 종료 배지 — 우상단 절대 위치 */}
-          {(isLive || isEnded) && (
-            <span className="absolute top-2 right-2">
-              {isLive ? <LiveBadge /> : <EndedBadge />}
-            </span>
-          )}
-
-          {/* 게임 태그 / 미정 */}
-          <div className={`flex items-center gap-1 flex-wrap ${isLive || isEnded ? 'pr-14' : ''}`}>
+          {/* 게임 태그 / 미정 / LIVE 배지 — 한 행에 인라인으로 배치 */}
+          <div className="flex items-center gap-1 min-w-0">
             {schedule.game && (
               <span
-                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[11px] font-bold shrink-0"
+                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[11px] font-bold min-w-0 overflow-hidden flex-1"
                 style={gameColor
                   ? { backgroundColor: `${gameColor}28`, color: gameColor }
                   : { backgroundColor: 'rgba(245,158,11,0.15)', color: '#b45309' }}
               >
-                <Gamepad2 className="w-2.5 h-2.5" />
-                {schedule.game.title}
+                <Gamepad2 className="w-2.5 h-2.5 shrink-0" />
+                <span className="truncate">{schedule.game.title}</span>
               </span>
             )}
             {schedule.isGuerrilla && (
               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 shrink-0">
                 <Zap className="w-2.5 h-2.5" />미정
+              </span>
+            )}
+            {/* LIVE / 종료 배지 — 항상 오른쪽 끝 */}
+            {(isLive || isEnded) && (
+              <span className="shrink-0 ml-auto">
+                {isLive ? <LiveBadge /> : <EndedBadge />}
               </span>
             )}
           </div>
