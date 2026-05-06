@@ -10,7 +10,7 @@ export default async function InterceptedStreamerDetailPage({
 }) {
   const { id } = await params;
 
-  const [streamers, { schedules, scheduleCount, clipCount }] = await Promise.all([
+  const [streamers, { schedules, linkedClips, scheduleCount, clipCount }] = await Promise.all([
     getAllStreamers(),
     getStreamerDetail(id),
   ]);
@@ -22,6 +22,7 @@ export default async function InterceptedStreamerDetailPage({
     <StreamerDetailModal
       streamer={streamer}
       schedules={schedules}
+      linkedClips={linkedClips}
       scheduleCount={scheduleCount}
       clipCount={clipCount}
     />

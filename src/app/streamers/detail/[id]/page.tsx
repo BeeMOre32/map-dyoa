@@ -11,7 +11,7 @@ export default async function FullStreamerDetailPage({
 }) {
   const { id } = await params;
 
-  const [streamers, streamer, { schedules, scheduleCount, clipCount }] = await Promise.all([
+  const [streamers, streamer, { schedules, linkedClips, scheduleCount, clipCount }] = await Promise.all([
     getAllStreamers(),
     getStreamerById(id),
     getStreamerDetail(id),
@@ -25,6 +25,7 @@ export default async function FullStreamerDetailPage({
       <StreamerDetailModal
         streamer={streamer}
         schedules={schedules}
+        linkedClips={linkedClips}
         scheduleCount={scheduleCount}
         clipCount={clipCount}
       />

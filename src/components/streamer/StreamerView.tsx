@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, X, LayoutGrid, WifiOff } from 'lucide-react';
 import { Streamer } from '@prisma/client';
@@ -26,8 +26,13 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
   // 선택 순서를 유지하는 배열 (Set 대신 Array)
   const [selectedOrder, setSelectedOrder] = useState<string[]>([]);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   const { liveIds } = useLiveStatus();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const generations = useMemo(
     () => [...new Set(streamers.map((s) => s.generation))].sort((a, b) => a - b),
@@ -140,7 +145,7 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
           <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
             {search || activeGen !== null
               ? `${filtered.length}명 검색됨`
-              : liveFiltered.length > 0
+              : isMounted && liveFiltered.length > 0
                 ? <><span className="text-red-500 font-black">{liveFiltered.length}명</span> 라이브 중 · 총 {streamers.length}명</>
                 : `총 ${streamers.length}명의 방송인이 지도동과 함께합니다.`}
           </p>

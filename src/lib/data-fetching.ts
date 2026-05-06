@@ -236,7 +236,7 @@ export const getStreamerById = unstable_cache(
 
 export const getStreamerDetail = unstable_cache(
   async (streamerId: string) => {
-    const [schedules, scheduleCount, clipCount] = await Promise.all([
+    const [schedules, linkedClips, scheduleCount, clipCount] = await Promise.all([
       prisma.schedule.findMany({
         where: { participants: { some: { streamerId } } },
         include: {
@@ -252,10 +252,25 @@ export const getStreamerDetail = unstable_cache(
         orderBy: { startTime: 'desc' },
         take: 20,
       }),
+      prisma.clip.findMany({
+        where: { participants: { some: { streamerId } } },
+        include: {
+          participants: { include: { streamer: true } },
+          schedule: {
+            select: {
+              id: true,
+              title: true,
+              game: { select: { id: true, title: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 8,
+      }),
       prisma.scheduleParticipant.count({ where: { streamerId } }),
       prisma.clip.count({ where: { participants: { some: { streamerId } } } }),
     ]);
-    return { schedules, scheduleCount, clipCount };
+    return { schedules, linkedClips, scheduleCount, clipCount };
   },
   ['streamer-detail'],
   { revalidate: 120, tags: ['streamers', 'calendar', 'clips'] },
