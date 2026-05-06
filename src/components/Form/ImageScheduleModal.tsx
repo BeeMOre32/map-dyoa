@@ -15,6 +15,8 @@ import {
   Gamepad2,
   Users,
   RefreshCw,
+  Database,
+  FileText,
 } from 'lucide-react';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
@@ -22,6 +24,7 @@ import { createScheduleAction } from '@/app/actions';
 import { Streamer, Game } from '@prisma/client';
 import { ModalProps } from '@/types/props';
 import StreamerSelector from './StreamerSelctor';
+import type { AnalysisPhase, SseEvent } from '@/app/api/schedule/extract-from-image/route';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -44,6 +47,17 @@ type ImageScheduleModalProps = ModalProps & {
   games: Game[];
 };
 
+// ── Constants ──────────────────────────────────────────────────────────────
+
+const PHASE_STEPS: { phase: AnalysisPhase; label: string; Icon: React.ElementType }[] = [
+  { phase: 'db_fetch',  label: '데이터 불러오는 중',  Icon: Database   },
+  { phase: 'encoding',  label: '이미지 처리 중',       Icon: ImageIcon  },
+  { phase: 'analyzing', label: 'AI가 분석하는 중',     Icon: Sparkles   },
+  { phase: 'parsing',   label: '결과 처리 중',         Icon: FileText   },
+];
+
+const PHASE_ORDER: AnalysisPhase[] = ['db_fetch', 'encoding', 'analyzing', 'parsing'];
+
 // ── Component ──────────────────────────────────────────────────────────────
 
 export default function ImageScheduleModal({
@@ -57,6 +71,7 @@ export default function ImageScheduleModal({
   const [extracted, setExtracted] = useState<ExtractedSchedule[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [loadingPhase, setLoadingPhase] = useState<AnalysisPhase | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEscapeKey(onClose);
@@ -73,8 +88,8 @@ export default function ImageScheduleModal({
       return;
     }
     setErrorMsg(null);
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
+    setLoadingPhase(null);
+    setPreviewUrl(URL.createObjectURL(file));
     setStep('loading');
 
     try {
@@ -85,26 +100,47 @@ export default function ImageScheduleModal({
         method: 'POST',
         body: formData,
       });
-      const data = await res.json();
 
-      if (!res.ok) {
-        setErrorMsg(data.error ?? '분석에 실패했습니다.');
+      if (!res.body) {
+        setErrorMsg('서버 응답을 읽을 수 없습니다.');
         setStep('upload');
         return;
       }
 
-      const schedules: ExtractedSchedule[] = (data.schedules ?? []).map(
-        (s: Omit<ExtractedSchedule, 'key' | 'editingStreamers'>) => ({
-          ...s,
-          key: crypto.randomUUID(),
-          streamerIds: s.streamerIds ?? [],
-          streamerNames: s.streamerNames ?? [],
-          editingStreamers: false,
-        }),
-      );
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
 
-      setExtracted(schedules);
-      setStep('review');
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop() ?? '';
+        for (const part of parts) {
+          if (!part.startsWith('data: ')) continue;
+          const event = JSON.parse(part.slice(6)) as SseEvent;
+          if (event.type === 'status') {
+            setLoadingPhase(event.phase);
+          } else if (event.type === 'error') {
+            setErrorMsg(event.message);
+            setStep('upload');
+            return;
+          } else if (event.type === 'result') {
+            const schedules: ExtractedSchedule[] = (
+              event.schedules as Omit<ExtractedSchedule, 'key' | 'editingStreamers'>[]
+            ).map((s) => ({
+              ...s,
+              key: crypto.randomUUID(),
+              streamerIds: s.streamerIds ?? [],
+              streamerNames: s.streamerNames ?? [],
+              editingStreamers: false,
+            }));
+            setExtracted(schedules);
+            setStep('review');
+          }
+        }
+      }
     } catch {
       setErrorMsg('네트워크 오류가 발생했습니다.');
       setStep('upload');
@@ -130,6 +166,7 @@ export default function ImageScheduleModal({
     setPreviewUrl(null);
     setErrorMsg(null);
     setSubmitError(null);
+    setLoadingPhase(null);
   };
 
   // ── 추출 결과 편집 ────────────────────────────────────────────────────────
@@ -151,122 +188,51 @@ export default function ImageScheduleModal({
     setStep('submitting');
     setSubmitError(null);
 
-    console.log('🎬 [ImageScheduleModal] handleSubmit 시작');
-    console.log(
-      '📋 [ImageScheduleModal] extracted 배열:',
-      JSON.stringify(extracted, null, 2),
-    );
-    console.log(`📊 [ImageScheduleModal] 일정 개수: ${extracted.length}`);
-
     const results = await Promise.allSettled(
-      extracted.map((s, scheduleIdx) => {
-        // ✅ 검증: 제목 확인
+      extracted.map((s) => {
         if (!s.title || s.title.trim().length === 0) {
-          return Promise.resolve({
-            success: false,
-            error: `제목이 입력되지 않았습니다.`,
-          });
+          return Promise.resolve({ success: false, error: '제목이 입력되지 않았습니다.' });
         }
-
-        // ✅ 검증: 멤버가 선택되었는지 확인
         if (!s.streamerIds || s.streamerIds.length === 0) {
-          return Promise.resolve({
-            success: false,
-            error: `"${s.title}" - 멤버를 선택해주세요.`,
-          });
+          return Promise.resolve({ success: false, error: `"${s.title}" - 멤버를 선택해주세요.` });
         }
 
         const hasTime = !!s.time;
         const dateStr = s.date ?? new Date().toISOString().split('T')[0];
-
-        // ✅ Date 파싱 개선: 로컬 시간대로 정확히 파싱
-        let startTime: Date;
+        const d = new Date(dateStr);
         if (hasTime && s.time) {
-          // 시간이 있으면 로컬 시간대로 파싱
           const [hours, minutes] = s.time.split(':');
-          const d = new Date(dateStr);
           d.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
-          startTime = d;
         } else {
-          // 시간이 없으면 00:00으로 설정
-          const d = new Date(dateStr);
           d.setHours(0, 0, 0, 0);
-          startTime = d;
         }
 
-        const payload = {
+        return createScheduleAction({
           title: s.title.trim(),
-          startTime,
+          startTime: d,
           participants: s.streamerIds.map((id) => ({ id })),
           gameId: s.gameId ?? undefined,
           isGuerrilla: !hasTime,
           isNaeJeon: false,
-        };
-
-        console.log(`📤 [ImageScheduleModal] 일정 #${scheduleIdx + 1} 전송:`, {
-          title: payload.title,
-          date: dateStr,
-          time: s.time,
-          startTime: payload.startTime.toISOString(),
-          participantIds: payload.participants.map((p) => p.id),
-          gameId: payload.gameId,
-          isGuerrilla: payload.isGuerrilla,
         });
-
-        return createScheduleAction(payload);
       }),
     );
 
-    // ✅ 개선: 정확한 결과 체크
-    console.log('📊 [ImageScheduleModal] 결과 요약:', {
-      total: results.length,
-      fulfilled: results.filter((r) => r.status === 'fulfilled').length,
-      rejected: results.filter((r) => r.status === 'rejected').length,
-    });
-
     const failures: string[] = [];
     results.forEach((result, idx) => {
-      console.log(`\n📋 [ImageScheduleModal] 일정 #${idx + 1} 결과:`);
-
       if (result.status === 'fulfilled') {
-        const response = result.value as any;
-        console.log(`  상태: fulfilled`, {
-          success: response.success,
-          data: response.data,
-          error: response.error,
-          errorCode: response.errorCode,
-        });
-
-        if (response.success) {
-          console.log(
-            `  ✅ [ImageScheduleModal] 일정 #${idx + 1} 생성 완료:`,
-            response.data,
-          );
-        } else {
-          const errorMsg = `${idx + 1}번: ${response.error || '알 수 없는 오류'}`;
-          console.warn(
-            `  ⚠️ [ImageScheduleModal] 일정 #${idx + 1} 실패:`,
-            response.error,
-          );
-          failures.push(errorMsg);
+        const response = result.value as { success: boolean; error?: string };
+        if (!response.success) {
+          failures.push(`${idx + 1}번: ${response.error ?? '알 수 없는 오류'}`);
         }
-      } else if (result.status === 'rejected') {
-        const errorMsg = `${idx + 1}번: ${result.reason?.message || '네트워크 오류'}`;
-        console.error(
-          `  ❌ [ImageScheduleModal] 일정 #${idx + 1} 거부됨:`,
-          result.reason,
-        );
-        failures.push(errorMsg);
+      } else {
+        failures.push(`${idx + 1}번: ${result.reason?.message ?? '네트워크 오류'}`);
       }
     });
 
     if (failures.length === 0) {
-      console.log('🎉 [ImageScheduleModal] 모든 일정 등록 완료');
       onClose();
     } else {
-      console.log(
-        `❌ [ImageScheduleModal] ${failures.length}/${results.length} 일정 실패`,
-      );
       setSubmitError(failures.join('\n'));
       setStep('review');
     }
@@ -275,6 +241,13 @@ export default function ImageScheduleModal({
   // ── Render ────────────────────────────────────────────────────────────────
 
   const isReview = step === 'review' || step === 'submitting';
+  const currentPhaseIdx = loadingPhase ? PHASE_ORDER.indexOf(loadingPhase) : -1;
+  const progressPct = [5, 28, 55, 80, 95][currentPhaseIdx + 1] ?? 5;
+
+  const headerSubtitle =
+    step === 'upload' ? '일정표 이미지를 업로드하세요' :
+    step === 'loading' ? (PHASE_STEPS.find(p => p.phase === loadingPhase)?.label ?? 'AI가 이미지를 분석하는 중...') :
+    `${extracted.length}개 일정 추출됨 · 확인 후 등록`;
 
   return (
     <motion.div
@@ -305,9 +278,7 @@ export default function ImageScheduleModal({
                 </span>
               </div>
               <p className="text-xs font-medium text-slate-400 dark:text-slate-500">
-                {step === 'upload' && '일정표 이미지를 업로드하세요'}
-                {step === 'loading' && 'AI가 이미지를 분석하는 중...'}
-                {isReview && `${extracted.length}개 일정 추출됨 · 확인 후 등록`}
+                {headerSubtitle}
               </p>
             </div>
           </div>
@@ -354,10 +325,7 @@ export default function ImageScheduleModal({
           {step === 'upload' && (
             <div className="p-6 md:p-8 space-y-4">
               <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOver(true);
-                }}
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
@@ -409,18 +377,58 @@ export default function ImageScheduleModal({
                   />
                 </div>
               )}
-              <div className="flex items-center gap-4 px-4 py-4 bg-violet-50 dark:bg-violet-900/20 rounded-2xl border border-violet-100 dark:border-violet-800">
-                <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center shrink-0">
-                  <Loader2 className="w-5 h-5 text-violet-600 dark:text-violet-400 animate-spin" />
+
+              <div className="space-y-1.5">
+                <div className="relative h-1.5 bg-violet-100 dark:bg-violet-900/40 rounded-full overflow-hidden">
+                  <motion.div
+                    className="absolute inset-y-0 left-0 bg-violet-500 rounded-full"
+                    animate={{ width: `${progressPct}%` }}
+                    transition={{ duration: 0.9, ease: 'easeOut' }}
+                  />
                 </div>
-                <div>
-                  <p className="text-sm font-black text-violet-700 dark:text-violet-300">
-                    AI가 이미지를 분석하는 중
-                  </p>
-                  <p className="text-xs font-medium text-violet-500 dark:text-violet-400 mt-0.5">
-                    일정 정보를 추출하고 있어요...
-                  </p>
-                </div>
+                <p className="text-right text-[11px] font-bold text-violet-400 dark:text-violet-500 tabular-nums">
+                  {progressPct}%
+                </p>
+              </div>
+
+              <div className="bg-violet-50 dark:bg-violet-900/20 rounded-2xl border border-violet-100 dark:border-violet-800 overflow-hidden">
+                {PHASE_STEPS.map(({ phase, label, Icon }, idx) => {
+                  const isDone = idx < currentPhaseIdx;
+                  const isActive = idx === currentPhaseIdx;
+                  return (
+                    <div
+                      key={phase}
+                      className={`flex items-center gap-3 px-4 py-3 transition-colors ${
+                        idx > 0 ? 'border-t border-violet-100 dark:border-violet-800' : ''
+                      } ${isActive ? 'bg-violet-100/60 dark:bg-violet-800/30' : ''}`}
+                    >
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                        isDone
+                          ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
+                          : isActive
+                          ? 'bg-violet-200 dark:bg-violet-700/60 text-violet-600 dark:text-violet-300'
+                          : 'bg-slate-100 dark:bg-slate-700/50 text-slate-300 dark:text-slate-600'
+                      }`}>
+                        {isDone ? (
+                          <CheckCircle2 className="w-4 h-4" />
+                        ) : isActive ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Icon className="w-4 h-4" />
+                        )}
+                      </div>
+                      <span className={`text-sm font-bold transition-colors ${
+                        isDone
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : isActive
+                          ? 'text-violet-700 dark:text-violet-300'
+                          : 'text-slate-300 dark:text-slate-600'
+                      }`}>
+                        {label}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -442,21 +450,16 @@ export default function ImageScheduleModal({
                 </div>
               ) : (
                 <>
-                  {/* 추출 결과 요약 */}
                   <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                     <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                      {extracted.length}개 일정 추출됨 · 내용을 확인하고 필요 시
-                      수정하세요
+                      {extracted.length}개 일정 추출됨 · 내용을 확인하고 필요 시 수정하세요
                     </p>
                   </div>
 
-                  {/* 일정 카드 목록 */}
                   {extracted.map((s, idx) => {
-                    const hasEmptyTitle =
-                      !s.title || s.title.trim().length === 0;
-                    const hasNoStreamers =
-                      !s.streamerIds || s.streamerIds.length === 0;
+                    const hasEmptyTitle = !s.title || s.title.trim().length === 0;
+                    const hasNoStreamers = !s.streamerIds || s.streamerIds.length === 0;
                     const hasErrors = hasEmptyTitle || hasNoStreamers;
 
                     return (
@@ -468,7 +471,6 @@ export default function ImageScheduleModal({
                             : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
                         }`}
                       >
-                        {/* 카드 헤더 */}
                         <div
                           className={`flex items-center gap-2 px-4 py-3 border-b transition-colors ${
                             hasErrors
@@ -482,9 +484,7 @@ export default function ImageScheduleModal({
                           <input
                             type="text"
                             value={s.title}
-                            onChange={(e) =>
-                              updateSchedule(s.key, { title: e.target.value })
-                            }
+                            onChange={(e) => updateSchedule(s.key, { title: e.target.value })}
                             placeholder="방송 제목"
                             className={`flex-1 min-w-0 bg-transparent text-sm font-bold placeholder-slate-400 outline-none ${
                               hasEmptyTitle
@@ -500,20 +500,14 @@ export default function ImageScheduleModal({
                           </button>
                         </div>
 
-                        {/* 카드 내용 */}
                         <div className="px-4 py-3 space-y-2.5">
-                          {/* 날짜 · 시간 */}
                           <div className="flex items-center gap-4">
                             <label className="flex items-center gap-2 flex-1 min-w-0">
                               <CalendarDays className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                               <input
                                 type="date"
                                 value={s.date ?? ''}
-                                onChange={(e) =>
-                                  updateSchedule(s.key, {
-                                    date: e.target.value || null,
-                                  })
-                                }
+                                onChange={(e) => updateSchedule(s.key, { date: e.target.value || null })}
                                 className="flex-1 min-w-0 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent outline-none scheme-light dark:scheme-dark"
                               />
                             </label>
@@ -522,33 +516,22 @@ export default function ImageScheduleModal({
                               <input
                                 type="time"
                                 value={s.time ?? ''}
-                                onChange={(e) =>
-                                  updateSchedule(s.key, {
-                                    time: e.target.value || null,
-                                  })
-                                }
+                                onChange={(e) => updateSchedule(s.key, { time: e.target.value || null })}
                                 className="flex-1 min-w-0 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent outline-none scheme-light dark:scheme-dark"
                               />
                             </label>
                           </div>
 
-                          {/* 게임 */}
                           <label className="flex items-center gap-2">
                             <Gamepad2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             <select
                               value={s.gameId ?? ''}
-                              onChange={(e) =>
-                                updateSchedule(s.key, {
-                                  gameId: e.target.value || null,
-                                })
-                              }
+                              onChange={(e) => updateSchedule(s.key, { gameId: e.target.value || null })}
                               className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent outline-none"
                             >
                               <option value="">게임 선택 안 함</option>
                               {games.map((g) => (
-                                <option key={g.id} value={g.id}>
-                                  {g.title}
-                                </option>
+                                <option key={g.id} value={g.id}>{g.title}</option>
                               ))}
                             </select>
                             {s.gameName && !s.gameId && (
@@ -558,54 +541,38 @@ export default function ImageScheduleModal({
                             )}
                           </label>
 
-                          {/* 멤버 */}
                           <div>
                             <button
                               type="button"
-                              onClick={() =>
-                                updateSchedule(s.key, {
-                                  editingStreamers: !s.editingStreamers,
-                                })
-                              }
+                              onClick={() => updateSchedule(s.key, { editingStreamers: !s.editingStreamers })}
                               className={`flex items-center gap-2 w-full text-left py-0.5 px-2 rounded transition-colors ${
                                 hasNoStreamers
                                   ? 'bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
                                   : 'hover:bg-slate-100 dark:hover:bg-slate-700/50'
                               }`}
                             >
-                              <Users
-                                className={`w-3.5 h-3.5 shrink-0 ${hasNoStreamers ? 'text-red-500' : 'text-slate-400'}`}
-                              />
-                              <span
-                                className={`text-sm font-medium flex-1 min-w-0 truncate ${
-                                  hasNoStreamers
-                                    ? 'text-red-600 dark:text-red-400'
-                                    : 'text-slate-600 dark:text-slate-300'
-                                }`}
-                              >
+                              <Users className={`w-3.5 h-3.5 shrink-0 ${hasNoStreamers ? 'text-red-500' : 'text-slate-400'}`} />
+                              <span className={`text-sm font-medium flex-1 min-w-0 truncate ${
+                                hasNoStreamers
+                                  ? 'text-red-600 dark:text-red-400'
+                                  : 'text-slate-600 dark:text-slate-300'
+                              }`}>
                                 {s.streamerIds.length > 0 ? (
                                   streamers
-                                    .filter((st) =>
-                                      s.streamerIds.includes(st.id),
-                                    )
+                                    .filter((st) => s.streamerIds.includes(st.id))
                                     .map((st) => st.name)
                                     .join(', ')
                                 ) : (
-                                  <span
-                                    className={
-                                      hasNoStreamers ? 'font-bold' : 'italic'
-                                    }
-                                  >
+                                  <span className={hasNoStreamers ? 'font-bold' : 'italic'}>
                                     멤버 미선택 — 탭하여 선택
                                   </span>
                                 )}
                               </span>
-                              {s.streamerNames.length > 0 &&
-                                s.streamerIds.length === 0 && (
-                                  <span className="text-[11px] text-slate-400 shrink-0 italic">
-                                    감지: {s.streamerNames.join(', ')}
-                                  </span>
-                                )}
+                              {s.streamerNames.length > 0 && s.streamerIds.length === 0 && (
+                                <span className="text-[11px] text-slate-400 shrink-0 italic">
+                                  감지: {s.streamerNames.join(', ')}
+                                </span>
+                              )}
                             </button>
 
                             <AnimatePresence>
@@ -625,9 +592,7 @@ export default function ImageScheduleModal({
                                       const has = s.streamerIds.includes(id);
                                       updateSchedule(s.key, {
                                         streamerIds: has
-                                          ? s.streamerIds.filter(
-                                              (x) => x !== id,
-                                            )
+                                          ? s.streamerIds.filter((x) => x !== id)
                                           : [...s.streamerIds, id],
                                       });
                                     }}
@@ -652,15 +617,10 @@ export default function ImageScheduleModal({
             {submitError && (
               <div className="flex items-start gap-2 text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2.5">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <div className="flex-1 whitespace-pre-wrap text-wrap">
-                  {submitError}
-                </div>
+                <div className="flex-1 whitespace-pre-wrap text-wrap">{submitError}</div>
               </div>
             )}
-            {/* ✅ 미선택 멤버 검증 */}
-            {extracted.some(
-              (s) => !s.streamerIds || s.streamerIds.length === 0,
-            ) && (
+            {extracted.some((s) => !s.streamerIds || s.streamerIds.length === 0) && (
               <div className="flex items-start gap-2 text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-2.5">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <div>모든 일정에서 멤버를 선택해야 등록할 수 있습니다.</div>
@@ -680,9 +640,7 @@ export default function ImageScheduleModal({
                 disabled={
                   step === 'submitting' ||
                   extracted.length === 0 ||
-                  extracted.some(
-                    (s) => !s.streamerIds || s.streamerIds.length === 0,
-                  )
+                  extracted.some((s) => !s.streamerIds || s.streamerIds.length === 0)
                 }
                 className="flex-1 py-3.5 bg-violet-600 text-white rounded-2xl font-bold hover:bg-violet-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
