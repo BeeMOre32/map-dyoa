@@ -2,39 +2,14 @@
 
 import { motion } from 'framer-motion';
 import {
-  BookOpen,
-  CalendarDays,
-  MousePointerClick,
-  Edit2,
-  Trash2,
-  LogIn,
-  Sparkles,
-  ArrowRight,
-  Gamepad2,
-  Users,
-  Mail,
-  LayoutGrid,
-  Search,
-  Zap,
-  Palette,
-  Keyboard,
-  ExternalLink,
-  Clock,
-  ChevronLeft,
-  ChevronRight,
-  SlidersHorizontal,
-  Radio,
-  Clapperboard,
-  Puzzle,
-  Move,
-  Maximize2,
-  Sword,
-  Wifi,
-  EyeOff,
+  BookOpen, CalendarDays, MousePointerClick, Edit2, Trash2, LogIn, Sparkles,
+  ArrowRight, Gamepad2, Users, Mail, LayoutGrid, Search, Zap, Palette,
+  Keyboard, ExternalLink, Clock, ChevronLeft, ChevronRight, SlidersHorizontal,
+  Radio, Clapperboard, Puzzle, Move, Maximize2, Sword, Wifi, EyeOff,
 } from 'lucide-react';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
-/* ─── 애니메이션 프리셋 ─── */
 const ease = [0.25, 0.46, 0.45, 0.94] as const;
 
 const fadeUp = {
@@ -44,41 +19,17 @@ const fadeUp = {
   transition: { duration: 0.55, ease },
 };
 
-const fadeLeft = {
-  initial: { opacity: 0, x: -20 },
-  whileInView: { opacity: 1, x: 0 },
-  viewport: { once: true, margin: '-60px' },
-  transition: { duration: 0.4, ease },
-};
-
-/* ─── SectionCard ─── */
-function SectionCard({
-  icon,
-  iconBg,
-  title,
-  children,
-}: {
-  icon: React.ReactNode;
-  iconBg: string;
-  title: React.ReactNode;
-  children: React.ReactNode;
+function SectionCard({ icon, iconBg, title, children }: {
+  icon: ReactNode; iconBg: string; title: ReactNode; children: ReactNode;
 }) {
   return (
     <motion.div
       {...fadeUp}
-      whileHover={{ y: -6, transition: { duration: 0.2 } }}
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
       className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-xl hover:shadow-slate-200/60 dark:hover:shadow-black/30 transition-shadow"
     >
       <div className="flex items-center gap-4 mb-6">
-        <motion.div
-          className={`p-3 ${iconBg} rounded-2xl`}
-          whileHover={{
-            rotate: [0, -12, 12, -6, 6, 0],
-            transition: { duration: 0.45 },
-          }}
-        >
-          {icon}
-        </motion.div>
+        <div className={`p-3 ${iconBg} rounded-2xl`}>{icon}</div>
         <h2 className="text-2xl font-black text-slate-800 dark:text-white">{title}</h2>
       </div>
       {children}
@@ -86,16 +37,7 @@ function SectionCard({
   );
 }
 
-/* ─── Row ─── */
-function Row({
-  icon,
-  delay = 0,
-  children,
-}: {
-  icon: React.ReactNode;
-  delay?: number;
-  children: React.ReactNode;
-}) {
+function Row({ icon, delay = 0, children }: { icon: ReactNode; delay?: number; children: ReactNode }) {
   return (
     <motion.p
       className="flex items-start gap-3"
@@ -110,8 +52,16 @@ function Row({
   );
 }
 
-/* ─── NewBadge ─── */
-function NewBadge() {
+function Tip({ children }: { children: ReactNode }) {
+  return (
+    <div className="bg-amber-50 dark:bg-amber-900/10 p-4 rounded-2xl border border-amber-100 dark:border-amber-800/40 flex items-start gap-3 mt-4">
+      <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
+      <span className="text-sm font-bold text-amber-800 dark:text-amber-300">{children}</span>
+    </div>
+  );
+}
+
+function Badge({ children }: { children: ReactNode }) {
   return (
     <motion.span
       initial={{ scale: 0.6, opacity: 0 }}
@@ -119,13 +69,12 @@ function NewBadge() {
       transition={{ type: 'spring', stiffness: 400, damping: 18, delay: 0.3 }}
       className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-500 text-white uppercase tracking-wider"
     >
-      new
+      {children}
     </motion.span>
   );
 }
 
-/* ─── LiveBadgeDemo ─── */
-function LiveBadgeDemo() {
+function LiveDemo() {
   return (
     <span className="inline-flex items-center gap-1 align-middle mx-1 px-2 py-0.5 bg-red-50 dark:bg-red-900/20 rounded-full">
       <span className="relative flex w-1.5 h-1.5">
@@ -137,28 +86,38 @@ function LiveBadgeDemo() {
   );
 }
 
-/* ─── Tip ─── */
-function Tip({ children }: { children: React.ReactNode }) {
+function MiniCardGrid({ items }: {
+  items: { icon: ReactNode; label: string; desc: ReactNode }[];
+}) {
   return (
-    <motion.div
-      {...fadeLeft}
-      transition={{ duration: 0.4, ease, delay: 0.15 }}
-      className="bg-amber-50 dark:bg-amber-900/10 p-4 rounded-2xl border border-amber-100 dark:border-amber-800/40 flex items-start gap-3 mt-4"
-    >
-      <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
-      <span className="text-sm font-bold text-amber-800 dark:text-amber-300">{children}</span>
-    </motion.div>
+    <div className="grid sm:grid-cols-3 gap-4 pt-1">
+      {items.map(({ icon, label, desc }, i) => (
+        <motion.div
+          key={label}
+          className="p-5 bg-slate-50 dark:bg-slate-700 rounded-3xl border border-slate-100 dark:border-slate-600"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.4, ease, delay: i * 0.07 }}
+          whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
+        >
+          <div className="flex items-center gap-2 mb-2 text-slate-800 dark:text-white font-black text-sm">
+            {icon}{label}
+          </div>
+          <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">{desc}</p>
+        </motion.div>
+      ))}
+    </div>
   );
 }
 
-export default function GuidePage() {
+export default function HelpPage() {
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/50 dark:bg-slate-950 py-12 px-4 sm:px-6 transition-colors">
       <div className="max-w-3xl mx-auto space-y-6 pb-12">
 
-        {/* ── 헤더 ── */}
+        {/* 헤더 */}
         <div className="text-center space-y-3 mb-10">
-          {/* 떠다니는 아이콘 */}
           <motion.div
             className="inline-flex items-center justify-center p-4 bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-3xl mb-2 shadow-sm"
             animate={{ y: [0, -10, 0] }}
@@ -166,7 +125,6 @@ export default function GuidePage() {
           >
             <BookOpen className="w-10 h-10" />
           </motion.div>
-
           <motion.h1
             className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight"
             initial={{ opacity: 0, y: 30, scale: 0.95 }}
@@ -175,7 +133,6 @@ export default function GuidePage() {
           >
             이용 가이드
           </motion.h1>
-
           <motion.p
             className="text-lg font-bold text-slate-500 dark:text-slate-400"
             initial={{ opacity: 0, y: 16 }}
@@ -186,14 +143,14 @@ export default function GuidePage() {
           </motion.p>
         </div>
 
-        {/* ── 1. 캘린더 뷰 ── */}
+        {/* 1. 캘린더 뷰 */}
         <SectionCard
           icon={<CalendarDays className="w-6 h-6 text-blue-500 dark:text-blue-400" />}
           iconBg="bg-blue-50 dark:bg-blue-900/20"
           title="1. 캘린더 뷰 전환"
         >
           <div className="space-y-4">
-            <Row icon={<LayoutGrid className="w-5 h-5" />} delay={0}>
+            <Row icon={<LayoutGrid className="w-5 h-5" />}>
               우측 상단의 <strong>주간 / 월간</strong> 버튼으로 캘린더 보기 방식을 전환할 수 있습니다.
             </Row>
             <Row icon={<ChevronLeft className="w-5 h-5" />} delay={0.07}>
@@ -202,119 +159,65 @@ export default function GuidePage() {
             <Row icon={<MousePointerClick className="w-5 h-5" />} delay={0.14}>
               날짜 셀을 클릭하면 해당 날의 <strong>일정 목록 모달</strong>이 열립니다.
             </Row>
-            <Tip>
-              주간 뷰는 일정 카드를 더 넓게 보여주고, 월간 뷰는 한 달 흐름을 한눈에 볼 때 유용합니다.
-            </Tip>
+            <Tip>주간 뷰는 일정 카드를 더 넓게 보여주고, 월간 뷰는 한 달 흐름을 한눈에 볼 때 유용합니다.</Tip>
           </div>
         </SectionCard>
 
-        {/* ── 2. 스트리머 필터 ── */}
+        {/* 2. 스트리머 필터 */}
         <SectionCard
           icon={<SlidersHorizontal className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />}
           iconBg="bg-indigo-50 dark:bg-indigo-900/20"
-          title={<>2. 스트리머 필터<NewBadge /></>}
+          title={<>2. 스트리머 필터<Badge>new</Badge></>}
         >
           <div className="space-y-4">
-            <Row icon={<SlidersHorizontal className="w-5 h-5" />} delay={0}>
+            <Row icon={<SlidersHorizontal className="w-5 h-5" />}>
               좌측 상단 <strong>설정 버튼</strong>을 누르면 슬라이드 드로어가 열립니다.
-              스트리머 필터 섹션을 클릭해 펼치면 원하는 스트리머만 선택해 일정을 필터링할 수 있습니다.
+              스트리머 필터 섹션을 클릭해 원하는 스트리머만 선택해 일정을 필터링할 수 있습니다.
             </Row>
             <Row icon={<Search className="w-5 h-5" />} delay={0.07}>
-              검색창에서 <strong>이름 또는 초성</strong>으로 스트리머를 빠르게 찾을 수 있습니다.{' '}
+              <strong>이름 또는 초성</strong>으로 스트리머를 빠르게 찾을 수 있습니다.{' '}
               <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs font-black">ㄷㅁ</code>{' '}
               → 두뭉,{' '}
               <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs font-black">ㅎㅇ</code>{' '}
               → 허인
             </Row>
             <Row icon={<Users className="w-5 h-5" />} delay={0.14}>
-              스트리머를 선택하면 해당 인원의 일정만 캘린더에 표시됩니다.
-              선택된 수는 <strong>배지</strong>로 확인할 수 있으며 '초기화'로 한 번에 해제됩니다.
+              선택된 스트리머의 일정만 캘린더에 표시됩니다. '초기화'로 한 번에 해제됩니다.
             </Row>
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.4, ease, delay: 0.2 }}
-              className="flex items-center gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-800/40 mt-2"
-            >
-              <motion.div
-                animate={{ x: [0, 4, 0] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                className="shrink-0 p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700"
-              >
-                <SlidersHorizontal className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-              </motion.div>
-              <span className="text-sm font-bold text-indigo-800 dark:text-indigo-300">
-                모바일에서는 드로어가 <strong>전체 화면</strong>으로 펼쳐집니다.
-              </span>
-            </motion.div>
           </div>
         </SectionCard>
 
-        {/* ── 3. 라이브 탭 ── */}
+        {/* 3. 라이브 탭 & 배지 */}
         <SectionCard
           icon={<Wifi className="w-6 h-6 text-red-500 dark:text-red-400" />}
           iconBg="bg-red-50 dark:bg-red-900/20"
-          title="3. 라이브 탭"
+          title="3. 라이브 탭 & 배지"
         >
           <div className="space-y-4">
-            <Row icon={<Radio className="w-5 h-5" />} delay={0}>
+            <Row icon={<Radio className="w-5 h-5" />}>
               상단 <strong>라이브</strong> 탭에서 지금 치지직에서 방송 중인 멤버를 실시간으로 확인할 수 있습니다.
             </Row>
             <Row icon={<LayoutGrid className="w-5 h-5" />} delay={0.07}>
-              라이브 중인 멤버를 <strong>클릭해 선택</strong>하면 하단에 멀티뷰 시작 버튼이 나타납니다.
-              최대 {9}명까지 선택해 한 화면에서 동시 시청이 가능합니다.
+              라이브 중인 멤버를 선택하면 하단에 <strong>멀티뷰 시작</strong> 버튼이 나타납니다. 최대 9명까지 선택 가능합니다.
             </Row>
             <Row icon={<Clock className="w-5 h-5" />} delay={0.14}>
-              라이브 상태는 <strong>60초마다</strong> 자동 갱신됩니다. 탭을 다른 곳으로 이동하면 폴링이 일시 중지되고,
-              돌아오면 즉시 최신 상태로 갱신됩니다.
+              라이브 상태는 <strong>60초마다</strong> 자동 갱신됩니다. 페이지를 새로고침하지 않아도 됩니다.
             </Row>
-            <Tip>
-              라이브 중이 아닌 멤버도 오프라인 섹션에 표시되어 전체 멤버를 한눈에 볼 수 있습니다.
-            </Tip>
+            <Row icon={<Radio className="w-5 h-5" />} delay={0.21}>
+              오늘 일정의 참여자가 현재 방송 중이면 일정 카드에 <LiveDemo /> 뱃지가 자동으로 표시됩니다.
+            </Row>
+            <Tip>라이브 중이 아닌 멤버도 오프라인 섹션에 표시되어 전체 멤버를 한눈에 볼 수 있습니다.</Tip>
           </div>
         </SectionCard>
 
-        {/* ── 4. 라이브 뱃지 ── */}
-        <SectionCard
-          icon={<Radio className="w-6 h-6 text-red-500 dark:text-red-400" />}
-          iconBg="bg-red-50 dark:bg-red-900/20"
-          title={<>4. 라이브 뱃지<NewBadge /></>}
-        >
-          <div className="space-y-4">
-            <Row icon={<Radio className="w-5 h-5" />} delay={0}>
-              오늘 일정에 참여하는 스트리머가 치지직에서 <strong>현재 방송 중</strong>이면
-              일정 카드에 <LiveBadgeDemo /> 뱃지가 자동으로 표시됩니다.
-            </Row>
-            <Row icon={<Clock className="w-5 h-5" />} delay={0.07}>
-              라이브 상태는 <strong>60초마다</strong> 자동으로 갱신됩니다. 페이지를 새로고침하지 않아도 됩니다.
-            </Row>
-            <Row icon={<CalendarDays className="w-5 h-5" />} delay={0.14}>
-              뱃지는 <strong>오늘 날짜 일정에만</strong> 표시됩니다. 과거·미래 일정에는 나타나지 않습니다.
-            </Row>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.4, ease, delay: 0.2 }}
-              className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-800/40"
-            >
-              <LiveBadgeDemo />
-              <span className="text-sm font-bold text-red-800 dark:text-red-300">
-                뱃지가 보인다면 지금 바로 방송 중이에요!
-              </span>
-            </motion.div>
-          </div>
-        </SectionCard>
-
-        {/* ── 4. 색상 의미 ── */}
+        {/* 4. 일정 카드 색상 */}
         <SectionCard
           icon={<Palette className="w-6 h-6 text-violet-500 dark:text-violet-400" />}
           iconBg="bg-violet-50 dark:bg-violet-900/20"
-          title="5. 일정 카드 색상의 의미"
+          title="4. 일정 카드 색상의 의미"
         >
           <div className="space-y-4">
-            <Row icon={<Gamepad2 className="w-5 h-5" />} delay={0}>
+            <Row icon={<Gamepad2 className="w-5 h-5" />}>
               <strong>게임 콘텐츠</strong> 일정은 해당 게임의 고유 컬러로 배경이 채워집니다.
             </Row>
             <Row icon={<Users className="w-5 h-5" />} delay={0.07}>
@@ -323,20 +226,18 @@ export default function GuidePage() {
             <Row icon={<Zap className="w-5 h-5" />} delay={0.14}>
               <strong>시간 미정</strong> 배지가 붙은 일정은 방송 시작 시간이 정해지지 않은 게릴라성 일정입니다.
             </Row>
-            <Tip>
-              다크 모드에서는 컬러가 자동으로 밝은 버전으로 전환되어 가독성을 유지합니다.
-            </Tip>
+            <Tip>다크 모드에서는 컬러가 자동으로 밝은 버전으로 전환되어 가독성을 유지합니다.</Tip>
           </div>
         </SectionCard>
 
-        {/* ── 3. 일정 상세 ── */}
+        {/* 5. 일정 상세 */}
         <SectionCard
           icon={<MousePointerClick className="w-6 h-6 text-sky-500 dark:text-sky-400" />}
           iconBg="bg-sky-50 dark:bg-sky-900/20"
-          title="6. 일정 상세 보기"
+          title="5. 일정 상세 보기"
         >
           <div className="space-y-4">
-            <Row icon={<Clock className="w-5 h-5" />} delay={0}>
+            <Row icon={<Clock className="w-5 h-5" />}>
               일정 카드를 클릭하면 <strong>시작/종료 시간, 게임, 내용</strong>을 확인할 수 있는 상세 모달이 열립니다.
             </Row>
             <Row icon={<Users className="w-5 h-5" />} delay={0.07}>
@@ -348,213 +249,165 @@ export default function GuidePage() {
           </div>
         </SectionCard>
 
-        {/* ── 4. 스트리머 페이지 ── */}
+        {/* 6. 스트리머 페이지 */}
         <SectionCard
           icon={<Users className="w-6 h-6 text-emerald-500 dark:text-emerald-400" />}
           iconBg="bg-emerald-50 dark:bg-emerald-900/20"
-          title="7. 스트리머 페이지"
+          title="6. 스트리머 페이지"
         >
           <div className="space-y-4">
-            <Row icon={<Users className="w-5 h-5" />} delay={0}>
+            <Row icon={<Users className="w-5 h-5" />}>
               상단 탭의 <strong>스트리머</strong>에서 등록된 모든 스트리머를 카드 형태로 확인할 수 있습니다.
             </Row>
             <Row icon={<Search className="w-5 h-5" />} delay={0.07}>
-              일정 등록 시 스트리머 선택 창에서 이름으로 검색할 수 있으며,{' '}
-              <strong>한글 초성 검색</strong>도 지원합니다.{' '}
-              <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs font-black">
-                ㄷㅁ
-              </code>{' '}
-              → 두뭉
+              기수 필터와 <strong>이름·초성 검색</strong>으로 빠르게 찾을 수 있습니다.
             </Row>
-            <Row icon={<MousePointerClick className="w-5 h-5" />} delay={0.14}>
-              스트리머 카드를 클릭하면 <strong>프로필 모달</strong>에서 기수, 역할, 플랫폼 정보를 볼 수 있습니다.
+            <Row icon={<ExternalLink className="w-5 h-5" />} delay={0.14}>
+              카드 우하단의 <strong>CHZZK 버튼</strong>을 클릭하면 해당 스트리머의 치지직 채널로 바로 이동합니다.
             </Row>
-            <Tip>
-              정보에 오류가 있으면 카드 우측 상단 ⋯ 버튼 → '정보 수정 요청'으로 제보해주세요.
-            </Tip>
+            <Row icon={<LayoutGrid className="w-5 h-5" />} delay={0.21}>
+              카드 우하단의{' '}
+              <LayoutGrid className="inline w-3.5 h-3.5 mx-0.5 mb-0.5" />{' '}
+              버튼으로 멀티뷰 추가/제거를 할 수 있습니다. 선택된 순서가 <strong>번호</strong>로 표시됩니다.
+            </Row>
+            <Tip>정보에 오류가 있으면 카드 우상단 ⋯ 버튼 → '정보 수정 요청'으로 제보해주세요.</Tip>
           </div>
         </SectionCard>
 
-        {/* ── HOI4 전적 ── */}
+        {/* 7. HOI4 전적 */}
         <SectionCard
           icon={<Sword className="w-6 h-6 text-amber-500 dark:text-amber-400" />}
           iconBg="bg-amber-50 dark:bg-amber-900/20"
-          title={<>8. HOI4 전적 기록<NewBadge /></>}
+          title={<>7. HOI4 전적 기록<Badge>new</Badge></>}
         >
           <div className="space-y-4">
-            <Row icon={<Sword className="w-5 h-5" />} delay={0}>
+            <Row icon={<Sword className="w-5 h-5" />}>
               HOI4 게임이 포함된 합방 일정에는 <strong>전적 탭</strong>이 추가됩니다.
-              일정 상세 우측 패널(데스크탑) 또는 하단 버튼(모바일)에서 <strong>⚔ 전적</strong>을 눌러 확인하세요.
+              일정 상세 우측 패널(데스크탑) 또는 하단 버튼(모바일)에서 확인하세요.
             </Row>
             <Row icon={<Gamepad2 className="w-5 h-5" />} delay={0.07}>
-              전적 탭에서 참여 스트리머별 <strong>담당 국가</strong>와{' '}
+              참여 스트리머별 <strong>담당 국가</strong>와{' '}
               <strong className="text-emerald-600 dark:text-emerald-400">승</strong>{' · '}
               <strong className="text-red-500 dark:text-red-400">패</strong>{' · '}
               <strong className="text-slate-500">미완</strong>{' '}
               결과를 확인할 수 있습니다.
             </Row>
             <Row icon={<Edit2 className="w-5 h-5" />} delay={0.14}>
-              로그인 후 일정 수정 화면에서 각 참여자의 <strong>국가명</strong>과 <strong>결과</strong>를 입력할 수 있습니다.
-              HOI4 게임 일정 선택 시 자동으로 입력 필드가 표시됩니다.
+              로그인 후 일정 수정 화면에서 국가명과 결과를 직접 입력할 수 있습니다.
             </Row>
-            <Tip>
-              전적 데이터는 스트리머 프로필의 "참여한 합방" 목록에서도 국가·결과와 함께 표시됩니다.
-            </Tip>
           </div>
         </SectionCard>
 
-        {/* ── 클립 모음 ── */}
+        {/* 8. 클립 모음 */}
         <SectionCard
           icon={<Clapperboard className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />}
           iconBg="bg-indigo-50 dark:bg-indigo-900/20"
-          title={<>9. 클립 모음<NewBadge /></>}
+          title={<>8. 클립 모음<Badge>new</Badge></>}
         >
           <div className="space-y-4">
-            <Row icon={<Clapperboard className="w-5 h-5" />} delay={0}>
-              방송에서 나온 <strong>인상적인 순간을 클립</strong>으로 아카이빙합니다.
+            <Row icon={<Clapperboard className="w-5 h-5" />}>
+              방송에서 나온 인상적인 순간을 클립으로 아카이빙합니다.
               치지직 클립 URL을 붙여넣으면 <strong>썸네일·제목이 자동 추출</strong>됩니다.
             </Row>
             <Row icon={<SlidersHorizontal className="w-5 h-5" />} delay={0.07}>
-              상단 필터로 <strong>스트리머</strong>와 <strong>월별</strong> 필터링이 가능합니다.
-              검색창에서 <strong>제목 또는 스트리머 이름</strong>으로 클립을 검색할 수 있습니다.
+              <strong>스트리머</strong>와 <strong>월별</strong> 필터, 제목·이름 검색을 지원합니다. 20개씩 페이지네이션으로 표시됩니다.
             </Row>
-            <Row icon={<ChevronRight className="w-5 h-5" />} delay={0.11}>
-              클립은 한 페이지에 <strong>20개씩</strong> 표시됩니다. 하단 페이지네이션으로 이동하거나, 필터를 바꾸면 자동으로 첫 페이지로 돌아갑니다.
-            </Row>
-            <Row icon={<ExternalLink className="w-5 h-5" />} delay={0.14}>
-              카드의 <strong>외부 링크 버튼</strong>으로 원본 클립 페이지로 이동하거나,
-              치지직 클립이라면 카드에서 <strong>바로 인라인 재생</strong>도 가능합니다.
-            </Row>
-            <div className="grid sm:grid-cols-3 gap-4 pt-1">
-              {[
-                {
-                  icon: <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />,
-                  label: '클립 추가',
-                  desc: (
-                    <>
-                      로그인 후 <strong>+ 클립 추가</strong> 버튼을 누릅니다.
-                      치지직 URL 입력 시 썸네일·제목이 자동 완성되며, 연관 스트리머와 방송 일정도 연결할 수 있습니다.
-                    </>
-                  ),
-                  delay: 0,
-                },
-                {
-                  icon: <Edit2 className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />,
-                  label: '클립 수정',
-                  desc: (
-                    <>
-                      카드의 <strong>연필 버튼</strong>을 누르면 제목, 스트리머, 방송, 날짜, 설명을 수정할 수 있습니다.
-                    </>
-                  ),
-                  delay: 0.07,
-                },
-                {
-                  icon: <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />,
-                  label: '클립 삭제',
-                  desc: (
-                    <>
-                      카드의 <strong>휴지통 버튼</strong>으로 삭제합니다. 삭제 후 복구 불가.
-                    </>
-                  ),
-                  delay: 0.14,
-                },
-              ].map(({ icon, label, desc, delay }) => (
-                <motion.div
-                  key={label}
-                  className="p-5 bg-slate-50 dark:bg-slate-700 rounded-3xl border border-slate-100 dark:border-slate-600"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-40px' }}
-                  transition={{ duration: 0.4, ease, delay }}
-                  whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
-                >
-                  <div className="flex items-center gap-2 mb-2 text-slate-800 dark:text-white font-black text-sm">
-                    {icon}
-                    {label}
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-                    {desc}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
-            <Tip>
-              치지직 클립 URL 입력 시 썸네일·제목이 자동 추출됩니다. 추출에 실패하면 직접 입력하세요.
-            </Tip>
+            <MiniCardGrid items={[
+              {
+                icon: <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />,
+                label: '클립 추가',
+                desc: <>로그인 후 <strong>+ 클립 추가</strong> 버튼을 누릅니다. 치지직 URL 입력 시 썸네일·제목이 자동 완성됩니다.</>,
+              },
+              {
+                icon: <Edit2 className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />,
+                label: '클립 수정',
+                desc: <>카드의 <strong>연필 버튼</strong>으로 제목, 스트리머, 날짜, 설명을 수정할 수 있습니다.</>,
+              },
+              {
+                icon: <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />,
+                label: '클립 삭제',
+                desc: <>카드의 <strong>휴지통 버튼</strong>으로 삭제합니다. 삭제 후 복구 불가.</>,
+              },
+            ]} />
           </div>
         </SectionCard>
 
-        {/* ── 멀티뷰 ── */}
+        {/* 9. 멀티뷰 */}
         <SectionCard
           icon={<LayoutGrid className="w-6 h-6 text-cyan-500 dark:text-cyan-400" />}
           iconBg="bg-cyan-50 dark:bg-cyan-900/20"
-          title={<>10. 멀티뷰<NewBadge /></>}
+          title={<>9. 멀티뷰<Badge>new</Badge></>}
         >
           <div className="space-y-4">
-            <Row icon={<LayoutGrid className="w-5 h-5" />} delay={0}>
-              일정 상세 모달 하단의 <strong>멀티뷰로 보기</strong> 버튼을 누르면 해당 합방에 참여한 스트리머들의
-              방송을 한 화면에서 동시에 시청할 수 있습니다.
+            <Row icon={<LayoutGrid className="w-5 h-5" />}>
+              일정 상세의 <strong>멀티뷰로 보기</strong> 버튼, 또는 스트리머 페이지에서 카드를 직접 선택해 시작할 수 있습니다.
             </Row>
             <Row icon={<Users className="w-5 h-5" />} delay={0.07}>
-              최대 <strong>9개</strong> 패널을 추가할 수 있습니다.
-              하단 선택 바에서 스트리머를 클릭해 켜고 끄며, 끈 패널은 목록에서 숨겨집니다.
+              카드 우하단{' '}
+              <LayoutGrid className="inline w-3.5 h-3.5 mx-0.5 mb-0.5" />{' '}
+              버튼으로 최대 <strong>9개</strong> 패널을 추가합니다.
+              선택 순서가 <strong>번호</strong>로 표시되며, 하단 바의 아바타를 <strong>드래그</strong>해 순서를 바꿀 수 있습니다.
             </Row>
             <Row icon={<ChevronLeft className="w-5 h-5" />} delay={0.14}>
-              각 패널 상단의 <strong>← →</strong> 버튼으로 패널 순서를 바꿀 수 있습니다.
+              멀티뷰 화면에서 각 패널 상단의 <strong>← →</strong> 버튼으로 패널 순서를 바꿀 수 있습니다.
             </Row>
             <Row icon={<Move className="w-5 h-5" />} delay={0.21}>
-              패널 사이의 <strong>드래그 핸들</strong>을 잡아 끌면 각 패널 크기를 자유롭게 조절할 수 있습니다.
+              패널 사이의 <strong>드래그 핸들</strong>을 잡아 끌면 각 패널 크기를 자유롭게 조절합니다.
             </Row>
             <Row icon={<Maximize2 className="w-5 h-5" />} delay={0.28}>
-              패널 상단의 <strong>집중 모드 버튼</strong>을 누르면 해당 방송을 좌측에 크게, 나머지를 우측에 세로로 배치합니다.
+              패널 상단의 <strong>집중 모드</strong>를 누르면 해당 방송을 좌측에 크게, 나머지를 우측에 세로로 배치합니다.
             </Row>
-            <motion.div
-              {...fadeLeft}
-              transition={{ duration: 0.4, ease, delay: 0.3 }}
-              className="flex items-start gap-3 p-4 bg-cyan-50 dark:bg-cyan-900/10 rounded-2xl border border-cyan-100 dark:border-cyan-800/40"
-            >
+            <div className="flex items-start gap-3 p-4 bg-cyan-50 dark:bg-cyan-900/10 rounded-2xl border border-cyan-100 dark:border-cyan-800/40">
               <Puzzle className="w-4 h-4 text-cyan-500 dark:text-cyan-400 shrink-0 mt-0.5" />
               <span className="text-sm font-bold text-cyan-800 dark:text-cyan-300">
                 치지직 로그인 상태를 유지하려면{' '}
                 <strong>Map-Dyoa 멀티뷰 도우미 Chrome 확장 프로그램</strong>이 필요합니다.
                 설치 후 네이버에 로그인된 상태라면 멀티뷰 iframe에서도 자동으로 로그인이 유지됩니다.
               </span>
-            </motion.div>
+            </div>
           </div>
         </SectionCard>
 
-        {/* ── Chrome 확장 프로그램 설치 ── */}
+        {/* 10. Chrome 확장 */}
         <SectionCard
           icon={<Puzzle className="w-6 h-6 text-cyan-500 dark:text-cyan-400" />}
           iconBg="bg-cyan-50 dark:bg-cyan-900/20"
-          title={<>11. Chrome 확장 프로그램 설치</>}
+          title="10. Chrome 확장 프로그램 설치"
         >
           <div className="space-y-4">
             <p className="text-slate-600 dark:text-slate-300 font-medium">
               멀티뷰에서 치지직 로그인을 유지하려면 <strong>Map-Dyoa 멀티뷰 도우미</strong> 확장 프로그램이 필요합니다.
             </p>
-            {[
-              { step: '1', text: <>아래 버튼으로 확장 프로그램 zip 파일을 다운로드합니다.</> },
-              { step: '2', text: <>zip 파일의 압축을 풀어 폴더를 준비합니다.</> },
-              { step: '3', text: <><strong>Chrome 주소창</strong>에 <code className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-mono">chrome://extensions</code>를 입력해 확장 페이지를 엽니다.</> },
-              { step: '4', text: <>우측 상단의 <strong>개발자 모드</strong>를 켭니다.</> },
-              { step: '5', text: <><strong>압축 해제된 확장 프로그램을 로드합니다</strong> 버튼을 누르고 폴더를 선택합니다.</> },
-            ].map(({ step, text }) => (
-              <Row key={step} icon={<span className="w-5 h-5 flex items-center justify-center rounded-full bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 text-xs font-black shrink-0">{step}</span>} delay={Number(step) * 0.07 - 0.07}>
+            {([
+              <>아래 버튼으로 확장 프로그램 zip 파일을 다운로드합니다.</>,
+              <>zip 파일의 압축을 풀어 폴더를 준비합니다.</>,
+              <><strong>Chrome 주소창</strong>에 <code className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-mono">chrome://extensions</code>를 입력해 확장 페이지를 엽니다.</>,
+              <>우측 상단의 <strong>개발자 모드</strong>를 켭니다.</>,
+              <><strong>압축 해제된 확장 프로그램을 로드합니다</strong> 버튼을 누르고 폴더를 선택합니다.</>,
+            ] as ReactNode[]).map((text, i) => (
+              <Row
+                key={i}
+                icon={
+                  <span className="w-5 h-5 flex items-center justify-center rounded-full bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 text-xs font-black shrink-0">
+                    {i + 1}
+                  </span>
+                }
+                delay={i * 0.07}
+              >
                 {text}
               </Row>
             ))}
-
             <motion.a
               href="/map-dyoa-extension.zip"
               download
-              {...fadeLeft}
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.4, ease, delay: 0.35 }}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-black rounded-2xl transition-colors shadow-sm"
             >
               <ExternalLink className="w-4 h-4" /> 확장 프로그램 다운로드 (.zip)
             </motion.a>
-
             <div className="grid sm:grid-cols-2 gap-3 pt-1">
               {[
                 { label: '개발자 모드 활성화 화면', src: '/images/%EA%B0%9C%EB%B0%9C%EC%9E%90%20%EC%82%AC%EC%A7%84%201.png' },
@@ -569,101 +422,60 @@ export default function GuidePage() {
           </div>
         </SectionCard>
 
-        {/* ── 로그인 ── */}
+        {/* 11. 로그인 */}
         <SectionCard
           icon={<LogIn className="w-6 h-6 text-amber-500 dark:text-amber-400" />}
           iconBg="bg-amber-50 dark:bg-amber-900/20"
-          title="12. 로그인과 편집 권한"
+          title="11. 로그인과 편집 권한"
         >
           <div className="space-y-4">
             <p className="text-slate-600 dark:text-slate-300 font-medium">
               구글 계정으로 <strong>로그인한 사용자라면 누구나</strong> 캘린더에 기여할 수 있습니다.
             </p>
-            <Tip>
-              로그인 후에는 숨겨져 있던 '일정 추가', '수정', '삭제' 버튼이 나타납니다.
-            </Tip>
+            <Tip>로그인 후에는 숨겨져 있던 '일정 추가', '수정', '삭제' 버튼이 나타납니다.</Tip>
           </div>
         </SectionCard>
 
-        {/* ── 6. CRUD ── */}
+        {/* 12. CRUD */}
         <SectionCard
           icon={<Edit2 className="w-6 h-6 text-rose-500 dark:text-rose-400" />}
           iconBg="bg-rose-50 dark:bg-rose-900/20"
-          title="13. 일정 추가 · 수정 · 삭제"
+          title="12. 일정 추가 · 수정 · 삭제"
         >
-          <div className="grid sm:grid-cols-3 gap-4">
-            {[
-              {
-                icon: <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />,
-                label: '일정 추가',
-                desc: (
-                  <>
-                    우측 상단 <strong>+ 일정 추가</strong> 버튼으로 제목, 날짜, 시간, 참여자, 게임을 입력합니다.
-                    시간이 미정인 경우 <strong>'시간 미정'</strong> 체크박스를 활성화하세요.
-                  </>
-                ),
-                delay: 0,
-              },
-              {
-                icon: <Edit2 className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />,
-                label: '내용 수정',
-                desc: (
-                  <>
-                    상세 모달에서 <strong>수정 버튼</strong>을 누르면 화면 이동 없이 그 자리에서 바로 내용을 변경합니다.
-                  </>
-                ),
-                delay: 0.07,
-              },
-              {
-                icon: <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />,
-                label: '삭제',
-                desc: (
-                  <>
-                    취소되거나 잘못 등록된 일정은 <strong>휴지통 버튼</strong>으로 삭제할 수 있습니다.{' '}
-                    삭제 후 복구 불가.
-                  </>
-                ),
-                delay: 0.14,
-              },
-            ].map(({ icon, label, desc, delay }) => (
-              <motion.div
-                key={label}
-                className="p-5 bg-slate-50 dark:bg-slate-700 rounded-3xl border border-slate-100 dark:border-slate-600"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.4, ease, delay }}
-                whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
-              >
-                <div className="flex items-center gap-2 mb-2 text-slate-800 dark:text-white font-black text-sm">
-                  {icon}
-                  {label}
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-                  {desc}
-                </p>
-              </motion.div>
-            ))}
-          </div>
+          <MiniCardGrid items={[
+            {
+              icon: <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />,
+              label: '일정 추가',
+              desc: <>우측 상단 <strong>+ 일정 추가</strong> 버튼으로 제목, 날짜, 시간, 참여자, 게임을 입력합니다.</>,
+            },
+            {
+              icon: <Edit2 className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />,
+              label: '내용 수정',
+              desc: <>상세 모달의 <strong>수정 버튼</strong>을 누르면 화면 이동 없이 그 자리에서 바로 변경합니다.</>,
+            },
+            {
+              icon: <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />,
+              label: '삭제',
+              desc: <>상세 모달의 <strong>휴지통 버튼</strong>으로 삭제합니다. 삭제 후 복구 불가.</>,
+            },
+          ]} />
         </SectionCard>
 
-        {/* ── 7. 편의 기능 ── */}
+        {/* 13. 편의 기능 */}
         <SectionCard
           icon={<Keyboard className="w-6 h-6 text-slate-500 dark:text-slate-400" />}
           iconBg="bg-slate-100 dark:bg-slate-700"
-          title="14. 편의 기능"
+          title="13. 편의 기능"
         >
           <div className="space-y-4">
-            <Row icon={<Keyboard className="w-5 h-5" />} delay={0}>
+            <Row icon={<Keyboard className="w-5 h-5" />}>
               열려 있는 <strong>모달은 Esc 키</strong>로 닫을 수 있습니다.
             </Row>
             <Row icon={<Palette className="w-5 h-5" />} delay={0.07}>
-              우측 상단 <strong>라이트/다크 모드</strong> 토글로 테마를 전환합니다.
-              스트리머·게임 색상도 모드에 맞게 자동 조정됩니다.
+              우측 상단 <strong>라이트/다크 모드</strong> 토글로 테마를 전환합니다. 스트리머·게임 색상도 모드에 맞게 자동 조정됩니다.
             </Row>
             <Row icon={<EyeOff className="w-5 h-5" />} delay={0.14}>
-              설정에서 <strong>종료된 방송 숨기기</strong>를 켜면 방송이 끝난 일정 카드가 캘린더에서 사라집니다.
-              다시 끄면 즉시 복원됩니다.
+              설정에서 <strong>종료된 방송 숨기기</strong>를 켜면 종료된 일정 카드가 캘린더에서 사라집니다.
             </Row>
             <Row icon={<ChevronRight className="w-5 h-5" />} delay={0.21}>
               모바일에서는 주간 뷰가 <strong>리스트 형식</strong>으로 표시되어 일정을 더 편하게 확인할 수 있습니다.
@@ -671,7 +483,7 @@ export default function GuidePage() {
           </div>
         </SectionCard>
 
-        {/* ── 하단 ── */}
+        {/* 하단 */}
         <motion.div
           {...fadeUp}
           transition={{ duration: 0.5, ease }}
@@ -691,7 +503,6 @@ export default function GuidePage() {
               </motion.span>
             </Link>
           </motion.div>
-
           <div className="flex flex-col items-center gap-4">
             <motion.a
               href="mailto:windowssart01@gmail.com"

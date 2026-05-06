@@ -3,6 +3,17 @@ import type { Streamer } from '@prisma/client';
 export const MAX_STREAMS = 9;
 export const HANDLE_CLS = 'absolute z-20 bg-slate-900 hover:bg-indigo-500/60 transition-colors';
 
+export function getChannelUrl(streamer: Streamer): string {
+  const base = streamer.chzzkUrl ?? `https://chzzk.naver.com/${streamer.handle}`;
+  try {
+    const { pathname } = new URL(base);
+    const segments = pathname.split('/').filter(Boolean);
+    const channelId = segments[segments.length - 1];
+    if (channelId && channelId !== 'live') return `https://chzzk.naver.com/${channelId}`;
+  } catch {}
+  return base;
+}
+
 export function getLiveUrl(streamer: Streamer): string {
   const base = streamer.chzzkUrl ?? `https://chzzk.naver.com/${streamer.handle}`;
   try {

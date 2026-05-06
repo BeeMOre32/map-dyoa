@@ -6,6 +6,7 @@ import { Streamer } from '@prisma/client';
 import { useTheme } from 'next-themes';
 import { getStreamerImagePath } from '@/lib/utils';
 import { getStreamerColor } from '@/constants/streamercolor';
+import { getChannelUrl } from '@/components/multiview/utils';
 import StreamerAvatar from './StreamerAvatar';
 import { track } from '@vercel/analytics';
 
@@ -17,19 +18,6 @@ interface StreamerCardProps {
   isMaxReached?: boolean;
   onToggleMultiview?: () => void;
   selectionIndex?: number;
-}
-
-function getChzzkChannelUrl(streamer: Streamer): string {
-  const base = streamer.chzzkUrl ?? `https://chzzk.naver.com/${streamer.handle}`;
-  try {
-    const url = new URL(base);
-    const segments = url.pathname.split('/').filter(Boolean);
-    const channelId = segments[segments.length - 1];
-    if (channelId && channelId !== 'live') {
-      return `https://chzzk.naver.com/${channelId}`;
-    }
-  } catch {}
-  return base;
 }
 
 export default function StreamerCard({
@@ -44,34 +32,41 @@ export default function StreamerCard({
   const imgSrc = getStreamerImagePath(streamer.name);
   const { resolvedTheme } = useTheme();
   const streamerColor = getStreamerColor(streamer.id, resolvedTheme === 'dark') ?? streamer.colorCode;
-  const channelUrl = getChzzkChannelUrl(streamer);
-
+  const channelUrl = getChannelUrl(streamer);
   const canSelect = isSelected || !isMaxReached;
+
+  const borderCls = isSelected
+    ? 'border-indigo-500 shadow-lg shadow-indigo-100 dark:shadow-indigo-900/30'
+    : isLive
+      ? 'border-red-200 dark:border-red-900/60 shadow-[0_4px_24px_rgba(239,68,68,0.15)] dark:shadow-[0_4px_24px_rgba(239,68,68,0.10)] hover:border-red-300 dark:hover:border-red-800'
+      : 'border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-700 hover:shadow-xl hover:shadow-indigo-50 dark:hover:shadow-indigo-950/50';
+
+  const nameCls = isSelected
+    ? 'text-indigo-600 dark:text-indigo-400'
+    : isLive
+      ? 'text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300'
+      : 'text-slate-800 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400';
+
+  const multiviewBtnCls = isSelected
+    ? 'bg-indigo-500 text-white hover:bg-indigo-600'
+    : canSelect
+      ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400'
+      : 'bg-slate-50 dark:bg-slate-800 text-slate-200 dark:text-slate-700 cursor-not-allowed';
 
   return (
     <Link
       href={`/streamers/detail/${streamer.id}`}
       scroll={false}
-      className={`group flex flex-col p-5 rounded-3xl border-2 transition-all bg-white dark:bg-slate-900 cursor-pointer relative ${
-        isSelected
-          ? 'border-indigo-500 shadow-lg shadow-indigo-100 dark:shadow-indigo-900/30'
-          : isLive
-            ? 'border-red-200 dark:border-red-900/60 shadow-[0_4px_24px_rgba(239,68,68,0.15)] dark:shadow-[0_4px_24px_rgba(239,68,68,0.10)] hover:border-red-300 dark:hover:border-red-800'
-            : 'border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-700 hover:shadow-xl hover:shadow-indigo-50 dark:hover:shadow-indigo-950/50'
-      }`}
+      className={`group flex flex-col p-5 rounded-3xl border-2 transition-all bg-white dark:bg-slate-900 cursor-pointer relative ${borderCls}`}
     >
-      {/* 라이브 중 상단 강조선 */}
       {isLive && !isSelected && (
         <div className="absolute top-0 left-5 right-5 h-0.5 rounded-full bg-linear-to-r from-transparent via-red-400 to-transparent" />
       )}
-
-      {/* 선택 중 상단 강조선 */}
       {isSelected && (
         <div className="absolute top-0 left-5 right-5 h-0.5 rounded-full bg-linear-to-r from-transparent via-indigo-500 to-transparent" />
       )}
 
       <div className="flex justify-between items-start mb-4">
-        {/* 아바타 + LIVE 배지 */}
         <div className="relative">
           <div className="relative w-14 h-14 rounded-2xl overflow-hidden">
             <StreamerAvatar
@@ -89,8 +84,6 @@ export default function StreamerCard({
             </span>
           )}
         </div>
-
-        {/* 우상단 - 더보기 버튼 */}
         <button
           onClick={(e) => {
             e.preventDefault();
@@ -104,13 +97,7 @@ export default function StreamerCard({
       </div>
 
       <div className="space-y-1">
-        <h3 className={`text-lg font-black transition-colors ${
-          isSelected
-            ? 'text-indigo-600 dark:text-indigo-400'
-            : isLive
-              ? 'text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300'
-              : 'text-slate-800 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
-        }`}>
+        <h3 className={`text-lg font-black transition-colors ${nameCls}`}>
           {streamer.name}
         </h3>
         <p className="text-sm text-slate-400 dark:text-slate-500 font-bold">
@@ -143,7 +130,6 @@ export default function StreamerCard({
             {streamer.platform || 'CHZZK'}
           </button>
 
-          {/* 멀티뷰 토글 버튼 */}
           {onToggleMultiview && (
             <button
               onClick={(e) => {
@@ -160,13 +146,7 @@ export default function StreamerCard({
                 onToggleMultiview();
               }}
               title={isSelected ? '멀티뷰에서 제거' : '멀티뷰에 추가'}
-              className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all text-[13px] font-black ${
-                isSelected
-                  ? 'bg-indigo-500 text-white hover:bg-indigo-600'
-                  : canSelect
-                    ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400'
-                    : 'bg-slate-50 dark:bg-slate-800 text-slate-200 dark:text-slate-700 cursor-not-allowed'
-              }`}
+              className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all text-[13px] font-black ${multiviewBtnCls}`}
             >
               {isSelected && selectionIndex != null
                 ? selectionIndex

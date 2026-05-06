@@ -1,18 +1,19 @@
-// src/components/streamer/StreamerView.tsx
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, X, LayoutGrid, Wifi, WifiOff } from 'lucide-react';
+import { Search, X, LayoutGrid, WifiOff } from 'lucide-react';
 import { Streamer } from '@prisma/client';
 import { useTheme } from 'next-themes';
 import RequestEditModal from '../Form/RequestEdit';
 import StreamerCard from './StreamerCard';
+import StreamerAvatar from './StreamerAvatar';
 import { useChosungSearch } from '@/hooks/useChosungSearch';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
 import { MAX_STREAMS } from '@/components/multiview/utils';
 import { getStreamerColor } from '@/constants/streamercolor';
+import { getStreamerImagePath } from '@/lib/utils';
 import { track } from '@vercel/analytics';
 
 export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
@@ -42,6 +43,7 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
 
   const liveFiltered = useMemo(() => filtered.filter((s) => liveIds.has(s.id)), [filtered, liveIds]);
   const offlineFiltered = useMemo(() => filtered.filter((s) => !liveIds.has(s.id)), [filtered, liveIds]);
+  const streamerMap = useMemo(() => new Map(streamers.map((s) => [s.id, s])), [streamers]);
 
   const handleRequestEdit = useCallback((streamer: Streamer) => setRequestTarget(streamer), []);
   const handleClose = useCallback(() => setRequestTarget(null), []);
@@ -54,16 +56,16 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
     });
   }, []);
 
-  const clearSelection = () => setSelectedOrder([]);
+  const clearSelection = useCallback(() => setSelectedOrder([]), []);
 
-  const startMultiview = () => {
+  const startMultiview = useCallback(() => {
     if (selectedOrder.length === 0) return;
     track('multiview_started', {
       streamer_count: selectedOrder.length,
       live_count: selectedOrder.filter((id) => liveIds.has(id)).length,
     });
     router.push(`/live/multiview?ids=${selectedOrder.join(',')}`);
-  };
+  }, [selectedOrder, liveIds, router]);
 
   const isMaxReached = selectedOrder.length >= MAX_STREAMS;
 
@@ -75,7 +77,7 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
   const handleDragOver = (e: React.DragEvent, id: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setDragOverId(id);
+    setDragOverId((prev) => (prev === id ? prev : id));
   };
   const handleDrop = (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
@@ -265,10 +267,9 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
           >
             <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 flex-wrap sm:flex-nowrap">
 
-              {/* 선택 순서 아바타 (드래그로 순서 변경) */}
               <div className="flex items-center gap-1.5 shrink-0">
                 {selectedOrder.map((id, index) => {
-                  const streamer = streamers.find((s) => s.id === id);
+                  const streamer = streamerMap.get(id);
                   if (!streamer) return null;
                   const color = getStreamerColor(streamer.id, isDark) ?? streamer.colorCode;
                   return (
@@ -287,11 +288,14 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
                       <span className="absolute -top-1.5 -right-1.5 z-10 w-3.5 h-3.5 rounded-full bg-indigo-600 text-white text-[8px] font-black flex items-center justify-center leading-none shadow-sm">
                         {index + 1}
                       </span>
-                      <div
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[11px] font-black border-2 border-white dark:border-slate-900 shadow-sm"
-                        style={{ backgroundColor: color }}
-                      >
-                        {streamer.name[0]}
+                      <div className="w-7 h-7 rounded-lg overflow-hidden border-2 border-white dark:border-slate-900 shadow-sm">
+                        <StreamerAvatar
+                          name={streamer.name}
+                          imgSrc={getStreamerImagePath(streamer.name)}
+                          colorCode={color}
+                          streamerId={streamer.id}
+                          size="xs"
+                        />
                       </div>
                     </div>
                   );
