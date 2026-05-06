@@ -28,7 +28,7 @@ import { Streamer, Game } from '@prisma/client';
 import { FlattenedSchedule } from '@/lib/schedule-formatters';
 import StreamerSelector from './StreamerSelctor';
 import { matchChzzkCategory } from '@/constants/chzzkGameMap';
-import ImageScheduleModal from './ImageScheduleModal';
+import ScheduleExtractTab from './ScheduleExtractTab';
 
 // ── Schemas ────────────────────────────────────────────────────────────────
 
@@ -171,8 +171,7 @@ export default function ScheduleFormModal({
     firstKeyRef.current,
   );
   const [batchSubmitError, setBatchSubmitError] = useState<string | null>(null);
-  const [createMode, setCreateMode] = useState<'single' | 'batch'>('single');
-  const [showImageModal, setShowImageModal] = useState(false);
+  const [createMode, setCreateMode] = useState<'single' | 'batch' | 'image' | 'text'>('single');
 
   // ── Shared state ──────────────────────────────────────────────────────────
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -516,18 +515,28 @@ export default function ScheduleFormModal({
           {!isEdit && (
             <div className="px-6 md:px-8 pt-4 pb-0 shrink-0">
               <div className="flex bg-slate-100 dark:bg-slate-700/60 rounded-2xl p-1 gap-1">
-                {(['single', 'batch'] as const).map((mode) => (
+                {([
+                  { key: 'single', label: '단일 등록' },
+                  { key: 'batch',  label: '일괄 등록' },
+                  { key: 'image',  label: '이미지' },
+                  { key: 'text',   label: '텍스트' },
+                ] as const).map(({ key, label }) => (
                   <button
-                    key={mode}
+                    key={key}
                     type="button"
-                    onClick={() => setCreateMode(mode)}
-                    className={`flex-1 py-2.5 text-sm font-black rounded-xl transition-all ${
-                      createMode === mode
+                    onClick={() => setCreateMode(key)}
+                    className={`flex-1 py-2 text-xs font-black rounded-xl transition-all ${
+                      createMode === key
                         ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-sm'
                         : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
                     }`}
                   >
-                    {mode === 'single' ? '단일 등록' : '일괄 등록'}
+                    {label}
+                    {(key === 'image' || key === 'text') && (
+                      <span className="ml-1 text-[9px] font-black px-1 py-0.5 rounded bg-violet-100 dark:bg-violet-900/50 text-violet-500 dark:text-violet-400">
+                        AI
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -1174,28 +1183,15 @@ export default function ScheduleFormModal({
                     );
                   })}
 
-                  {/* Add slot / image upload buttons */}
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={addSlot}
-                      className="flex-1 py-3 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-bold text-slate-400 dark:text-slate-500 hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all flex items-center justify-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      일정 추가
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowImageModal(true)}
-                      className="flex-1 py-3 border-2 border-dashed border-violet-200 dark:border-violet-800 rounded-2xl text-sm font-bold text-violet-400 dark:text-violet-500 hover:border-violet-400 dark:hover:border-violet-600 hover:text-violet-600 dark:hover:text-violet-400 transition-all flex items-center justify-center gap-2"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      이미지에서 추출
-                      <span className="text-[10px] font-black px-1 py-0.5 rounded bg-violet-100 dark:bg-violet-900/50">
-                        β
-                      </span>
-                    </button>
-                  </div>
+                  {/* Add slot button */}
+                  <button
+                    type="button"
+                    onClick={addSlot}
+                    className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-bold text-slate-400 dark:text-slate-500 hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    일정 추가
+                  </button>
                 </div>
               </form>
 
@@ -1229,18 +1225,21 @@ export default function ScheduleFormModal({
               </div>
             </>
           )}
+
+          {/* ══════════════════════════════════════════════════════════ */}
+          {/* IMAGE / TEXT EXTRACT TABS                                   */}
+          {/* ══════════════════════════════════════════════════════════ */}
+          {!isEdit && (createMode === 'image' || createMode === 'text') && (
+            <ScheduleExtractTab
+              key={createMode}
+              mode={createMode}
+              streamers={streamers}
+              games={games}
+              onClose={onClose}
+            />
+          )}
         </motion.div>
       </motion.div>
-
-      <AnimatePresence>
-        {showImageModal && (
-          <ImageScheduleModal
-            streamers={streamers}
-            games={games}
-            onClose={() => setShowImageModal(false)}
-          />
-        )}
-      </AnimatePresence>
     </>
   );
 }
