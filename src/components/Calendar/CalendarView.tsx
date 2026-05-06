@@ -51,6 +51,8 @@ interface CalendarViewProps {
   games: Game[];
 }
 
+const CALENDAR_PREFERENCES_KEY = 'calendar:view-preferences:v1';
+
 export default function CalendarView({
   initialSchedules,
   streamers,
@@ -85,6 +87,42 @@ export default function CalendarView({
   const [hideEnded] = useHideEndedStreams();
   const { flags } = useExperimentalFeatures();
   const todayMobileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CALENDAR_PREFERENCES_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as {
+        viewMode?: 'weekly' | 'monthly';
+        selectedStreamers?: string[];
+        selectedGames?: string[];
+      };
+
+      if (parsed.viewMode === 'weekly' || parsed.viewMode === 'monthly') {
+        setViewMode(parsed.viewMode);
+      }
+      if (Array.isArray(parsed.selectedStreamers)) {
+        setSelectedStreamers(new Set(parsed.selectedStreamers));
+      }
+      if (Array.isArray(parsed.selectedGames)) {
+        setSelectedGames(new Set(parsed.selectedGames));
+      }
+    } catch {
+      localStorage.removeItem(CALENDAR_PREFERENCES_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    localStorage.setItem(
+      CALENDAR_PREFERENCES_KEY,
+      JSON.stringify({
+        viewMode,
+        selectedStreamers: [...selectedStreamers],
+        selectedGames: [...selectedGames],
+      }),
+    );
+  }, [mounted, viewMode, selectedStreamers, selectedGames]);
 
   useEffect(() => {
     if (viewMode === 'weekly' && todayMobileRef.current) {
@@ -229,6 +267,12 @@ export default function CalendarView({
         </div>
 
         <div className="flex items-center gap-2.5 mt-3 md:mt-0">
+          <button
+            onClick={() => setCurrentDate(new Date())}
+            className="flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-200 dark:hover:border-indigo-700 transition-colors"
+          >
+            오늘
+          </button>
           <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-800">
             <button
               onClick={() => setViewMode('weekly')}
