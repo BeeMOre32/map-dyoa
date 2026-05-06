@@ -57,7 +57,7 @@ export function flattenScheduleParticipants(
     isGuerrilla: schedule.isGuerrilla,
     isNaeJeon: schedule.isNaeJeon,
     isLiveEnded: schedule.isLiveEnded,
-    liveUrl: schedule.liveUrl,
+    liveUrls: schedule.liveUrls,
     startTime: new Date(schedule.startTime),
     endTime: schedule.endTime ? new Date(schedule.endTime) : null,
     createdAt: new Date(schedule.createdAt),

@@ -46,7 +46,6 @@ const editSchema = z.object({
   streamerIds: z
     .array(z.string())
     .min(1, '참여 멤버를 최소 1명 이상 선택해주세요.'),
-  liveUrl: z.string().optional(),
 });
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -61,7 +60,7 @@ type SlotEntry = {
   startTime: string;
   selectedGameId: string;
   selectedStreamerIds: string[];
-  liveUrl: string;
+  liveUrls: string[];
   isTimeTBD: boolean;
   metaLoading: boolean;
   autoFilled: string[];
@@ -96,7 +95,7 @@ function createSlot(): SlotEntry {
     startTime: '',
     selectedGameId: '',
     selectedStreamerIds: [],
-    liveUrl: '',
+    liveUrls: [''],
     isTimeTBD: false,
     metaLoading: false,
     autoFilled: [],
@@ -151,7 +150,9 @@ export default function ScheduleFormModal({
       result: p.result ?? '',
     })) || [],
   );
-  const [liveUrl, setLiveUrl] = useState(initialData?.liveUrl || '');
+  const [liveUrls, setLiveUrls] = useState<string[]>(
+    initialData?.liveUrls?.length ? initialData.liveUrls : [''],
+  );
   const [isTimeTBD, setIsTimeTBD] = useState(initialData?.isGuerrilla || false);
   const [isNaeJeon, setIsNaeJeon] = useState(initialData?.isNaeJeon || false);
   const [isLiveEnded, setIsLiveEnded] = useState(
@@ -211,8 +212,8 @@ export default function ScheduleFormModal({
     );
   };
 
-  const handleLiveUrlBlur = useCallback(async () => {
-    const trimmed = liveUrl.trim();
+  const handleLiveUrlBlur = useCallback(async (urlIndex: number) => {
+    const trimmed = liveUrls[urlIndex]?.trim();
     if (!trimmed || !trimmed.includes('chzzk.naver.com')) return;
     setEditMetaLoading(true);
     setEditAutoFilled([]);
@@ -222,7 +223,6 @@ export default function ScheduleFormModal({
       );
       if (!res.ok) return;
       const data: AutoFillResult = await res.json();
-      console.log('[live-meta]', data);
       const filled: string[] = [];
       if (data.title && !title.trim()) {
         setTitle(data.title);
@@ -254,16 +254,11 @@ export default function ScheduleFormModal({
     } finally {
       setEditMetaLoading(false);
     }
-  }, [liveUrl, title, selectedGameId, selectedStreamers, games]);
+  }, [liveUrls, title, selectedGameId, selectedStreamers, games]);
 
-  const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = editSchema.safeParse({
-      title,
-      startTime,
-      streamerIds: selectedStreamers,
-      liveUrl: liveUrl || undefined,
-    });
+    const parsed = editSchema.safeParse({ title, startTime, streamerIds: selectedStreamers });
     if (!parsed.success) {
       const fieldErrors: EditErrors = {};
       for (const issue of parsed.error.issues) {
@@ -278,6 +273,7 @@ export default function ScheduleFormModal({
     const resolvedStartTime = isTimeTBD
       ? new Date(startTime.split('T')[0] + 'T00:00')
       : new Date(startTime);
+    const cleanUrls = liveUrls.map((u) => u.trim()).filter(Boolean);
     const payload = {
       title,
       startTime: resolvedStartTime,
@@ -287,7 +283,7 @@ export default function ScheduleFormModal({
         result: result || undefined,
       })),
       gameId: selectedGameId === '' ? undefined : selectedGameId,
-      liveUrl: liveUrl.trim() || undefined,
+      liveUrls: cleanUrls,
       isGuerrilla: isTimeTBD,
       isNaeJeon: isHoi4Game ? isNaeJeon : false,
       isLiveEnded: isEdit ? isLiveEnded : false,
@@ -302,11 +298,7 @@ export default function ScheduleFormModal({
           .filter((s) => selectedStreamers.includes(s.id))
           .map((s) => {
             const p = participants.find((x) => x.id === s.id);
-            return {
-              ...s,
-              nation: p?.nation.trim() || null,
-              result: p?.result || null,
-            };
+            return { ...s, nation: p?.nation.trim() || null, result: p?.result || null };
           });
         const startDate = new Date(startTime);
         onOptimisticCreate({
@@ -317,15 +309,13 @@ export default function ScheduleFormModal({
           isGuerrilla: isTimeTBD,
           isNaeJeon: isHoi4Game ? isNaeJeon : false,
           isLiveEnded: false,
-          liveUrl: liveUrl.trim() || null,
+          liveUrls: cleanUrls,
           startTime: startDate,
           endTime: null,
           createdAt: new Date(),
           participants: flatParticipants,
           game: selectedGame,
-          formattedDate: format(startDate, 'yyyy년 MM월 dd일(EEEE)', {
-            locale: ko,
-          }),
+          formattedDate: format(startDate, 'yyyy년 MM월 dd일(EEEE)', { locale: ko }),
           formattedTime: format(startDate, 'HH:mm'),
         });
       }
@@ -361,12 +351,12 @@ export default function ScheduleFormModal({
   const handleSlotLiveUrlBlur = useCallback(
     async (
       key: string,
-      liveUrl: string,
+      url: string,
       slotTitle: string,
       slotGameId: string,
       slotStreamerIds: string[],
     ) => {
-      const trimmed = liveUrl.trim();
+      const trimmed = url.trim();
       if (!trimmed || !trimmed.includes('chzzk.naver.com')) return;
       setSlots((prev) =>
         prev.map((s) =>
@@ -379,7 +369,6 @@ export default function ScheduleFormModal({
         );
         if (!res.ok) return;
         const data: AutoFillResult = await res.json();
-        console.log('[live-meta]', data);
         const filled: string[] = [];
         const updates: Partial<SlotEntry> = {};
         if (data.title && !slotTitle.trim()) {
@@ -421,7 +410,7 @@ export default function ScheduleFormModal({
     [games],
   );
 
-  const handleBatchSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleBatchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBatchSubmitError(null);
 
@@ -460,7 +449,7 @@ export default function ScheduleFormModal({
             : new Date(slot.startTime),
           participants: slot.selectedStreamerIds.map((id) => ({ id })),
           gameId: slot.selectedGameId || undefined,
-          liveUrl: slot.liveUrl.trim() || undefined,
+          liveUrls: slot.liveUrls.map((u) => u.trim()).filter(Boolean),
           isGuerrilla: slot.isTimeTBD,
           isNaeJeon: false,
         }),
@@ -558,39 +547,51 @@ export default function ScheduleFormModal({
               >
                 {/* 방송 링크 */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
-                    방송 링크
-                    <span className="ml-1.5 normal-case font-medium text-indigo-400 dark:text-indigo-500">
-                      · 치지직 URL 입력 시 자동 채우기
-                    </span>
-                  </label>
-                  <div className="relative">
-                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="text"
-                      value={liveUrl}
-                      onChange={(e) => {
-                        setLiveUrl(e.target.value);
-                        if (editAutoFilled.length) setEditAutoFilled([]);
-                        if (editErrors.liveUrl)
-                          setEditErrors((er) => ({
-                            ...er,
-                            liveUrl: undefined,
-                          }));
-                      }}
-                      onBlur={handleLiveUrlBlur}
-                      placeholder="https://chzzk.naver.com/live/..."
-                      className="w-full pl-9 pr-10 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      {editMetaLoading && (
-                        <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
-                      )}
-                      {!editMetaLoading && editAutoFilled.length > 0 && (
-                        <Sparkles className="w-4 h-4 text-indigo-400" />
-                      )}
-                    </div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+                      방송 링크
+                      <span className="ml-1.5 normal-case font-medium text-indigo-400 dark:text-indigo-500">
+                        · 치지직 URL 입력 시 자동 채우기
+                      </span>
+                    </label>
+                    {editMetaLoading && <Loader2 className="w-3.5 h-3.5 text-indigo-400 animate-spin" />}
+                    {!editMetaLoading && editAutoFilled.length > 0 && <Sparkles className="w-3.5 h-3.5 text-indigo-400" />}
                   </div>
+                  <div className="space-y-2">
+                    {liveUrls.map((url, i) => (
+                      <div key={i} className="relative">
+                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                          type="text"
+                          value={url}
+                          onChange={(e) => {
+                            setLiveUrls((prev) => prev.map((u, idx) => idx === i ? e.target.value : u));
+                            if (editAutoFilled.length) setEditAutoFilled([]);
+                          }}
+                          onBlur={() => handleLiveUrlBlur(i)}
+                          placeholder="https://chzzk.naver.com/live/..."
+                          className="w-full pl-9 pr-9 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+                        />
+                        {liveUrls.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => setLiveUrls((prev) => prev.filter((_, idx) => idx !== i))}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-300 dark:text-slate-600 hover:text-red-400 transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLiveUrls((prev) => [...prev, ''])}
+                    className="mt-2 flex items-center gap-1.5 text-xs font-bold text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    URL 추가
+                  </button>
                   <AnimatePresence>
                     {editAutoFilled.length > 0 && (
                       <motion.div
@@ -944,47 +945,67 @@ export default function ScheduleFormModal({
                               className="overflow-hidden"
                             >
                               <div className="px-4 pb-5 pt-1 space-y-4 border-t border-slate-100 dark:border-slate-700">
-                                {/* liveUrl */}
+                                {/* 방송 링크 */}
                                 <div className="pt-3">
-                                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
-                                    방송 링크
-                                    <span className="ml-1.5 normal-case font-medium text-indigo-400 dark:text-indigo-500">
-                                      · 치지직 URL 자동 채우기
-                                    </span>
-                                  </label>
-                                  <div className="relative">
-                                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    <input
-                                      type="text"
-                                      value={slot.liveUrl}
-                                      onChange={(e) =>
-                                        updateSlot(slot.key, {
-                                          liveUrl: e.target.value,
-                                          autoFilled: [],
-                                        })
-                                      }
-                                      onBlur={() =>
-                                        handleSlotLiveUrlBlur(
-                                          slot.key,
-                                          slot.liveUrl,
-                                          slot.title,
-                                          slot.selectedGameId,
-                                          slot.selectedStreamerIds,
-                                        )
-                                      }
-                                      placeholder="https://chzzk.naver.com/live/..."
-                                      className="w-full pl-9 pr-10 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
-                                    />
-                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                      {slot.metaLoading && (
-                                        <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
-                                      )}
-                                      {!slot.metaLoading &&
-                                        slot.autoFilled.length > 0 && (
-                                          <Sparkles className="w-4 h-4 text-indigo-400" />
-                                        )}
-                                    </div>
+                                  <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+                                      방송 링크
+                                      <span className="ml-1.5 normal-case font-medium text-indigo-400 dark:text-indigo-500">
+                                        · 치지직 URL 자동 채우기
+                                      </span>
+                                    </label>
+                                    {slot.metaLoading && <Loader2 className="w-3 h-3 text-indigo-400 animate-spin" />}
+                                    {!slot.metaLoading && slot.autoFilled.length > 0 && <Sparkles className="w-3 h-3 text-indigo-400" />}
                                   </div>
+                                  <div className="space-y-1.5">
+                                    {slot.liveUrls.map((url, urlIdx) => (
+                                      <div key={urlIdx} className="relative">
+                                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                                        <input
+                                          type="text"
+                                          value={url}
+                                          onChange={(e) =>
+                                            updateSlot(slot.key, {
+                                              liveUrls: slot.liveUrls.map((u, i) => i === urlIdx ? e.target.value : u),
+                                              autoFilled: [],
+                                            })
+                                          }
+                                          onBlur={() =>
+                                            handleSlotLiveUrlBlur(
+                                              slot.key,
+                                              url,
+                                              slot.title,
+                                              slot.selectedGameId,
+                                              slot.selectedStreamerIds,
+                                            )
+                                          }
+                                          placeholder="https://chzzk.naver.com/live/..."
+                                          className="w-full pl-8 pr-8 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+                                        />
+                                        {slot.liveUrls.length > 1 && (
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              updateSlot(slot.key, {
+                                                liveUrls: slot.liveUrls.filter((_, i) => i !== urlIdx),
+                                              })
+                                            }
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-300 dark:text-slate-600 hover:text-red-400 transition-colors"
+                                          >
+                                            <X className="w-3 h-3" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateSlot(slot.key, { liveUrls: [...slot.liveUrls, ''] })}
+                                    className="mt-1.5 flex items-center gap-1 text-xs font-bold text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                    URL 추가
+                                  </button>
                                   <AnimatePresence>
                                     {slot.autoFilled.length > 0 && (
                                       <motion.div
@@ -995,16 +1016,11 @@ export default function ScheduleFormModal({
                                       >
                                         <CheckCircle2 className="w-3 h-3 text-indigo-500 shrink-0" />
                                         <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                                          자동 입력:{' '}
-                                          {slot.autoFilled.join(' · ')}
+                                          자동 입력: {slot.autoFilled.join(' · ')}
                                         </p>
                                         <button
                                           type="button"
-                                          onClick={() =>
-                                            updateSlot(slot.key, {
-                                              autoFilled: [],
-                                            })
-                                          }
+                                          onClick={() => updateSlot(slot.key, { autoFilled: [] })}
                                           className="ml-auto text-indigo-300 hover:text-indigo-500 transition-colors"
                                         >
                                           <X className="w-3 h-3" />

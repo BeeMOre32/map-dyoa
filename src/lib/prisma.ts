@@ -15,7 +15,7 @@ function createPrismaClient() {
 
   return new PrismaClient({
     datasources: { db: { url: url.toString() } },
-    log: process.env.NODE_ENV === 'development' ? ['query'] : [],
+    log: ['query', 'error', 'warn'], // 🔥 항상 로그 켜기 - 모든 환경에서 쿼리 확인
   });
 }
 

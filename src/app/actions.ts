@@ -30,7 +30,7 @@ export async function createScheduleAction(data: {
   startTime: Date;
   participants: { id: string; nation?: string; result?: string }[];
   gameId?: string;
-  liveUrl?: string;
+  liveUrls?: string[];
   isGuerrilla?: boolean;
   isNaeJeon?: boolean;
 }): Promise<ActionResult<{ id: string }>> {
@@ -50,7 +50,7 @@ export async function createScheduleAction(data: {
           })),
         },
         ...(validated.gameId ? { game: { connect: { id: validated.gameId } } } : {}),
-        liveUrl: validated.liveUrl?.trim() || null,
+        liveUrls: validated.liveUrls?.map((u) => u.trim()).filter(Boolean) ?? [],
         isGuerrilla: validated.isGuerrilla ?? false,
         isNaeJeon: validated.isNaeJeon ?? false,
       },
@@ -107,7 +107,7 @@ export async function updateScheduleAction(
     startTime: Date;
     participants: { id: string; nation?: string; result?: string }[];
     gameId?: string;
-    liveUrl?: string;
+    liveUrls?: string[];
     isGuerrilla?: boolean;
     isNaeJeon?: boolean;
     isLiveEnded?: boolean;
@@ -125,7 +125,7 @@ export async function updateScheduleAction(
           title: validated.title.trim(),
           startTime: validated.startTime,
           game: validated.gameId ? { connect: { id: validated.gameId } } : { disconnect: true },
-          liveUrl: validated.liveUrl?.trim() || null,
+          liveUrls: validated.liveUrls?.map((u) => u.trim()).filter(Boolean) ?? [],
           isGuerrilla: validated.isGuerrilla ?? false,
           isNaeJeon: validated.isNaeJeon ?? false,
           isLiveEnded: validated.isLiveEnded ?? false,
@@ -404,7 +404,9 @@ export async function createFeedbackAction(formData: {
   }
 }
 
-export async function rejectFeedbackAction(feedbackId: string): Promise<ActionResult> {
+export async function rejectFeedbackAction(
+  feedbackId: string,
+): Promise<ActionResult> {
   try {
     await requireAuth();
     await prisma.feedback.update({
@@ -426,7 +428,9 @@ export async function rejectFeedbackAction(feedbackId: string): Promise<ActionRe
   }
 }
 
-export async function resolveFeedbackAction(feedbackId: string): Promise<ActionResult> {
+export async function resolveFeedbackAction(
+  feedbackId: string,
+): Promise<ActionResult> {
   try {
     await requireAuth();
     await prisma.feedback.update({
@@ -447,4 +451,3 @@ export async function resolveFeedbackAction(feedbackId: string): Promise<ActionR
     return { success: false, error: message, errorCode: code };
   }
 }
-

@@ -339,21 +339,26 @@ function DetailView({
             <ExternalLink className="w-4 h-4 text-slate-300 dark:text-slate-600" />
             <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">VOD / Live</span>
           </div>
-          {schedule.liveUrl ? (() => {
-            const { label, icon: Icon, className } = getLinkMeta(schedule.liveUrl);
-            return (
-              <a
-                href={schedule.liveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl border font-bold text-sm transition-all active:scale-95 ${className}`}
-              >
-                <Icon className="w-4 h-4 shrink-0" />
-                {label}
-                <ExternalLink className="w-3 h-3 opacity-60" />
-              </a>
-            );
-          })() : (
+          {schedule.liveUrls.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {schedule.liveUrls.map((url) => {
+                const { label, icon: Icon, className } = getLinkMeta(url);
+                return (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl border font-bold text-sm transition-all active:scale-95 ${className}`}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" />
+                    {label}
+                    <ExternalLink className="w-3 h-3 opacity-60" />
+                  </a>
+                );
+              })}
+            </div>
+          ) : (
             <div className="flex items-center gap-2.5 px-5 py-3 rounded-2xl border border-dashed border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500 text-sm font-bold">
               <ExternalLink className="w-4 h-4 shrink-0 opacity-50" />
               아직 등록된 링크가 없어요

@@ -151,35 +151,123 @@ export default function ImageScheduleModal({
     setStep('submitting');
     setSubmitError(null);
 
+    console.log('🎬 [ImageScheduleModal] handleSubmit 시작');
+    console.log(
+      '📋 [ImageScheduleModal] extracted 배열:',
+      JSON.stringify(extracted, null, 2),
+    );
+    console.log(`📊 [ImageScheduleModal] 일정 개수: ${extracted.length}`);
+
     const results = await Promise.allSettled(
-      extracted.map((s) => {
+      extracted.map((s, scheduleIdx) => {
+        // ✅ 검증: 제목 확인
+        if (!s.title || s.title.trim().length === 0) {
+          return Promise.resolve({
+            success: false,
+            error: `제목이 입력되지 않았습니다.`,
+          });
+        }
+
+        // ✅ 검증: 멤버가 선택되었는지 확인
+        if (!s.streamerIds || s.streamerIds.length === 0) {
+          return Promise.resolve({
+            success: false,
+            error: `"${s.title}" - 멤버를 선택해주세요.`,
+          });
+        }
+
         const hasTime = !!s.time;
         const dateStr = s.date ?? new Date().toISOString().split('T')[0];
-        const startTime = hasTime
-          ? new Date(`${dateStr}T${s.time}`)
-          : new Date(`${dateStr}T00:00`);
 
-        return createScheduleAction({
-          title: s.title,
+        // ✅ Date 파싱 개선: 로컬 시간대로 정확히 파싱
+        let startTime: Date;
+        if (hasTime && s.time) {
+          // 시간이 있으면 로컬 시간대로 파싱
+          const [hours, minutes] = s.time.split(':');
+          const d = new Date(dateStr);
+          d.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+          startTime = d;
+        } else {
+          // 시간이 없으면 00:00으로 설정
+          const d = new Date(dateStr);
+          d.setHours(0, 0, 0, 0);
+          startTime = d;
+        }
+
+        const payload = {
+          title: s.title.trim(),
           startTime,
           participants: s.streamerIds.map((id) => ({ id })),
           gameId: s.gameId ?? undefined,
           isGuerrilla: !hasTime,
           isNaeJeon: false,
+        };
+
+        console.log(`📤 [ImageScheduleModal] 일정 #${scheduleIdx + 1} 전송:`, {
+          title: payload.title,
+          date: dateStr,
+          time: s.time,
+          startTime: payload.startTime.toISOString(),
+          participantIds: payload.participants.map((p) => p.id),
+          gameId: payload.gameId,
+          isGuerrilla: payload.isGuerrilla,
         });
+
+        return createScheduleAction(payload);
       }),
     );
 
-    const failCount = results.filter(
-      (r) =>
-        r.status === 'rejected' ||
-        (r.status === 'fulfilled' && !r.value.success),
-    ).length;
+    // ✅ 개선: 정확한 결과 체크
+    console.log('📊 [ImageScheduleModal] 결과 요약:', {
+      total: results.length,
+      fulfilled: results.filter((r) => r.status === 'fulfilled').length,
+      rejected: results.filter((r) => r.status === 'rejected').length,
+    });
 
-    if (failCount === 0) {
+    const failures: string[] = [];
+    results.forEach((result, idx) => {
+      console.log(`\n📋 [ImageScheduleModal] 일정 #${idx + 1} 결과:`);
+
+      if (result.status === 'fulfilled') {
+        const response = result.value as any;
+        console.log(`  상태: fulfilled`, {
+          success: response.success,
+          data: response.data,
+          error: response.error,
+          errorCode: response.errorCode,
+        });
+
+        if (response.success) {
+          console.log(
+            `  ✅ [ImageScheduleModal] 일정 #${idx + 1} 생성 완료:`,
+            response.data,
+          );
+        } else {
+          const errorMsg = `${idx + 1}번: ${response.error || '알 수 없는 오류'}`;
+          console.warn(
+            `  ⚠️ [ImageScheduleModal] 일정 #${idx + 1} 실패:`,
+            response.error,
+          );
+          failures.push(errorMsg);
+        }
+      } else if (result.status === 'rejected') {
+        const errorMsg = `${idx + 1}번: ${result.reason?.message || '네트워크 오류'}`;
+        console.error(
+          `  ❌ [ImageScheduleModal] 일정 #${idx + 1} 거부됨:`,
+          result.reason,
+        );
+        failures.push(errorMsg);
+      }
+    });
+
+    if (failures.length === 0) {
+      console.log('🎉 [ImageScheduleModal] 모든 일정 등록 완료');
       onClose();
     } else {
-      setSubmitError(`${failCount}개 등록에 실패했습니다.`);
+      console.log(
+        `❌ [ImageScheduleModal] ${failures.length}/${results.length} 일정 실패`,
+      );
+      setSubmitError(failures.join('\n'));
       setStep('review');
     }
   };
@@ -193,7 +281,7 @@ export default function ImageScheduleModal({
       initial="hidden"
       animate="visible"
       variants={backdropVariants}
-      className="fixed inset-0 z-[80] flex items-center justify-center p-4 md:p-6 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm"
+      className="fixed inset-0 z-80 flex items-center justify-center p-4 md:p-6 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm"
       onClick={onClose}
     >
       <motion.div
@@ -364,152 +452,194 @@ export default function ImageScheduleModal({
                   </div>
 
                   {/* 일정 카드 목록 */}
-                  {extracted.map((s, idx) => (
-                    <div
-                      key={s.key}
-                      className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
-                    >
-                      {/* 카드 헤더 */}
-                      <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700">
-                        <span className="text-xs font-black text-slate-400 dark:text-slate-500 w-4 shrink-0 text-center">
-                          {idx + 1}
-                        </span>
-                        <input
-                          type="text"
-                          value={s.title}
-                          onChange={(e) =>
-                            updateSchedule(s.key, { title: e.target.value })
-                          }
-                          placeholder="방송 제목"
-                          className="flex-1 min-w-0 bg-transparent text-sm font-bold text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none"
-                        />
-                        <button
-                          onClick={() => removeSchedule(s.key)}
-                          className="p-1 text-slate-300 dark:text-slate-600 hover:text-red-400 transition-colors shrink-0"
+                  {extracted.map((s, idx) => {
+                    const hasEmptyTitle =
+                      !s.title || s.title.trim().length === 0;
+                    const hasNoStreamers =
+                      !s.streamerIds || s.streamerIds.length === 0;
+                    const hasErrors = hasEmptyTitle || hasNoStreamers;
+
+                    return (
+                      <div
+                        key={s.key}
+                        className={`rounded-2xl border overflow-hidden transition-colors ${
+                          hasErrors
+                            ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+                        }`}
+                      >
+                        {/* 카드 헤더 */}
+                        <div
+                          className={`flex items-center gap-2 px-4 py-3 border-b transition-colors ${
+                            hasErrors
+                              ? 'bg-red-100 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                              : 'bg-slate-50 dark:bg-slate-700/50 border-slate-100 dark:border-slate-700'
+                          }`}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-
-                      {/* 카드 내용 */}
-                      <div className="px-4 py-3 space-y-2.5">
-                        {/* 날짜 · 시간 */}
-                        <div className="flex items-center gap-4">
-                          <label className="flex items-center gap-2 flex-1 min-w-0">
-                            <CalendarDays className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <input
-                              type="date"
-                              value={s.date ?? ''}
-                              onChange={(e) =>
-                                updateSchedule(s.key, {
-                                  date: e.target.value || null,
-                                })
-                              }
-                              className="flex-1 min-w-0 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent outline-none scheme-light dark:scheme-dark"
-                            />
-                          </label>
-                          <label className="flex items-center gap-2 flex-1 min-w-0">
-                            <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <input
-                              type="time"
-                              value={s.time ?? ''}
-                              onChange={(e) =>
-                                updateSchedule(s.key, {
-                                  time: e.target.value || null,
-                                })
-                              }
-                              className="flex-1 min-w-0 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent outline-none scheme-light dark:scheme-dark"
-                            />
-                          </label>
-                        </div>
-
-                        {/* 게임 */}
-                        <label className="flex items-center gap-2">
-                          <Gamepad2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <select
-                            value={s.gameId ?? ''}
+                          <span className="text-xs font-black text-slate-400 dark:text-slate-500 w-4 shrink-0 text-center">
+                            {idx + 1}
+                          </span>
+                          <input
+                            type="text"
+                            value={s.title}
                             onChange={(e) =>
-                              updateSchedule(s.key, {
-                                gameId: e.target.value || null,
-                              })
+                              updateSchedule(s.key, { title: e.target.value })
                             }
-                            className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent outline-none"
-                          >
-                            <option value="">게임 선택 안 함</option>
-                            {games.map((g) => (
-                              <option key={g.id} value={g.id}>
-                                {g.title}
-                              </option>
-                            ))}
-                          </select>
-                          {s.gameName && !s.gameId && (
-                            <span className="text-[11px] text-slate-400 dark:text-slate-500 shrink-0 italic">
-                              감지: {s.gameName}
-                            </span>
-                          )}
-                        </label>
-
-                        {/* 멤버 */}
-                        <div>
+                            placeholder="방송 제목"
+                            className={`flex-1 min-w-0 bg-transparent text-sm font-bold placeholder-slate-400 outline-none ${
+                              hasEmptyTitle
+                                ? 'text-red-500 dark:text-red-400 placeholder-red-300'
+                                : 'text-slate-800 dark:text-slate-100'
+                            }`}
+                          />
                           <button
-                            type="button"
-                            onClick={() =>
-                              updateSchedule(s.key, {
-                                editingStreamers: !s.editingStreamers,
-                              })
-                            }
-                            className="flex items-center gap-2 w-full text-left py-0.5"
+                            onClick={() => removeSchedule(s.key)}
+                            className="p-1 text-slate-300 dark:text-slate-600 hover:text-red-400 transition-colors shrink-0"
                           >
-                            <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <span className="text-sm font-medium text-slate-600 dark:text-slate-300 flex-1 min-w-0 truncate">
-                              {s.streamerIds.length > 0 ? (
-                                streamers
-                                  .filter((st) => s.streamerIds.includes(st.id))
-                                  .map((st) => st.name)
-                                  .join(', ')
-                              ) : (
-                                <span className="text-slate-400 dark:text-slate-500 italic text-xs">
-                                  멤버 미선택 — 탭하여 선택
-                                </span>
-                              )}
-                            </span>
-                            {s.streamerNames.length > 0 &&
-                              s.streamerIds.length === 0 && (
-                                <span className="text-[11px] text-slate-400 shrink-0 italic">
-                                  감지: {s.streamerNames.join(', ')}
-                                </span>
-                              )}
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
+                        </div>
 
-                          <AnimatePresence>
-                            {s.editingStreamers && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="overflow-hidden mt-2"
-                              >
-                                <StreamerSelector
-                                  compact
-                                  streamers={sortedStreamers}
-                                  selectedStreamers={s.streamerIds}
-                                  toggleStreamer={(id) => {
-                                    const has = s.streamerIds.includes(id);
-                                    updateSchedule(s.key, {
-                                      streamerIds: has
-                                        ? s.streamerIds.filter((x) => x !== id)
-                                        : [...s.streamerIds, id],
-                                    });
-                                  }}
-                                />
-                              </motion.div>
+                        {/* 카드 내용 */}
+                        <div className="px-4 py-3 space-y-2.5">
+                          {/* 날짜 · 시간 */}
+                          <div className="flex items-center gap-4">
+                            <label className="flex items-center gap-2 flex-1 min-w-0">
+                              <CalendarDays className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <input
+                                type="date"
+                                value={s.date ?? ''}
+                                onChange={(e) =>
+                                  updateSchedule(s.key, {
+                                    date: e.target.value || null,
+                                  })
+                                }
+                                className="flex-1 min-w-0 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent outline-none scheme-light dark:scheme-dark"
+                              />
+                            </label>
+                            <label className="flex items-center gap-2 flex-1 min-w-0">
+                              <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <input
+                                type="time"
+                                value={s.time ?? ''}
+                                onChange={(e) =>
+                                  updateSchedule(s.key, {
+                                    time: e.target.value || null,
+                                  })
+                                }
+                                className="flex-1 min-w-0 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent outline-none scheme-light dark:scheme-dark"
+                              />
+                            </label>
+                          </div>
+
+                          {/* 게임 */}
+                          <label className="flex items-center gap-2">
+                            <Gamepad2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <select
+                              value={s.gameId ?? ''}
+                              onChange={(e) =>
+                                updateSchedule(s.key, {
+                                  gameId: e.target.value || null,
+                                })
+                              }
+                              className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent outline-none"
+                            >
+                              <option value="">게임 선택 안 함</option>
+                              {games.map((g) => (
+                                <option key={g.id} value={g.id}>
+                                  {g.title}
+                                </option>
+                              ))}
+                            </select>
+                            {s.gameName && !s.gameId && (
+                              <span className="text-[11px] text-slate-400 dark:text-slate-500 shrink-0 italic">
+                                감지: {s.gameName}
+                              </span>
                             )}
-                          </AnimatePresence>
+                          </label>
+
+                          {/* 멤버 */}
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateSchedule(s.key, {
+                                  editingStreamers: !s.editingStreamers,
+                                })
+                              }
+                              className={`flex items-center gap-2 w-full text-left py-0.5 px-2 rounded transition-colors ${
+                                hasNoStreamers
+                                  ? 'bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+                                  : 'hover:bg-slate-100 dark:hover:bg-slate-700/50'
+                              }`}
+                            >
+                              <Users
+                                className={`w-3.5 h-3.5 shrink-0 ${hasNoStreamers ? 'text-red-500' : 'text-slate-400'}`}
+                              />
+                              <span
+                                className={`text-sm font-medium flex-1 min-w-0 truncate ${
+                                  hasNoStreamers
+                                    ? 'text-red-600 dark:text-red-400'
+                                    : 'text-slate-600 dark:text-slate-300'
+                                }`}
+                              >
+                                {s.streamerIds.length > 0 ? (
+                                  streamers
+                                    .filter((st) =>
+                                      s.streamerIds.includes(st.id),
+                                    )
+                                    .map((st) => st.name)
+                                    .join(', ')
+                                ) : (
+                                  <span
+                                    className={
+                                      hasNoStreamers ? 'font-bold' : 'italic'
+                                    }
+                                  >
+                                    멤버 미선택 — 탭하여 선택
+                                  </span>
+                                )}
+                              </span>
+                              {s.streamerNames.length > 0 &&
+                                s.streamerIds.length === 0 && (
+                                  <span className="text-[11px] text-slate-400 shrink-0 italic">
+                                    감지: {s.streamerNames.join(', ')}
+                                  </span>
+                                )}
+                            </button>
+
+                            <AnimatePresence>
+                              {s.editingStreamers && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: 'auto', opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="overflow-hidden mt-2"
+                                >
+                                  <StreamerSelector
+                                    compact
+                                    streamers={sortedStreamers}
+                                    selectedStreamers={s.streamerIds}
+                                    toggleStreamer={(id) => {
+                                      const has = s.streamerIds.includes(id);
+                                      updateSchedule(s.key, {
+                                        streamerIds: has
+                                          ? s.streamerIds.filter(
+                                              (x) => x !== id,
+                                            )
+                                          : [...s.streamerIds, id],
+                                      });
+                                    }}
+                                  />
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </>
               )}
             </div>
@@ -520,10 +650,21 @@ export default function ImageScheduleModal({
         {isReview && (
           <div className="p-5 md:p-6 bg-slate-50 dark:bg-slate-800 flex flex-col gap-3 border-t border-slate-100 dark:border-slate-700 shrink-0">
             {submitError && (
-              <p className="flex items-center gap-1.5 text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2.5">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                {submitError}
-              </p>
+              <div className="flex items-start gap-2 text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div className="flex-1 whitespace-pre-wrap text-wrap">
+                  {submitError}
+                </div>
+              </div>
+            )}
+            {/* ✅ 미선택 멤버 검증 */}
+            {extracted.some(
+              (s) => !s.streamerIds || s.streamerIds.length === 0,
+            ) && (
+              <div className="flex items-start gap-2 text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div>모든 일정에서 멤버를 선택해야 등록할 수 있습니다.</div>
+              </div>
             )}
             <div className="flex gap-3">
               <button
@@ -536,7 +677,13 @@ export default function ImageScheduleModal({
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={step === 'submitting' || extracted.length === 0}
+                disabled={
+                  step === 'submitting' ||
+                  extracted.length === 0 ||
+                  extracted.some(
+                    (s) => !s.streamerIds || s.streamerIds.length === 0,
+                  )
+                }
                 className="flex-1 py-3.5 bg-violet-600 text-white rounded-2xl font-bold hover:bg-violet-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {step === 'submitting' ? (

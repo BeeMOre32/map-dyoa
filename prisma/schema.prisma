@@ -38,7 +38,7 @@ model Schedule {
   isGuerrilla Boolean   @default(false)
   isNaeJeon   Boolean   @default(false)
   isLiveEnded Boolean   @default(false)
-  liveUrl     String?
+  liveUrls    String[]
 
   participants ScheduleParticipant[]
   clips        Clip[]

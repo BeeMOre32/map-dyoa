@@ -11,7 +11,7 @@ export const scheduleServerSchema = z.object({
   startTime: z.coerce.date().refine((d) => !isNaN(d.getTime()), '올바른 시간을 입력해주세요.'),
   participants: z.array(participant).min(1, '참여자를 최소 1명 이상 선택해주세요.'),
   gameId: z.string().optional(),
-  liveUrl: z.string().optional(),
+  liveUrls: z.array(z.string()).optional(),
   isGuerrilla: z.boolean().optional(),
   isNaeJeon: z.boolean().optional(),
   isLiveEnded: z.boolean().optional(),
