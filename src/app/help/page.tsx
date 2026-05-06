@@ -5,7 +5,7 @@ import {
   BookOpen, CalendarDays, MousePointerClick, Edit2, Trash2, LogIn, Sparkles,
   ArrowRight, Gamepad2, Users, Mail, LayoutGrid, Search, Zap, Palette,
   Keyboard, ExternalLink, Clock, ChevronLeft, ChevronRight, SlidersHorizontal,
-  Radio, Clapperboard, Puzzle, Move, Maximize2, Sword, Wifi, EyeOff,
+  Radio, Clapperboard, Puzzle, Move, Maximize2, Sword, Wifi, EyeOff, Bot,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -142,6 +142,25 @@ export default function HelpPage() {
             스트리머 합방 캘린더와 클립 모음을 100% 활용하는 방법
           </motion.p>
         </div>
+
+        {/* 최근 업데이트 요약 */}
+        <motion.div
+          {...fadeUp}
+          className="bg-indigo-50 dark:bg-indigo-900/15 border border-indigo-100 dark:border-indigo-800/40 rounded-4xl p-6 shadow-sm"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
+            <h2 className="text-lg font-black text-indigo-700 dark:text-indigo-300">
+              최근 업데이트 요약
+            </h2>
+            <Badge>latest</Badge>
+          </div>
+          <div className="space-y-2 text-sm font-bold text-indigo-700/90 dark:text-indigo-200/90">
+            <p>• Map-Dyoa 멀티뷰 도우미 Chrome 확장 프로그램이 정식 출시되었습니다.</p>
+            <p>• 스케줄 연속 작성 기능으로 여러 일정을 빠르게 등록할 수 있습니다.</p>
+            <p>• AI 일정 업로드(텍스트/이미지)로 일정 자동 추출 및 입력이 가능합니다.</p>
+          </div>
+        </motion.div>
 
         {/* 1. 캘린더 뷰 */}
         <SectionCard
@@ -360,9 +379,8 @@ export default function HelpPage() {
             <div className="flex items-start gap-3 p-4 bg-cyan-50 dark:bg-cyan-900/10 rounded-2xl border border-cyan-100 dark:border-cyan-800/40">
               <Puzzle className="w-4 h-4 text-cyan-500 dark:text-cyan-400 shrink-0 mt-0.5" />
               <span className="text-sm font-bold text-cyan-800 dark:text-cyan-300">
-                치지직 로그인 상태를 유지하려면{' '}
-                <strong>Map-Dyoa 멀티뷰 도우미 Chrome 확장 프로그램</strong>이 필요합니다.
-                설치 후 네이버에 로그인된 상태라면 멀티뷰 iframe에서도 자동으로 로그인이 유지됩니다.
+                <strong>Map-Dyoa 멀티뷰 도우미 Chrome 확장 프로그램이 출시되었습니다.</strong>{' '}
+                확장을 설치하고 네이버에 로그인해두면 멀티뷰 iframe에서도 로그인 상태가 안정적으로 유지됩니다.
               </span>
             </div>
           </div>
@@ -372,14 +390,15 @@ export default function HelpPage() {
         <SectionCard
           icon={<Puzzle className="w-6 h-6 text-cyan-500 dark:text-cyan-400" />}
           iconBg="bg-cyan-50 dark:bg-cyan-900/20"
-          title="10. Chrome 확장 프로그램 설치"
+          title={<>10. Chrome 확장 프로그램<Badge>released</Badge></>}
         >
           <div className="space-y-4">
             <p className="text-slate-600 dark:text-slate-300 font-medium">
-              멀티뷰에서 치지직 로그인을 유지하려면 <strong>Map-Dyoa 멀티뷰 도우미</strong> 확장 프로그램이 필요합니다.
+              멀티뷰 로그인 유지를 위해 <strong>Map-Dyoa 멀티뷰 도우미</strong> 확장을 설치해주세요.
+              아래는 가장 확실한 수동 설치 방법입니다.
             </p>
             {([
-              <>아래 버튼으로 확장 프로그램 zip 파일을 다운로드합니다.</>,
+              <>아래 버튼으로 확장 프로그램 zip 파일을 다운로드합니다. (출시 버전)</>,
               <>zip 파일의 압축을 풀어 폴더를 준비합니다.</>,
               <><strong>Chrome 주소창</strong>에 <code className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-mono">chrome://extensions</code>를 입력해 확장 페이지를 엽니다.</>,
               <>우측 상단의 <strong>개발자 모드</strong>를 켭니다.</>,
@@ -398,15 +417,16 @@ export default function HelpPage() {
               </Row>
             ))}
             <motion.a
-              href="/map-dyoa-extension.zip"
-              download
+              href="https://chromewebstore.google.com/detail/jmehpmfkiciefbgoebiljadeamohkgfb?utm_source=item-share-cb"
+              target="_blank"
+              rel="noopener noreferrer"
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, ease, delay: 0.35 }}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-black rounded-2xl transition-colors shadow-sm"
             >
-              <ExternalLink className="w-4 h-4" /> 확장 프로그램 다운로드 (.zip)
+              <ExternalLink className="w-4 h-4" /> Chrome Web Store에서 설치
             </motion.a>
             <div className="grid sm:grid-cols-2 gap-3 pt-1">
               {[
@@ -461,11 +481,50 @@ export default function HelpPage() {
           ]} />
         </SectionCard>
 
-        {/* 13. 편의 기능 */}
+        {/* 13. 스케줄 연속 작성 */}
+        <SectionCard
+          icon={<CalendarDays className="w-6 h-6 text-fuchsia-500 dark:text-fuchsia-400" />}
+          iconBg="bg-fuchsia-50 dark:bg-fuchsia-900/20"
+          title={<>13. 스케줄 연속 작성<Badge>new</Badge></>}
+        >
+          <div className="space-y-4">
+            <Row icon={<CalendarDays className="w-5 h-5" />}>
+              일정 추가 모달에서 <strong>스케줄 연속 작성</strong> 기능을 사용하면 여러 일정을 한 번에 빠르게 등록할 수 있습니다.
+            </Row>
+            <Row icon={<Edit2 className="w-5 h-5" />} delay={0.07}>
+              같은 참여자/게임 조합으로 시간대만 바꿔 여러 개 입력할 때 특히 유용합니다.
+            </Row>
+            <Row icon={<Sparkles className="w-5 h-5" />} delay={0.14}>
+              등록 후 캘린더에 즉시 반영되므로 대량 일정 입력 시간을 크게 줄일 수 있습니다.
+            </Row>
+          </div>
+        </SectionCard>
+
+        {/* 14. AI 일정 업로드 */}
+        <SectionCard
+          icon={<Bot className="w-6 h-6 text-violet-500 dark:text-violet-400" />}
+          iconBg="bg-violet-50 dark:bg-violet-900/20"
+          title={<>14. AI 일정 업로드<Badge>new</Badge></>}
+        >
+          <div className="space-y-4">
+            <Row icon={<Sparkles className="w-5 h-5" />}>
+              일정 추가 모달에서 <strong>AI 업로드</strong>를 이용하면 텍스트/이미지에서 일정을 자동 추출해 입력할 수 있습니다.
+            </Row>
+            <Row icon={<Search className="w-5 h-5" />} delay={0.07}>
+              OCR/분석 결과를 바로 폼에 채워주므로 수동 타이핑을 최소화할 수 있습니다.
+            </Row>
+            <Row icon={<Edit2 className="w-5 h-5" />} delay={0.14}>
+              자동 추출 결과는 제출 전에 수정 가능하니, 최종 확인 후 저장하면 됩니다.
+            </Row>
+            <Tip>대량 공지 이미지를 빠르게 일정으로 옮길 때 가장 효과적입니다.</Tip>
+          </div>
+        </SectionCard>
+
+        {/* 15. 편의 기능 */}
         <SectionCard
           icon={<Keyboard className="w-6 h-6 text-slate-500 dark:text-slate-400" />}
           iconBg="bg-slate-100 dark:bg-slate-700"
-          title="13. 편의 기능"
+          title="15. 편의 기능"
         >
           <div className="space-y-4">
             <Row icon={<Keyboard className="w-5 h-5" />}>
