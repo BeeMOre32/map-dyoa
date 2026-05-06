@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -26,8 +26,6 @@ import { ModalProps } from '@/types/props';
 import StreamerSelector from './StreamerSelctor';
 import type { AnalysisPhase, SseEvent } from '@/app/api/schedule/extract-from-image/route';
 
-// ── Types ──────────────────────────────────────────────────────────────────
-
 type ExtractedSchedule = {
   key: string;
   title: string;
@@ -47,18 +45,27 @@ type ImageScheduleModalProps = ModalProps & {
   games: Game[];
 };
 
-// ── Constants ──────────────────────────────────────────────────────────────
-
 const PHASE_STEPS: { phase: AnalysisPhase; label: string; Icon: React.ElementType }[] = [
-  { phase: 'db_fetch',  label: '데이터 불러오는 중',  Icon: Database   },
-  { phase: 'encoding',  label: '이미지 처리 중',       Icon: ImageIcon  },
-  { phase: 'analyzing', label: 'AI가 분석하는 중',     Icon: Sparkles   },
-  { phase: 'parsing',   label: '결과 처리 중',         Icon: FileText   },
+  { phase: 'db_fetch',  label: '데이터 불러오는 중', Icon: Database  },
+  { phase: 'encoding',  label: '이미지 처리 중',      Icon: ImageIcon },
+  { phase: 'analyzing', label: 'AI가 분석하는 중',    Icon: Sparkles  },
+  { phase: 'parsing',   label: '결과 처리 중',        Icon: FileText  },
 ];
 
-const PHASE_ORDER: AnalysisPhase[] = ['db_fetch', 'encoding', 'analyzing', 'parsing'];
-
-// ── Component ──────────────────────────────────────────────────────────────
+function phaseStepClasses(isDone: boolean, isActive: boolean) {
+  if (isDone) return {
+    icon: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400',
+    text: 'text-emerald-600 dark:text-emerald-400',
+  };
+  if (isActive) return {
+    icon: 'bg-violet-200 dark:bg-violet-700/60 text-violet-600 dark:text-violet-300',
+    text: 'text-violet-700 dark:text-violet-300',
+  };
+  return {
+    icon: 'bg-slate-100 dark:bg-slate-700/50 text-slate-300 dark:text-slate-600',
+    text: 'text-slate-300 dark:text-slate-600',
+  };
+}
 
 export default function ImageScheduleModal({
   onClose,
@@ -73,14 +80,22 @@ export default function ImageScheduleModal({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loadingPhase, setLoadingPhase] = useState<AnalysisPhase | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEscapeKey(onClose);
 
-  const sortedStreamers = [...streamers].sort((a, b) =>
-    a.name.localeCompare(b.name, 'ko-KR'),
+  useEffect(() => () => abortControllerRef.current?.abort(), []);
+  useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
+
+  const sortedStreamers = useMemo(
+    () => [...streamers].sort((a, b) => a.name.localeCompare(b.name, 'ko-KR')),
+    [streamers],
   );
 
-  // ── 이미지 처리 ───────────────────────────────────────────────────────────
+  const streamerMap = useMemo(
+    () => new Map(streamers.map((st) => [st.id, st.name])),
+    [streamers],
+  );
 
   const processFile = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -92,6 +107,9 @@ export default function ImageScheduleModal({
     setPreviewUrl(URL.createObjectURL(file));
     setStep('loading');
 
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+
     try {
       const formData = new FormData();
       formData.append('image', file);
@@ -99,6 +117,7 @@ export default function ImageScheduleModal({
       const res = await fetch('/api/schedule/extract-from-image', {
         method: 'POST',
         body: formData,
+        signal: abortControllerRef.current.signal,
       });
 
       if (!res.body) {
@@ -127,21 +146,21 @@ export default function ImageScheduleModal({
             setStep('upload');
             return;
           } else if (event.type === 'result') {
-            const schedules: ExtractedSchedule[] = (
-              event.schedules as Omit<ExtractedSchedule, 'key' | 'editingStreamers'>[]
-            ).map((s) => ({
-              ...s,
-              key: crypto.randomUUID(),
-              streamerIds: s.streamerIds ?? [],
-              streamerNames: s.streamerNames ?? [],
-              editingStreamers: false,
-            }));
-            setExtracted(schedules);
+            setExtracted(
+              (event.schedules as Omit<ExtractedSchedule, 'key' | 'editingStreamers'>[]).map((s) => ({
+                ...s,
+                key: crypto.randomUUID(),
+                streamerIds: s.streamerIds ?? [],
+                streamerNames: s.streamerNames ?? [],
+                editingStreamers: false,
+              })),
+            );
             setStep('review');
           }
         }
       }
-    } catch {
+    } catch (err) {
+      if ((err as { name?: string }).name === 'AbortError') return;
       setErrorMsg('네트워크 오류가 발생했습니다.');
       setStep('upload');
     }
@@ -169,19 +188,13 @@ export default function ImageScheduleModal({
     setLoadingPhase(null);
   };
 
-  // ── 추출 결과 편집 ────────────────────────────────────────────────────────
-
   const updateSchedule = (key: string, updates: Partial<ExtractedSchedule>) => {
-    setExtracted((prev) =>
-      prev.map((s) => (s.key === key ? { ...s, ...updates } : s)),
-    );
+    setExtracted((prev) => prev.map((s) => (s.key === key ? { ...s, ...updates } : s)));
   };
 
   const removeSchedule = (key: string) => {
     setExtracted((prev) => prev.filter((s) => s.key !== key));
   };
-
-  // ── 등록 ──────────────────────────────────────────────────────────────────
 
   const handleSubmit = async () => {
     if (extracted.length === 0) return;
@@ -222,9 +235,7 @@ export default function ImageScheduleModal({
     results.forEach((result, idx) => {
       if (result.status === 'fulfilled') {
         const response = result.value as { success: boolean; error?: string };
-        if (!response.success) {
-          failures.push(`${idx + 1}번: ${response.error ?? '알 수 없는 오류'}`);
-        }
+        if (!response.success) failures.push(`${idx + 1}번: ${response.error ?? '알 수 없는 오류'}`);
       } else {
         failures.push(`${idx + 1}번: ${result.reason?.message ?? '네트워크 오류'}`);
       }
@@ -238,16 +249,14 @@ export default function ImageScheduleModal({
     }
   };
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
   const isReview = step === 'review' || step === 'submitting';
-  const currentPhaseIdx = loadingPhase ? PHASE_ORDER.indexOf(loadingPhase) : -1;
+  const currentPhaseIdx = loadingPhase ? PHASE_STEPS.findIndex((p) => p.phase === loadingPhase) : -1;
   const progressPct = [5, 28, 55, 80, 95][currentPhaseIdx + 1] ?? 5;
-
+  const hasAnyMissingStreamers = extracted.some((s) => !s.streamerIds || s.streamerIds.length === 0);
   const headerSubtitle =
-    step === 'upload' ? '일정표 이미지를 업로드하세요' :
-    step === 'loading' ? (PHASE_STEPS.find(p => p.phase === loadingPhase)?.label ?? 'AI가 이미지를 분석하는 중...') :
-    `${extracted.length}개 일정 추출됨 · 확인 후 등록`;
+    step === 'upload'  ? '일정표 이미지를 업로드하세요' :
+    step === 'loading' ? (PHASE_STEPS[currentPhaseIdx]?.label ?? 'AI가 이미지를 분석하는 중...') :
+                         `${extracted.length}개 일정 추출됨 · 확인 후 등록`;
 
   return (
     <motion.div
@@ -262,7 +271,7 @@ export default function ImageScheduleModal({
         className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 flex flex-col max-h-[90dvh] border border-slate-100 dark:border-slate-700"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="p-6 md:p-8 border-b border-slate-50 dark:border-slate-700 flex justify-between items-center shrink-0 bg-slate-50/50 dark:bg-slate-700/30">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-violet-100 dark:bg-violet-900/50 rounded-2xl flex items-center justify-center text-violet-600 dark:text-violet-400 shrink-0">
@@ -290,7 +299,7 @@ export default function ImageScheduleModal({
           </button>
         </div>
 
-        {/* ── 이미지 미리보기 (리뷰 단계에서 고정 표시) ── */}
+        {/* 이미지 미리보기 — 리뷰 단계에서 상단 고정 */}
         <AnimatePresence>
           {previewUrl && isReview && (
             <motion.div
@@ -319,9 +328,8 @@ export default function ImageScheduleModal({
           )}
         </AnimatePresence>
 
-        {/* ── Body ── */}
+        {/* Body */}
         <div className="flex-1 overflow-y-auto min-h-0">
-          {/* STEP: upload */}
           {step === 'upload' && (
             <div className="p-6 md:p-8 space-y-4">
               <div
@@ -354,7 +362,6 @@ export default function ImageScheduleModal({
                 className="hidden"
                 onChange={handleFileChange}
               />
-
               {errorMsg && (
                 <p className="flex items-center gap-1.5 text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2.5">
                   <AlertCircle className="w-4 h-4 shrink-0" />
@@ -364,7 +371,6 @@ export default function ImageScheduleModal({
             </div>
           )}
 
-          {/* STEP: loading */}
           {step === 'loading' && (
             <div className="p-6 flex flex-col gap-4">
               {previewUrl && (
@@ -395,6 +401,7 @@ export default function ImageScheduleModal({
                 {PHASE_STEPS.map(({ phase, label, Icon }, idx) => {
                   const isDone = idx < currentPhaseIdx;
                   const isActive = idx === currentPhaseIdx;
+                  const cls = phaseStepClasses(isDone, isActive);
                   return (
                     <div
                       key={phase}
@@ -402,28 +409,12 @@ export default function ImageScheduleModal({
                         idx > 0 ? 'border-t border-violet-100 dark:border-violet-800' : ''
                       } ${isActive ? 'bg-violet-100/60 dark:bg-violet-800/30' : ''}`}
                     >
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                        isDone
-                          ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
-                          : isActive
-                          ? 'bg-violet-200 dark:bg-violet-700/60 text-violet-600 dark:text-violet-300'
-                          : 'bg-slate-100 dark:bg-slate-700/50 text-slate-300 dark:text-slate-600'
-                      }`}>
-                        {isDone ? (
-                          <CheckCircle2 className="w-4 h-4" />
-                        ) : isActive ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Icon className="w-4 h-4" />
-                        )}
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${cls.icon}`}>
+                        {isDone    ? <CheckCircle2 className="w-4 h-4" /> :
+                         isActive  ? <Loader2 className="w-4 h-4 animate-spin" /> :
+                                     <Icon className="w-4 h-4" />}
                       </div>
-                      <span className={`text-sm font-bold transition-colors ${
-                        isDone
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : isActive
-                          ? 'text-violet-700 dark:text-violet-300'
-                          : 'text-slate-300 dark:text-slate-600'
-                      }`}>
+                      <span className={`text-sm font-bold transition-colors ${cls.text}`}>
                         {label}
                       </span>
                     </div>
@@ -433,7 +424,6 @@ export default function ImageScheduleModal({
             </div>
           )}
 
-          {/* STEP: review / submitting */}
           {isReview && (
             <div className="p-4 md:p-5 space-y-3">
               {extracted.length === 0 ? (
@@ -471,13 +461,11 @@ export default function ImageScheduleModal({
                             : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
                         }`}
                       >
-                        <div
-                          className={`flex items-center gap-2 px-4 py-3 border-b transition-colors ${
-                            hasErrors
-                              ? 'bg-red-100 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                              : 'bg-slate-50 dark:bg-slate-700/50 border-slate-100 dark:border-slate-700'
-                          }`}
-                        >
+                        <div className={`flex items-center gap-2 px-4 py-3 border-b transition-colors ${
+                          hasErrors
+                            ? 'bg-red-100 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                            : 'bg-slate-50 dark:bg-slate-700/50 border-slate-100 dark:border-slate-700'
+                        }`}>
                           <span className="text-xs font-black text-slate-400 dark:text-slate-500 w-4 shrink-0 text-center">
                             {idx + 1}
                           </span>
@@ -553,15 +541,10 @@ export default function ImageScheduleModal({
                             >
                               <Users className={`w-3.5 h-3.5 shrink-0 ${hasNoStreamers ? 'text-red-500' : 'text-slate-400'}`} />
                               <span className={`text-sm font-medium flex-1 min-w-0 truncate ${
-                                hasNoStreamers
-                                  ? 'text-red-600 dark:text-red-400'
-                                  : 'text-slate-600 dark:text-slate-300'
+                                hasNoStreamers ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-300'
                               }`}>
                                 {s.streamerIds.length > 0 ? (
-                                  streamers
-                                    .filter((st) => s.streamerIds.includes(st.id))
-                                    .map((st) => st.name)
-                                    .join(', ')
+                                  s.streamerIds.map((id) => streamerMap.get(id)).filter(Boolean).join(', ')
                                 ) : (
                                   <span className={hasNoStreamers ? 'font-bold' : 'italic'}>
                                     멤버 미선택 — 탭하여 선택
@@ -611,7 +594,7 @@ export default function ImageScheduleModal({
           )}
         </div>
 
-        {/* ── Footer ── */}
+        {/* Footer */}
         {isReview && (
           <div className="p-5 md:p-6 bg-slate-50 dark:bg-slate-800 flex flex-col gap-3 border-t border-slate-100 dark:border-slate-700 shrink-0">
             {submitError && (
@@ -620,7 +603,7 @@ export default function ImageScheduleModal({
                 <div className="flex-1 whitespace-pre-wrap text-wrap">{submitError}</div>
               </div>
             )}
-            {extracted.some((s) => !s.streamerIds || s.streamerIds.length === 0) && (
+            {hasAnyMissingStreamers && (
               <div className="flex items-start gap-2 text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-2.5">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <div>모든 일정에서 멤버를 선택해야 등록할 수 있습니다.</div>
@@ -637,11 +620,7 @@ export default function ImageScheduleModal({
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={
-                  step === 'submitting' ||
-                  extracted.length === 0 ||
-                  extracted.some((s) => !s.streamerIds || s.streamerIds.length === 0)
-                }
+                disabled={step === 'submitting' || extracted.length === 0 || hasAnyMissingStreamers}
                 className="flex-1 py-3.5 bg-violet-600 text-white rounded-2xl font-bold hover:bg-violet-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {step === 'submitting' ? (
