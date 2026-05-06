@@ -35,7 +35,11 @@ function FilterPanel({
   onClose,
 }: FilterPanelProps) {
   const [tab, setTab] = useState<Tab>('streamer');
-  const { search, setSearch, filtered: filteredStreamers } = useChosungSearch(streamers);
+  const {
+    search,
+    setSearch,
+    filtered: filteredStreamers,
+  } = useChosungSearch(streamers);
 
   return (
     <div className="flex flex-col">
@@ -43,12 +47,16 @@ function FilterPanel({
       <div className="flex items-center border-b border-slate-100 dark:border-slate-800 px-2 pt-2">
         {(['streamer', 'game'] as Tab[]).map((t) => {
           const label = t === 'streamer' ? '스트리머' : '게임';
-          const count = t === 'streamer' ? selectedStreamers.size : selectedGames.size;
+          const count =
+            t === 'streamer' ? selectedStreamers.size : selectedGames.size;
           const isActive = tab === t;
           return (
             <button
               key={t}
-              onClick={() => { setTab(t); setSearch(''); }}
+              onClick={() => {
+                setTab(t);
+                setSearch('');
+              }}
               className={`relative px-3 py-2 text-xs font-black transition-colors ${
                 isActive
                   ? 'text-indigo-600 dark:text-indigo-400'
@@ -135,8 +143,8 @@ function FilterPanel({
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.13, ease: 'easeInOut' }}
           >
-            {tab === 'streamer' && (
-              filteredStreamers.length === 0 ? (
+            {tab === 'streamer' &&
+              (filteredStreamers.length === 0 ? (
                 <p className="text-xs font-bold text-slate-300 dark:text-slate-600 text-center py-4">
                   결과 없음
                 </p>
@@ -150,8 +158,16 @@ function FilterPanel({
                           key={streamer.id}
                           layout
                           initial={{ opacity: 0, scale: 0.85 }}
-                          animate={{ opacity: 1, scale: 1, transition: { delay: i * 0.025, duration: 0.15 } }}
-                          exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.1 } }}
+                          animate={{
+                            opacity: 1,
+                            scale: 1,
+                            transition: { delay: i * 0.025, duration: 0.15 },
+                          }}
+                          exit={{
+                            opacity: 0,
+                            scale: 0.85,
+                            transition: { duration: 0.1 },
+                          }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => onStreamerToggle(streamer.id)}
                           className={`flex flex-col items-center gap-1.5 p-2 rounded-xl transition-colors ${
@@ -160,11 +176,13 @@ function FilterPanel({
                               : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                           }`}
                         >
-                          <div className={`rounded-2xl transition-all ${
-                            isSelected
-                              ? 'ring-2 ring-indigo-400 dark:ring-indigo-500 ring-offset-1 ring-offset-white dark:ring-offset-slate-900'
-                              : ''
-                          }`}>
+                          <div
+                            className={`rounded-2xl transition-all ${
+                              isSelected
+                                ? 'ring-2 ring-indigo-400 dark:ring-indigo-500 ring-offset-1 ring-offset-white dark:ring-offset-slate-900'
+                                : ''
+                            }`}
+                          >
                             <StreamerAvatar
                               name={streamer.name}
                               imgSrc={getStreamerImagePath(streamer.name)}
@@ -173,11 +191,13 @@ function FilterPanel({
                               size="small"
                             />
                           </div>
-                          <span className={`text-[10px] font-black w-full text-center truncate leading-none transition-colors ${
-                            isSelected
-                              ? 'text-indigo-600 dark:text-indigo-400'
-                              : 'text-slate-400 dark:text-slate-500'
-                          }`}>
+                          <span
+                            className={`text-[10px] font-black w-full text-center truncate leading-none transition-colors ${
+                              isSelected
+                                ? 'text-indigo-600 dark:text-indigo-400'
+                                : 'text-slate-400 dark:text-slate-500'
+                            }`}
+                          >
                             {streamer.name}
                           </span>
                         </motion.button>
@@ -185,8 +205,7 @@ function FilterPanel({
                     })}
                   </AnimatePresence>
                 </div>
-              )
-            )}
+              ))}
 
             {tab === 'game' && (
               <div className="space-y-0.5">
@@ -215,7 +234,11 @@ function FilterPanel({
                             initial={{ opacity: 0, scale: 0.5 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.5 }}
-                            transition={{ type: 'spring', damping: 20, stiffness: 400 }}
+                            transition={{
+                              type: 'spring',
+                              damping: 20,
+                              stiffness: 400,
+                            }}
                             className="ml-auto"
                           >
                             <Check className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
@@ -265,8 +288,10 @@ export default function FilterBar({
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (
-        popoverRef.current && !popoverRef.current.contains(e.target as Node) &&
-        buttonRef.current && !buttonRef.current.contains(e.target as Node)
+        popoverRef.current &&
+        !popoverRef.current.contains(e.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node)
       ) {
         setIsOpen(false);
       }
@@ -277,7 +302,6 @@ export default function FilterBar({
 
   return (
     <div className="flex items-center gap-2 flex-wrap shrink-0 mb-3">
-
       {/* 필터 버튼 + 데스크탑 팝오버 */}
       <div className="relative">
         <button
@@ -304,7 +328,10 @@ export default function FilterBar({
               </motion.span>
             )}
           </AnimatePresence>
-          <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <motion.div
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
             <ChevronDown className="w-3 h-3" />
           </motion.div>
         </button>
@@ -349,10 +376,17 @@ export default function FilterBar({
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ type: 'spring', damping: 22, stiffness: 380 }}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border"
-              style={{ color, borderColor: `${color}40`, backgroundColor: `${color}12` }}
+              style={{
+                color,
+                borderColor: `${color}40`,
+                backgroundColor: `${color}12`,
+              }}
             >
               {streamer.name}
-              <button onClick={() => onStreamerToggle(id)} className="hover:opacity-60 transition-opacity">
+              <button
+                onClick={() => onStreamerToggle(id)}
+                className="hover:opacity-60 transition-opacity"
+              >
                 <X className="w-3 h-3" />
               </button>
             </motion.span>
@@ -372,10 +406,17 @@ export default function FilterBar({
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ type: 'spring', damping: 22, stiffness: 380 }}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border"
-              style={{ color, borderColor: `${color}40`, backgroundColor: `${color}12` }}
+              style={{
+                color,
+                borderColor: `${color}40`,
+                backgroundColor: `${color}12`,
+              }}
             >
               {game.title}
-              <button onClick={() => onGameToggle(id)} className="hover:opacity-60 transition-opacity">
+              <button
+                onClick={() => onGameToggle(id)}
+                className="hover:opacity-60 transition-opacity"
+              >
                 <X className="w-3 h-3" />
               </button>
             </motion.span>

@@ -20,6 +20,7 @@ import ConfirmModal from '@/components/Common/ConfirmModal';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
+import { getStreamerImagePath } from '@/lib/utils';
 import Link from 'next/link';
 import type { Streamer, Game } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
@@ -264,6 +265,8 @@ function DetailView({
   onBack: () => void;
   onOpenSheet: (tab: SideTab) => void;
 }) {
+  const liveUrls = schedule.liveUrls ?? [];
+
   return (
     <>
       <div className="h-16 w-full shrink-0 relative transition-colors duration-500" style={{ backgroundColor: gameColor }}>
@@ -302,14 +305,43 @@ function DetailView({
           <div className="flex flex-wrap gap-2">
             {schedule.participants.map((p) => {
               const color = getStreamerColor(p.id, isDark) ?? p.colorCode;
+              const localAvatarPath = getStreamerImagePath(p.name);
               return (
                 <Link
                   key={p.id}
                   href={`/streamers/detail/${p.id}`}
-                  className="px-4 py-2.5 rounded-2xl border font-bold text-sm shadow-sm transition-all hover:scale-105"
-                  style={{ backgroundColor: `${color}08`, color, borderColor: `${color}25` }}
+                  className="inline-flex items-center gap-2 pl-1 pr-3 py-1.5 bg-white dark:bg-slate-700/60 border border-slate-100 dark:border-slate-600 rounded-2xl hover:border-slate-200 dark:hover:border-slate-500 hover:scale-[1.03] transition-all shadow-sm"
                 >
-                  {p.name}
+                  <span
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[11px] font-black shrink-0 overflow-hidden"
+                    style={{ backgroundColor: color }}
+                  >
+                    {p.profileImg ? (
+                      <img
+                        src={localAvatarPath}
+                        alt={`${p.name} 프로필`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (target.src.includes(encodeURIComponent(p.name))) {
+                            target.src = p.profileImg || '/images/default-avatar.webp';
+                            return;
+                          }
+                          target.src = '/images/default-avatar.webp';
+                        }}
+                      />
+                    ) : (
+                      <img
+                        src={localAvatarPath}
+                        alt={`${p.name} 프로필`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/default-avatar.webp';
+                        }}
+                      />
+                    )}
+                  </span>
+                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{p.name}</span>
                 </Link>
               );
             })}
@@ -339,9 +371,9 @@ function DetailView({
             <ExternalLink className="w-4 h-4 text-slate-300 dark:text-slate-600" />
             <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">VOD / Live</span>
           </div>
-          {schedule.liveUrls.length > 0 ? (
+          {liveUrls.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {schedule.liveUrls.map((url) => {
+              {liveUrls.map((url) => {
                 const { label, icon: Icon, className } = getLinkMeta(url);
                 return (
                   <a

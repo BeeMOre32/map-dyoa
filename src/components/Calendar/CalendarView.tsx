@@ -1,7 +1,15 @@
 // src/components/calendar/CalendarView.tsx
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useOptimistic, useTransition, useRef } from 'react';
+import {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useOptimistic,
+  useTransition,
+  useRef,
+} from 'react';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
 import { useHideEndedStreams } from '@/hooks/useHideEndedStreams';
 import {
@@ -69,7 +77,9 @@ export default function CalendarView({
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>(
     'left',
   );
-  const [selectedStreamers, setSelectedStreamers] = useState<Set<string>>(new Set());
+  const [selectedStreamers, setSelectedStreamers] = useState<Set<string>>(
+    new Set(),
+  );
   const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set());
   const { liveIds: liveStreamerIds } = useLiveStatus();
   const [hideEnded] = useHideEndedStreams();
@@ -78,7 +88,10 @@ export default function CalendarView({
 
   useEffect(() => {
     if (viewMode === 'weekly' && todayMobileRef.current) {
-      todayMobileRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      todayMobileRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
     }
   }, [viewMode, currentDate]);
 
@@ -150,8 +163,8 @@ export default function CalendarView({
     }
 
     if (selectedGames.size > 0) {
-      filtered = filtered.filter((s) =>
-        s.gameId != null && selectedGames.has(s.gameId),
+      filtered = filtered.filter(
+        (s) => s.gameId != null && selectedGames.has(s.gameId),
       );
     }
 
@@ -242,7 +255,6 @@ export default function CalendarView({
           </button>
         </div>
       </div>
-
       <FilterBar
         streamers={streamers}
         games={games}
@@ -250,19 +262,21 @@ export default function CalendarView({
         selectedGames={selectedGames}
         onStreamerToggle={handleStreamerToggle}
         onGameToggle={handleGameToggle}
-        onClearAll={() => { setSelectedStreamers(new Set()); setSelectedGames(new Set()); }}
+        onClearAll={() => {
+          setSelectedStreamers(new Set());
+          setSelectedGames(new Set());
+        }}
       />
-
       {hideEnded && (
         <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl w-fit text-xs font-black text-amber-600 dark:text-amber-400 shrink-0">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400 dark:bg-amber-500" />
           종료된 방송 숨김 중
         </div>
       )}
-
       {/* 캘린더 본체 */}
-      <div className={`sm:flex-1 sm:overflow-hidden flex flex-col ${isV2Weekly ? '' : 'bg-white dark:bg-slate-900 rounded-4xl shadow-sm border border-slate-100 dark:border-slate-800'}`}>
-
+      <div
+        className={`sm:flex-1 sm:overflow-hidden flex flex-col ${isV2Weekly ? '' : 'bg-white dark:bg-slate-900 rounded-4xl shadow-sm border border-slate-100 dark:border-slate-800'}`}
+      >
         {/* ── 모바일 주간 리스트 (sm 미만 + weekly) ── */}
         {viewMode === 'weekly' && (
           <div
@@ -274,16 +288,27 @@ export default function CalendarView({
               const dateKey = format(day, 'yyyy-MM-dd');
               const daySchedules = schedulesByDate.get(dateKey) || [];
               const dayIdx = day.getDay();
-              const dayNameColor = dayIdx === 0 ? 'text-red-400' : dayIdx === 6 ? 'text-blue-400' : 'text-slate-400 dark:text-slate-500';
+              const dayNameColor =
+                dayIdx === 0
+                  ? 'text-red-400'
+                  : dayIdx === 6
+                    ? 'text-blue-400'
+                    : 'text-slate-400 dark:text-slate-500';
 
               return (
-                <div key={day.toString()} ref={today ? todayMobileRef : null} className="border-b border-slate-100 dark:border-slate-800 last:border-b-0">
+                <div
+                  key={day.toString()}
+                  ref={today ? todayMobileRef : null}
+                  className="border-b border-slate-100 dark:border-slate-800 last:border-b-0"
+                >
                   {/* 날짜 행 */}
                   <div
                     onClick={() => handleDayClick(day)}
                     className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                   >
-                    <span className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-black shrink-0 ${today ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 dark:text-slate-200'}`}>
+                    <span
+                      className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-black shrink-0 ${today ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 dark:text-slate-200'}`}
+                    >
                       {format(day, 'd')}
                     </span>
                     <span className={`text-sm font-black ${dayNameColor}`}>
@@ -300,7 +325,13 @@ export default function CalendarView({
                   {daySchedules.length > 0 && (
                     <div className="px-4 pb-3 space-y-1.5">
                       {daySchedules.map((schedule, i) => (
-                        <ScheduleCard key={schedule.id} schedule={schedule} variant="mobile" liveStreamerIds={liveStreamerIds} index={i} />
+                        <ScheduleCard
+                          key={schedule.id}
+                          schedule={schedule}
+                          variant="mobile"
+                          liveStreamerIds={liveStreamerIds}
+                          index={i}
+                        />
                       ))}
                     </div>
                   )}
@@ -311,7 +342,9 @@ export default function CalendarView({
         )}
 
         {/* ── 데스크탑 그리드 / 모바일 월간 그리드 ── */}
-        <div className={`${viewMode === 'weekly' ? 'hidden sm:flex' : 'flex'} flex-col sm:flex-1 sm:overflow-hidden`}>
+        <div
+          className={`${viewMode === 'weekly' ? 'hidden sm:flex' : 'flex'} flex-col sm:flex-1 sm:overflow-hidden`}
+        >
           {isV2Weekly ? (
             /* V2 weekly — 카드형 컬럼 레이아웃 */
             <div
@@ -324,7 +357,12 @@ export default function CalendarView({
                   const dateKey = format(day, 'yyyy-MM-dd');
                   const daySchedules = schedulesByDate.get(dateKey) || [];
                   const dayIdx = day.getDay();
-                  const dayNameColor = dayIdx === 0 ? 'text-red-400' : dayIdx === 6 ? 'text-blue-500' : 'text-slate-400 dark:text-slate-500';
+                  const dayNameColor =
+                    dayIdx === 0
+                      ? 'text-red-400'
+                      : dayIdx === 6
+                        ? 'text-blue-500'
+                        : 'text-slate-400 dark:text-slate-500';
 
                   return (
                     <div
@@ -336,17 +374,29 @@ export default function CalendarView({
                           : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
                       }`}
                     >
-                      <div className={`px-3 pt-3 pb-2 shrink-0 border-b ${today ? 'border-indigo-100 dark:border-indigo-900/40' : 'border-slate-100 dark:border-slate-800'}`}>
-                        <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${dayNameColor}`}>
+                      <div
+                        className={`px-3 pt-3 pb-2 shrink-0 border-b ${today ? 'border-indigo-100 dark:border-indigo-900/40' : 'border-slate-100 dark:border-slate-800'}`}
+                      >
+                        <p
+                          className={`text-[10px] font-black uppercase tracking-widest mb-1 ${dayNameColor}`}
+                        >
                           {weekDays[dayIdx]}
                         </p>
-                        <p className={`text-2xl font-black leading-none ${today ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200'}`}>
+                        <p
+                          className={`text-2xl font-black leading-none ${today ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200'}`}
+                        >
                           {format(day, 'd')}
                         </p>
                       </div>
                       <div className="flex flex-col flex-1 gap-1.5 p-2 overflow-y-auto custom-scrollbar">
                         {daySchedules.map((schedule, i) => (
-                          <ScheduleCardV2 key={schedule.id} schedule={schedule} variant="weekly" liveStreamerIds={liveStreamerIds} index={i} />
+                          <ScheduleCardV2
+                            key={schedule.id}
+                            schedule={schedule}
+                            variant="weekly"
+                            liveStreamerIds={liveStreamerIds}
+                            index={i}
+                          />
                         ))}
                       </div>
                     </div>
@@ -422,7 +472,13 @@ export default function CalendarView({
                         {/* 데스크탑: 텍스트 카드 */}
                         <div className="hidden sm:flex flex-col flex-1 min-h-0 gap-1.5 overflow-y-auto custom-scrollbar">
                           {daySchedules.map((schedule, i) => (
-                            <ScheduleCard key={schedule.id} schedule={schedule} variant={viewMode} liveStreamerIds={liveStreamerIds} index={i} />
+                            <ScheduleCard
+                              key={schedule.id}
+                              schedule={schedule}
+                              variant={viewMode}
+                              liveStreamerIds={liveStreamerIds}
+                              index={i}
+                            />
                           ))}
                         </div>
                       </div>
@@ -433,9 +489,8 @@ export default function CalendarView({
             </>
           )}
         </div>
-
-      </div> {/* 캘린더 본체 */}
-
+      </div>{' '}
+      {/* 캘린더 본체 */}
       <AnimatePresence>
         {isFormOpen && (
           <ScheduleFormModal

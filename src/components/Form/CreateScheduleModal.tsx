@@ -47,7 +47,8 @@ export default function CreateScheduleModal({
   );
 
   const showEditOrSingle = isEdit || createMode === 'single';
-  const showExtract = !isEdit && (createMode === 'image' || createMode === 'text');
+  const showExtract =
+    !isEdit && (createMode === 'image' || createMode === 'text');
   const showBatch = !isEdit && createMode === 'batch' && !showExtract;
 
   return (

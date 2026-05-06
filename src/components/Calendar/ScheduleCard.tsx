@@ -17,7 +17,9 @@ function LiveBadge() {
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80" />
         <span className="relative inline-flex rounded-full w-2 h-2 bg-white" />
       </span>
-      <span className="text-[10px] font-black text-white uppercase tracking-wider">LIVE</span>
+      <span className="text-[10px] font-black text-white uppercase tracking-wider">
+        LIVE
+      </span>
     </span>
   );
 }
@@ -26,7 +28,9 @@ function EndedBadge() {
   return (
     <span className="inline-flex items-center gap-1 shrink-0 px-2.5 py-1 bg-slate-400 dark:bg-slate-600 rounded-full">
       <span className="w-1.5 h-1.5 rounded-full bg-white/80" />
-      <span className="text-[10px] font-black text-white tracking-wider">종료</span>
+      <span className="text-[10px] font-black text-white tracking-wider">
+        종료
+      </span>
     </span>
   );
 }
@@ -38,7 +42,12 @@ interface ScheduleCardProps {
   index?: number;
 }
 
-export default function ScheduleCard({ schedule, variant, liveStreamerIds, index = 0 }: ScheduleCardProps) {
+export default function ScheduleCard({
+  schedule,
+  variant,
+  liveStreamerIds,
+  index = 0,
+}: ScheduleCardProps) {
   const href = `/calendar/schedule/${schedule.id}`;
   const stopProp = (e: React.MouseEvent) => e.stopPropagation();
   const { resolvedTheme } = useTheme();
@@ -72,7 +81,10 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds, index
         <Link
           href={href}
           scroll={false}
-          onClick={(e) => { stopProp(e); trackOpen(); }}
+          onClick={(e) => {
+            stopProp(e);
+            trackOpen();
+          }}
           className={`flex items-center gap-2.5 px-3 py-2.5 rounded-2xl border text-sm font-bold transition-shadow ${
             isLive
               ? 'ring-1 ring-red-400/70 dark:ring-red-500/50 shadow-[0_2px_10px_rgba(239,68,68,0.18)]'
@@ -88,12 +100,18 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds, index
           }`}
           style={
             gameColor
-              ? { backgroundColor: `${gameColor}35`, borderColor: `${gameColor}70`, color: gameColor }
+              ? {
+                  backgroundColor: `${gameColor}35`,
+                  borderColor: `${gameColor}70`,
+                  color: gameColor,
+                }
               : undefined
           }
         >
           <span className="text-xs opacity-60 shrink-0 font-semibold">
-            {schedule.isGuerrilla ? '미정' : format(new Date(schedule.startTime), 'HH:mm')}
+            {schedule.isGuerrilla
+              ? '미정'
+              : format(new Date(schedule.startTime), 'HH:mm')}
           </span>
           <span className="truncate flex-1">{schedule.title}</span>
           {isLive && <LiveBadge />}
@@ -112,12 +130,18 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds, index
         whileHover={{ scale: 1.03, transition: { duration: 0.1 } }}
         whileTap={{ scale: 0.96 }}
       >
-        <Link href={href} scroll={false} className="block" onClick={(e) => { stopProp(e); trackOpen(); }}>
+        <Link
+          href={href}
+          scroll={false}
+          className="block"
+          onClick={(e) => {
+            stopProp(e);
+            trackOpen();
+          }}
+        >
           <div
             className={`flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-md border shadow-sm shrink-0 ${
-              isLive
-                ? 'ring-1 ring-red-400/60 dark:ring-red-500/40'
-                : ''
+              isLive ? 'ring-1 ring-red-400/60 dark:ring-red-500/40' : ''
             } ${
               gameColor
                 ? ''
@@ -129,7 +153,11 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds, index
             }`}
             style={
               gameColor
-                ? { backgroundColor: `${gameColor}35`, borderColor: `${gameColor}70`, color: gameColor }
+                ? {
+                    backgroundColor: `${gameColor}35`,
+                    borderColor: `${gameColor}70`,
+                    color: gameColor,
+                  }
                 : undefined
             }
           >
@@ -154,107 +182,125 @@ export default function ScheduleCard({ schedule, variant, liveStreamerIds, index
       whileHover={{ y: -2, transition: { duration: 0.12, ease: 'easeOut' } }}
       whileTap={{ scale: 0.97 }}
     >
-      <Link href={href} scroll={false} className="block" onClick={(e) => { stopProp(e); trackOpen(); }}>
-      <div
-        className={`relative px-2.5 py-2 rounded-xl border shadow-sm space-y-1.5 transition-shadow hover:shadow-md ${
-          isLive
-            ? 'ring-1 ring-red-400/70 dark:ring-red-500/50 shadow-[0_2px_12px_rgba(239,68,68,0.18)]'
-            : ''
-        } ${
-          gameColor
-            ? ''
-            : schedule.game
-              ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
-              : isLive
-                ? 'bg-red-50/50 dark:bg-red-900/10 border-red-200 dark:border-red-700/50'
-                : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
-        }`}
-        style={
-          gameColor
-            ? { backgroundColor: `${gameColor}25`, borderColor: `${gameColor}70` }
-            : undefined
-        }
+      <Link
+        href={href}
+        scroll={false}
+        className="block"
+        onClick={(e) => {
+          stopProp(e);
+          trackOpen();
+        }}
       >
-        {(isLive || isEnded) && (
-          <span className="absolute top-2 right-2.5">
-            {isLive ? <LiveBadge /> : <EndedBadge />}
-          </span>
-        )}
-
-        {/* 상단: 게임 배지 / 미정 배지 */}
-        <div className={`flex items-center gap-1 flex-wrap ${isLive || isEnded ? 'pr-16' : ''}`}>
-          {schedule.game && (
-            <span
-              className={`inline-flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
-                gameColor ? '' : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400'
-              }`}
-              style={
-                gameColor
-                  ? { backgroundColor: `${gameColor}40`, color: gameColor }
-                  : undefined
-              }
-            >
-              <Gamepad2 className="w-3 h-3" />
-              {schedule.game.title}
-            </span>
-          )}
-          {schedule.isGuerrilla && (
-            <span className="inline-flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 shrink-0">
-              <Zap className="w-3 h-3" />
-              시간 미정
-            </span>
-          )}
-        </div>
-
-        {!schedule.isGuerrilla && (
-          <div className="flex items-center gap-1 text-[13px] font-semibold text-slate-400 dark:text-slate-500">
-            <Clock className="w-3 h-3 shrink-0" />
-            {format(new Date(schedule.startTime), 'HH:mm')}
-            {schedule.endTime && (
-              <span className="opacity-70">
-                → {format(new Date(schedule.endTime), 'HH:mm')}
-              </span>
-            )}
-          </div>
-        )}
-
-        <p
-          className={`text-sm font-bold line-clamp-2 leading-snug ${
+        <div
+          className={`relative px-2.5 py-2 rounded-xl border shadow-sm space-y-1.5 transition-shadow hover:shadow-md ${
+            isLive
+              ? 'ring-1 ring-red-400/70 dark:ring-red-500/50 shadow-[0_2px_12px_rgba(239,68,68,0.18)]'
+              : ''
+          } ${
             gameColor
               ? ''
               : schedule.game
-                ? 'text-amber-800 dark:text-amber-300'
-                : 'text-slate-700 dark:text-slate-200'
+                ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+                : isLive
+                  ? 'bg-red-50/50 dark:bg-red-900/10 border-red-200 dark:border-red-700/50'
+                  : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
           }`}
-          style={gameColor ? { color: gameColor } : undefined}
+          style={
+            gameColor
+              ? {
+                  backgroundColor: `${gameColor}25`,
+                  borderColor: `${gameColor}70`,
+                }
+              : undefined
+          }
         >
-          {schedule.title}
-        </p>
+          {(isLive || isEnded) && (
+            <span className="absolute top-2 right-2.5">
+              {isLive ? <LiveBadge /> : <EndedBadge />}
+            </span>
+          )}
 
-        {schedule.participants.length > 0 && (
-          <div className="flex items-center gap-1 flex-wrap">
-            {schedule.participants.slice(0, 3).map((p) => (
+          {/* 상단: 게임 배지 / 미정 배지 */}
+          <div
+            className={`flex items-center gap-1 flex-wrap ${isLive || isEnded ? 'pr-16' : ''}`}
+          >
+            {schedule.game && (
               <span
-                key={p.id}
-                className="text-[11px] font-bold px-1.5 py-0.5 rounded-full border shrink-0"
-                style={((c) => ({
-                  borderColor: `${c}60`,
-                  color: c,
-                  backgroundColor: `${c}18`,
-                }))(getStreamerColor(p.id, resolvedTheme === 'dark') ?? p.colorCode)}
+                className={`inline-flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                  gameColor
+                    ? ''
+                    : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400'
+                }`}
+                style={
+                  gameColor
+                    ? { backgroundColor: `${gameColor}40`, color: gameColor }
+                    : undefined
+                }
               >
-                {p.name}
+                <Gamepad2 className="w-3 h-3" />
+                {schedule.game.title}
               </span>
-            ))}
-            {schedule.participants.length > 3 && (
-              <span className="text-[11px] text-slate-400 dark:text-slate-500 font-bold">
-                +{schedule.participants.length - 3}
+            )}
+            {schedule.isGuerrilla && (
+              <span className="inline-flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 shrink-0">
+                <Zap className="w-3 h-3" />
+                시간 미정
               </span>
             )}
           </div>
-        )}
-      </div>
-    </Link>
+
+          {!schedule.isGuerrilla && (
+            <div className="flex items-center gap-1 text-[13px] font-semibold text-slate-400 dark:text-slate-500">
+              <Clock className="w-3 h-3 shrink-0" />
+              {format(new Date(schedule.startTime), 'HH:mm')}
+              {schedule.endTime && (
+                <span className="opacity-70">
+                  → {format(new Date(schedule.endTime), 'HH:mm')}
+                </span>
+              )}
+            </div>
+          )}
+
+          <p
+            className={`text-sm font-bold line-clamp-2 leading-snug ${
+              gameColor
+                ? ''
+                : schedule.game
+                  ? 'text-amber-800 dark:text-amber-300'
+                  : 'text-slate-700 dark:text-slate-200'
+            }`}
+            style={gameColor ? { color: gameColor } : undefined}
+          >
+            {schedule.title}
+          </p>
+
+          {schedule.participants.length > 0 && (
+            <div className="flex items-center gap-1 flex-wrap">
+              {schedule.participants.slice(0, 3).map((p) => (
+                <span
+                  key={p.id}
+                  className="text-[11px] font-bold px-1.5 py-0.5 rounded-full border shrink-0"
+                  style={((c) => ({
+                    borderColor: `${c}60`,
+                    color: c,
+                    backgroundColor: `${c}18`,
+                  }))(
+                    getStreamerColor(p.id, resolvedTheme === 'dark') ??
+                      p.colorCode,
+                  )}
+                >
+                  {p.name}
+                </span>
+              ))}
+              {schedule.participants.length > 3 && (
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 font-bold">
+                  +{schedule.participants.length - 3}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </Link>
     </motion.div>
   );
 }
