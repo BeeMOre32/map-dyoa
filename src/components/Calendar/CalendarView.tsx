@@ -237,8 +237,8 @@ export default function CalendarView({
   return (
     <div className="flex flex-col p-4 md:p-6 sm:flex-1 sm:min-h-0 sm:overflow-hidden">
       {/* 상단 컨트롤 영역 */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center shrink-0 mb-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center shrink-0 mb-4 gap-3">
+        <div className="flex items-center gap-3 w-full md:w-auto min-w-0">
           <div className="flex bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 p-1">
             <button
               onClick={prevPeriod}
@@ -253,12 +253,12 @@ export default function CalendarView({
               <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
             </button>
           </div>
-          <div>
-            <h2 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight leading-none">
+          <div className="min-w-0">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight leading-none truncate">
               {format(currentDate, 'yyyy년 M월')}
             </h2>
             {viewMode === 'weekly' && (
-              <p className="text-slate-400 dark:text-slate-500 font-bold text-xs mt-1">
+              <p className="text-slate-400 dark:text-slate-500 font-bold text-[11px] mt-1 truncate">
                 {format(startOfWeek(currentDate), 'M. d')} -{' '}
                 {format(endOfWeek(currentDate), 'M. d')}
               </p>
@@ -266,23 +266,23 @@ export default function CalendarView({
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 mt-3 md:mt-0">
+        <div className="flex items-center gap-2 w-full md:w-auto md:justify-end flex-wrap md:flex-nowrap">
           <button
             onClick={() => setCurrentDate(new Date())}
-            className="flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-200 dark:hover:border-indigo-700 transition-colors"
+            className="h-8 px-3 rounded-lg text-sm font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-200 dark:hover:border-indigo-700 transition-colors shrink-0"
           >
             오늘
           </button>
-          <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-800">
+          <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-800 shrink-0">
             <button
               onClick={() => setViewMode('weekly')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-bold transition-all ${viewMode === 'weekly' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-sm font-bold transition-all ${viewMode === 'weekly' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
             >
               <LayoutGrid className="w-4 h-4" /> 주간
             </button>
             <button
               onClick={() => setViewMode('monthly')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-bold transition-all ${viewMode === 'monthly' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-sm font-bold transition-all ${viewMode === 'monthly' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
             >
               <CalendarIcon className="w-4 h-4" /> 월간
             </button>
@@ -292,10 +292,10 @@ export default function CalendarView({
               setEditSchedule(undefined);
               setIsFormOpen(true);
             }}
-            className="flex-1 md:flex-none flex items-center justify-center gap-1.5 bg-indigo-600 text-white px-4 py-1.5 rounded-lg font-bold hover:bg-indigo-700 transition-colors shadow-sm text-sm"
+            className="h-8 flex-1 sm:flex-none sm:min-w-[96px] flex items-center justify-center gap-1.5 bg-indigo-600 text-white px-3 sm:px-4 rounded-lg font-bold hover:bg-indigo-700 transition-colors shadow-sm text-sm"
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden md:inline">일정 추가</span>
+            <span>일정 추가</span>
           </button>
         </div>
       </div>
