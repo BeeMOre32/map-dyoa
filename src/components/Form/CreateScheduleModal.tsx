@@ -50,6 +50,7 @@ export default function CreateScheduleModal({
   const showExtract =
     !isEdit && (createMode === 'image' || createMode === 'text');
   const showBatch = !isEdit && createMode === 'batch' && !showExtract;
+  const modalMaxWidthClass = showExtract ? 'max-w-5xl' : 'max-w-lg';
 
   return (
     <>
@@ -62,7 +63,7 @@ export default function CreateScheduleModal({
       >
         <motion.div
           variants={smoothModalVariants}
-          className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 flex flex-col max-h-[90dvh] border border-slate-100 dark:border-slate-700"
+          className={`bg-white dark:bg-slate-800 w-full ${modalMaxWidthClass} rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 flex flex-col max-h-[90dvh] border border-slate-100 dark:border-slate-700`}
           onClick={(e) => e.stopPropagation()}
         >
           <ModalHeader

@@ -30,17 +30,20 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
+  Lock,
   Calendar as CalendarIcon,
   LayoutGrid,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
+import { useSession } from 'next-auth/react';
 
 import ScheduleFormModal from '@/components/Form/CreateScheduleModal';
 import ScheduleCard from '@/components/Calendar/ScheduleCard';
 import ScheduleCardV2 from '@/components/Calendar/ScheduleCardV2';
 import FilterBar from '@/components/Calendar/FilterBar';
 import { useExperimentalFeatures } from '@/hooks/useExperimentalFeatures';
+import { useToast } from '@/components/Common/Toaster';
 
 import type { Streamer, Game } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
@@ -59,6 +62,8 @@ export default function CalendarView({
   games,
 }: CalendarViewProps) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const toast = useToast();
   const [mounted, setMounted] = useState(false);
   const [, startTransition] = useTransition();
 
@@ -229,6 +234,19 @@ export default function CalendarView({
   }, []);
 
   const isV2Weekly = flags.newCalendarUI && viewMode === 'weekly';
+  const isLoggedIn = !!session;
+
+  const handleOpenCreateModal = useCallback(() => {
+    if (!isLoggedIn) {
+      toast.error('로그인이 필요합니다.', {
+        actionLabel: '로그인하기',
+        onAction: () => router.push('/login'),
+      });
+      return;
+    }
+    setEditSchedule(undefined);
+    setIsFormOpen(true);
+  }, [isLoggedIn, toast, router]);
 
   if (!mounted) {
     return <div className="flex-1 bg-slate-50/50 dark:bg-slate-950" />;
@@ -288,13 +306,14 @@ export default function CalendarView({
             </button>
           </div>
           <button
-            onClick={() => {
-              setEditSchedule(undefined);
-              setIsFormOpen(true);
-            }}
-            className="h-8 flex-1 sm:flex-none sm:min-w-[96px] flex items-center justify-center gap-1.5 bg-indigo-600 text-white px-3 sm:px-4 rounded-lg font-bold hover:bg-indigo-700 transition-colors shadow-sm text-sm"
+            onClick={handleOpenCreateModal}
+            className={`h-8 flex-1 sm:flex-none sm:min-w-[96px] flex items-center justify-center gap-1.5 px-3 sm:px-4 rounded-lg font-bold transition-colors shadow-sm text-sm ${
+              isLoggedIn
+                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                : 'bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-400/80 dark:hover:bg-slate-600'
+            }`}
           >
-            <Plus className="w-4 h-4" />
+            {isLoggedIn ? <Plus className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
             <span>일정 추가</span>
           </button>
         </div>

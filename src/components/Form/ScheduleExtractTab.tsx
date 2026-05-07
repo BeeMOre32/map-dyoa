@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Sparkles,
+  Eye,
   Trash2,
   CalendarDays,
   Clock,
@@ -53,6 +54,14 @@ const TEXT_PHASES: PhaseConfig[] = [
 
 const IMAGE_PROGRESS = [5, 28, 55, 80, 95];
 const TEXT_PROGRESS  = [5, 45, 80, 95];
+const EXTRACT_DRAFT_TTL_MS = 1000 * 60 * 10; // 10분
+
+type PersistedExtractDraft = {
+  updatedAt: number;
+  step: 'input' | 'review';
+  extracted: ExtractedSchedule[];
+  textInput: string;
+};
 
 function phaseClasses(isDone: boolean, isActive: boolean) {
   if (isDone) return {
@@ -85,6 +94,8 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loadingPhase, setLoadingPhase] = useState<string | null>(null);
+  const [displayProgress, setDisplayProgress] = useState(5);
+  const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -93,6 +104,7 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
 
   const phases = mode === 'image' ? IMAGE_PHASES : TEXT_PHASES;
   const progressArr = mode === 'image' ? IMAGE_PROGRESS : TEXT_PROGRESS;
+  const storageKey = `schedule-extract-draft:v1:${mode}`;
 
   const sortedStreamers = useMemo(
     () => [...streamers].sort((a, b) => a.name.localeCompare(b.name, 'ko-KR')),
@@ -102,6 +114,46 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
     () => new Map(streamers.map((st) => [st.id, st.name])),
     [streamers],
   );
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(storageKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as PersistedExtractDraft;
+      if (!parsed.updatedAt || Date.now() - parsed.updatedAt > EXTRACT_DRAFT_TTL_MS) {
+        sessionStorage.removeItem(storageKey);
+        return;
+      }
+      if (Array.isArray(parsed.extracted) && parsed.extracted.length > 0) {
+        setExtracted(parsed.extracted);
+        setStep(parsed.step === 'review' ? 'review' : 'input');
+      }
+      if (typeof parsed.textInput === 'string') {
+        setTextInput(parsed.textInput);
+      }
+    } catch {
+      sessionStorage.removeItem(storageKey);
+    }
+  }, [storageKey]);
+
+  useEffect(() => {
+    try {
+      const shouldPersist = extracted.length > 0 || (mode === 'text' && textInput.trim().length > 0);
+      if (!shouldPersist) {
+        sessionStorage.removeItem(storageKey);
+        return;
+      }
+      const payload: PersistedExtractDraft = {
+        updatedAt: Date.now(),
+        step: step === 'review' || step === 'submitting' ? 'review' : 'input',
+        extracted,
+        textInput,
+      };
+      sessionStorage.setItem(storageKey, JSON.stringify(payload));
+    } catch {
+      // ignore storage errors
+    }
+  }, [extracted, textInput, step, mode, storageKey]);
 
   const consumeSSE = useCallback(async (res: Response) => {
     if (!res.body) {
@@ -204,6 +256,7 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
     setErrorMsg(null);
     setSubmitError(null);
     setLoadingPhase(null);
+    sessionStorage.removeItem(storageKey);
   };
 
   const updateSchedule = (key: string, updates: Partial<ExtractedSchedule>) =>
@@ -255,6 +308,7 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
     });
 
     if (failures.length === 0) {
+      sessionStorage.removeItem(storageKey);
       onClose();
     } else {
       setSubmitError(failures.join('\n'));
@@ -264,38 +318,51 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
 
   const currentPhaseIdx = loadingPhase ? phases.findIndex((p) => p.phase === loadingPhase) : -1;
   const progressPct = progressArr[currentPhaseIdx + 1] ?? 5;
+  const fakeProgressCap = Math.min(97, progressPct + (currentPhaseIdx >= 1 ? 14 : 10));
+  const shownProgress = Math.max(progressPct, Math.round(displayProgress));
   const isReview = step === 'review' || step === 'submitting';
+  const showPreviewPanel =
+    mode === 'image' && !!previewUrl && (step === 'loading' || isReview);
   const hasAnyMissingStreamers = extracted.some((s) => !s.streamerIds?.length);
 
-  return (
-    <div className="flex-1 flex flex-col min-h-0">
-      {/* Image preview strip (review mode only) */}
-      <AnimatePresence>
-        {mode === 'image' && previewUrl && isReview && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="shrink-0 overflow-hidden border-b border-slate-100 dark:border-slate-700"
-          >
-            <div className="relative bg-slate-900">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={previewUrl} alt="업로드된 일정표" className="w-full max-h-48 object-contain" />
-              <button
-                onClick={handleReset}
-                className="absolute top-2 right-2 flex items-center gap-1.5 px-2.5 py-1.5 bg-black/50 hover:bg-black/70 text-white rounded-xl text-xs font-bold transition-colors backdrop-blur-sm"
-              >
-                <RefreshCw className="w-3 h-3" />
-                재업로드
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+  useEffect(() => {
+    if (step !== 'loading') {
+      setDisplayProgress(5);
+      return;
+    }
 
-      {/* Scrollable body */}
-      <div className="flex-1 overflow-y-auto min-h-0">
+    setDisplayProgress((prev) => Math.max(prev, progressPct));
+    const timer = setInterval(() => {
+      setDisplayProgress((prev) => {
+        const target = Math.max(progressPct, fakeProgressCap);
+        if (prev >= target) return prev;
+        const gap = target - prev;
+        const delta = gap > 10 ? 1.6 : gap > 4 ? 0.8 : 0.35;
+        return Math.min(target, prev + delta);
+      });
+    }, 220);
+
+    return () => clearInterval(timer);
+  }, [step, progressPct, fakeProgressCap]);
+
+  return (
+    <div className="flex-1 min-h-0 flex flex-col">
+      {showPreviewPanel && (
+        <div className="shrink-0 px-4 pt-3 md:hidden">
+          <button
+            type="button"
+            onClick={() => setIsMobilePreviewOpen(true)}
+            className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3 py-2 text-sm font-bold text-slate-600 dark:text-slate-300"
+          >
+            <Eye className="w-4 h-4" />
+            이미지 보기
+          </button>
+        </div>
+      )}
+
+      <div className="flex-1 min-h-0 flex">
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto min-h-0">
 
         {/* ── IMAGE INPUT ── */}
         {step === 'input' && mode === 'image' && (
@@ -394,12 +461,22 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
               <div className="relative h-1.5 bg-violet-100 dark:bg-violet-900/40 rounded-full overflow-hidden">
                 <motion.div
                   className="absolute inset-y-0 left-0 bg-violet-500 rounded-full"
-                  animate={{ width: `${progressPct}%` }}
+                  animate={{ width: `${shownProgress}%` }}
                   transition={{ duration: 0.9, ease: 'easeOut' }}
                 />
               </div>
               <p className="text-right text-[11px] font-bold text-violet-400 dark:text-violet-500 tabular-nums">
-                {progressPct}%
+                {shownProgress}%
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-violet-200/70 dark:border-violet-800 bg-violet-50/70 dark:bg-violet-900/20 px-4 py-3">
+              <p className="text-xs font-black text-violet-700 dark:text-violet-300">
+                AI가 일정을 읽는 중입니다
+              </p>
+              <p className="mt-1 text-[11px] font-medium text-violet-600/90 dark:text-violet-300/90 leading-relaxed">
+                현재 단계: {phases[currentPhaseIdx]?.label ?? '분석 준비 중'}.
+                {" "}탭을 이동해도 추출 결과는 10분 동안 임시 저장됩니다.
               </p>
             </div>
 
@@ -599,6 +676,27 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
             )}
           </div>
         )}
+        </div>
+
+        {showPreviewPanel && (
+          <div className="hidden md:flex md:w-80 lg:w-96 shrink-0 border-l border-slate-100 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/50 p-3">
+            <div className="w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-900 relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={previewUrl}
+                alt="업로드된 일정표"
+                className="w-full h-full max-h-[65dvh] object-contain"
+              />
+              <button
+                onClick={handleReset}
+                className="absolute top-2 right-2 flex items-center gap-1.5 px-2.5 py-1.5 bg-black/50 hover:bg-black/70 text-white rounded-xl text-xs font-bold transition-colors backdrop-blur-sm"
+              >
+                <RefreshCw className="w-3 h-3" />
+                재업로드
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footer (review/submitting only) */}
@@ -645,6 +743,41 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
           </div>
         </div>
       )}
+
+      <AnimatePresence>
+        {showPreviewPanel && isMobilePreviewOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-90 bg-black/70 backdrop-blur-sm p-4 md:hidden"
+            onClick={() => setIsMobilePreviewOpen(false)}
+          >
+            <motion.div
+              initial={{ y: 24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 24, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="h-full w-full rounded-3xl overflow-hidden border border-slate-700 bg-slate-900 relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={previewUrl}
+                alt="업로드된 일정표 전체보기"
+                className="w-full h-full object-contain"
+              />
+              <button
+                type="button"
+                onClick={() => setIsMobilePreviewOpen(false)}
+                className="absolute top-3 right-3 rounded-xl px-3 py-1.5 text-xs font-bold bg-black/60 text-white"
+              >
+                닫기
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

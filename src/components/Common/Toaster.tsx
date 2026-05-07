@@ -8,16 +8,25 @@ interface ToastItem {
   id: string;
   type: 'success' | 'error';
   message: string;
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
-const ToastCtx = createContext<{ add: (type: ToastItem['type'], message: string) => void } | null>(null);
+type ToastOptions = {
+  actionLabel?: string;
+  onAction?: () => void;
+};
+
+const ToastCtx = createContext<{
+  add: (type: ToastItem['type'], message: string, options?: ToastOptions) => void;
+} | null>(null);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
-  const add = useCallback((type: ToastItem['type'], message: string) => {
+  const add = useCallback((type: ToastItem['type'], message: string, options?: ToastOptions) => {
     const id = Math.random().toString(36).slice(2);
-    setToasts((prev) => [...prev, { id, type, message }]);
+    setToasts((prev) => [...prev, { id, type, message, ...options }]);
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
   }, []);
 
@@ -47,6 +56,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 ? <CheckCircle2 className="w-4 h-4 shrink-0" />
                 : <XCircle className="w-4 h-4 shrink-0" />}
               <span className="flex-1">{t.message}</span>
+              {t.actionLabel && t.onAction && (
+                <button
+                  onClick={() => {
+                    t.onAction?.();
+                    remove(t.id);
+                  }}
+                  className="shrink-0 px-2 py-1 rounded-lg text-[11px] font-black bg-white/70 dark:bg-slate-800/70 hover:bg-white dark:hover:bg-slate-700 border border-current/20"
+                >
+                  {t.actionLabel}
+                </button>
+              )}
               <button
                 onClick={() => remove(t.id)}
                 className="shrink-0 opacity-50 hover:opacity-100 transition-opacity"
@@ -66,7 +86,7 @@ export function useToast() {
   if (!ctx) throw new Error('useToast must be used inside ToastProvider');
   const { add } = ctx;
   return useMemo(() => ({
-    success: (message: string) => add('success', message),
-    error: (message: string) => add('error', message),
+    success: (message: string, options?: ToastOptions) => add('success', message, options),
+    error: (message: string, options?: ToastOptions) => add('error', message, options),
   }), [add]);
 }
