@@ -133,18 +133,30 @@ const CLIP_INCLUDE = {
 /**
  * 클립 페이지네이션 (서버사이드 필터링 포함)
  */
+export type ClipSortOption = 'newest' | 'oldest' | 'date_desc' | 'date_asc' | 'title';
+
+const CLIP_SORT_MAP: Record<ClipSortOption, Prisma.ClipOrderByWithRelationInput> = {
+  newest:    { createdAt: 'desc' },
+  oldest:    { createdAt: 'asc' },
+  date_desc: { clipDate: 'desc' },
+  date_asc:  { clipDate: 'asc' },
+  title:     { title: 'asc' },
+};
+
 export async function getClipsPaginated({
   page = 1,
   pageSize = 20,
   streamerId,
   month,
   q,
+  sort = 'newest',
 }: {
   page?: number;
   pageSize?: number;
   streamerId?: string;
   month?: string;
   q?: string;
+  sort?: ClipSortOption;
 }) {
   const conditions: Prisma.ClipWhereInput[] = [];
 
@@ -179,7 +191,7 @@ export async function getClipsPaginated({
     prisma.clip.findMany({
       where,
       include: CLIP_INCLUDE,
-      orderBy: { createdAt: 'desc' },
+      orderBy: CLIP_SORT_MAP[sort],
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
@@ -203,7 +215,7 @@ export const getScheduleDetail = unstable_cache(
       },
     });
   },
-  ['schedule-detail'],
+  ['schedule-detail', scheduleId],
   { revalidate: 60, tags: ['calendar'] },
 );
 

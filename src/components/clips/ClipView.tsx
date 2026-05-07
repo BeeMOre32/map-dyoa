@@ -1,18 +1,19 @@
 'use client';
 
-import { useState, useCallback, useEffect, useTransition } from 'react';
+import { useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Clapperboard, Plus, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Clapperboard, Plus, Search, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import type { ClipWithParticipants } from '@/types/entities';
 import type { Streamer } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
+import { useClipNavigation, type ClipSortOption } from '@/hooks/useClipNavigation';
 import ClipCard from './ClipCard';
 import CreateClipModal from './CreateClipModal';
 import { ClipSkeletonCard } from './ClipSkeleton';
+import { ClipPagination } from './ClipPagination';
 
 interface ClipViewProps {
   clips: ClipWithParticipants[];
@@ -22,7 +23,7 @@ interface ClipViewProps {
   total: number;
   totalPages: number;
   currentPage: number;
-  currentFilters: { streamerId: string; month: string; q: string };
+  currentFilters: { streamerId: string; month: string; q: string; sort: ClipSortOption };
 }
 
 export default function ClipView({
@@ -36,64 +37,17 @@ export default function ClipView({
   currentFilters,
 }: ClipViewProps) {
   const { data: session } = useSession();
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const [showModal, setShowModal] = useState(false);
   const [editingClip, setEditingClip] = useState<ClipWithParticipants | null>(null);
-  const [searchValue, setSearchValue] = useState(currentFilters.q);
 
-  useEffect(() => {
-    setSearchValue(currentFilters.q);
-  }, [currentFilters.q]);
+  const { isPending, searchValue, setSearchValue, buildUrl, navigate, clearFilters, hasFilter } =
+    useClipNavigation(currentFilters, currentPage);
 
-  const buildUrl = useCallback(
-    (updates: Partial<{ page: number; streamer: string; month: string; q: string }>) => {
-      const merged = {
-        streamer: currentFilters.streamerId,
-        month: currentFilters.month,
-        q: currentFilters.q,
-        page: currentPage,
-        ...updates,
-      };
-      const params = new URLSearchParams();
-      if (merged.streamer) params.set('streamer', merged.streamer);
-      if (merged.month) params.set('month', merged.month);
-      if (merged.q) params.set('q', merged.q);
-      if (merged.page && merged.page > 1) params.set('page', String(merged.page));
-      const qs = params.toString();
-      return qs ? `/clips?${qs}` : '/clips';
-    },
-    [currentFilters, currentPage],
-  );
-
-  const navigate = useCallback(
-    (url: string) => startTransition(() => router.push(url)),
-    [router],
-  );
-
-  useEffect(() => {
-    if (searchValue === currentFilters.q) return;
-    const timer = setTimeout(() => navigate(buildUrl({ q: searchValue, page: 1 })), 400);
-    return () => clearTimeout(timer);
-  }, [searchValue, currentFilters.q, navigate, buildUrl]);
-
-  const hasFilter = !!(currentFilters.streamerId || currentFilters.month || currentFilters.q);
-  const clearFilters = () => navigate('/clips');
   const handleOpen = useCallback(() => setShowModal(true), []);
   const handleClose = useCallback(() => setShowModal(false), []);
 
-  const pageItems = Array.from({ length: totalPages }, (_, i) => i + 1)
-    .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
-    .reduce<(number | 'ellipsis')[]>((acc, p, i, arr) => {
-      if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('ellipsis');
-      acc.push(p);
-      return acc;
-    }, []);
-
   return (
-    <div
-          className="h-full flex flex-col bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-800 relative overflow-hidden"
-    >
+    <div className="h-full flex flex-col bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-800 relative overflow-hidden">
       {/* 헤더 */}
       <div className="p-6 border-b border-slate-50 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-800/20 shrink-0 space-y-4">
         <div className="flex justify-between items-center gap-4">
@@ -102,9 +56,7 @@ export default function ClipView({
               <Clapperboard className="w-5 h-5 text-indigo-500" />
               클립 모음
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
-              총 {total}개의 클립
-            </p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">총 {total}개의 클립</p>
           </div>
 
           {session && (
@@ -158,10 +110,20 @@ export default function ClipView({
           >
             <option value="">전체 스트리머</option>
             {streamers.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
+              <option key={s.id} value={s.id}>{s.name}</option>
             ))}
+          </select>
+
+          <select
+            value={currentFilters.sort}
+            onChange={(e) => navigate(buildUrl({ sort: e.target.value as ClipSortOption, page: 1 }))}
+            className="px-3 py-2 text-sm font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700 transition-all"
+          >
+            <option value="newest">최신 등록순</option>
+            <option value="oldest">오래된 순</option>
+            <option value="date_desc">클립 날짜 최신순</option>
+            <option value="date_asc">클립 날짜 오래된순</option>
+            <option value="title">제목순</option>
           </select>
 
           {hasFilter && (
@@ -216,46 +178,11 @@ export default function ClipView({
         )}
       </div>
 
-      {/* 페이지네이션 */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 px-6 py-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
-          <button
-            onClick={() => navigate(buildUrl({ page: currentPage - 1 }))}
-            disabled={currentPage <= 1}
-            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          {pageItems.map((item, i) =>
-            item === 'ellipsis' ? (
-              <span key={`e${i}`} className="px-1 text-slate-400 dark:text-slate-500 text-sm">
-                …
-              </span>
-            ) : (
-              <button
-                key={item}
-                onClick={() => navigate(buildUrl({ page: item as number }))}
-                className={`w-9 h-9 rounded-xl text-sm font-bold transition-colors ${
-                  item === currentPage
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-300/50 dark:shadow-indigo-900/40'
-                    : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
-                }`}
-              >
-                {item}
-              </button>
-            ),
-          )}
-
-          <button
-            onClick={() => navigate(buildUrl({ page: currentPage + 1 }))}
-            disabled={currentPage >= totalPages}
-            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+      <ClipPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onNavigate={(page) => navigate(buildUrl({ page }))}
+      />
 
       <AnimatePresence>
         {showModal && (

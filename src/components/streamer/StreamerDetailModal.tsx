@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { track } from '@vercel/analytics';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
+import { useScrollLock } from '@/hooks/useScrollLock';
 import StreamerAvatar from './StreamerAvatar';
 import { getStreamerImagePath } from '@/lib/utils';
 import { getStreamerColor } from '@/constants/streamercolor';
@@ -85,6 +86,7 @@ export default function StreamerDetailModal({
   }, [streamer.id]); // streamer.id를 dep으로 넣어 모달 교체 시에도 재발화
 
   useEscapeKey(goBack);
+  useScrollLock();
 
   return (
     <motion.div

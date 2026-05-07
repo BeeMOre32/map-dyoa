@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { AlertTriangle } from 'lucide-react';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 interface ConfirmModalProps {
   message: string;
@@ -18,6 +19,7 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
+  useScrollLock();
   return (
     <motion.div
       initial={{ opacity: 0 }}

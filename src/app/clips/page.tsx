@@ -1,18 +1,22 @@
-import { getClipsPaginated, getClipMonths, getAllStreamers, getCalendarData } from '@/lib/data-fetching';
+import { getClipsPaginated, getClipMonths, getAllStreamers, getCalendarData, type ClipSortOption } from '@/lib/data-fetching';
 import ClipView from '@/components/clips/ClipView';
 
 const PAGE_SIZE = 20;
+const VALID_SORTS: ClipSortOption[] = ['newest', 'oldest', 'date_desc', 'date_asc', 'title'];
 
 export default async function ClipsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; streamer?: string; month?: string; q?: string }>;
+  searchParams: Promise<{ page?: string; streamer?: string; month?: string; q?: string; sort?: string }>;
 }) {
   const params = await searchParams;
   const page = Math.max(1, Number(params.page ?? 1));
   const streamerId = params.streamer ?? '';
   const month = params.month ?? '';
   const q = params.q ?? '';
+  const sort: ClipSortOption = VALID_SORTS.includes(params.sort as ClipSortOption)
+    ? (params.sort as ClipSortOption)
+    : 'newest';
 
   const [{ clips, total, totalPages }, streamers, { schedules }, monthOptions] = await Promise.all([
     getClipsPaginated({
@@ -21,6 +25,7 @@ export default async function ClipsPage({
       streamerId: streamerId || undefined,
       month: month || undefined,
       q: q || undefined,
+      sort,
     }),
     getAllStreamers(),
     getCalendarData(),
@@ -37,7 +42,7 @@ export default async function ClipsPage({
         total={total}
         totalPages={totalPages}
         currentPage={page}
-        currentFilters={{ streamerId, month, q }}
+        currentFilters={{ streamerId, month, q, sort }}
       />
     </div>
   );

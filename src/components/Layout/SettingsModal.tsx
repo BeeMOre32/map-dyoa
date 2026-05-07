@@ -1,12 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Sun, Moon, HelpCircle, Shield, LogIn, LogOut, UserCheck, X, LayoutDashboard, EyeOff, Heart, Megaphone, FlaskConical, PanelRight, LayoutGrid } from 'lucide-react';
+import {
+  Sun, Moon, HelpCircle, Shield, LogIn, LogOut, UserCheck, X,
+  LayoutDashboard, EyeOff, Heart, Megaphone, FlaskConical, PanelRight, LayoutGrid,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
+import { useScrollLock } from '@/hooks/useScrollLock';
 import { useHideEndedStreams } from '@/hooks/useHideEndedStreams';
 import { useExperimentalFeatures } from '@/hooks/useExperimentalFeatures';
 
@@ -27,6 +31,227 @@ function Toggle({ on, color = 'indigo' }: { on: boolean; color?: 'indigo' | 'vio
   );
 }
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">
+      {children}
+    </p>
+  );
+}
+
+function SettingRow({ onClick, children }: { onClick?: () => void; children: React.ReactNode }) {
+  const cls = 'w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors';
+  if (onClick) return <button onClick={onClick} className={cls}>{children}</button>;
+  return <div className={cls}>{children}</div>;
+}
+
+function GeneralTab({
+  onClose,
+  isDark,
+  setTheme,
+  hideEnded,
+  setHideEnded,
+  session,
+}: {
+  onClose: () => void;
+  isDark: boolean;
+  setTheme: (t: string) => void;
+  hideEnded: boolean;
+  setHideEnded: (v: boolean) => void;
+  session: ReturnType<typeof useSession>['data'];
+}) {
+  return (
+    <motion.div
+      key="general"
+      initial={{ opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -8 }}
+      transition={{ duration: 0.15 }}
+      className="space-y-2"
+    >
+      {/* 테마 */}
+      <div className="px-2 py-1">
+        <SectionLabel>화면</SectionLabel>
+        <SettingRow onClick={() => setTheme(isDark ? 'light' : 'dark')}>
+          <div className="flex items-center gap-3">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={isDark ? 'dark' : 'light'}
+                initial={{ rotate: -45, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: 45, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {isDark
+                  ? <Sun className="w-4 h-4 text-amber-400" />
+                  : <Moon className="w-4 h-4 text-indigo-500" />}
+              </motion.div>
+            </AnimatePresence>
+            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
+              {isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
+            </span>
+          </div>
+          <Toggle on={isDark} />
+        </SettingRow>
+      </div>
+
+      {/* 캘린더 */}
+      <div className="px-2 py-1">
+        <SectionLabel>캘린더</SectionLabel>
+        <SettingRow onClick={() => setHideEnded(!hideEnded)}>
+          <div className="flex items-center gap-3">
+            <EyeOff className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <div className="text-left">
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">종료된 방송 숨기기</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">완료 처리된 일정을 캘린더에서 숨깁니다</p>
+            </div>
+          </div>
+          <Toggle on={hideEnded} />
+        </SettingRow>
+      </div>
+
+      {/* 후원 */}
+      <a
+        href="https://ctee.kr/place/mapdoya"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-3 px-4 py-3 mx-2 bg-pink-50 dark:bg-pink-900/20 hover:bg-pink-100 dark:hover:bg-pink-900/30 border border-pink-200 dark:border-pink-800/50 rounded-2xl transition-colors"
+      >
+        <Heart className="w-4 h-4 text-pink-500 dark:text-pink-400 shrink-0" />
+        <div>
+          <p className="text-sm font-bold text-pink-600 dark:text-pink-400">후원하기</p>
+          <p className="text-xs text-pink-400 dark:text-pink-500 font-medium mt-0.5">서버비 제외 전액 기부됩니다</p>
+        </div>
+      </a>
+
+      {/* 정보 */}
+      <div className="px-2 py-1">
+        <SectionLabel>정보</SectionLabel>
+        <div className="space-y-1">
+          {[
+            { href: '/announcements', icon: <Megaphone className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '공지사항' },
+            { href: '/help', icon: <HelpCircle className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '도움말' },
+            { href: '/privacy', icon: <Shield className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '개인정보처리방침' },
+          ].map(({ href, icon, label }) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={onClose}
+              className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
+            >
+              {icon}
+              <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{label}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* 계정 */}
+      <div className="px-2 py-1">
+        <SectionLabel>계정</SectionLabel>
+        <div className="space-y-1">
+          {session ? (
+            <>
+              <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl">
+                <UserCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+                <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">관리자 로그인 중</span>
+              </div>
+              <Link
+                href="/admin"
+                onClick={onClose}
+                className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
+              >
+                <LayoutDashboard className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">관리자 대시보드</span>
+              </Link>
+              <button
+                onClick={() => { signOut(); onClose(); }}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 rounded-2xl transition-colors text-slate-400 dark:text-slate-500"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm font-bold">로그아웃</span>
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              onClick={onClose}
+              className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-2xl transition-colors"
+            >
+              <LogIn className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+              <span className="text-sm font-bold text-slate-700 dark:text-slate-200">관리자 로그인</span>
+            </Link>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function ExperimentalTab({
+  flags,
+  setFlag,
+}: {
+  flags: ReturnType<typeof useExperimentalFeatures>['flags'];
+  setFlag: ReturnType<typeof useExperimentalFeatures>['setFlag'];
+}) {
+  const featureItems = [
+    {
+      key: 'newScheduleModal' as const,
+      icon: <PanelRight className="w-4 h-4 text-violet-400 shrink-0" />,
+      label: '새 일정 모달 UI',
+      desc: '일정 카드 클릭 시 새 디자인 모달을 사용합니다',
+    },
+    {
+      key: 'newCalendarUI' as const,
+      icon: <LayoutGrid className="w-4 h-4 text-violet-400 shrink-0" />,
+      label: '새 캘린더 UI',
+      desc: '주간 보기에서 카드형 캘린더 레이아웃을 사용합니다',
+    },
+  ];
+
+  return (
+    <motion.div
+      key="experimental"
+      initial={{ opacity: 0, x: 8 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 8 }}
+      transition={{ duration: 0.15 }}
+      className="space-y-4"
+    >
+      <div className="flex gap-3 px-4 py-3 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/50 rounded-2xl">
+        <FlaskConical className="w-4 h-4 text-violet-500 dark:text-violet-400 shrink-0 mt-0.5" />
+        <p className="text-xs text-violet-600 dark:text-violet-400 font-medium leading-relaxed">
+          아직 검토 중인 기능들입니다. 예기치 않은 동작이 있을 수 있습니다.
+        </p>
+      </div>
+
+      <div className="px-2 space-y-1">
+        <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">기능</p>
+        {featureItems.map(({ key, icon, label, desc }) => (
+          <button
+            key={key}
+            onClick={() => setFlag(key, !flags[key])}
+            className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              {icon}
+              <div className="text-left">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{label}</p>
+                  <span className="px-1.5 py-px bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 text-[9px] font-black rounded uppercase tracking-wide">Beta</span>
+                </div>
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">{desc}</p>
+              </div>
+            </div>
+            <Toggle on={flags[key]} color="violet" />
+          </button>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 export default function SettingsModal({ onClose }: SettingsModalProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const { data: session } = useSession();
@@ -36,6 +261,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   const isDark = resolvedTheme === 'dark';
 
   useEscapeKey(onClose);
+  useScrollLock();
 
   return (
     <motion.div
@@ -54,7 +280,6 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         className="w-full max-w-sm max-h-[90dvh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl dark:shadow-black/60 border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 헤더 */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800">
           <h2 className="text-lg font-black text-slate-800 dark:text-white">설정</h2>
           <button
@@ -65,7 +290,6 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           </button>
         </div>
 
-        {/* 탭 */}
         <div className="flex gap-1 px-4 pt-3 pb-1 shrink-0">
           <button
             onClick={() => setTab('general')}
@@ -90,204 +314,19 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           </button>
         </div>
 
-        <div className="p-4 space-y-2 overflow-y-auto flex-1">
+        <div className="p-4 space-y-2 overflow-y-auto flex-1 min-h-0">
           <AnimatePresence mode="wait" initial={false}>
             {tab === 'general' ? (
-              <motion.div
-                key="general"
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -8 }}
-                transition={{ duration: 0.15 }}
-                className="space-y-2"
-              >
-                {/* 테마 */}
-                <div className="px-2 py-1">
-                  <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">화면</p>
-                  <button
-                    onClick={() => setTheme(isDark ? 'light' : 'dark')}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <AnimatePresence mode="wait" initial={false}>
-                        <motion.div
-                          key={resolvedTheme}
-                          initial={{ rotate: -45, opacity: 0 }}
-                          animate={{ rotate: 0, opacity: 1 }}
-                          exit={{ rotate: 45, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          {isDark
-                            ? <Sun className="w-4 h-4 text-amber-400" />
-                            : <Moon className="w-4 h-4 text-indigo-500" />}
-                        </motion.div>
-                      </AnimatePresence>
-                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                        {isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
-                      </span>
-                    </div>
-                    <Toggle on={isDark} />
-                  </button>
-                </div>
-
-                {/* 캘린더 */}
-                <div className="px-2 py-1">
-                  <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">캘린더</p>
-                  <button
-                    onClick={() => setHideEnded(!hideEnded)}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <EyeOff className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                      <div className="text-left">
-                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200">종료된 방송 숨기기</p>
-                        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">완료 처리된 일정을 캘린더에서 숨깁니다</p>
-                      </div>
-                    </div>
-                    <Toggle on={hideEnded} />
-                  </button>
-                </div>
-
-                {/* 후원 */}
-                <a
-                  href="https://ctee.kr/place/mapdoya"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 px-4 py-3 mx-2 bg-pink-50 dark:bg-pink-900/20 hover:bg-pink-100 dark:hover:bg-pink-900/30 border border-pink-200 dark:border-pink-800/50 rounded-2xl transition-colors"
-                >
-                  <Heart className="w-4 h-4 text-pink-500 dark:text-pink-400 shrink-0" />
-                  <div>
-                    <p className="text-sm font-bold text-pink-600 dark:text-pink-400">후원하기</p>
-                    <p className="text-xs text-pink-400 dark:text-pink-500 font-medium mt-0.5">서버비 제외 전액 기부됩니다</p>
-                  </div>
-                </a>
-
-                {/* 정보 */}
-                <div className="px-2 py-1">
-                  <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">정보</p>
-                  <div className="space-y-1">
-                    <Link
-                      href="/announcements"
-                      onClick={onClose}
-                      className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
-                    >
-                      <Megaphone className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200">공지사항</span>
-                    </Link>
-                    <Link
-                      href="/help"
-                      onClick={onClose}
-                      className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
-                    >
-                      <HelpCircle className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200">도움말</span>
-                    </Link>
-                    <Link
-                      href="/privacy"
-                      onClick={onClose}
-                      className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
-                    >
-                      <Shield className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200">개인정보처리방침</span>
-                    </Link>
-                  </div>
-                </div>
-
-                {/* 계정 */}
-                <div className="px-2 py-1">
-                  <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">계정</p>
-                  <div className="space-y-1">
-                    {session ? (
-                      <>
-                        <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl">
-                          <UserCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-                          <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">관리자 로그인 중</span>
-                        </div>
-                        <Link
-                          href="/admin"
-                          onClick={onClose}
-                          className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
-                        >
-                          <LayoutDashboard className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                          <span className="text-sm font-bold text-slate-700 dark:text-slate-200">관리자 대시보드</span>
-                        </Link>
-                        <button
-                          onClick={() => { signOut(); onClose(); }}
-                          className="w-full flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 rounded-2xl transition-colors text-slate-400 dark:text-slate-500"
-                        >
-                          <LogOut className="w-4 h-4" />
-                          <span className="text-sm font-bold">로그아웃</span>
-                        </button>
-                      </>
-                    ) : (
-                      <Link
-                        href="/login"
-                        onClick={onClose}
-                        className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-2xl transition-colors"
-                      >
-                        <LogIn className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">관리자 로그인</span>
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
+              <GeneralTab
+                onClose={onClose}
+                isDark={isDark}
+                setTheme={setTheme}
+                hideEnded={hideEnded}
+                setHideEnded={setHideEnded}
+                session={session}
+              />
             ) : (
-              <motion.div
-                key="experimental"
-                initial={{ opacity: 0, x: 8 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 8 }}
-                transition={{ duration: 0.15 }}
-                className="space-y-4"
-              >
-                {/* 안내 배너 */}
-                <div className="flex gap-3 px-4 py-3 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/50 rounded-2xl">
-                  <FlaskConical className="w-4 h-4 text-violet-500 dark:text-violet-400 shrink-0 mt-0.5" />
-                  <p className="text-xs text-violet-600 dark:text-violet-400 font-medium leading-relaxed">
-                    아직 검토 중인 기능들입니다. 예기치 않은 동작이 있을 수 있습니다.
-                  </p>
-                </div>
-
-                {/* 실험적 기능 목록 */}
-                <div className="px-2 space-y-1">
-                  <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">기능</p>
-
-                  <button
-                    onClick={() => setFlag('newScheduleModal', !flags.newScheduleModal)}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <PanelRight className="w-4 h-4 text-violet-400 shrink-0" />
-                      <div className="text-left">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">새 일정 모달 UI</p>
-                          <span className="px-1.5 py-px bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 text-[9px] font-black rounded uppercase tracking-wide">Beta</span>
-                        </div>
-                        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">일정 카드 클릭 시 새 디자인 모달을 사용합니다</p>
-                      </div>
-                    </div>
-                    <Toggle on={flags.newScheduleModal} color="violet" />
-                  </button>
-
-                  <button
-                    onClick={() => setFlag('newCalendarUI', !flags.newCalendarUI)}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <LayoutGrid className="w-4 h-4 text-violet-400 shrink-0" />
-                      <div className="text-left">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">새 캘린더 UI</p>
-                          <span className="px-1.5 py-px bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 text-[9px] font-black rounded uppercase tracking-wide">Beta</span>
-                        </div>
-                        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">주간 보기에서 카드형 캘린더 레이아웃을 사용합니다</p>
-                      </div>
-                    </div>
-                    <Toggle on={flags.newCalendarUI} color="violet" />
-                  </button>
-                </div>
-              </motion.div>
+              <ExperimentalTab flags={flags} setFlag={setFlag} />
             )}
           </AnimatePresence>
         </div>
