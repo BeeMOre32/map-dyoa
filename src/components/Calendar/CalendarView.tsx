@@ -31,11 +31,13 @@ import {
   ChevronRight,
   Plus,
   Lock,
+  X,
+  Clock3,
   Calendar as CalendarIcon,
   LayoutGrid,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 
 import ScheduleFormModal from '@/components/Form/CreateScheduleModal';
@@ -88,6 +90,7 @@ export default function CalendarView({
     new Set(),
   );
   const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set());
+  const [isMobileFabOpen, setIsMobileFabOpen] = useState(false);
   const { liveIds: liveStreamerIds } = useLiveStatus();
   const [hideEnded] = useHideEndedStreams();
   const { flags } = useExperimentalFeatures();
@@ -248,6 +251,16 @@ export default function CalendarView({
     setIsFormOpen(true);
   }, [isLoggedIn, toast, router]);
 
+  const handleToggleViewMode = useCallback(() => {
+    setViewMode((prev) => (prev === 'weekly' ? 'monthly' : 'weekly'));
+    setIsMobileFabOpen(false);
+  }, []);
+
+  const handleGoToday = useCallback(() => {
+    setCurrentDate(new Date());
+    setIsMobileFabOpen(false);
+  }, []);
+
   if (!mounted) {
     return <div className="flex-1 bg-slate-50/50 dark:bg-slate-950" />;
   }
@@ -284,7 +297,7 @@ export default function CalendarView({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto md:justify-end flex-wrap md:flex-nowrap">
+        <div className="hidden md:flex items-center gap-2 w-full md:w-auto md:justify-end flex-wrap md:flex-nowrap">
           <button
             onClick={() => setCurrentDate(new Date())}
             className="h-8 px-3 rounded-lg text-sm font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-200 dark:hover:border-indigo-700 transition-colors shrink-0"
@@ -573,6 +586,58 @@ export default function CalendarView({
           />
         )}
       </AnimatePresence>
+
+      {/* 모바일 플로팅 액션 메뉴 */}
+      <AnimatePresence>
+        {isMobileFabOpen && (
+          <div className="md:hidden fixed inset-0 z-40" onClick={() => setIsMobileFabOpen(false)}>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/25 backdrop-blur-[1px]"
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.97 }}
+              transition={{ duration: 0.16 }}
+              className="absolute bottom-24 right-4 w-52 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur shadow-xl p-2"
+              onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
+            >
+              <button
+                onClick={handleGoToday}
+                className="w-full text-left px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                오늘로 이동
+              </button>
+              <button
+                onClick={handleToggleViewMode}
+                className="w-full text-left px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                보기 전환 ({viewMode === 'weekly' ? '월간' : '주간'})
+              </button>
+              <button
+                onClick={() => {
+                  setIsMobileFabOpen(false);
+                  handleOpenCreateModal();
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
+              >
+                일정 추가
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      <button
+        type="button"
+        onClick={() => setIsMobileFabOpen((prev) => !prev)}
+        className="md:hidden fixed bottom-24 right-4 z-50 w-12 h-12 rounded-full bg-indigo-600 text-white shadow-lg flex items-center justify-center"
+        aria-label="빠른 메뉴 열기"
+      >
+        {isMobileFabOpen ? <X className="w-5 h-5" /> : <Clock3 className="w-5 h-5" />}
+      </button>
     </div>
   );
 }

@@ -101,8 +101,18 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="mt-2 md:hidden overflow-x-auto">
-          <Navigation />
+        <div className="mt-2 md:hidden flex items-center gap-2">
+          <div className="overflow-x-auto flex-1">
+            <Navigation />
+          </div>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="shrink-0 p-2 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-colors shadow-sm"
+            title="설정"
+            aria-label="설정 열기"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
         </div>
       </header>
 

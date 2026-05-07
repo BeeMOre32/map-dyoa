@@ -408,7 +408,7 @@ export async function rejectFeedbackAction(
   feedbackId: string,
 ): Promise<ActionResult> {
   try {
-    await requireAuth();
+    await requireAdmin();
     await prisma.feedback.update({
       where: { id: feedbackId },
       data: { status: 'REJECTED' },
@@ -432,7 +432,7 @@ export async function resolveFeedbackAction(
   feedbackId: string,
 ): Promise<ActionResult> {
   try {
-    await requireAuth();
+    await requireAdmin();
     await prisma.feedback.update({
       where: { id: feedbackId },
       data: { status: 'RESOLVED' },

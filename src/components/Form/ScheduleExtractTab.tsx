@@ -52,15 +52,17 @@ const TEXT_PHASES: PhaseConfig[] = [
   { phase: 'parsing',   label: '결과 처리 중',        Icon: FileText  },
 ];
 
-const IMAGE_PROGRESS = [5, 28, 55, 80, 95];
-const TEXT_PROGRESS  = [5, 45, 80, 95];
+const IMAGE_PROGRESS = [5, 25, 50, 82, 96];
+const TEXT_PROGRESS  = [5, 50, 82, 96];
 const EXTRACT_DRAFT_TTL_MS = 1000 * 60 * 10; // 10분
+const MAX_PERSIST_IMAGE_BYTES = 1_500_000; // 약 1.5MB 이하만 세션 저장
 
 type PersistedExtractDraft = {
   updatedAt: number;
   step: 'input' | 'review';
   extracted: ExtractedSchedule[];
   textInput: string;
+  previewDataUrl?: string;
 };
 
 function phaseClasses(isDone: boolean, isActive: boolean) {
@@ -95,12 +97,15 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loadingPhase, setLoadingPhase] = useState<string | null>(null);
   const [displayProgress, setDisplayProgress] = useState(5);
+  const [persistedPreviewDataUrl, setPersistedPreviewDataUrl] = useState<string | null>(null);
   const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => () => abortRef.current?.abort(), []);
-  useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
+  useEffect(() => () => {
+    if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
 
   const phases = mode === 'image' ? IMAGE_PHASES : TEXT_PHASES;
   const progressArr = mode === 'image' ? IMAGE_PROGRESS : TEXT_PROGRESS;
@@ -131,6 +136,10 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
       if (typeof parsed.textInput === 'string') {
         setTextInput(parsed.textInput);
       }
+      if (typeof parsed.previewDataUrl === 'string' && parsed.previewDataUrl.length > 0) {
+        setPersistedPreviewDataUrl(parsed.previewDataUrl);
+        setPreviewUrl(parsed.previewDataUrl);
+      }
     } catch {
       sessionStorage.removeItem(storageKey);
     }
@@ -148,6 +157,7 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
         step: step === 'review' || step === 'submitting' ? 'review' : 'input',
         extracted,
         textInput,
+        previewDataUrl: persistedPreviewDataUrl ?? undefined,
       };
       sessionStorage.setItem(storageKey, JSON.stringify(payload));
     } catch {
@@ -203,12 +213,24 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
     setErrorMsg(null);
     setLoadingPhase(null);
     setPreviewUrl(URL.createObjectURL(file));
+    setPersistedPreviewDataUrl(null);
     setStep('loading');
     abortRef.current?.abort();
     abortRef.current = new AbortController();
     try {
       const formData = new FormData();
       formData.append('image', file);
+
+      if (file.size <= MAX_PERSIST_IMAGE_BYTES) {
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+          reader.onerror = () => reject(new Error('이미지 캐시 변환 실패'));
+          reader.readAsDataURL(file);
+        });
+        if (dataUrl) setPersistedPreviewDataUrl(dataUrl);
+      }
+
       const res = await fetch('/api/schedule/extract-from-image', {
         method: 'POST',
         body: formData,
@@ -256,6 +278,7 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
     setErrorMsg(null);
     setSubmitError(null);
     setLoadingPhase(null);
+    setPersistedPreviewDataUrl(null);
     sessionStorage.removeItem(storageKey);
   };
 
@@ -318,8 +341,12 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
 
   const currentPhaseIdx = loadingPhase ? phases.findIndex((p) => p.phase === loadingPhase) : -1;
   const progressPct = progressArr[currentPhaseIdx + 1] ?? 5;
-  const fakeProgressCap = Math.min(97, progressPct + (currentPhaseIdx >= 1 ? 14 : 10));
+  const fakeProgressCap = currentPhaseIdx >= 1
+    ? 100
+    : Math.min(45, progressPct + 8);
   const shownProgress = Math.max(progressPct, Math.round(displayProgress));
+  const loadingLabel =
+    shownProgress >= 99 ? '마무리 중...' : (phases[currentPhaseIdx]?.label ?? '분석 준비 중');
   const isReview = step === 'review' || step === 'submitting';
   const showPreviewPanel =
     mode === 'image' && !!previewUrl && (step === 'loading' || isReview);
@@ -475,7 +502,7 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
                 AI가 일정을 읽는 중입니다
               </p>
               <p className="mt-1 text-[11px] font-medium text-violet-600/90 dark:text-violet-300/90 leading-relaxed">
-                현재 단계: {phases[currentPhaseIdx]?.label ?? '분석 준비 중'}.
+                현재 단계: {loadingLabel}.
                 {" "}탭을 이동해도 추출 결과는 10분 동안 임시 저장됩니다.
               </p>
             </div>
