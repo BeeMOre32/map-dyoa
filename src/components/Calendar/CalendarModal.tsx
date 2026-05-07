@@ -143,7 +143,7 @@ export default function ScheduleModal({
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const isAdmin = session;
+  const isAdmin = !!session;
 
   const handleClose = () => {
     if (editingSchedule) { exitEditMode(); return; }

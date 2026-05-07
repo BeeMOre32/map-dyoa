@@ -13,6 +13,72 @@ import { getStreamerImagePath } from '@/lib/utils';
 
 const EXTENSION_URL = 'https://chromewebstore.google.com/detail/jmehpmfkiciefbgoebiljadeamohkgfb';
 
+function StreamerCard({
+  streamer,
+  isLive,
+  selected,
+  onToggle,
+}: {
+  streamer: Streamer;
+  isLive: boolean;
+  selected: Set<string>;
+  onToggle: (id: string) => void;
+}) {
+  const isSelected = selected.has(streamer.id);
+  const isDisabled = !isSelected && selected.size >= MAX_STREAMS;
+
+  return (
+    <motion.button
+      layout
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+      onClick={() => onToggle(streamer.id)}
+      disabled={isDisabled}
+      className={`group relative flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all text-left ${
+        isSelected
+          ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+          : isDisabled
+            ? 'border-transparent opacity-40 cursor-not-allowed'
+            : 'border-transparent hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+      }`}
+    >
+      <div className="relative">
+        <div className="relative w-14 h-14 rounded-2xl overflow-hidden">
+          <StreamerAvatar
+            name={streamer.name}
+            imgSrc={getStreamerImagePath(streamer.name)}
+            colorCode={streamer.colorCode}
+            streamerId={streamer.id}
+            size="medium"
+          />
+          {isSelected && (
+            <div className="absolute inset-0 border-2 border-indigo-500 flex items-center justify-center bg-indigo-500/20">
+              <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+          )}
+        </div>
+        {isLive && (
+          <span className="absolute -bottom-1 -right-1 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[9px] font-black leading-none shadow-sm">
+            <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
+            LIVE
+          </span>
+        )}
+      </div>
+      <span className={`text-xs font-bold text-center leading-tight line-clamp-1 w-full ${
+        isSelected ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200'
+      }`}>
+        {streamer.name}
+      </span>
+    </motion.button>
+  );
+}
+
 export default function LiveView({ streamers }: { streamers: Streamer[] }) {
   const router = useRouter();
 
@@ -39,63 +105,6 @@ export default function LiveView({ streamers }: { streamers: Streamer[] }) {
 
   const liveStreamers = streamers.filter((s) => liveIds.has(s.id));
   const offlineStreamers = streamers.filter((s) => !liveIds.has(s.id));
-
-  const StreamerCard = ({ streamer, isLive }: { streamer: Streamer; isLive: boolean }) => {
-    const isSelected = selected.has(streamer.id);
-    const isDisabled = !isSelected && selected.size >= MAX_STREAMS;
-
-    return (
-      <motion.button
-        layout
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-        onClick={() => toggle(streamer.id)}
-        disabled={isDisabled}
-        className={`group relative flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all text-left ${
-          isSelected
-            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-            : isDisabled
-              ? 'border-transparent opacity-40 cursor-not-allowed'
-              : 'border-transparent hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-        }`}
-      >
-        {/* avatar + 체크 오버레이를 overflow-hidden으로 감싸서 hover 확대 시 삐져나오지 않게 */}
-        <div className="relative">
-          <div className="relative w-14 h-14 rounded-2xl overflow-hidden">
-            <StreamerAvatar
-              name={streamer.name}
-              imgSrc={getStreamerImagePath(streamer.name)}
-              colorCode={streamer.colorCode}
-              streamerId={streamer.id}
-              size="medium"
-            />
-            {isSelected && (
-              <div className="absolute inset-0 border-2 border-indigo-500 flex items-center justify-center bg-indigo-500/20">
-                <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center">
-                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              </div>
-            )}
-          </div>
-          {isLive && (
-            <span className="absolute -bottom-1 -right-1 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[9px] font-black leading-none shadow-sm">
-              <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
-              LIVE
-            </span>
-          )}
-        </div>
-        <span className={`text-xs font-bold text-center leading-tight line-clamp-1 w-full ${
-          isSelected ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200'
-        }`}>
-          {streamer.name}
-        </span>
-      </motion.button>
-    );
-  };
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
@@ -150,7 +159,7 @@ export default function LiveView({ streamers }: { streamers: Streamer[] }) {
               <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                 <AnimatePresence>
                   {liveStreamers.map((s) => (
-                    <StreamerCard key={s.id} streamer={s} isLive />
+                    <StreamerCard key={s.id} streamer={s} isLive selected={selected} onToggle={toggle} />
                   ))}
                 </AnimatePresence>
               </div>
@@ -166,7 +175,7 @@ export default function LiveView({ streamers }: { streamers: Streamer[] }) {
               </div>
               <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 opacity-60">
                 {offlineStreamers.map((s) => (
-                  <StreamerCard key={s.id} streamer={s} isLive={false} />
+                  <StreamerCard key={s.id} streamer={s} isLive={false} selected={selected} onToggle={toggle} />
                 ))}
               </div>
             </section>
