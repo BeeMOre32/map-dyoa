@@ -40,7 +40,7 @@ export default function Header() {
             </div>
           </Link>
 
-          <div className="hidden md:block shrink-0">
+          <div className="flex-1 min-w-0 flex justify-center px-1 sm:px-2">
             <Navigation />
           </div>
 
@@ -53,7 +53,7 @@ export default function Header() {
                 </div>
                 <button
                   onClick={() => signOut()}
-                  className="p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm"
+                  className="hidden sm:inline-flex p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm"
                   title="로그아웃"
                 >
                   <LogOut className="w-4 h-4" />
@@ -62,7 +62,7 @@ export default function Header() {
             ) : (
               <Link
                 href="/login"
-                className="p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm"
+                className="hidden sm:inline-flex p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm"
                 title="관리자 로그인"
               >
                 <LogIn className="w-4 h-4" />
@@ -71,7 +71,7 @@ export default function Header() {
 
             <button
               onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-              className="relative p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm overflow-hidden"
+              className="hidden sm:inline-flex relative p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm overflow-hidden"
               title={resolvedTheme === 'dark' ? '라이트 모드' : '다크 모드'}
             >
               <AnimatePresence mode="wait" initial={false}>
@@ -101,19 +101,6 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="mt-2 md:hidden flex items-center gap-2">
-          <div className="overflow-x-auto flex-1">
-            <Navigation />
-          </div>
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="shrink-0 p-2 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-colors shadow-sm"
-            title="설정"
-            aria-label="설정 열기"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
-        </div>
       </header>
 
       <AnimatePresence>
