@@ -2,7 +2,7 @@ import { MessageSquare } from 'lucide-react';
 
 export default function AdminFeedbacksLoading() {
   return (
-    <div className="p-8 space-y-8 bg-white dark:bg-slate-950 min-h-screen transition-colors">
+    <div className="p-8 space-y-8 bg-white dark:bg-slate-950 transition-colors">
       {/* 헤더 */}
       <div className="space-y-2">
         <div className="flex items-center gap-3">

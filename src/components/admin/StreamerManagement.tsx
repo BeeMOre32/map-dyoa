@@ -30,7 +30,7 @@ export default function StreamerManagement({
   );
 
   return (
-    <div className="p-8 space-y-6 bg-white dark:bg-slate-950 min-h-screen transition-colors">
+    <div className="p-8 space-y-6 bg-white dark:bg-slate-950 transition-colors">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">

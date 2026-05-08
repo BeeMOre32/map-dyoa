@@ -49,7 +49,7 @@ export default async function AdminFeedbackPage({
   };
 
   return (
-    <div className="p-8 space-y-6 bg-white dark:bg-slate-950 min-h-screen transition-colors">
+    <div className="p-8 space-y-6 bg-white dark:bg-slate-950 transition-colors">
       <div>
         <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
           <MessageSquare className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />

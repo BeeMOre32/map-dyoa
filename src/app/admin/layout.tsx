@@ -7,7 +7,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="h-full min-h-0 bg-slate-50 flex flex-col overflow-hidden">
       {/* 어드민 전용 상단바나 사이드바를 여기 넣을 수 있습니다 */}
       <nav className="bg-white border-b border-slate-100 px-8 py-4 shrink-0">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -25,7 +25,7 @@ export default function AdminLayout({
         </div>
       </nav>
 
-      <main className="flex-1 max-w-7xl mx-auto w-full">
+      <main className="flex-1 max-w-7xl mx-auto w-full min-h-0 overflow-y-auto">
         {children} {/* 🌟 이게 있어야 page.tsx 내용이 보입니다! */}
       </main>
     </div>
