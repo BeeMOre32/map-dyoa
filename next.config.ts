@@ -1,5 +1,5 @@
-import type { NextConfig } from "next";
-import { withAxiom } from "next-axiom";
+import type { NextConfig } from 'next';
+import { withAxiom } from 'next-axiom';
 
 const nextConfig: NextConfig = {};
 

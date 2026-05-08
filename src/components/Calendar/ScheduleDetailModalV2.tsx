@@ -4,8 +4,19 @@ import { useState } from 'react';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, Edit2, Trash2, Clock, Users, Gamepad2, Calendar,
-  ChevronLeft, ExternalLink, Play, Tv, ArrowUpRight, LayoutGrid,
+  X,
+  Edit2,
+  Trash2,
+  Clock,
+  Users,
+  Gamepad2,
+  Calendar,
+  ChevronLeft,
+  ExternalLink,
+  Play,
+  Tv,
+  ArrowUpRight,
+  LayoutGrid,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -24,7 +35,11 @@ import { getStreamerImagePath } from '@/lib/utils';
 import Link from 'next/link';
 import type { Streamer, Game } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
-import { SidePanel, type ClipForSchedule, type SideTab } from './ScheduleSidePanel';
+import {
+  SidePanel,
+  type ClipForSchedule,
+  type SideTab,
+} from './ScheduleSidePanel';
 
 interface Props {
   schedule: FlattenedSchedule;
@@ -35,13 +50,33 @@ interface Props {
 
 function getLinkMeta(url: string) {
   if (url.includes('youtube.com') || url.includes('youtu.be'))
-    return { label: 'YouTube 다시보기', icon: Play, className: 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-100 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30' };
+    return {
+      label: 'YouTube 다시보기',
+      icon: Play,
+      className:
+        'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-100 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30',
+    };
   if (url.includes('chzzk.naver.com'))
-    return { label: 'CHZZK 라이브', icon: Tv, className: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/30' };
-  return { label: '방송 링크', icon: ExternalLink, className: 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/30' };
+    return {
+      label: 'CHZZK 라이브',
+      icon: Tv,
+      className:
+        'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/30',
+    };
+  return {
+    label: '방송 링크',
+    icon: ExternalLink,
+    className:
+      'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/30',
+  };
 }
 
-export default function ScheduleDetailModalV2({ schedule, streamers, games, clips = [] }: Props) {
+export default function ScheduleDetailModalV2({
+  schedule,
+  streamers,
+  games,
+  clips = [],
+}: Props) {
   const router = useRouter();
   const { data: session } = useSession();
   const { resolvedTheme } = useTheme();
@@ -56,13 +91,21 @@ export default function ScheduleDetailModalV2({ schedule, streamers, games, clip
   const isUser = !!session;
   const isDark = resolvedTheme === 'dark';
   const isHoi4 = schedule.game?.isHoi4 ?? false;
-  const gameColor = schedule.game?.id ? (getGameColor(schedule.game.id, isDark) ?? '#4f46e5') : '#4f46e5';
+  const gameColor = schedule.game?.id
+    ? (getGameColor(schedule.game.id, isDark) ?? '#4f46e5')
+    : '#4f46e5';
 
   const goBack = useGoBack('/calendar');
 
   const handleClose = () => {
-    if (sheetOpen) { setSheetOpen(false); return; }
-    if (isEditing) { setIsEditing(false); return; }
+    if (sheetOpen) {
+      setSheetOpen(false);
+      return;
+    }
+    if (isEditing) {
+      setIsEditing(false);
+      return;
+    }
     goBack();
   };
 
@@ -82,7 +125,12 @@ export default function ScheduleDetailModalV2({ schedule, streamers, games, clip
     }
   };
 
-  const sidePanelProps = { clips, participants: schedule.participants, isHoi4, isDark };
+  const sidePanelProps = {
+    clips,
+    participants: schedule.participants,
+    isHoi4,
+    isDark,
+  };
 
   return (
     <motion.div
@@ -94,7 +142,6 @@ export default function ScheduleDetailModalV2({ schedule, streamers, games, clip
       onClick={handleClose}
     >
       <div className="flex sm:flex-row sm:items-start sm:gap-3 w-full sm:w-auto">
-
         {/* 메인 모달 */}
         <motion.div
           variants={smoothModalVariants}
@@ -107,7 +154,10 @@ export default function ScheduleDetailModalV2({ schedule, streamers, games, clip
               streamers={streamers}
               games={games}
               onBack={() => setIsEditing(false)}
-              onSave={() => { setIsEditing(false); router.refresh(); }}
+              onSave={() => {
+                setIsEditing(false);
+                router.refresh();
+              }}
             />
           ) : (
             <DetailViewV2
@@ -120,7 +170,10 @@ export default function ScheduleDetailModalV2({ schedule, streamers, games, clip
               onEdit={() => setIsEditing(true)}
               onDelete={() => setShowConfirm(true)}
               onClose={handleClose}
-              onOpenSheet={(tab) => { setSheetTab(tab); setSheetOpen(true); }}
+              onOpenSheet={(tab) => {
+                setSheetTab(tab);
+                setSheetOpen(true);
+              }}
             />
           )}
         </motion.div>
@@ -176,7 +229,11 @@ export default function ScheduleDetailModalV2({ schedule, streamers, games, clip
               <div className="flex justify-center pt-3 pb-1 shrink-0">
                 <div className="w-10 h-1 rounded-full bg-slate-200 dark:bg-slate-700" />
               </div>
-              <SidePanel {...sidePanelProps} onClose={() => setSheetOpen(false)} defaultTab={sheetTab} />
+              <SidePanel
+                {...sidePanelProps}
+                onClose={() => setSheetOpen(false)}
+                defaultTab={sheetTab}
+              />
             </motion.div>
           </>
         )}
@@ -186,7 +243,13 @@ export default function ScheduleDetailModalV2({ schedule, streamers, games, clip
 }
 
 // ── Edit View ──────────────────────────────────────────────────────
-function EditView({ schedule, streamers, games, onBack, onSave }: {
+function EditView({
+  schedule,
+  streamers,
+  games,
+  onBack,
+  onSave,
+}: {
   schedule: FlattenedSchedule;
   streamers: Streamer[];
   games: Game[];
@@ -203,7 +266,9 @@ function EditView({ schedule, streamers, games, onBack, onSave }: {
           <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           상세보기
         </button>
-        <h3 className="text-lg font-black text-slate-800 dark:text-white">일정 수정</h3>
+        <h3 className="text-lg font-black text-slate-800 dark:text-white">
+          일정 수정
+        </h3>
         <div className="w-10" />
       </div>
       <div className="p-5 sm:p-8 overflow-y-auto flex-1 min-h-0 overscroll-y-contain custom-scrollbar">
@@ -220,7 +285,18 @@ function EditView({ schedule, streamers, games, onBack, onSave }: {
 }
 
 // ── Detail View V2 ────────────────────────────────────────────────
-function DetailViewV2({ schedule, gameColor, isUser, isDark, isHoi4, clips, onEdit, onDelete, onClose, onOpenSheet }: {
+function DetailViewV2({
+  schedule,
+  gameColor,
+  isUser,
+  isDark,
+  isHoi4,
+  clips,
+  onEdit,
+  onDelete,
+  onClose,
+  onOpenSheet,
+}: {
   schedule: FlattenedSchedule;
   gameColor: string;
   isUser: boolean;
@@ -237,8 +313,17 @@ function DetailViewV2({ schedule, gameColor, isUser, isDark, isHoi4, clips, onEd
   return (
     <>
       {/* 컬러 헤더 */}
-      <div className="relative h-16 w-full shrink-0 transition-colors duration-500" style={{ backgroundColor: gameColor }}>
-        <div className="absolute inset-0 opacity-25" style={{ background: 'linear-gradient(135deg, #ffffff33 0%, transparent 55%)' }} />
+      <div
+        className="relative h-16 w-full shrink-0 transition-colors duration-500"
+        style={{ backgroundColor: gameColor }}
+      >
+        <div
+          className="absolute inset-0 opacity-25"
+          style={{
+            background:
+              'linear-gradient(135deg, #ffffff33 0%, transparent 55%)',
+          }}
+        />
         <button
           onClick={onClose}
           className="absolute top-1/2 -translate-y-1/2 right-4 p-2 sm:p-2.5 bg-black/10 hover:bg-black/25 text-white rounded-full backdrop-blur-sm transition-all"
@@ -262,11 +347,15 @@ function DetailViewV2({ schedule, gameColor, isUser, isDark, isHoi4, clips, onEd
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 font-bold text-sm border border-slate-100 dark:border-slate-600">
           <Calendar className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-          {format(new Date(schedule.startTime), 'yyyy년 M월 d일 (eee)', { locale: ko })}
+          {format(new Date(schedule.startTime), 'yyyy년 M월 d일 (eee)', {
+            locale: ko,
+          })}
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 font-bold text-sm border border-slate-100 dark:border-slate-600">
           <Clock className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-          {schedule.isGuerrilla ? '시간 미정' : format(new Date(schedule.startTime), 'a h:mm', { locale: ko })}
+          {schedule.isGuerrilla
+            ? '시간 미정'
+            : format(new Date(schedule.startTime), 'a h:mm', { locale: ko })}
         </div>
       </div>
 
@@ -275,7 +364,9 @@ function DetailViewV2({ schedule, gameColor, isUser, isDark, isHoi4, clips, onEd
         <div className="px-5 py-5 sm:px-8 sm:py-6 border-t border-slate-50 dark:border-slate-700 space-y-4">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-slate-300 dark:text-slate-600" />
-            <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Participants</span>
+            <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+              Participants
+            </span>
           </div>
           <div className="flex flex-wrap gap-2">
             {schedule.participants.map((p) => {
@@ -299,7 +390,8 @@ function DetailViewV2({ schedule, gameColor, isUser, isDark, isHoi4, clips, onEd
                         onError={(e) => {
                           const target = e.currentTarget;
                           if (target.src.includes(encodeURIComponent(p.name))) {
-                            target.src = p.profileImg || '/images/default-avatar.webp';
+                            target.src =
+                              p.profileImg || '/images/default-avatar.webp';
                             return;
                           }
                           target.src = '/images/default-avatar.webp';
@@ -316,7 +408,9 @@ function DetailViewV2({ schedule, gameColor, isUser, isDark, isHoi4, clips, onEd
                       />
                     )}
                   </span>
-                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{p.name}</span>
+                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                    {p.name}
+                  </span>
                 </Link>
               );
             })}
@@ -334,7 +428,9 @@ function DetailViewV2({ schedule, gameColor, isUser, isDark, isHoi4, clips, onEd
                 <LayoutGrid className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-black text-indigo-600 dark:text-indigo-400">멀티뷰로 함께 보기</p>
+                <p className="text-sm font-black text-indigo-600 dark:text-indigo-400">
+                  멀티뷰로 함께 보기
+                </p>
                 <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">
                   {schedule.participants.length}명의 방송을 한 화면에서
                 </p>
@@ -348,7 +444,9 @@ function DetailViewV2({ schedule, gameColor, isUser, isDark, isHoi4, clips, onEd
         <div className="px-5 py-5 sm:px-8 sm:py-6 border-t border-slate-50 dark:border-slate-700 space-y-3">
           <div className="flex items-center gap-2">
             <ExternalLink className="w-4 h-4 text-slate-300 dark:text-slate-600" />
-            <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">VOD / Live</span>
+            <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+              VOD / Live
+            </span>
           </div>
           {liveUrls.length > 0 ? (
             <div className="flex flex-wrap gap-2">
@@ -383,7 +481,9 @@ function DetailViewV2({ schedule, gameColor, isUser, isDark, isHoi4, clips, onEd
             onClick={() => onOpenSheet('clips')}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 hover:border-indigo-200 dark:hover:border-indigo-700 transition-all"
           >
-            <span className="text-sm font-bold text-slate-600 dark:text-slate-300">클립</span>
+            <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
+              클립
+            </span>
             {clips.length > 0 && (
               <span className="text-[10px] font-black text-white bg-indigo-500 rounded-full px-1.5 py-0.5 leading-none">
                 {clips.length}
@@ -395,7 +495,9 @@ function DetailViewV2({ schedule, gameColor, isUser, isDark, isHoi4, clips, onEd
               onClick={() => onOpenSheet('hoi4')}
               className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-amber-100 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-900/10 hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-all"
             >
-              <span className="text-sm font-bold text-amber-600 dark:text-amber-400">전적</span>
+              <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
+                전적
+              </span>
             </button>
           )}
         </div>
