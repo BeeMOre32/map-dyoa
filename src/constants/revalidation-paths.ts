@@ -7,7 +7,7 @@ export const REVALIDATION_PATHS = {
   calendar: ['/calendar', '/streamers'],
   schedule: ['/calendar', '/hoi4'],
   streamer: ['/calendar', '/streamers'],
-  admin: ['/admin', '/admin/feedbacks'],
+  admin: ['/admin', '/admin/feedbacks', '/admin/streamers'],
   clip: ['/clips'],
 } as const;
 

@@ -204,6 +204,61 @@ export async function createStreamerAction(data: {
 }
 
 /**
+ * 스트리머 수정
+ */
+export async function updateStreamerAction(
+  id: string,
+  data: {
+    name: string;
+    handle: string;
+    generation: number;
+    role: string;
+    platform: string;
+    colorCode: string;
+    chzzkUrl: string;
+    bio?: string;
+  },
+): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+
+    if (!id?.trim()) {
+      throw new ValidationError('유효한 스트리머 ID가 필요합니다.');
+    }
+
+    const validated = streamerServerSchema.parse(data);
+
+    await prisma.streamer.update({
+      where: { id },
+      data: {
+        name: validated.name.trim(),
+        handle: validated.handle.trim(),
+        generation: validated.generation,
+        role: validated.role?.trim() || null,
+        platform: validated.platform,
+        colorCode: validated.colorCode,
+        chzzkUrl: validated.chzzkUrl?.trim() || null,
+        bio: validated.bio?.trim() || null,
+      },
+    });
+
+    const paths = getRevalidationPathsMulti(['streamer', 'schedule', 'admin']);
+    await Promise.all([
+      ...paths.map((path: string) => revalidatePath(path)),
+      updateTag('calendar'),
+      updateTag('streamers'),
+      updateTag('admin'),
+    ]);
+
+    return { success: true, data: null };
+  } catch (error) {
+    const { message, code } = getErrorMessage(error);
+    logError('updateStreamer', error);
+    return { success: false, error: message, errorCode: code };
+  }
+}
+
+/**
  * 스트리머 일괄 생성
  */
 export async function bulkCreateStreamersAction(

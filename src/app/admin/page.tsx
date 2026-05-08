@@ -96,17 +96,19 @@ export default async function AdminDashboard() {
           </div>
         </Link>
 
-        <div className="bg-slate-50 dark:bg-slate-900/50 p-8 rounded-[2.5rem] border border-dashed border-slate-200 dark:border-slate-700 opacity-60">
-          <div className="w-14 h-14 bg-white dark:bg-slate-700 rounded-2xl flex items-center justify-center mb-6">
-            <Users className="w-7 h-7 text-slate-300 dark:text-slate-600" />
+        <Link href="/admin/streamers">
+          <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-xl dark:hover:shadow-slate-900/50 hover:-translate-y-1 transition-all group">
+            <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <Users className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <h3 className="text-xl font-black text-slate-800 dark:text-white">
+              방송인 관리
+            </h3>
+            <p className="text-slate-400 dark:text-slate-500 font-bold text-sm mt-2">
+              스트리머 정보 추가 및 수정을 진행합니다.
+            </p>
           </div>
-          <h3 className="text-xl font-black text-slate-400 dark:text-slate-500">
-            방송인 관리
-          </h3>
-          <p className="text-slate-300 dark:text-slate-600 font-bold text-sm mt-2">
-            준비 중...
-          </p>
-        </div>
+        </Link>
       </div>
     </div>
   );

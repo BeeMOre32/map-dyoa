@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { X, UserPlus, Check, Palette, AlertCircle } from 'lucide-react';
 import { z } from 'zod';
-import { createStreamerAction } from '@/app/actions';
+import { createStreamerAction, updateStreamerAction } from '@/app/actions';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 const streamerSchema = z.object({
@@ -29,19 +29,35 @@ const PASTEL_COLORS = [
   { name: '그레이', hex: '#64748b' },
 ];
 
+type StreamerFormInitialData = {
+  id: string;
+  name: string;
+  handle: string;
+  generation: number;
+  role: string | null;
+  platform: string;
+  colorCode: string;
+  chzzkUrl: string | null;
+  bio: string | null;
+};
+
 export default function CreateStreamerModal({
   onClose,
+  mode = 'create',
+  initialData,
 }: {
   onClose: () => void;
+  mode?: 'create' | 'edit';
+  initialData?: StreamerFormInitialData;
 }) {
-  const [name, setName] = useState('');
-  const [handle, setHandle] = useState('');
-  const [generation, setGeneration] = useState<number>(1);
-  const [role, setRole] = useState('');
-  const [colorCode, setColorCode] = useState(PASTEL_COLORS[0].hex);
+  const [name, setName] = useState(initialData?.name ?? '');
+  const [handle, setHandle] = useState(initialData?.handle ?? '');
+  const [generation, setGeneration] = useState<number>(initialData?.generation ?? 1);
+  const [role, setRole] = useState(initialData?.role ?? '');
+  const [colorCode, setColorCode] = useState(initialData?.colorCode ?? PASTEL_COLORS[0].hex);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [chzzkUrl, setChzzkUrl] = useState('');
-  const [bio, setBio] = useState('');
+  const [chzzkUrl, setChzzkUrl] = useState(initialData?.chzzkUrl ?? '');
+  const [bio, setBio] = useState(initialData?.bio ?? '');
   const [errors, setErrors] = useState<StreamerErrors>({});
 
   useEscapeKey(onClose);
@@ -62,13 +78,25 @@ export default function CreateStreamerModal({
     setErrors({});
     setIsSubmitting(true);
 
-    const payload = { name, handle, generation, role, platform: 'chzzk', colorCode, chzzkUrl, bio };
-    const result = await createStreamerAction(payload);
+    const payload = {
+      name,
+      handle,
+      generation,
+      role,
+      platform: initialData?.platform || 'CHZZK',
+      colorCode,
+      chzzkUrl,
+      bio,
+    };
+
+    const result = mode === 'edit' && initialData
+      ? await updateStreamerAction(initialData.id, payload)
+      : await createStreamerAction(payload);
 
     setIsSubmitting(false);
 
     if (result.success) onClose();
-    else setErrors({ submit: '스트리머 추가에 실패했습니다. 다시 시도해주세요.' });
+    else setErrors({ submit: mode === 'edit' ? '스트리머 수정에 실패했습니다. 다시 시도해주세요.' : '스트리머 추가에 실패했습니다. 다시 시도해주세요.' });
   };
 
   return (
@@ -88,7 +116,7 @@ export default function CreateStreamerModal({
                 New Member
               </p>
               <h3 className="text-2xl font-black text-slate-800 dark:text-white">
-                인원 추가
+                {mode === 'edit' ? '인원 수정' : '인원 추가'}
               </h3>
               <h5 className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                 프로필 사진 기능은 추후 업데이트 예정입니다!
@@ -306,7 +334,7 @@ export default function CreateStreamerModal({
                 disabled={isSubmitting}
                 className="flex-1 py-4 bg-indigo-600 dark:bg-indigo-600 text-white dark:text-white rounded-2xl font-bold hover:bg-indigo-700 dark:hover:bg-indigo-700 transition-all disabled:opacity-50"
               >
-                {isSubmitting ? '저장 중...' : '인원 추가하기'}
+                {isSubmitting ? '저장 중...' : mode === 'edit' ? '수정하기' : '인원 추가하기'}
               </button>
             </div>
           </div>
