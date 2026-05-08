@@ -384,10 +384,10 @@ function DetailView({
                           const target = e.currentTarget;
                           if (target.src.includes(encodeURIComponent(p.name))) {
                             target.src =
-                              p.profileImg || '/images/default-avatar.webp';
+                              p.profileImg || '/images/default-avatar.svg';
                             return;
                           }
-                          target.src = '/images/default-avatar.webp';
+                          target.src = '/images/default-avatar.svg';
                         }}
                       />
                     ) : (
@@ -396,7 +396,7 @@ function DetailView({
                         alt={`${p.name} 프로필`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          e.currentTarget.src = '/images/default-avatar.webp';
+                          e.currentTarget.src = '/images/default-avatar.svg';
                         }}
                       />
                     )}

@@ -39,7 +39,7 @@ export function getChosung(str: string): string {
 }
 
 export const getStreamerImagePath = (name: string): string => {
-  if (!name) return '/images/default-avatar.webp';
+  if (!name) return '/images/default-avatar.svg';
 
   // 한글 파일명 깨짐 방지를 위해 encodeURIComponent 사용
   const safeName = encodeURIComponent(name.trim());
