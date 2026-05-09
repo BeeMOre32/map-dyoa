@@ -66,7 +66,7 @@ export default function RootLayout({
               <main className="h-dvh w-full bg-slate-50/50 dark:bg-slate-950 flex flex-col overflow-hidden transition-colors duration-300">
                 <Header />
                 <AnnouncementBanner />
-                <div className="flex-1 flex flex-col overflow-y-auto sm:overflow-hidden">
+                <div className="flex min-h-0 flex-1 flex-col overflow-y-auto sm:overflow-hidden">
                   {children}
                 </div>
                 <AnnouncementToast />

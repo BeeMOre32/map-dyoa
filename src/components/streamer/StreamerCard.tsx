@@ -3,8 +3,8 @@
 import { MoreHorizontal, LayoutGrid } from 'lucide-react';
 import Link from 'next/link';
 import { Streamer } from '@prisma/client';
-import { useTheme } from 'next-themes';
 import { getStreamerImagePath } from '@/lib/utils';
+import { useIsDarkAfterMount } from '@/hooks/useIsDarkAfterMount';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { getChannelUrl } from '@/components/multiview/utils';
 import StreamerAvatar from './StreamerAvatar';
@@ -30,8 +30,8 @@ export default function StreamerCard({
   selectionIndex,
 }: StreamerCardProps) {
   const imgSrc = getStreamerImagePath(streamer.name);
-  const { resolvedTheme } = useTheme();
-  const streamerColor = getStreamerColor(streamer.id, resolvedTheme === 'dark') ?? streamer.colorCode;
+  const isDark = useIsDarkAfterMount();
+  const streamerColor = getStreamerColor(streamer.id, isDark) ?? streamer.colorCode;
   const channelUrl = getChannelUrl(streamer);
   const canSelect = isSelected || !isMaxReached;
 

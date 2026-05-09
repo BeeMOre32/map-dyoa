@@ -7,7 +7,7 @@ export default function StreamersLayout({
   modal: React.ReactNode;
 }) {
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain">
       {/* 스트리머 목록 페이지가 여기에 들어옵니다 */}
       {children}
 

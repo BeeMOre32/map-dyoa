@@ -10,7 +10,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { useGoBack } from '@/hooks/useGoBack';
-import { useTheme } from 'next-themes';
+import { useIsDarkAfterMount } from '@/hooks/useIsDarkAfterMount';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import Link from 'next/link';
@@ -69,8 +69,7 @@ export default function StreamerDetailModal({
 }: StreamerDetailModalProps) {
   const goBack = useGoBack('/streamers');
   const imgSrc = getStreamerImagePath(streamer.name);
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
+  const isDark = useIsDarkAfterMount();
   const streamerColor = getStreamerColor(streamer.id, isDark) ?? streamer.colorCode;
 
   const recentSchedules = schedules.slice(0, 5);

@@ -2,9 +2,8 @@
 
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
 import { getStreamerColor } from '@/constants/streamercolor';
-import { log } from 'console';
+import { useIsDarkAfterMount } from '@/hooks/useIsDarkAfterMount';
 
 interface StreamerAvatarProps {
   name: string;
@@ -22,11 +21,9 @@ export default function StreamerAvatar({
   size,
 }: StreamerAvatarProps) {
   const [imgError, setImgError] = useState(false);
-  const { resolvedTheme } = useTheme();
+  const isDark = useIsDarkAfterMount();
   const resolvedColor =
-    (streamerId
-      ? getStreamerColor(streamerId, resolvedTheme === 'dark')
-      : null) ?? colorCode;
+    (streamerId ? getStreamerColor(streamerId, isDark) : null) ?? colorCode;
 
   useEffect(() => {
     setImgError(false);
