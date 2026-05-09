@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Map, Settings, LogIn, LogOut, UserCheck, Sun, Moon } from 'lucide-react';
+import Image from 'next/image';
+import { Settings, LogIn, LogOut, UserCheck, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signOut, useSession } from 'next-auth/react';
 import { useTheme } from 'next-themes';
@@ -27,8 +28,15 @@ export default function Header() {
       <header className="py-3 px-2 sm:px-4 md:px-8 border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md shrink-0 sticky top-0 z-40 transition-all duration-500">
         <div className="flex items-center justify-between gap-2 sm:gap-3 w-full">
           <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group min-w-0 max-w-[45%] sm:max-w-none">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none group-hover:rotate-6 transition-all duration-300">
-            <Map className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl overflow-hidden shadow-lg shadow-indigo-200 dark:shadow-none group-hover:rotate-6 transition-all duration-300">
+              <Image
+                src="/brand/map-dyoa-logo.svg"
+                alt="Map-Dyoa 로고"
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+                priority
+              />
             </div>
             <div className="flex flex-col min-w-0 max-[390px]:hidden">
               <h1 className="text-sm sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none truncate">

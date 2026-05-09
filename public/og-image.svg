@@ -1,0 +1,23 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="40" x2="1080" y2="590" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#3730A3"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" rx="32" fill="url(#bg)"/>
+  <rect x="82" y="82" width="1036" height="466" rx="36" fill="white" fill-opacity="0.08"/>
+
+  <rect x="140" y="126" width="220" height="220" rx="56" fill="#4F46E5"/>
+  <circle cx="250" cy="236" r="58" fill="#EEF2FF"/>
+  <path d="M220 212C227 204 238 202 247 205C253 207 257 212 262 214C270 217 276 214 282 218C287 223 289 231 285 237C281 244 273 246 268 252C263 257 262 265 255 269C247 272 239 269 234 263C229 257 222 255 218 249C212 242 212 234 216 228C218 223 220 219 220 212Z" fill="#818CF8"/>
+  <path d="M250 194C237 194 226 205 226 218C226 237 246 251 249 253C250 253 250 253 251 253C252 253 252 253 253 253C256 251 276 237 276 218C276 205 265 194 252 194H250Z" fill="#4338CA"/>
+  <circle cx="251" cy="217" r="8" fill="#E0E7FF"/>
+
+  <text x="400" y="240" fill="white" font-size="72" font-weight="800" font-family="Inter, Pretendard, Apple SD Gothic Neo, sans-serif">
+    Map-Dyoa
+  </text>
+  <text x="400" y="308" fill="#C7D2FE" font-size="36" font-weight="600" font-family="Inter, Pretendard, Apple SD Gothic Neo, sans-serif">
+    юды d└ДX )║ |D \п
+  </text>
+</svg>

@@ -1,0 +1,37 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="64" x2="448" y2="448" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#4338CA"/>
+    </linearGradient>
+    <linearGradient id="globe" x1="166" y1="150" x2="346" y2="354" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FAFC"/>
+      <stop offset="1" stop-color="#E2E8F0"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="48" y="48" width="416" height="416" rx="120" fill="url(#bg)"/>
+  <rect x="84" y="84" width="344" height="344" rx="98" fill="white" fill-opacity="0.08"/>
+
+  <!-- Globe -->
+  <circle cx="256" cy="252" r="108" fill="url(#globe)"/>
+  <circle cx="256" cy="252" r="108" stroke="#C7D2FE" stroke-width="10"/>
+
+  <!-- Continents silhouette -->
+  <path d="M206 210C216 198 232 194 246 198C256 201 262 208 270 211C282 215 292 211 301 218C310 225 313 238 306 248C299 259 286 262 278 271C270 280 269 294 257 300C244 306 230 300 222 290C214 280 203 277 196 268C187 257 187 243 193 232C197 225 201 219 206 210Z" fill="#818CF8"/>
+  <path d="M286 286C295 279 309 278 319 284C328 290 330 303 324 313C318 323 305 328 293 325C282 322 274 312 275 301C276 295 279 290 286 286Z" fill="#818CF8"/>
+  <path d="M188 292C195 287 205 287 212 292C219 297 220 307 215 314C209 322 198 325 190 321C182 317 178 307 181 300C182 297 184 294 188 292Z" fill="#818CF8"/>
+
+  <ellipse cx="256" cy="252" rx="72" ry="108" stroke="#A5B4FC" stroke-width="8"/>
+  <ellipse cx="256" cy="252" rx="32" ry="108" stroke="#A5B4FC" stroke-width="8"/>
+  <path d="M156 220C184 236 222 246 256 246C290 246 328 236 356 220" stroke="#A5B4FC" stroke-width="8" stroke-linecap="round"/>
+  <path d="M156 284C184 268 222 258 256 258C290 258 328 268 356 284" stroke="#A5B4FC" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- Pin on globe -->
+  <path d="M256 178C231.699 178 212 197.699 212 222C212 256.368 249.242 282.354 254.454 285.831C255.598 286.594 257.116 286.594 258.26 285.831C263.472 282.354 300.714 256.368 300.714 222C300.714 197.699 281.015 178 256.714 178H256Z" fill="#4F46E5"/>
+  <circle cx="256" cy="221" r="16" fill="#E0E7FF"/>
+
+  <!-- Live indicator -->
+  <circle cx="340" cy="172" r="22" fill="#10B981"/>
+  <circle cx="340" cy="172" r="9" fill="#ECFDF5"/>
+</svg>

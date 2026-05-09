@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import {
   Sun, Moon, HelpCircle, Shield, LogIn, LogOut, UserCheck, X,
-  LayoutDashboard, EyeOff, Heart, Megaphone, FlaskConical, PanelRight, LayoutGrid,
+  LayoutDashboard, EyeOff, Heart, Megaphone, FlaskConical, PanelRight, LayoutGrid, Bell, BellOff,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
@@ -13,6 +13,8 @@ import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { useHideEndedStreams } from '@/hooks/useHideEndedStreams';
 import { useExperimentalFeatures } from '@/hooks/useExperimentalFeatures';
+import { useToast } from '@/components/Common/Toaster';
+import { getReminderEnabled, setReminderEnabled } from '@/lib/reminder-settings';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -191,9 +193,13 @@ function GeneralTab({
 function ExperimentalTab({
   flags,
   setFlag,
+  reminderEnabled,
+  onToggleReminder,
 }: {
   flags: ReturnType<typeof useExperimentalFeatures>['flags'];
   setFlag: ReturnType<typeof useExperimentalFeatures>['setFlag'];
+  reminderEnabled: boolean;
+  onToggleReminder: () => void;
 }) {
   const featureItems = [
     {
@@ -247,6 +253,53 @@ function ExperimentalTab({
             <Toggle on={flags[key]} color="violet" />
           </button>
         ))}
+        <button
+          onClick={onToggleReminder}
+          className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            {reminderEnabled ? (
+              <Bell className="w-4 h-4 text-violet-400 shrink-0" />
+            ) : (
+              <BellOff className="w-4 h-4 text-violet-400 shrink-0" />
+            )}
+            <div className="text-left">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                  웹 푸시 놓치기 알림
+                </p>
+                <span className="px-1.5 py-px bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 text-[9px] font-black rounded uppercase tracking-wide">
+                  Beta
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">
+                시작 10분 전에 브라우저/백그라운드 푸시 알림을 보냅니다
+              </p>
+            </div>
+          </div>
+          <Toggle on={reminderEnabled} color="violet" />
+        </button>
+        <div className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl">
+          <div className="flex items-center gap-3">
+            <LayoutGrid className="w-4 h-4 text-violet-400 shrink-0" />
+            <div className="text-left">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                  PWA 설치 배너
+                </p>
+                <span className="px-1.5 py-px bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 text-[9px] font-black rounded uppercase tracking-wide">
+                  Beta
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">
+                설치 가능한 환경에서 하단 설치 배너가 표시됩니다
+              </p>
+            </div>
+          </div>
+          <span className="text-[11px] font-bold text-violet-500 dark:text-violet-400">
+            ON
+          </span>
+        </div>
       </div>
     </motion.div>
   );
@@ -258,10 +311,104 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   const [hideEnded, setHideEnded] = useHideEndedStreams();
   const { flags, setFlag } = useExperimentalFeatures();
   const [tab, setTab] = useState<Tab>('general');
+  const [reminderEnabled, setReminderEnabledState] = useState(() =>
+    getReminderEnabled(),
+  );
+  const toast = useToast();
   const isDark = resolvedTheme === 'dark';
 
   useEscapeKey(onClose);
   useScrollLock();
+
+  const urlBase64ToUint8Array = (base64String: string) => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+  };
+
+  const registerPushSubscription = async () => {
+    if (!('serviceWorker' in navigator)) {
+      throw new Error('서비스워커를 지원하지 않는 브라우저입니다.');
+    }
+
+    const keyRes = await fetch('/api/push/public-key');
+    if (!keyRes.ok) {
+      throw new Error('푸시 공개 키를 불러오지 못했습니다.');
+    }
+    const { publicKey } = (await keyRes.json()) as { publicKey: string };
+
+    const registration = await navigator.serviceWorker.ready;
+    const existing = await registration.pushManager.getSubscription();
+    const subscription =
+      existing ??
+      (await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      }));
+
+    const saveRes = await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subscription: subscription.toJSON() }),
+    });
+
+    if (!saveRes.ok) {
+      throw new Error('푸시 구독 저장에 실패했습니다.');
+    }
+  };
+
+  const unregisterPushSubscription = async () => {
+    if (!('serviceWorker' in navigator)) return;
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    if (!subscription) return;
+
+    await fetch('/api/push/unsubscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endpoint: subscription.endpoint }),
+    });
+    await subscription.unsubscribe();
+  };
+
+  const handleToggleReminder = async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      toast.error('이 브라우저는 알림을 지원하지 않습니다.');
+      return;
+    }
+
+    if (reminderEnabled) {
+      try {
+        await unregisterPushSubscription();
+      } catch {
+        // keep local toggle behavior even if unsubscribe request fails
+      }
+      setReminderEnabled(false);
+      setReminderEnabledState(false);
+      toast.success('놓치기 알림이 꺼졌습니다.');
+      return;
+    }
+
+    const permission =
+      Notification.permission === 'default'
+        ? await Notification.requestPermission()
+        : Notification.permission;
+
+    if (permission !== 'granted') {
+      toast.error('브라우저 알림 권한이 필요합니다.');
+      return;
+    }
+
+    try {
+      await registerPushSubscription();
+      setReminderEnabled(true);
+      setReminderEnabledState(true);
+      toast.success('놓치기 알림이 켜졌습니다.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '푸시 구독에 실패했습니다.');
+    }
+  };
 
   return (
     <motion.div
@@ -326,7 +473,12 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 session={session}
               />
             ) : (
-              <ExperimentalTab flags={flags} setFlag={setFlag} />
+              <ExperimentalTab
+                flags={flags}
+                setFlag={setFlag}
+                reminderEnabled={reminderEnabled}
+                onToggleReminder={handleToggleReminder}
+              />
             )}
           </AnimatePresence>
         </div>

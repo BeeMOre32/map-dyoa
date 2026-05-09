@@ -122,7 +122,7 @@ export default function ScheduleCardV2({
     >
       <Link href={href} scroll={false} className="block" onClick={stopProp}>
         <div
-          className={`rounded-lg border flex flex-col px-3 py-3 gap-2.5 transition-[box-shadow,transform,border-color] hover:shadow-sm cursor-pointer ${
+          className={`relative rounded-lg border flex flex-col px-3 py-3 gap-2.5 transition-[box-shadow,transform,border-color] hover:shadow-sm cursor-pointer ${
             gameColor
               ? isLive ? 'shadow-[0_2px_10px_rgba(239,68,68,0.15)]' : ''
               : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'

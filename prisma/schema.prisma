@@ -161,3 +161,27 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+model PushSubscription {
+  id             String           @id @default(cuid())
+  endpoint       String           @unique
+  p256dh         String
+  auth           String
+  expirationTime DateTime?
+  userAgent      String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  reminderLogs   PushReminderLog[]
+}
+
+model PushReminderLog {
+  id             String           @id @default(cuid())
+  subscriptionId String
+  scheduleId     String
+  scheduledFor   DateTime
+  sentAt         DateTime         @default(now())
+  subscription   PushSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriptionId, scheduleId])
+  @@index([scheduleId, scheduledFor])
+}
