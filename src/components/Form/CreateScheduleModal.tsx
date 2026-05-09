@@ -57,12 +57,16 @@ export default function CreateScheduleModal({
       <motion.div
         initial="hidden"
         animate="visible"
+        exit="hidden"
         variants={backdropVariants}
         className="fixed inset-0 z-70 flex items-center justify-center p-4 md:p-6 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm"
         onClick={onClose}
       >
         <motion.div
           variants={smoothModalVariants}
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
           className={`bg-white dark:bg-slate-800 w-full ${modalMaxWidthClass} rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 flex flex-col max-h-[90dvh] border border-slate-100 dark:border-slate-700`}
           onClick={(e) => e.stopPropagation()}
         >

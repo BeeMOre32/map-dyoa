@@ -74,6 +74,9 @@ export default function RequestEditModal({
     >
       <motion.div
         variants={defaultModalVariants}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
         className="bg-white dark:bg-slate-800 w-full max-w-md rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 overflow-hidden border border-slate-100 dark:border-slate-700"
         onClick={(e) => e.stopPropagation()}
       >

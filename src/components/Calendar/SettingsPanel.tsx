@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, LayoutGrid, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { drawerBackdropVariants, drawerPanelVariants } from '@/lib/modalVariants';
 import type { Streamer } from '@prisma/client';
 import StreamerAvatar from '@/components/streamer/StreamerAvatar';
 import { getStreamerImagePath } from '@/lib/utils';
@@ -31,10 +32,10 @@ export default function SettingsPanel({
     <div className="fixed inset-0 z-50 flex">
       {/* 드로어 패널 */}
       <motion.div
-        initial={{ x: '-100%' }}
-        animate={{ x: 0 }}
-        exit={{ x: '-100%' }}
-        transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+        variants={drawerPanelVariants}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
         className="relative w-full sm:w-80 h-full bg-white dark:bg-slate-900 shadow-2xl flex flex-col border-r border-slate-100 dark:border-slate-800 z-10"
       >
         {/* 헤더 */}
@@ -182,10 +183,10 @@ export default function SettingsPanel({
 
       {/* 백드롭 (sm 이상에서만) */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.25 }}
+        variants={drawerBackdropVariants}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
         className="hidden sm:block flex-1 bg-black/25 backdrop-blur-[2px]"
         onClick={onClose}
       />

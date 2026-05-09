@@ -6,6 +6,7 @@ import {
   LayoutDashboard, EyeOff, Heart, Megaphone, FlaskConical, PanelRight, LayoutGrid, Bell, BellOff,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { useTheme } from 'next-themes';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
@@ -412,18 +413,18 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.15 }}
+      initial="hidden"
+      animate="visible"
+      exit="hidden"
+      variants={backdropVariants}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 dark:bg-slate-950/50 backdrop-blur-sm"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 8 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 8 }}
-        transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
+        variants={smoothModalVariants}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
         className="w-full max-w-sm max-h-[90dvh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl dark:shadow-black/60 border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >

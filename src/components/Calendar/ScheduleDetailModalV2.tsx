@@ -28,7 +28,13 @@ import { deleteScheduleAction } from '@/app/actions';
 import CreateScheduleModal from '../Form/CreateScheduleModal';
 import { useToast } from '@/components/Common/Toaster';
 import ConfirmModal from '@/components/Common/ConfirmModal';
-import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
+import {
+  backdropVariants,
+  bottomSheetVariants,
+  companionPanelVariants,
+  sheetBackdropVariants,
+  smoothModalVariants,
+} from '@/lib/modalVariants';
 import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { getStreamerImagePath } from '@/lib/utils';
@@ -145,6 +151,9 @@ export default function ScheduleDetailModalV2({
         {/* 메인 모달 */}
         <motion.div
           variants={smoothModalVariants}
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
           className="relative bg-white dark:bg-slate-800 w-full sm:max-w-lg rounded-t-4xl sm:rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90dvh] border border-slate-100 dark:border-slate-700"
           onClick={(e) => e.stopPropagation()}
         >
@@ -183,11 +192,11 @@ export default function ScheduleDetailModalV2({
           {!isEditing && (
             <motion.div
               key="side-panel"
+              variants={companionPanelVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
               className="hidden sm:flex flex-col bg-white dark:bg-slate-800 w-72 rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-700 overflow-hidden max-h-[90dvh]"
-              initial={{ opacity: 0, x: 16, scale: 0.97 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 16, scale: 0.97 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
               onClick={(e) => e.stopPropagation()}
             >
               <SidePanel {...sidePanelProps} />
@@ -213,17 +222,18 @@ export default function ScheduleDetailModalV2({
           <>
             <motion.div
               className="sm:hidden fixed inset-0 z-80 bg-black/40"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              variants={sheetBackdropVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
               onClick={() => setSheetOpen(false)}
             />
             <motion.div
               className="sm:hidden fixed inset-x-0 bottom-0 z-85 bg-white dark:bg-slate-800 rounded-t-3xl shadow-2xl border-t border-slate-100 dark:border-slate-700 flex flex-col max-h-[75dvh]"
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+              variants={bottomSheetVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-center pt-3 pb-1 shrink-0">
