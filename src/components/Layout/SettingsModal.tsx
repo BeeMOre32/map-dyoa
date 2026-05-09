@@ -280,27 +280,6 @@ function ExperimentalTab({
           </div>
           <Toggle on={reminderEnabled} color="violet" />
         </button>
-        <div className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl">
-          <div className="flex items-center gap-3">
-            <LayoutGrid className="w-4 h-4 text-violet-400 shrink-0" />
-            <div className="text-left">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                  PWA 설치 배너
-                </p>
-                <span className="px-1.5 py-px bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 text-[9px] font-black rounded uppercase tracking-wide">
-                  Beta
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">
-                설치 가능한 환경에서 하단 설치 배너가 표시됩니다
-              </p>
-            </div>
-          </div>
-          <span className="text-[11px] font-bold text-violet-500 dark:text-violet-400">
-            ON
-          </span>
-        </div>
       </div>
     </motion.div>
   );

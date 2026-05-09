@@ -8,7 +8,6 @@ import HelpToast from '@/components/Common/HelpToast';
 import AnnouncementToast from '@/components/Common/AnnouncementToast';
 import { ToastProvider } from '@/components/Common/Toaster';
 import PwaRegistrar from '@/components/Common/PwaRegistrar';
-import PwaInstallBanner from '@/components/Common/PwaInstallBanner';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ThemeProvider } from '@/providers/ThemeProvider';
@@ -64,7 +63,6 @@ export default function RootLayout({
           <AuthProvider>
             <ToastProvider>
               <PwaRegistrar />
-              <PwaInstallBanner />
               <main className="h-dvh w-full bg-slate-50/50 dark:bg-slate-950 flex flex-col overflow-hidden transition-colors duration-300">
                 <Header />
                 <AnnouncementBanner />

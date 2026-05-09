@@ -1,0 +1,25 @@
+# map-dyoa
+
+## 커밋 메시지 — 반드시 준수
+
+**소스 관리 → 커밋 메시지 생성(Generate Commit Message)을 포함해**, 이 저장소에서 만들어지는 **모든** 커밋 초안·문구는 **한국어 전용**이다. (접두사 `feat:` 등은 예외)
+
+- **금지**: 영어로 된 제목·본문·불릿. (`update ...`, `Removed ...`, `Added ...` 같은 문장 전부 금지)
+- **첫 줄**: `feat:` 또는 `fix:` 또는 `chore:` 또는 `docs:` 또는 `refactor:` + 한글 요약(짧게). `~했습니다` 말고 `~추가`, `~삭제`, `~수정`, `~반영`, `~함` 같은 말투.
+- **본문**(선택): 한글만, 짧은 줄마다 한 가지씩.
+
+올바른 예:
+
+```
+chore: 커밋 규칙 문서 및 Git 템플릿 정리
+
+- AGENTS·cursor rules에 한글 커밋 안내 반영
+- PwaInstallBanner 제거, 설정에서 배너 안내 삭제
+```
+
+잘못된 예 (이렇게 출력하지 말 것):
+
+```
+update Git commit guidelines and remove PWA install banner
+- Added Korean guidelines...
+```
