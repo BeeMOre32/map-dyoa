@@ -2,7 +2,7 @@
 
 import { format, isToday } from 'date-fns';
 import Link from 'next/link';
-import { Clock, Gamepad2, Zap } from 'lucide-react';
+import { Clock, Gamepad2, CircleAlert } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion } from 'framer-motion';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
@@ -11,18 +11,18 @@ import { getStreamerColor } from '@/constants/streamercolor';
 
 function LiveBadge() {
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-500 rounded-full shadow-md shadow-red-400/30">
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-red-500/95 rounded-full">
       <span className="w-1 h-1 rounded-full bg-white animate-ping" />
-      <span className="text-[9px] font-black text-white tracking-wider">LIVE</span>
+      <span className="text-[9px] font-black text-white tracking-wide">LIVE</span>
     </span>
   );
 }
 
 function EndedBadge() {
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-400 dark:bg-slate-600 rounded-full">
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-400 dark:bg-slate-600 rounded-full">
       <span className="w-1 h-1 rounded-full bg-white/80" />
-      <span className="text-[9px] font-black text-white tracking-wider">종료</span>
+      <span className="text-[9px] font-black text-white tracking-wide">종료</span>
     </span>
   );
 }
@@ -34,7 +34,12 @@ interface Props {
   index?: number;
 }
 
-export default function ScheduleCardV2({ schedule, variant, liveStreamerIds, index = 0 }: Props) {
+export default function ScheduleCardV2({
+  schedule,
+  variant,
+  liveStreamerIds,
+  index = 0,
+}: Props) {
   const href = `/calendar/schedule/${schedule.id}`;
   const stopProp = (e: React.MouseEvent) => e.stopPropagation();
   const { resolvedTheme } = useTheme();
@@ -47,6 +52,7 @@ export default function ScheduleCardV2({ schedule, variant, liveStreamerIds, ind
     schedule.participants.some((p) => liveStreamerIds.has(p.id));
   const isEnded = schedule.isLiveEnded && isToday_;
   const gameColor = schedule.game ? getGameColor(schedule.game.id, isDark) : null;
+  const hasGameTitle = Boolean(schedule.game?.title?.trim());
 
   // mobile / monthly — same as original
   if (variant === 'mobile') {
@@ -104,6 +110,7 @@ export default function ScheduleCardV2({ schedule, variant, liveStreamerIds, ind
   const cardBg = gameColor
     ? { backgroundColor: `${gameColor}14`, borderColor: `${gameColor}50` }
     : undefined;
+  const cardTitleColor = gameColor ?? (isDark ? '#e2e8f0' : '#1e293b');
 
   return (
     <motion.div
@@ -115,18 +122,18 @@ export default function ScheduleCardV2({ schedule, variant, liveStreamerIds, ind
     >
       <Link href={href} scroll={false} className="block" onClick={stopProp}>
         <div
-          className={`px-2.5 py-2.5 rounded-xl border flex flex-col gap-1.5 transition-shadow hover:shadow-md cursor-pointer ${
+          className={`rounded-lg border flex flex-col px-3 py-3 gap-2.5 transition-[box-shadow,transform,border-color] hover:shadow-sm cursor-pointer ${
             gameColor
               ? isLive ? 'shadow-[0_2px_10px_rgba(239,68,68,0.15)]' : ''
-              : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+              : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
           }`}
           style={cardBg}
         >
-          {/* 게임 태그 / 미정 / LIVE 배지 — 한 행에 인라인으로 배치 */}
-          <div className="flex items-center gap-1 min-w-0">
-            {schedule.game && (
+          {/* 상단 메타: 게임 태그 + 상태 배지 */}
+          <div className="flex items-center gap-2 min-w-0">
+            {hasGameTitle && schedule.game && (
               <span
-                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[11px] font-bold min-w-0 overflow-hidden flex-1"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold min-w-0 overflow-hidden flex-1"
                 style={gameColor
                   ? { backgroundColor: `${gameColor}28`, color: gameColor }
                   : { backgroundColor: 'rgba(245,158,11,0.15)', color: '#b45309' }}
@@ -135,12 +142,6 @@ export default function ScheduleCardV2({ schedule, variant, liveStreamerIds, ind
                 <span className="truncate">{schedule.game.title}</span>
               </span>
             )}
-            {schedule.isGuerrilla && (
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 shrink-0">
-                <Zap className="w-2.5 h-2.5" />미정
-              </span>
-            )}
-            {/* LIVE / 종료 배지 — 항상 오른쪽 끝 */}
             {(isLive || isEnded) && (
               <span className="shrink-0 ml-auto">
                 {isLive ? <LiveBadge /> : <EndedBadge />}
@@ -148,43 +149,45 @@ export default function ScheduleCardV2({ schedule, variant, liveStreamerIds, ind
             )}
           </div>
 
-          {/* 시간 */}
-          {!schedule.isGuerrilla && (
-            <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+          {/* 시간 / 미정 */}
+          {schedule.isGuerrilla ? (
+            <div className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+              <CircleAlert className="w-3 h-3 shrink-0" />
+              미정
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
               <Clock className="w-2.5 h-2.5 shrink-0" />
               {format(new Date(schedule.startTime), 'HH:mm')}
               {schedule.endTime && (
-                <span className="opacity-60">→ {format(new Date(schedule.endTime), 'HH:mm')}</span>
+                <span className="opacity-70">→ {format(new Date(schedule.endTime), 'HH:mm')}</span>
               )}
             </div>
           )}
 
           {/* 제목 */}
-          <p
-            className="text-[13px] font-bold line-clamp-2 leading-snug"
-            style={gameColor ? { color: gameColor } : { color: isDark ? '#e2e8f0' : '#1e293b' }}
-          >
+          <p className="text-[13px] font-extrabold line-clamp-2 leading-snug" style={{ color: cardTitleColor }}>
             {schedule.title}
           </p>
 
           {/* 참여 방송인 */}
           {schedule.participants.length > 0 && (
-            <div className="flex items-center gap-1 flex-wrap">
-              {schedule.participants.slice(0, 3).map((p) => {
+            <div className="flex items-center gap-2 flex-wrap">
+              {schedule.participants.slice(0, 2).map((p) => {
                 const c = getStreamerColor(p.id, isDark) ?? p.colorCode;
                 return (
                   <span
                     key={p.id}
-                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border shrink-0"
+                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full border shrink-0"
                     style={{ borderColor: `${c}60`, color: c, backgroundColor: `${c}18` }}
                   >
                     {p.name}
                   </span>
                 );
               })}
-              {schedule.participants.length > 3 && (
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
-                  +{schedule.participants.length - 3}
+              {schedule.participants.length > 2 && (
+                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                  +{schedule.participants.length - 2}
                 </span>
               )}
             </div>

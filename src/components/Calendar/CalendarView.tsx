@@ -90,6 +90,7 @@ export default function CalendarView({
     new Set(),
   );
   const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set());
+  const [liveOnlyMode, setLiveOnlyMode] = useState(false);
   const [isMobileFabOpen, setIsMobileFabOpen] = useState(false);
   const { liveIds: liveStreamerIds } = useLiveStatus();
   const [hideEnded] = useHideEndedStreams();
@@ -104,6 +105,7 @@ export default function CalendarView({
         viewMode?: 'weekly' | 'monthly';
         selectedStreamers?: string[];
         selectedGames?: string[];
+        liveOnlyMode?: boolean;
       };
 
       if (parsed.viewMode === 'weekly' || parsed.viewMode === 'monthly') {
@@ -114,6 +116,9 @@ export default function CalendarView({
       }
       if (Array.isArray(parsed.selectedGames)) {
         setSelectedGames(new Set(parsed.selectedGames));
+      }
+      if (typeof parsed.liveOnlyMode === 'boolean') {
+        setLiveOnlyMode(parsed.liveOnlyMode);
       }
     } catch {
       localStorage.removeItem(CALENDAR_PREFERENCES_KEY);
@@ -128,9 +133,10 @@ export default function CalendarView({
         viewMode,
         selectedStreamers: [...selectedStreamers],
         selectedGames: [...selectedGames],
+        liveOnlyMode,
       }),
     );
-  }, [mounted, viewMode, selectedStreamers, selectedGames]);
+  }, [mounted, viewMode, selectedStreamers, selectedGames, liveOnlyMode]);
 
   useEffect(() => {
     if (viewMode === 'weekly' && todayMobileRef.current) {
@@ -214,6 +220,14 @@ export default function CalendarView({
       );
     }
 
+    if (liveOnlyMode) {
+      filtered = filtered.filter(
+        (s) =>
+          !s.isLiveEnded &&
+          s.participants.some((p) => liveStreamerIds.has(p.id)),
+      );
+    }
+
     const map = new Map<string, FlattenedSchedule[]>();
     filtered.forEach((schedule) => {
       const dateKey = format(new Date(schedule.startTime), 'yyyy-MM-dd');
@@ -221,7 +235,14 @@ export default function CalendarView({
       map.get(dateKey)!.push(schedule);
     });
     return map;
-  }, [optimisticSchedules, selectedStreamers, selectedGames, hideEnded]);
+  }, [
+    optimisticSchedules,
+    selectedStreamers,
+    selectedGames,
+    hideEnded,
+    liveOnlyMode,
+    liveStreamerIds,
+  ]);
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
   const handleDayClick = useCallback(
@@ -343,6 +364,19 @@ export default function CalendarView({
           setSelectedGames(new Set());
         }}
       />
+      <div className="flex items-center gap-2 mb-3 shrink-0">
+        <button
+          type="button"
+          onClick={() => setLiveOnlyMode((prev) => !prev)}
+          className={`h-7 px-2.5 rounded-lg text-xs font-bold border transition-colors ${
+            liveOnlyMode
+              ? 'bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-700 text-rose-600 dark:text-rose-300'
+              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+          }`}
+        >
+          LIVE만 보기
+        </button>
+      </div>
       {hideEnded && (
         <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl w-fit text-xs font-black text-amber-600 dark:text-amber-400 shrink-0">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400 dark:bg-amber-500" />
@@ -425,9 +459,9 @@ export default function CalendarView({
             /* V2 weekly — 카드형 컬럼 레이아웃 */
             <div
               key={`v2-${currentDate.toISOString()}`}
-              className="flex-1 overflow-y-auto custom-scrollbar p-3 animate-in fade-in duration-300"
+              className="flex-1 overflow-hidden p-3 animate-in fade-in duration-300"
             >
-              <div className="grid grid-cols-7 gap-2.5 min-h-full">
+              <div className="grid grid-cols-7 gap-2.5 h-full min-h-0">
                 {days.map((day) => {
                   const today = isToday(day);
                   const dateKey = format(day, 'yyyy-MM-dd');
@@ -444,36 +478,53 @@ export default function CalendarView({
                     <div
                       key={day.toString()}
                       onClick={() => handleDayClick(day)}
-                      className={`flex flex-col rounded-2xl border cursor-pointer transition-all min-h-120 overflow-hidden ${
+                      className={`flex flex-col rounded-xl border cursor-pointer transition-all h-full min-h-0 overflow-hidden ${
                         today
                           ? 'bg-linear-to-b from-indigo-50/60 dark:from-indigo-950/30 to-white dark:to-slate-900 border-indigo-200 dark:border-indigo-800/50'
                           : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
                       }`}
                     >
                       <div
-                        className={`px-3 pt-3 pb-2 shrink-0 border-b ${today ? 'border-indigo-100 dark:border-indigo-900/40' : 'border-slate-100 dark:border-slate-800'}`}
+                        className={`px-2.5 pt-2.5 pb-2.5 shrink-0 border-b ${today ? 'border-indigo-100 dark:border-indigo-900/40' : 'border-slate-100 dark:border-slate-800'}`}
                       >
-                        <p
-                          className={`text-[10px] font-black uppercase tracking-widest mb-1 ${dayNameColor}`}
-                        >
-                          {weekDays[dayIdx]}
-                        </p>
-                        <p
-                          className={`text-2xl font-black leading-none ${today ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200'}`}
-                        >
-                          {format(day, 'd')}
-                        </p>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p
+                              className={`text-[9px] font-black uppercase tracking-widest mb-1 ${dayNameColor}`}
+                            >
+                              {weekDays[dayIdx]}
+                            </p>
+                            <p
+                              className={`text-xl font-black leading-none ${today ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200'}`}
+                            >
+                              {format(day, 'd')}
+                            </p>
+                          </div>
+                          {daySchedules.length > 0 && (
+                            <span className="shrink-0 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-500 dark:text-slate-400">
+                              {daySchedules.length}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex flex-col flex-1 gap-1.5 p-2 overflow-y-auto custom-scrollbar">
-                        {daySchedules.map((schedule, i) => (
-                          <ScheduleCardV2
-                            key={schedule.id}
-                            schedule={schedule}
-                            variant="weekly"
-                            liveStreamerIds={liveStreamerIds}
-                            index={i}
-                          />
-                        ))}
+                      <div className="flex flex-col flex-1 min-h-0 gap-2 p-2 overflow-y-auto custom-scrollbar">
+                        {daySchedules.length > 0 ? (
+                          daySchedules.map((schedule, i) => (
+                            <ScheduleCardV2
+                              key={schedule.id}
+                              schedule={schedule}
+                              variant="weekly"
+                              liveStreamerIds={liveStreamerIds}
+                              index={i}
+                            />
+                          ))
+                        ) : (
+                          <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 px-2 text-center">
+                            <span className="text-[12px] font-semibold text-slate-400 dark:text-slate-500">
+                              일정 없음
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
