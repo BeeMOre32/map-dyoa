@@ -4,7 +4,7 @@ import { ExternalLink, Trash2, Play, Tv, Pencil, ArrowUpRight } from 'lucide-rea
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import type { ClipWithParticipants } from '@/types/entities';
 import { deleteClipAction } from '@/app/actions';
 import { useSession } from 'next-auth/react';
@@ -25,6 +25,7 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
   const [deleting, setDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const chzzkClipId = extractChzzkClipId(clip.url);
   const canPlayInline = chzzkClipId !== null;
@@ -73,7 +74,11 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
 
   return (
     <>
-      <div className="group flex flex-col rounded-3xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden hover:border-indigo-200 dark:hover:border-indigo-700 hover:shadow-xl hover:shadow-indigo-50 dark:hover:shadow-indigo-950/50 transition-all">
+      <div
+        className="group flex flex-col rounded-3xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden hover:border-indigo-200 dark:hover:border-indigo-700 hover:shadow-xl hover:shadow-indigo-50 dark:hover:shadow-indigo-950/50 transition-all"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
 
         {/* 미디어 영역 */}
         <div className="relative aspect-video bg-black overflow-hidden">
@@ -182,9 +187,14 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
           </div>
 
           {clip.description && (
-            <p className="text-xs text-slate-400 dark:text-slate-500 line-clamp-2">
+            <motion.p
+              initial={false}
+              animate={isHovered ? { maxHeight: 34, opacity: 1 } : { maxHeight: 17, opacity: 0.92 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="overflow-hidden text-xs leading-4 text-slate-400 dark:text-slate-500"
+            >
               {clip.description}
-            </p>
+            </motion.p>
           )}
 
           {clip.schedule && (

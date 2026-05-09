@@ -90,7 +90,6 @@ export default function CalendarView({
     new Set(),
   );
   const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set());
-  const [liveOnlyMode, setLiveOnlyMode] = useState(false);
   const [isMobileFabOpen, setIsMobileFabOpen] = useState(false);
   const { liveIds: liveStreamerIds } = useLiveStatus();
   const [hideEnded] = useHideEndedStreams();
@@ -105,7 +104,6 @@ export default function CalendarView({
         viewMode?: 'weekly' | 'monthly';
         selectedStreamers?: string[];
         selectedGames?: string[];
-        liveOnlyMode?: boolean;
       };
 
       if (parsed.viewMode === 'weekly' || parsed.viewMode === 'monthly') {
@@ -116,9 +114,6 @@ export default function CalendarView({
       }
       if (Array.isArray(parsed.selectedGames)) {
         setSelectedGames(new Set(parsed.selectedGames));
-      }
-      if (typeof parsed.liveOnlyMode === 'boolean') {
-        setLiveOnlyMode(parsed.liveOnlyMode);
       }
     } catch {
       localStorage.removeItem(CALENDAR_PREFERENCES_KEY);
@@ -133,10 +128,9 @@ export default function CalendarView({
         viewMode,
         selectedStreamers: [...selectedStreamers],
         selectedGames: [...selectedGames],
-        liveOnlyMode,
       }),
     );
-  }, [mounted, viewMode, selectedStreamers, selectedGames, liveOnlyMode]);
+  }, [mounted, viewMode, selectedStreamers, selectedGames]);
 
   useEffect(() => {
     if (viewMode === 'weekly' && todayMobileRef.current) {
@@ -220,14 +214,6 @@ export default function CalendarView({
       );
     }
 
-    if (liveOnlyMode) {
-      filtered = filtered.filter(
-        (s) =>
-          !s.isLiveEnded &&
-          s.participants.some((p) => liveStreamerIds.has(p.id)),
-      );
-    }
-
     const map = new Map<string, FlattenedSchedule[]>();
     filtered.forEach((schedule) => {
       const dateKey = format(new Date(schedule.startTime), 'yyyy-MM-dd');
@@ -240,8 +226,6 @@ export default function CalendarView({
     selectedStreamers,
     selectedGames,
     hideEnded,
-    liveOnlyMode,
-    liveStreamerIds,
   ]);
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -364,19 +348,6 @@ export default function CalendarView({
           setSelectedGames(new Set());
         }}
       />
-      <div className="flex items-center gap-2 mb-3 shrink-0">
-        <button
-          type="button"
-          onClick={() => setLiveOnlyMode((prev) => !prev)}
-          className={`h-7 px-2.5 rounded-lg text-xs font-bold border transition-colors ${
-            liveOnlyMode
-              ? 'bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-700 text-rose-600 dark:text-rose-300'
-              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-          }`}
-        >
-          LIVE만 보기
-        </button>
-      </div>
       {hideEnded && (
         <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl w-fit text-xs font-black text-amber-600 dark:text-amber-400 shrink-0">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400 dark:bg-amber-500" />

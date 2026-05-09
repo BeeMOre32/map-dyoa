@@ -15,13 +15,13 @@ export function ClipPagination({ currentPage, totalPages, onNavigate }: ClipPagi
   const pageItems = buildPageItems(totalPages, currentPage);
 
   return (
-    <div className="flex items-center justify-center gap-2 px-6 py-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
+    <div className="flex items-center justify-center gap-1.5 px-4 py-3 border-t border-slate-100 dark:border-slate-800 shrink-0">
       <button
         onClick={() => onNavigate(currentPage - 1)}
         disabled={currentPage <= 1}
-        className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >
-        <ChevronLeft className="w-4 h-4" />
+        <ChevronLeft className="w-3.5 h-3.5" />
       </button>
 
       {pageItems.map((item, i) =>
@@ -31,7 +31,7 @@ export function ClipPagination({ currentPage, totalPages, onNavigate }: ClipPagi
           <button
             key={item}
             onClick={() => onNavigate(item as number)}
-            className={`w-9 h-9 rounded-xl text-sm font-bold transition-colors ${
+            className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${
               item === currentPage
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-300/50 dark:shadow-indigo-900/40'
                 : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
@@ -45,9 +45,9 @@ export function ClipPagination({ currentPage, totalPages, onNavigate }: ClipPagi
       <button
         onClick={() => onNavigate(currentPage + 1)}
         disabled={currentPage >= totalPages}
-        className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >
-        <ChevronRight className="w-4 h-4" />
+        <ChevronRight className="w-3.5 h-3.5" />
       </button>
     </div>
   );
