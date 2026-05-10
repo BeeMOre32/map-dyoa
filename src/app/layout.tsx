@@ -28,7 +28,6 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Map-Dyoa | 지도동 일정 관리',
     description: '지도동 멤버들의 방송 일정을 한눈에 확인하세요.',
-    images: ['/og-image.svg'],
     type: 'website',
     locale: 'ko_KR',
   },
@@ -36,7 +35,6 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Map-Dyoa | 지도동 일정 관리',
     description: '지도동 멤버들의 방송 일정을 한눈에 확인하세요.',
-    images: ['/og-image.svg'],
   },
 };
 

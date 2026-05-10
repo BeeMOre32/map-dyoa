@@ -413,6 +413,90 @@ export async function deleteClipAction(id: string): Promise<ActionResult> {
 }
 
 /**
+ * 게임 생성
+ */
+export async function createGameAction(data: {
+  title: string;
+  isHoi4?: boolean;
+}): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    if (!data.title?.trim()) throw new ValidationError('게임 제목이 필요합니다.');
+
+    await prisma.game.create({
+      data: { title: data.title.trim(), isHoi4: data.isHoi4 ?? false },
+    });
+
+    const paths = getRevalidationPaths('game');
+    await Promise.all([
+      ...paths.map((path: string) => revalidatePath(path)),
+      updateTag('calendar'),
+    ]);
+
+    return { success: true, data: null };
+  } catch (error) {
+    const { message, code } = getErrorMessage(error);
+    logError('createGame', error);
+    return { success: false, error: message, errorCode: code };
+  }
+}
+
+/**
+ * 게임 수정
+ */
+export async function updateGameAction(
+  id: string,
+  data: { title: string; isHoi4?: boolean },
+): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    if (!id?.trim()) throw new ValidationError('유효한 게임 ID가 필요합니다.');
+    if (!data.title?.trim()) throw new ValidationError('게임 제목이 필요합니다.');
+
+    await prisma.game.update({
+      where: { id },
+      data: { title: data.title.trim(), isHoi4: data.isHoi4 ?? false },
+    });
+
+    const paths = getRevalidationPaths('game');
+    await Promise.all([
+      ...paths.map((path: string) => revalidatePath(path)),
+      updateTag('calendar'),
+    ]);
+
+    return { success: true, data: null };
+  } catch (error) {
+    const { message, code } = getErrorMessage(error);
+    logError('updateGame', error);
+    return { success: false, error: message, errorCode: code };
+  }
+}
+
+/**
+ * 게임 삭제
+ */
+export async function deleteGameAction(id: string): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    if (!id?.trim()) throw new ValidationError('유효한 게임 ID가 필요합니다.');
+
+    await prisma.game.delete({ where: { id } });
+
+    const paths = getRevalidationPaths('game');
+    await Promise.all([
+      ...paths.map((path: string) => revalidatePath(path)),
+      updateTag('calendar'),
+    ]);
+
+    return { success: true, data: null };
+  } catch (error) {
+    const { message, code } = getErrorMessage(error);
+    logError('deleteGame', error);
+    return { success: false, error: message, errorCode: code };
+  }
+}
+
+/**
  * 피드백 생성
  */
 export async function createFeedbackAction(formData: {

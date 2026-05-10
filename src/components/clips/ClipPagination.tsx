@@ -6,10 +6,11 @@ import { buildPageItems } from '@/hooks/useClipNavigation';
 interface ClipPaginationProps {
   currentPage: number;
   totalPages: number;
+  isPending?: boolean;
   onNavigate: (page: number) => void;
 }
 
-export function ClipPagination({ currentPage, totalPages, onNavigate }: ClipPaginationProps) {
+export function ClipPagination({ currentPage, totalPages, isPending, onNavigate }: ClipPaginationProps) {
   if (totalPages <= 1) return null;
 
   const pageItems = buildPageItems(totalPages, currentPage);
@@ -18,7 +19,7 @@ export function ClipPagination({ currentPage, totalPages, onNavigate }: ClipPagi
     <div className="flex items-center justify-center gap-1.5 px-4 py-3 border-t border-slate-100 dark:border-slate-800 shrink-0">
       <button
         onClick={() => onNavigate(currentPage - 1)}
-        disabled={currentPage <= 1}
+        disabled={currentPage <= 1 || isPending}
         className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >
         <ChevronLeft className="w-3.5 h-3.5" />
@@ -31,10 +32,11 @@ export function ClipPagination({ currentPage, totalPages, onNavigate }: ClipPagi
           <button
             key={item}
             onClick={() => onNavigate(item as number)}
-            className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${
+            disabled={isPending}
+            className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors disabled:cursor-not-allowed ${
               item === currentPage
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-300/50 dark:shadow-indigo-900/40'
-                : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50'
             }`}
           >
             {item}
@@ -44,7 +46,7 @@ export function ClipPagination({ currentPage, totalPages, onNavigate }: ClipPagi
 
       <button
         onClick={() => onNavigate(currentPage + 1)}
-        disabled={currentPage >= totalPages}
+        disabled={currentPage >= totalPages || isPending}
         className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >
         <ChevronRight className="w-3.5 h-3.5" />

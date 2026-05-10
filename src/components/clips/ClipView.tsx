@@ -253,6 +253,7 @@ export default function ClipView({
       <ClipPagination
         currentPage={currentPage}
         totalPages={totalPages}
+        isPending={isPending}
         onNavigate={(page) => navigate(buildUrl({ page }))}
       />
 

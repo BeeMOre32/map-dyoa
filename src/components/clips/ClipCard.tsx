@@ -4,7 +4,8 @@ import { ExternalLink, Trash2, Play, Tv, Pencil, ArrowUpRight } from 'lucide-rea
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import type { ClipWithParticipants } from '@/types/entities';
 import { deleteClipAction } from '@/app/actions';
 import { useSession } from 'next-auth/react';
@@ -20,12 +21,12 @@ interface ClipCardProps {
 }
 
 export default function ClipCard({ clip, onEdit }: ClipCardProps) {
+  const router = useRouter();
   const { data: session } = useSession();
   const toast = useToast();
   const [deleting, setDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   const chzzkClipId = extractChzzkClipId(clip.url);
   const canPlayInline = chzzkClipId !== null;
@@ -68,17 +69,17 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
     const result = await deleteClipAction(clip.id);
     setDeleting(false);
     setShowConfirm(false);
-    if (result.success) toast.success('클립이 삭제되었습니다.');
-    else toast.error('삭제에 실패했습니다.');
+    if (result.success) {
+      toast.success('클립이 삭제되었습니다.');
+      router.refresh();
+    } else {
+      toast.error('삭제에 실패했습니다.');
+    }
   }
 
   return (
     <>
-      <div
-        className="group flex flex-col rounded-3xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden hover:border-indigo-200 dark:hover:border-indigo-700 hover:shadow-xl hover:shadow-indigo-50 dark:hover:shadow-indigo-950/50 transition-all"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
+      <div className="group flex flex-col rounded-3xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden hover:border-indigo-200 dark:hover:border-indigo-700 hover:shadow-xl hover:shadow-indigo-50 dark:hover:shadow-indigo-950/50 transition-all">
 
         {/* 미디어 영역 */}
         <div className="relative aspect-video bg-black overflow-hidden">
@@ -95,7 +96,7 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
                   alt={clip.title}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  unoptimized
+
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/25 transition-colors flex items-center justify-center">
                   <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
@@ -110,7 +111,7 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
                   alt={clip.title}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  unoptimized
+
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                   <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -187,14 +188,9 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
           </div>
 
           {clip.description && (
-            <motion.p
-              initial={false}
-              animate={isHovered ? { maxHeight: 34, opacity: 1 } : { maxHeight: 17, opacity: 0.92 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="overflow-hidden text-xs leading-4 text-slate-400 dark:text-slate-500"
-            >
+            <p className="text-xs leading-4 text-slate-400 dark:text-slate-500 line-clamp-2">
               {clip.description}
-            </motion.p>
+            </p>
           )}
 
           {clip.schedule && (

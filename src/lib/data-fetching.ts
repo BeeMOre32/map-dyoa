@@ -62,10 +62,11 @@ export const getAllGames = unstable_cache(
   async () => {
     return prisma.game.findMany({
       orderBy: { title: 'asc' },
+      include: { _count: { select: { schedules: true } } },
     });
   },
   ['games-all'],
-  { revalidate: 120, tags: ['games'] },
+  { revalidate: 120, tags: ['games', 'calendar'] },
 );
 
 /**
@@ -399,4 +400,67 @@ export const getFeedbacks = unstable_cache(
   },
   ['feedbacks-all'],
   { revalidate: 30, tags: ['admin'] },
+);
+
+export const getAdminClips = unstable_cache(
+  async () => {
+    return prisma.clip.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        participants: { include: { streamer: { select: { id: true, name: true, colorCode: true } } } },
+      },
+    });
+  },
+  ['admin-clips-all'],
+  { revalidate: 30, tags: ['clips', 'admin'] },
+);
+
+export async function getAdminSchedules(from?: string, to?: string) {
+  const where: Prisma.ScheduleWhereInput = {};
+  if (from || to) {
+    where.startTime = {
+      ...(from ? { gte: new Date(from) } : {}),
+      ...(to ? { lte: new Date(to + 'T23:59:59') } : {}),
+    };
+  }
+  return prisma.schedule.findMany({
+    where,
+    orderBy: { startTime: 'desc' },
+    include: {
+      game: { select: { id: true, title: true } },
+      participants: { include: { streamer: { select: { id: true, name: true, colorCode: true } } } },
+    },
+    take: 200,
+  });
+}
+
+export const getRecentActivity = unstable_cache(
+  async () => {
+    const [schedules, clips] = await Promise.all([
+      prisma.schedule.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        select: {
+          id: true,
+          title: true,
+          startTime: true,
+          createdAt: true,
+          game: { select: { title: true } },
+        },
+      }),
+      prisma.clip.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        select: {
+          id: true,
+          title: true,
+          createdAt: true,
+          participants: { include: { streamer: { select: { name: true } } } },
+        },
+      }),
+    ]);
+    return { schedules, clips };
+  },
+  ['recent-activity'],
+  { revalidate: 60, tags: ['calendar', 'clips'] },
 );
