@@ -25,7 +25,7 @@ import { useRouter } from 'next/navigation';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useSession } from 'next-auth/react';
 import { useTheme } from 'next-themes';
-import { deleteScheduleAction } from '@/app/actions';
+import { deleteScheduleRequest } from '@/lib/schedule-delete-client';
 import CreateScheduleModal from '../Form/CreateScheduleModal';
 import { useToast } from '@/components/Common/Toaster';
 import ConfirmModal from '@/components/Common/ConfirmModal';
@@ -118,7 +118,7 @@ export default function ScheduleDetailView({
 
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
-    const result = await deleteScheduleAction(schedule.id);
+    const result = await deleteScheduleRequest(schedule.id);
     setIsDeleting(false);
     setShowConfirm(false);
     if (result.success) {

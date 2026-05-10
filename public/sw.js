@@ -1,7 +1,12 @@
-const STATIC_CACHE = 'map-dyoa-static-v1';
-const PAGE_CACHE = 'map-dyoa-pages-v1';
-const RUNTIME_CACHE = 'map-dyoa-runtime-v1';
+const STATIC_CACHE = 'map-dyoa-static-v2';
+const PAGE_CACHE = 'map-dyoa-pages-v2';
+const RUNTIME_CACHE = 'map-dyoa-runtime-v2';
 const PRECACHE_URLS = ['/', '/manifest.webmanifest', '/window.svg', '/file.svg'];
+
+function isLocalDev() {
+  const host = self.location.hostname;
+  return host === 'localhost' || host === '127.0.0.1';
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -36,7 +41,27 @@ self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(event.request.url);
   const isSameOrigin = requestUrl.origin === self.location.origin;
 
-  // 페이지 요청은 network-first (오프라인 시 cached page fallback)
+  // 로컬: Next HMR·RSC는 URL은 같아도 내용이 바뀌므로 SW가 끼면 구번들+신규 Flight가 섞임 → Flight 디코더 오류
+  if (isSameOrigin && isLocalDev()) {
+    return;
+  }
+
+  // Next 빌드 산출물: 캐시 퍼스트 금지(구 청크 + 신규 서버 응답 불일치 방지). 네트워크 우선, 실패 시에만 캐시
+  if (isSameOrigin && requestUrl.pathname.startsWith('/_next/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(STATIC_CACHE).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request)),
+    );
+    return;
+  }
+
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
@@ -54,11 +79,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 정적 자산은 cache-first
   if (
     isSameOrigin &&
-    (requestUrl.pathname.startsWith('/_next/static/') ||
-      requestUrl.pathname.startsWith('/images/') ||
+    (requestUrl.pathname.startsWith('/images/') ||
       requestUrl.pathname.match(/\.(?:png|jpg|jpeg|webp|svg|ico|css|js)$/))
   ) {
     event.respondWith(
@@ -74,7 +97,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 나머지는 stale-while-revalidate
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const networkFetch = fetch(event.request)
@@ -89,7 +111,6 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// 추후 웹푸시 연동용: 서버에서 Web Push를 보내면 표시됩니다.
 self.addEventListener('push', (event) => {
   let payload = { title: 'Map-Dyoa', body: '새 알림이 도착했습니다.', url: '/' };
   try {

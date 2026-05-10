@@ -8,7 +8,12 @@ import { announcements } from '@/config/announcements';
 
 const STORAGE_KEY = 'dismissedAnnouncements';
 
-export default function AnnouncementToast() {
+type Props = {
+  /** true면 부모 스택에서 위치·너비만 잡고, fixed는 쓰지 않습니다. */
+  stacked?: boolean;
+};
+
+export default function AnnouncementToast({ stacked }: Props) {
   const [target, setTarget] = useState<(typeof announcements)[number] | null>(null);
 
   useEffect(() => {
@@ -31,27 +36,26 @@ export default function AnnouncementToast() {
     setTarget(null);
   };
 
+  const outer = stacked
+    ? 'relative w-full pointer-events-auto'
+    : 'fixed bottom-4 right-4 z-[280] w-[min(320px,calc(100vw-2rem))] pointer-events-auto';
+
   return (
     <AnimatePresence>
       {target && (
         <motion.div
-          initial={{ opacity: 0, y: 80, scale: 0.95 }}
+          initial={{ opacity: 0, y: 12, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 60, scale: 0.95 }}
-          transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-          className="fixed bottom-6 left-4 sm:left-6 z-[200] max-w-xs w-[calc(100vw-2rem)] sm:w-72"
+          exit={{ opacity: 0, y: 8, scale: 0.98 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className={outer}
         >
-          <div className="bg-white dark:bg-slate-800 rounded-[1.75rem] shadow-2xl shadow-slate-300/40 dark:shadow-black/50 border border-slate-100 dark:border-slate-700 p-5 flex items-start gap-4">
-            <div className="shrink-0 p-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400 rounded-2xl">
-              <Megaphone className="w-5 h-5" />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-black text-slate-800 dark:text-white mb-0.5">
-                {target.title}
-              </p>
+          <div className="flex items-start gap-3 rounded-2xl border border-indigo-200/80 bg-indigo-50/95 px-4 py-3 text-sm shadow-lg backdrop-blur-sm dark:border-indigo-800/60 dark:bg-indigo-950/90">
+            <Megaphone className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+            <div className="min-w-0 flex-1">
+              <p className="font-black text-indigo-950 dark:text-indigo-100">{target.title}</p>
               {target.content && (
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-3 leading-relaxed">
+                <p className="mt-0.5 text-xs font-medium leading-relaxed text-indigo-800/90 dark:text-indigo-200/90">
                   {target.content}
                 </p>
               )}
@@ -59,20 +63,20 @@ export default function AnnouncementToast() {
                 <Link
                   href={target.href}
                   onClick={dismiss}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-black transition-colors shadow-md shadow-indigo-200 dark:shadow-indigo-950"
+                  className="mt-2 inline-flex items-center gap-1 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11px] font-black text-white shadow-sm transition-colors hover:bg-indigo-700"
                 >
-                  공지 확인하기
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  공지 보기
+                  <ArrowRight className="h-3 w-3" />
                 </Link>
               )}
             </div>
-
             <button
+              type="button"
               onClick={dismiss}
-              className="shrink-0 p-1.5 text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
+              className="shrink-0 rounded-lg p-1 text-indigo-400 transition-colors hover:bg-indigo-200/50 hover:text-indigo-700 dark:hover:bg-indigo-800/50 dark:hover:text-indigo-200"
               aria-label="닫기"
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" />
             </button>
           </div>
         </motion.div>

@@ -13,7 +13,7 @@ import { ko } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import { useGoBack } from '@/hooks/useGoBack';
 import Link from 'next/link';
-import { deleteScheduleAction } from '@/app/actions';
+import { deleteScheduleRequest } from '@/lib/schedule-delete-client';
 import CreateScheduleModal from '../Form/CreateScheduleModal';
 import { useToast } from '@/components/Common/Toaster';
 import ConfirmModal from '@/components/Common/ConfirmModal';
@@ -164,7 +164,7 @@ export default function ScheduleModal({
   const handleConfirmDelete = async () => {
     if (!confirmId) return;
     setIsDeleting(true);
-    const result = await deleteScheduleAction(confirmId);
+    const result = await deleteScheduleRequest(confirmId);
     setIsDeleting(false);
     setConfirmId(null);
     if (result.success) {

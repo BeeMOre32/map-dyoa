@@ -13,8 +13,12 @@ import Link from 'next/link';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { useHideEndedStreams } from '@/hooks/useHideEndedStreams';
-import { useExperimentalFeatures } from '@/hooks/useExperimentalFeatures';
+import {
+  useExperimentalFeatures,
+  WEB_PUSH_REMINDER_ANALYTICS_FEATURE,
+} from '@/hooks/useExperimentalFeatures';
 import { useToast } from '@/components/Common/Toaster';
+import { track } from '@vercel/analytics';
 import { getReminderEnabled, setReminderEnabled } from '@/lib/reminder-settings';
 
 interface SettingsModalProps {
@@ -366,6 +370,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       }
       setReminderEnabled(false);
       setReminderEnabledState(false);
+      track('experimental_feature_set', { feature: WEB_PUSH_REMINDER_ANALYTICS_FEATURE, enabled: 0 });
       toast.success('놓치기 알림이 꺼졌습니다.');
       return;
     }
@@ -384,6 +389,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       await registerPushSubscription();
       setReminderEnabled(true);
       setReminderEnabledState(true);
+      track('experimental_feature_set', { feature: WEB_PUSH_REMINDER_ANALYTICS_FEATURE, enabled: 1 });
       toast.success('놓치기 알림이 켜졌습니다.');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '푸시 구독에 실패했습니다.');
@@ -429,7 +435,12 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             일반
           </button>
           <button
-            onClick={() => setTab('experimental')}
+            onClick={() => {
+              if (tab !== 'experimental') {
+                track('settings_experimental_tab_opened');
+              }
+              setTab('experimental');
+            }}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-black transition-colors ${
               tab === 'experimental'
                 ? 'bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400'

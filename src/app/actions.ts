@@ -14,6 +14,7 @@ import {
   getRevalidationPaths,
   getRevalidationPathsMulti,
 } from '@/constants/revalidation-paths';
+import { runDeleteSchedule } from '@/lib/schedule-delete-server';
 import {
   scheduleServerSchema,
   clipServerSchema,
@@ -76,19 +77,7 @@ export async function createScheduleAction(data: {
 export async function deleteScheduleAction(id: string): Promise<ActionResult> {
   try {
     await requireAuth();
-
-    if (!id?.trim()) {
-      throw new ValidationError('유효한 일정 ID가 필요합니다.');
-    }
-
-    await prisma.schedule.delete({ where: { id } });
-
-    const paths = getRevalidationPaths('schedule');
-    await Promise.all([
-      ...paths.map((path: string) => revalidatePath(path)),
-      updateTag('calendar'),
-    ]);
-
+    await runDeleteSchedule(id);
     return { success: true, data: null };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
