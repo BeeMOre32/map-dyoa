@@ -44,6 +44,7 @@ import ScheduleFormModal from '@/components/Form/CreateScheduleModal';
 import ScheduleCard from '@/components/Calendar/ScheduleCard';
 import ScheduleCardV2 from '@/components/Calendar/ScheduleCardV2';
 import FilterBar from '@/components/Calendar/FilterBar';
+import CalendarWelcomeBanner from '@/components/Calendar/CalendarWelcomeBanner';
 import { useExperimentalFeatures } from '@/hooks/useExperimentalFeatures';
 import { useToast } from '@/components/Common/Toaster';
 import { getReminderEnabled, REMINDER_SETTINGS_KEY } from '@/lib/reminder-settings';
@@ -335,6 +336,7 @@ export default function CalendarView({
 
   return (
     <div className="flex flex-col p-4 md:p-6 sm:flex-1 sm:min-h-0 sm:overflow-hidden">
+      <CalendarWelcomeBanner />
       {/* 상단 컨트롤 영역 */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center shrink-0 mb-4 gap-3">
         <div className="flex items-center gap-3 w-full md:w-auto min-w-0">

@@ -5,7 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, X, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
-const STORAGE_KEY = 'help_toast_dismissed';
+import {
+  CALENDAR_WELCOME_DISMISSED_KEY,
+  HELP_TOAST_DISMISSED_KEY,
+} from '@/constants/onboarding';
 
 type Props = {
   stacked?: boolean;
@@ -16,14 +19,25 @@ export default function HelpToast({ stacked }: Props) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (localStorage.getItem(STORAGE_KEY)) return;
+
+    // 예전에 가이드 토스트만 닫은 사용자는 캘린더 배너를 다시 띄우지 않음
+    if (
+      localStorage.getItem(HELP_TOAST_DISMISSED_KEY) &&
+      !localStorage.getItem(CALENDAR_WELCOME_DISMISSED_KEY)
+    ) {
+      localStorage.setItem(CALENDAR_WELCOME_DISMISSED_KEY, '1');
+    }
+
+    if (localStorage.getItem(HELP_TOAST_DISMISSED_KEY)) return;
+    // 캘린더 첫 방문 안내를 처리하기 전에는 토스트 생략(배너와 겹침 방지)
+    if (!localStorage.getItem(CALENDAR_WELCOME_DISMISSED_KEY)) return;
 
     const timer = setTimeout(() => setVisible(true), 2200);
     return () => clearTimeout(timer);
   }, []);
 
   const dismiss = () => {
-    localStorage.setItem(STORAGE_KEY, '1');
+    localStorage.setItem(HELP_TOAST_DISMISSED_KEY, '1');
     setVisible(false);
   };
 

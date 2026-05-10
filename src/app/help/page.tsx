@@ -6,6 +6,7 @@ import {
   ArrowRight, Gamepad2, Users, Mail, LayoutGrid, Search, Zap, Palette,
   Keyboard, ExternalLink, Clock, ChevronLeft, ChevronRight, SlidersHorizontal,
   Radio, Clapperboard, Puzzle, Move, Maximize2, Sword, Wifi, EyeOff, Bot,
+  Smartphone, Share, Download,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -539,6 +540,38 @@ export default function HelpPage() {
             <Row icon={<ChevronRight className="w-5 h-5" />} delay={0.21}>
               모바일에서는 주간 뷰가 <strong>리스트 형식</strong>으로 표시되어 일정을 더 편하게 확인할 수 있습니다.
             </Row>
+          </div>
+        </SectionCard>
+
+        {/* 16. PWA */}
+        <SectionCard
+          icon={<Smartphone className="w-6 h-6 text-teal-500 dark:text-teal-400" />}
+          iconBg="bg-teal-50 dark:bg-teal-900/20"
+          title={<>16. PWA · 앱처럼 설치하기</>}
+        >
+          <div className="space-y-4">
+            <p className="text-slate-600 dark:text-slate-300 font-medium">
+              Map-Dyoa는 <strong>PWA(Progressive Web App)</strong>으로 배포됩니다.
+              설치하지 않아도 브라우저에서 그대로 쓸 수 있고, 원하면 <strong>홈 화면에 추가</strong>해 아이콘으로 바로 열 수 있습니다.
+            </p>
+            <Row icon={<Download className="w-5 h-5" />}>
+              <strong>Chrome / Edge (데스크톱·Android)</strong>
+              주소창 오른쪽의 <strong>설치(⊕)</strong> 아이콘이 보이면 클릭해 설치합니다.
+              메뉴(⋮)에 <strong>앱 설치</strong> 또는 <strong>Map-Dyoa 설치</strong>가 있으면 그 항목을 선택해도 됩니다.
+            </Row>
+            <Row icon={<Share className="w-5 h-5" />} delay={0.07}>
+              <strong>iPhone · iPad (Safari)</strong>
+              하단 <strong>공유</strong> 버튼 → <strong>홈 화면에 추가</strong>를 눌러 아이콘을 만듭니다.
+              다른 브라우저에서는 메뉴에 <strong>홈 화면에 추가</strong> 유사 항목이 있을 수 있습니다.
+            </Row>
+            <Row icon={<Smartphone className="w-5 h-5" />} delay={0.14}>
+              설치 후에는 브라우저 탭 대신 <strong>자체 창(standalone)</strong>처럼 실행되며,
+              manifest에 맞춰 테마 색·시작 주소가 적용됩니다. 캘린더가 기본 진입 화면으로 열립니다.
+            </Row>
+            <Tip>
+              <strong>로컬 개발</strong>(<code className="px-1 rounded bg-slate-200/80 dark:bg-slate-700 text-xs">npm run dev</code>)에서는
+              이전 서비스 워커 캐시와 충돌을 막기 위해 등록이 끊기므로, 설치·오프라인 동작은 <strong>배포된 사이트</strong>에서 확인하는 것이 좋습니다.
+            </Tip>
           </div>
         </SectionCard>
 
