@@ -301,7 +301,7 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
                       <div className="h-7 w-7 overflow-hidden rounded-lg border-2 border-white shadow-sm dark:border-slate-900">
                         <StreamerAvatar
                           name={streamer.name}
-                          imgSrc={getStreamerImagePath(streamer.name)}
+                          imgSrc={streamer.profileImg ?? getStreamerImagePath(streamer.name)}
                           colorCode={color}
                           streamerId={streamer.id}
                           size="xs"

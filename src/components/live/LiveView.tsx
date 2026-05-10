@@ -48,7 +48,7 @@ function StreamerCard({
         <div className="relative w-14 h-14 rounded-2xl overflow-hidden">
           <StreamerAvatar
             name={streamer.name}
-            imgSrc={getStreamerImagePath(streamer.name)}
+            imgSrc={streamer.profileImg ?? getStreamerImagePath(streamer.name)}
             colorCode={streamer.colorCode}
             streamerId={streamer.id}
             size="medium"

@@ -185,7 +185,7 @@ function FilterPanel({
                           >
                             <StreamerAvatar
                               name={streamer.name}
-                              imgSrc={getStreamerImagePath(streamer.name)}
+                              imgSrc={streamer.profileImg ?? getStreamerImagePath(streamer.name)}
                               colorCode={streamer.colorCode}
                               streamerId={streamer.id}
                               size="small"

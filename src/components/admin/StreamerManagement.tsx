@@ -11,6 +11,7 @@ type StreamerItem = {
   generation: number;
   role: string | null;
   platform: string;
+  profileImg: string | null;
   colorCode: string;
   chzzkUrl: string | null;
   bio: string | null;

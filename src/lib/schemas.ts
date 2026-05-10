@@ -49,6 +49,7 @@ export const streamerServerSchema = z.object({
   }, z.number().int().positive()),
   role: z.string().optional(),
   platform: z.string().default('CHZZK'),
+  profileImg: z.string().trim().url().optional().or(z.literal('')),
   colorCode: z.string().default('#673AB7'),
   chzzkUrl: z.string().optional(),
   bio: z.string().optional(),

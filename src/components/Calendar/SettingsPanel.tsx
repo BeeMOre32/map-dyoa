@@ -132,7 +132,7 @@ export default function SettingsPanel({
                               <div className={`rounded-2xl transition-all ${isSelected ? 'ring-2 ring-indigo-400 dark:ring-indigo-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-900' : ''}`}>
                                 <StreamerAvatar
                                   name={streamer.name}
-                                  imgSrc={getStreamerImagePath(streamer.name)}
+                                  imgSrc={streamer.profileImg ?? getStreamerImagePath(streamer.name)}
                                   colorCode={streamer.colorCode}
                                   streamerId={streamer.id}
                                   size="small"

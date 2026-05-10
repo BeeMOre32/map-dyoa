@@ -1,7 +1,6 @@
 'use client';
 
-import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { useIsDarkAfterMount } from '@/hooks/useIsDarkAfterMount';
 
@@ -20,16 +19,13 @@ export default function StreamerAvatar({
   streamerId,
   size,
 }: StreamerAvatarProps) {
-  const [imgError, setImgError] = useState(false);
+  const [failedImgSrc, setFailedImgSrc] = useState<string | null>(null);
   const isDark = useIsDarkAfterMount();
   const resolvedColor =
     (streamerId ? getStreamerColor(streamerId, isDark) : null) ?? colorCode;
 
-  useEffect(() => {
-    setImgError(false);
-  }, [imgSrc]);
-
-  const shouldShowFallback = !imgSrc || imgSrc.trim() === '' || imgError;
+  const normalizedImgSrc = imgSrc?.trim() ?? '';
+  const shouldShowFallback = !normalizedImgSrc || failedImgSrc === normalizedImgSrc;
   const sizeClasses = {
     xs: 'w-7 h-7',
     small: 'w-10 h-10',
@@ -55,12 +51,11 @@ export default function StreamerAvatar({
     <div
       className={`relative ${sizeClasses[size]} shrink-0 overflow-hidden rounded-2xl shadow-sm transition-transform group-hover:scale-110 duration-300`}
     >
-      <Image
-        src={imgSrc}
+      <img
+        src={normalizedImgSrc}
         alt={name}
-        fill
-        className="object-cover"
-        onError={() => setImgError(true)}
+        className="h-full w-full object-cover"
+        onError={() => setFailedImgSrc(normalizedImgSrc)}
       />
     </div>
   );

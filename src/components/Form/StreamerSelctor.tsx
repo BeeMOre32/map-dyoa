@@ -99,7 +99,7 @@ export default function StreamerSelector({
                       >
                         <StreamerAvatar
                           name={streamer.name}
-                          imgSrc={getStreamerImagePath(streamer.name)}
+                          imgSrc={streamer.profileImg ?? getStreamerImagePath(streamer.name)}
                           colorCode={streamerColor}
                           streamerId={streamer.id}
                           size={compact ? 'small' : 'medium'}

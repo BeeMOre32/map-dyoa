@@ -15,6 +15,12 @@ const streamerSchema = z.object({
     .string()
     .min(1, '영문 ID를 입력해주세요.')
     .regex(/^[a-z0-9_]+$/, '영문 소문자, 숫자, 밑줄(_)만 사용 가능합니다.'),
+  profileImg: z
+    .string()
+    .trim()
+    .url('올바른 이미지 URL을 입력해주세요.')
+    .optional()
+    .or(z.literal('')),
 });
 
 type StreamerErrors = Partial<Record<keyof z.infer<typeof streamerSchema> | 'submit', string>>;
@@ -38,6 +44,7 @@ type StreamerFormInitialData = {
   generation: number;
   role: string | null;
   platform: string;
+  profileImg: string | null;
   colorCode: string;
   chzzkUrl: string | null;
   bio: string | null;
@@ -60,6 +67,7 @@ export default function CreateStreamerModal({
   const [role, setRole] = useState(initialData?.role ?? '');
   const [colorCode, setColorCode] = useState(initialData?.colorCode ?? PASTEL_COLORS[0].hex);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [profileImg, setProfileImg] = useState(initialData?.profileImg ?? '');
   const [chzzkUrl, setChzzkUrl] = useState(initialData?.chzzkUrl ?? '');
   const [bio, setBio] = useState(initialData?.bio ?? '');
   const [isGuest, setIsGuest] = useState(initialData?.isGuest ?? false);
@@ -73,6 +81,7 @@ export default function CreateStreamerModal({
     const parsed = streamerSchema.safeParse({
       name: name.trim(),
       handle: handle.trim().toLowerCase(),
+      profileImg: profileImg.trim(),
     });
     if (!parsed.success) {
       const fieldErrors: StreamerErrors = {};
@@ -93,6 +102,7 @@ export default function CreateStreamerModal({
       generation,
       role,
       platform: initialData?.platform || 'CHZZK',
+      profileImg,
       colorCode,
       chzzkUrl,
       bio,
@@ -139,7 +149,7 @@ export default function CreateStreamerModal({
                 {mode === 'edit' ? '인원 수정' : '인원 추가'}
               </h3>
               <h5 className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                프로필 사진 기능은 추후 업데이트 예정입니다!
+                프로필 이미지는 URL로 등록할 수 있습니다.
               </h5>
             </div>
           </div>
@@ -261,6 +271,30 @@ export default function CreateStreamerModal({
               </span>
             </span>
           </label>
+
+          <div data-zod-field="profileImg">
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
+              프로필 이미지 URL (선택)
+            </label>
+            <input
+              type="url"
+              value={profileImg}
+              onChange={(e) => {
+                setProfileImg(e.target.value);
+                if (errors.profileImg) setErrors((er) => ({ ...er, profileImg: undefined }));
+              }}
+              placeholder="https://example.com/profile.png"
+              className={`w-full p-3 bg-slate-50 dark:bg-slate-700 border rounded-xl font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-400/50 outline-none transition-all ${
+                errors.profileImg ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-slate-600'
+              }`}
+            />
+            {errors.profileImg && (
+              <p className="mt-1.5 flex items-center gap-1 text-xs font-bold text-red-500">
+                <AlertCircle className="w-3 h-3 shrink-0" />
+                {errors.profileImg}
+              </p>
+            )}
+          </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">

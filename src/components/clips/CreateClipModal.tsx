@@ -142,7 +142,7 @@ export default function CreateClipModal({
                             colorCode={color}
                             name={s.name}
                             size="xs"
-                            imgSrc={getStreamerImagePath(s.name)}
+                            imgSrc={s.profileImg ?? getStreamerImagePath(s.name)}
                           />
                           {s.name}
                         </motion.button>
@@ -186,7 +186,7 @@ export default function CreateClipModal({
                           >
                             <StreamerAvatar
                               name={s.name}
-                              imgSrc={getStreamerImagePath(s.name)}
+                              imgSrc={s.profileImg ?? getStreamerImagePath(s.name)}
                               colorCode={s.colorCode}
                               streamerId={s.id}
                               size="medium"

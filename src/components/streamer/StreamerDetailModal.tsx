@@ -69,7 +69,7 @@ export default function StreamerDetailModal({
   clipCount = 0,
 }: StreamerDetailModalProps) {
   const goBack = useGoBack('/streamers');
-  const imgSrc = getStreamerImagePath(streamer.name);
+  const imgSrc = streamer.profileImg ?? getStreamerImagePath(streamer.name);
   const isDark = useIsDarkAfterMount();
   const streamerColor = getStreamerColor(streamer.id, isDark) ?? streamer.colorCode;
 

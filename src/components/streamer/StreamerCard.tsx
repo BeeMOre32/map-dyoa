@@ -29,7 +29,7 @@ export default function StreamerCard({
   onToggleMultiview,
   selectionIndex,
 }: StreamerCardProps) {
-  const imgSrc = getStreamerImagePath(streamer.name);
+  const imgSrc = streamer.profileImg ?? getStreamerImagePath(streamer.name);
   const isDark = useIsDarkAfterMount();
   const streamerColor = getStreamerColor(streamer.id, isDark) ?? streamer.colorCode;
   const channelUrl = getChannelUrl(streamer);

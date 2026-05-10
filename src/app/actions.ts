@@ -191,6 +191,7 @@ export async function createStreamerAction(data: {
   generation: number;
   role: string;
   platform: string;
+  profileImg?: string;
   colorCode: string;
   chzzkUrl: string;
   bio?: string;
@@ -208,6 +209,7 @@ export async function createStreamerAction(data: {
         generation: validated.generation,
         role: validated.role?.trim() || null,
         platform: validated.platform,
+        profileImg: validated.profileImg?.trim() || null,
         colorCode: validated.colorCode,
         chzzkUrl: validated.chzzkUrl?.trim() || null,
         bio: validated.bio?.trim() || null,
@@ -244,6 +246,7 @@ export async function updateStreamerAction(
     generation: number;
     role: string;
     platform: string;
+    profileImg?: string;
     colorCode: string;
     chzzkUrl: string;
     bio?: string;
@@ -267,6 +270,7 @@ export async function updateStreamerAction(
         generation: validated.generation,
         role: validated.role?.trim() || null,
         platform: validated.platform,
+        profileImg: validated.profileImg?.trim() || null,
         colorCode: validated.colorCode,
         chzzkUrl: validated.chzzkUrl?.trim() || null,
         bio: validated.bio?.trim() || null,
@@ -312,6 +316,7 @@ export async function bulkCreateStreamersAction(
         generation: s.generation || 1,
         role: s.role?.trim() || null,
         platform: s.platform || 'CHZZK',
+        profileImg: s.profileImg?.trim() || null,
         colorCode: s.colorCode || '#673AB7',
         chzzkUrl: s.chzzkUrl?.trim() || null,
         isGuest: s.isGuest ?? false,
