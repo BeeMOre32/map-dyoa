@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 
+export const revalidate = 0;
+
 function extractChannelId(url: string): string | null {
   try {
     const segments = new URL(url).pathname.split('/').filter(Boolean);
@@ -15,7 +17,7 @@ const fetchLiveStreamerIds = unstable_cache(
   async (): Promise<string[]> => {
     const streamers = await prisma.streamer.findMany({
       select: { id: true, chzzkUrl: true },
-      where: { chzzkUrl: { not: null } },
+      where: { chzzkUrl: { not: null }, isGuest: false },
     });
 
     const results = await Promise.all(
@@ -48,5 +50,12 @@ const fetchLiveStreamerIds = unstable_cache(
 
 export async function GET() {
   const liveStreamerIds = await fetchLiveStreamerIds();
-  return NextResponse.json({ liveStreamerIds });
+  return NextResponse.json(
+    { liveStreamerIds },
+    {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      },
+    },
+  );
 }

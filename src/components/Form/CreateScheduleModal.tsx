@@ -4,8 +4,6 @@ import { useState } from 'react';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { motion } from 'framer-motion';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
-import { Streamer, Game } from '@prisma/client';
-import { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { CreateScheduleModalProps, CreateMode } from './types';
 import { useEditScheduleForm } from './hooks/useEditScheduleForm';
 import { useBatchScheduleForm } from './hooks/useBatchScheduleForm';
@@ -108,6 +106,8 @@ export default function CreateScheduleModal({
                 sortedStreamers={sortedStreamers}
                 games={games}
                 onToggleStreamer={editForm.toggleStreamer}
+                onToggleGuest={editForm.toggleGuest}
+                onClearError={editForm.clearEditError}
                 onUpdateParticipant={editForm.updateParticipant}
                 onLiveUrlBlur={editForm.handleLiveUrlBlur}
                 onSubmit={editForm.handleEditSubmit}

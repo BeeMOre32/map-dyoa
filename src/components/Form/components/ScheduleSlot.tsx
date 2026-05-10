@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { Plus, ChevronDown, ChevronRight, Trash2, X, Link as LinkIcon, Loader2, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import StreamerSelector from '../StreamerSelctor';
-import { SlotEntry, Game, Streamer, SlotErrors } from '../types';
+import { SlotEntry, Game, Streamer } from '../types';
 
 type ScheduleSlotProps = {
   slot: SlotEntry;
@@ -33,14 +32,29 @@ export default function ScheduleSlot({
 
   const handleToggleStreamer = (id: string) => {
     const has = slot.selectedStreamerIds.includes(id);
+    const streamer = sortedStreamers.find((s) => s.id === id);
     onUpdate({
       selectedStreamerIds: has
         ? slot.selectedStreamerIds.filter((x) => x !== id)
         : [...slot.selectedStreamerIds, id],
+      guestStreamerIds: has
+        ? slot.guestStreamerIds.filter((x) => x !== id)
+        : streamer?.isGuest
+          ? [...slot.guestStreamerIds, id]
+          : slot.guestStreamerIds,
       errors: {
         ...slot.errors,
         streamerIds: undefined,
       },
+    });
+  };
+
+  const handleToggleGuest = (id: string) => {
+    const has = slot.guestStreamerIds.includes(id);
+    onUpdate({
+      guestStreamerIds: has
+        ? slot.guestStreamerIds.filter((x) => x !== id)
+        : [...slot.guestStreamerIds, id],
     });
   };
 
@@ -62,8 +76,10 @@ export default function ScheduleSlot({
         /* ignore */
       }
     }
-    if (slot.selectedStreamerIds.length > 0)
-      parts.push(`${slot.selectedStreamerIds.length}명`);
+    if (slot.selectedStreamerIds.length > 0) {
+      const memberCount = slot.selectedStreamerIds.length - slot.guestStreamerIds.length;
+      parts.push(`멤버 ${memberCount} · 게스트 ${slot.guestStreamerIds.length}`);
+    }
     return parts.join(' · ');
   };
 
@@ -340,9 +356,9 @@ export default function ScheduleSlot({
                 data-zod-field="streamerIds"
               >
                 <label className="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight">
-                  참여 멤버{' '}
+                  참여자{' '}
                   <span className="text-indigo-500">
-                    ({slot.selectedStreamerIds.length})
+                    (멤버 {slot.selectedStreamerIds.length - slot.guestStreamerIds.length} · 게스트 {slot.guestStreamerIds.length})
                   </span>
                 </label>
                 {slot.errors.streamerIds && (
@@ -355,7 +371,9 @@ export default function ScheduleSlot({
                   compact
                   streamers={sortedStreamers}
                   selectedStreamers={slot.selectedStreamerIds}
+                  guestStreamers={slot.guestStreamerIds}
                   toggleStreamer={handleToggleStreamer}
+                  toggleGuest={handleToggleGuest}
                 />
               </div>
             </div>

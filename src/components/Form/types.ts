@@ -30,6 +30,7 @@ export type SlotEntry = {
   startTime: string;
   selectedGameId: string;
   selectedStreamerIds: string[];
+  guestStreamerIds: string[];
   liveUrls: string[];
   isTimeTBD: boolean;
   metaLoading: boolean;
@@ -41,7 +42,7 @@ export type EditErrors = Partial<
   Record<keyof z.infer<typeof editSchema> | 'submit', string>
 >;
 
-export type ParticipantEntry = { id: string; nation: string; result: string };
+export type ParticipantEntry = { id: string; nation: string; result: string; isGuest: boolean };
 
 export type AutoFillResult = {
   title: string | null;

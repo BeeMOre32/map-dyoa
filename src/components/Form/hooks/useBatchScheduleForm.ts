@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { createScheduleAction } from '@/app/actions';
 import { matchChzzkCategory } from '@/constants/chzzkGameMap';
 import {
@@ -41,6 +41,7 @@ function createSlot(): SlotEntry {
     startTime: '',
     selectedGameId: '',
     selectedStreamerIds: [],
+    guestStreamerIds: [],
     liveUrls: [''],
     isTimeTBD: false,
     metaLoading: false,
@@ -53,12 +54,11 @@ export function useBatchScheduleForm({
   games,
   onClose,
 }: UseBatchScheduleFormArgs): UseBatchScheduleFormReturn {
-  const firstKeyRef = useRef(crypto.randomUUID());
   const [slots, setSlots] = useState<SlotEntry[]>(() => [
-    { ...createSlot(), key: firstKeyRef.current },
+    { ...createSlot(), key: 'initial-slot' },
   ]);
   const [expandedKey, setExpandedKey] = useState<string | null>(
-    firstKeyRef.current,
+    'initial-slot',
   );
   const [batchSubmitError, setBatchSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -197,7 +197,10 @@ export function useBatchScheduleForm({
           startTime: slot.isTimeTBD
             ? new Date(slot.startTime.split('T')[0] + 'T00:00')
             : new Date(slot.startTime),
-          participants: slot.selectedStreamerIds.map((id) => ({ id })),
+          participants: slot.selectedStreamerIds.map((id) => ({
+            id,
+            isGuest: slot.guestStreamerIds.includes(id),
+          })),
           gameId: slot.selectedGameId || undefined,
           liveUrls: slot.liveUrls.map((u) => u.trim()).filter(Boolean),
           isGuerrilla: slot.isTimeTBD,

@@ -290,6 +290,7 @@ export default function ScheduleCard({
                   )}
                 >
                   {p.name}
+                  {p.isGuest && <span className="ml-1 opacity-70">게스트</span>}
                 </span>
               ))}
               {schedule.participants.length > 3 && (

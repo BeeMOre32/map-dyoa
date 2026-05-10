@@ -11,14 +11,18 @@ import { getStreamerColor } from '@/constants/streamercolor';
 interface StreamerSelectorProps {
   streamers: Streamer[];
   selectedStreamers: string[];
+  guestStreamers?: string[];
   toggleStreamer: (id: string) => void;
+  toggleGuest?: (id: string) => void;
   compact?: boolean;
 }
 
 export default function StreamerSelector({
   streamers,
   selectedStreamers,
+  guestStreamers = [],
   toggleStreamer,
+  toggleGuest,
   compact = false,
 }: StreamerSelectorProps) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -63,6 +67,7 @@ export default function StreamerSelector({
           <AnimatePresence mode="popLayout">
             {filteredStreamers.map((streamer) => {
               const isSelected = selectedStreamers.includes(streamer.id);
+              const isGuest = guestStreamers.includes(streamer.id);
               const streamerColor = getStreamerColor(streamer.id, resolvedTheme === 'dark') ?? streamer.colorCode;
 
               return (
@@ -74,45 +79,61 @@ export default function StreamerSelector({
                   exit={{ opacity: 0, scale: 0.9 }}
                   className={compact ? 'flex flex-col items-center' : 'flex flex-col items-center justify-start min-h-27.5'}
                 >
-                  <button
-                    type="button"
-                    onClick={() => toggleStreamer(streamer.id)}
-                    className={`flex flex-col items-center w-full group outline-none ${compact ? 'gap-1.5' : 'gap-4'}`}
-                  >
-                    <div
-                      className={`relative shrink-0 rounded-2xl transition-all duration-300 ${
-                        isSelected
-                          ? 'scale-110 shadow-xl'
-                          : 'opacity-50 grayscale group-hover:opacity-100 group-hover:grayscale-0 group-hover:scale-105'
-                      }`}
-                      style={
-                        isSelected
-                          ? { outline: `2.5px solid ${streamerColor}`, outlineOffset: '3px' }
-                          : undefined
-                      }
+                  <div className={`flex flex-col items-center w-full ${compact ? 'gap-1.5' : 'gap-2.5'}`}>
+                    <button
+                      type="button"
+                      onClick={() => toggleStreamer(streamer.id)}
+                      className={`flex flex-col items-center w-full group outline-none ${compact ? 'gap-1.5' : 'gap-4'}`}
                     >
-                      <StreamerAvatar
-                        name={streamer.name}
-                        imgSrc={getStreamerImagePath(streamer.name)}
-                        colorCode={streamerColor}
-                        streamerId={streamer.id}
-                        size={compact ? 'small' : 'medium'}
-                      />
-                    </div>
+                      <div
+                        className={`relative shrink-0 rounded-2xl transition-all duration-300 ${
+                          isSelected
+                            ? 'scale-110 shadow-xl'
+                            : 'opacity-50 grayscale group-hover:opacity-100 group-hover:grayscale-0 group-hover:scale-105'
+                        }`}
+                        style={
+                          isSelected
+                            ? { outline: `2.5px solid ${streamerColor}`, outlineOffset: '3px' }
+                            : undefined
+                        }
+                      >
+                        <StreamerAvatar
+                          name={streamer.name}
+                          imgSrc={getStreamerImagePath(streamer.name)}
+                          colorCode={streamerColor}
+                          streamerId={streamer.id}
+                          size={compact ? 'small' : 'medium'}
+                        />
+                      </div>
 
-                    <span
-                      className={`font-black text-center truncate w-full leading-tight transition-colors ${
-                        compact ? 'text-[11px] px-0.5' : 'text-[13px] px-1'
-                      } ${
-                        isSelected
-                          ? 'text-slate-900 dark:text-slate-100'
-                          : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'
-                      }`}
-                      style={{ color: isSelected ? streamerColor : undefined }}
-                    >
-                      {streamer.name}
-                    </span>
-                  </button>
+                      <span
+                        className={`font-black text-center truncate w-full leading-tight transition-colors ${
+                          compact ? 'text-[11px] px-0.5' : 'text-[13px] px-1'
+                        } ${
+                          isSelected
+                            ? 'text-slate-900 dark:text-slate-100'
+                            : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'
+                        }`}
+                        style={{ color: isSelected ? streamerColor : undefined }}
+                      >
+                        {streamer.name}
+                      </span>
+                    </button>
+
+                    {isSelected && toggleGuest && (
+                      <button
+                        type="button"
+                        onClick={() => toggleGuest(streamer.id)}
+                        className={`rounded-full border px-2 py-0.5 text-[10px] font-black transition-colors ${
+                          isGuest
+                            ? 'border-amber-200 bg-amber-50 text-amber-600 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400'
+                            : 'border-slate-200 bg-slate-50 text-slate-400 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500 dark:hover:text-slate-300'
+                        }`}
+                      >
+                        {isGuest ? '게스트' : '멤버'}
+                      </button>
+                    )}
+                  </div>
                 </motion.div>
               );
             })}

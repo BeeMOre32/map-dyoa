@@ -41,6 +41,7 @@ type StreamerFormInitialData = {
   colorCode: string;
   chzzkUrl: string | null;
   bio: string | null;
+  isGuest: boolean;
 };
 
 export default function CreateStreamerModal({
@@ -61,6 +62,7 @@ export default function CreateStreamerModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [chzzkUrl, setChzzkUrl] = useState(initialData?.chzzkUrl ?? '');
   const [bio, setBio] = useState(initialData?.bio ?? '');
+  const [isGuest, setIsGuest] = useState(initialData?.isGuest ?? false);
   const [errors, setErrors] = useState<StreamerErrors>({});
 
   useEscapeKey(onClose);
@@ -94,6 +96,7 @@ export default function CreateStreamerModal({
       colorCode,
       chzzkUrl,
       bio,
+      isGuest,
     };
 
     const result = mode === 'edit' && initialData
@@ -235,6 +238,29 @@ export default function CreateStreamerModal({
               />
             </div>
           </div>
+
+          <label
+            className={`flex items-start gap-3 rounded-2xl border px-4 py-3.5 transition-colors ${
+              isGuest
+                ? 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/15'
+                : 'border-slate-200 bg-slate-50 dark:border-slate-600 dark:bg-slate-700/50'
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={isGuest}
+              onChange={(e) => setIsGuest(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded accent-amber-500"
+            />
+            <span>
+              <span className={`block text-sm font-bold ${isGuest ? 'text-amber-700 dark:text-amber-400' : 'text-slate-600 dark:text-slate-300'}`}>
+                게스트로 등록
+              </span>
+              <span className="mt-0.5 block text-xs font-medium text-slate-400 dark:text-slate-500">
+                멤버 목록과 멤버 수 집계에서는 제외하고, 일정 참여자로는 선택할 수 있습니다
+              </span>
+            </span>
+          </label>
 
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">

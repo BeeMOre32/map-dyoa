@@ -414,6 +414,11 @@ function DetailView({
                   <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
                     {p.name}
                   </span>
+                  {p.isGuest && (
+                    <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-black text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
+                      게스트
+                    </span>
+                  )}
                 </Link>
               );
             })}

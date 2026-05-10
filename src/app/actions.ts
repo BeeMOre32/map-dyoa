@@ -54,7 +54,7 @@ function streamerUniqueConstraintFailure(
 export async function createScheduleAction(data: {
   title: string;
   startTime: Date;
-  participants: { id: string; nation?: string; result?: string }[];
+  participants: { id: string; nation?: string; result?: string; isGuest?: boolean }[];
   gameId?: string;
   liveUrls?: string[];
   isGuerrilla?: boolean;
@@ -69,10 +69,11 @@ export async function createScheduleAction(data: {
         title: validated.title.trim(),
         startTime: validated.startTime,
         participants: {
-          create: validated.participants.map(({ id, nation, result }) => ({
+          create: validated.participants.map(({ id, nation, result, isGuest }) => ({
             streamer: { connect: { id } },
             nation: nation?.trim() || null,
             result: result || null,
+            isGuest: isGuest ?? false,
           })),
         },
         ...(validated.gameId ? { game: { connect: { id: validated.gameId } } } : {}),
@@ -119,7 +120,7 @@ export async function updateScheduleAction(
   data: {
     title: string;
     startTime: Date;
-    participants: { id: string; nation?: string; result?: string }[];
+    participants: { id: string; nation?: string; result?: string; isGuest?: boolean }[];
     gameId?: string;
     liveUrls?: string[];
     isGuerrilla?: boolean;
@@ -148,11 +149,21 @@ export async function updateScheduleAction(
       prisma.scheduleParticipant.deleteMany({
         where: { scheduleId: id, streamerId: { notIn: newStreamerIds } },
       }),
-      ...validated.participants.map(({ id: streamerId, nation, result }) =>
+      ...validated.participants.map(({ id: streamerId, nation, result, isGuest }) =>
         prisma.scheduleParticipant.upsert({
           where: { scheduleId_streamerId: { scheduleId: id, streamerId } },
-          create: { scheduleId: id, streamerId, nation: nation?.trim() || null, result: result || null },
-          update: { nation: nation?.trim() || null, result: result || null },
+          create: {
+            scheduleId: id,
+            streamerId,
+            nation: nation?.trim() || null,
+            result: result || null,
+            isGuest: isGuest ?? false,
+          },
+          update: {
+            nation: nation?.trim() || null,
+            result: result || null,
+            isGuest: isGuest ?? false,
+          },
         }),
       ),
     ]);
@@ -183,6 +194,7 @@ export async function createStreamerAction(data: {
   colorCode: string;
   chzzkUrl: string;
   bio?: string;
+  isGuest?: boolean;
 }): Promise<ActionResult> {
   try {
     await requireAdmin();
@@ -199,6 +211,7 @@ export async function createStreamerAction(data: {
         colorCode: validated.colorCode,
         chzzkUrl: validated.chzzkUrl?.trim() || null,
         bio: validated.bio?.trim() || null,
+        isGuest: validated.isGuest ?? false,
       },
     });
 
@@ -234,6 +247,7 @@ export async function updateStreamerAction(
     colorCode: string;
     chzzkUrl: string;
     bio?: string;
+    isGuest?: boolean;
   },
 ): Promise<ActionResult> {
   try {
@@ -256,6 +270,7 @@ export async function updateStreamerAction(
         colorCode: validated.colorCode,
         chzzkUrl: validated.chzzkUrl?.trim() || null,
         bio: validated.bio?.trim() || null,
+        isGuest: validated.isGuest ?? false,
       },
     });
 
@@ -299,6 +314,7 @@ export async function bulkCreateStreamersAction(
         platform: s.platform || 'CHZZK',
         colorCode: s.colorCode || '#673AB7',
         chzzkUrl: s.chzzkUrl?.trim() || null,
+        isGuest: s.isGuest ?? false,
       })),
       skipDuplicates: true,
     });

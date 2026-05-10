@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { FlattenedSchedule, ParticipantFlat } from '@/lib/schedule-formatters';
@@ -21,6 +21,10 @@ type UseEditScheduleFormArgs = {
   onOptimisticCreate?: (schedule: FlattenedSchedule) => void;
   onClose: () => void;
 };
+
+function createParticipant(streamer: Pick<Streamer, 'id' | 'isGuest'>): ParticipantEntry {
+  return { id: streamer.id, nation: '', result: '', isGuest: streamer.isGuest };
+}
 
 type UseEditScheduleFormReturn = {
   title: string;
@@ -45,8 +49,11 @@ type UseEditScheduleFormReturn = {
   editAutoFilled: string[];
   setEditAutoFilled: React.Dispatch<React.SetStateAction<string[]>>;
   selectedStreamers: string[];
+  guestStreamers: string[];
   isHoi4Game: boolean;
   toggleStreamer: (id: string) => void;
+  toggleGuest: (id: string) => void;
+  clearEditError: (field: keyof EditErrors) => void;
   updateParticipant: (id: string, field: 'nation' | 'result', value: string) => void;
   handleLiveUrlBlur: (urlIndex: number) => Promise<void>;
   handleEditSubmit: (e: React.FormEvent) => Promise<void>;
@@ -72,6 +79,7 @@ export function useEditScheduleForm({
       id: p.id,
       nation: p.nation ?? '',
       result: p.result ?? '',
+      isGuest: p.isGuest ?? false,
     })) || [],
   );
   const [liveUrls, setLiveUrls] = useState<string[]>(
@@ -86,19 +94,33 @@ export function useEditScheduleForm({
   const [editAutoFilled, setEditAutoFilled] = useState<string[]>([]);
 
   const selectedStreamers = participants.map((p) => p.id);
+  const guestStreamers = participants.filter((p) => p.isGuest).map((p) => p.id);
   const isHoi4Game =
     games.find((g) => g.id === selectedGameId)?.isHoi4 ||
     (initialData?.gameId === selectedGameId && initialData?.game?.isHoi4) ||
     false;
+  const streamerMap = useMemo(() => new Map(streamers.map((s) => [s.id, s])), [streamers]);
 
   const toggleStreamer = (id: string) => {
     setParticipants((prev) =>
       prev.some((p) => p.id === id)
         ? prev.filter((p) => p.id !== id)
-        : [...prev, { id, nation: '', result: '' }],
+        : streamerMap.has(id)
+          ? [...prev, createParticipant(streamerMap.get(id)!)]
+          : prev,
     );
     if (editErrors.streamerIds)
       setEditErrors((e) => ({ ...e, streamerIds: undefined }));
+  };
+
+  const toggleGuest = (id: string) => {
+    setParticipants((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, isGuest: !p.isGuest } : p)),
+    );
+  };
+
+  const clearEditError = (field: keyof EditErrors) => {
+    setEditErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
   const updateParticipant = (id: string, field: 'nation' | 'result', value: string) => {
@@ -140,7 +162,10 @@ export function useEditScheduleForm({
         ) {
           setParticipants((prev) => [
             ...prev,
-            { id: data.matchedStreamerId!, nation: '', result: '' },
+            createParticipant(streamerMap.get(data.matchedStreamerId!) ?? {
+              id: data.matchedStreamerId!,
+              isGuest: false,
+            }),
           ]);
           filled.push(`멤버 (${data.matchedStreamerName})`);
         }
@@ -151,7 +176,7 @@ export function useEditScheduleForm({
         setEditMetaLoading(false);
       }
     },
-    [liveUrls, title, selectedGameId, selectedStreamers, games],
+    [liveUrls, title, selectedGameId, selectedStreamers, games, streamerMap],
   );
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -186,10 +211,11 @@ export function useEditScheduleForm({
     const payload = {
       title,
       startTime: resolvedStartTime,
-      participants: participants.map(({ id, nation, result }) => ({
+      participants: participants.map(({ id, nation, result, isGuest }) => ({
         id,
         nation: nation.trim() || undefined,
         result: result || undefined,
+        isGuest,
       })),
       gameId: selectedGameId === '' ? undefined : selectedGameId,
       liveUrls: cleanUrls,
@@ -211,6 +237,7 @@ export function useEditScheduleForm({
               ...s,
               nation: p?.nation.trim() || null,
               result: p?.result || null,
+              isGuest: p?.isGuest ?? false,
             };
           });
         const startDate = new Date(startTime);
@@ -264,8 +291,11 @@ export function useEditScheduleForm({
     editAutoFilled,
     setEditAutoFilled,
     selectedStreamers,
+    guestStreamers,
     isHoi4Game,
     toggleStreamer,
+    toggleGuest,
+    clearEditError,
     updateParticipant,
     handleLiveUrlBlur,
     handleEditSubmit,

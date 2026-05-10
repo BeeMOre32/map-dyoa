@@ -6,6 +6,7 @@ export interface ParticipantEntry {
   id: string;
   nation: string;
   result: string;
+  isGuest: boolean;
 }
 
 export interface SingleFormState {

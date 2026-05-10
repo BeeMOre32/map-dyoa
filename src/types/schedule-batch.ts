@@ -12,6 +12,7 @@ export interface SlotEntry {
   startTime: string;
   selectedGameId: string;
   selectedStreamerIds: string[];
+  guestStreamerIds: string[];
   liveUrls: string[];
   isTimeTBD: boolean;
   metaLoading: boolean;

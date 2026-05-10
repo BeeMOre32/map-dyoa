@@ -3,7 +3,7 @@
 import { AnimatePresence } from 'framer-motion';
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, X, LayoutGrid, WifiOff } from 'lucide-react';
+import { Search, X, LayoutGrid, WifiOff, RefreshCw } from 'lucide-react';
 import { Streamer } from '@prisma/client';
 import { useIsDarkAfterMount } from '@/hooks/useIsDarkAfterMount';
 import RequestEditModal from '../Form/RequestEdit';
@@ -26,7 +26,7 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
   const [selectedOrder, setSelectedOrder] = useState<string[]>([]);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
 
-  const { liveIds } = useLiveStatus();
+  const { liveIds, isRefreshing, lastUpdatedAt } = useLiveStatus();
 
   const generations = useMemo(
     () => [...new Set(streamers.map((s) => s.generation))].sort((a, b) => a - b),
@@ -108,6 +108,19 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
     return { kind: 'default' as const, total: streamers.length };
   }, [search, activeGen, filtered.length, liveFiltered.length, streamers.length]);
 
+  const refreshStatus = useMemo(() => {
+    if (isRefreshing) return { kind: 'loading' as const, text: '갱신 중' };
+    if (!lastUpdatedAt) return { kind: 'loading' as const, text: '확인 중' };
+
+    return {
+      kind: 'done' as const,
+      text: `${new Date(lastUpdatedAt).toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })} 갱신`,
+    };
+  }, [isRefreshing, lastUpdatedAt]);
+
   const cardGrid = (list: Streamer[]) => (
     <div className="relative z-0 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {list.map((streamer) => {
@@ -151,6 +164,20 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
                   </>
                 )}
               </p>
+            </div>
+            <div
+              className={`flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-black transition-all sm:text-xs ${
+                refreshStatus.kind === 'done'
+                  ? 'border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400'
+                  : 'border-indigo-100 bg-indigo-50 text-indigo-600 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-400'
+              }`}
+              aria-live="polite"
+            >
+              <RefreshCw
+                className={`h-3 w-3 ${isRefreshing || !lastUpdatedAt ? 'animate-spin' : ''}`}
+                aria-hidden
+              />
+              <span>{refreshStatus.text}</span>
             </div>
           </div>
 

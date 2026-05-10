@@ -23,6 +23,7 @@ model Streamer {
   colorCode  String  @default("#673AB7") // 캘린더 표시 색상
   chzzkUrl   String?
   bio        String? @db.Text
+  isGuest    Boolean @default(false)
 
   schedules        ScheduleParticipant[]
   clipParticipants ClipParticipant[]
@@ -53,6 +54,7 @@ model ScheduleParticipant {
   streamerId String
   nation     String?
   result     String?
+  isGuest    Boolean  @default(false)
   schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
   streamer   Streamer @relation(fields: [streamerId], references: [id], onDelete: Cascade)
 
@@ -163,14 +165,14 @@ model VerificationToken {
 }
 
 model PushSubscription {
-  id             String           @id @default(cuid())
-  endpoint       String           @unique
+  id             String            @id @default(cuid())
+  endpoint       String            @unique
   p256dh         String
   auth           String
   expirationTime DateTime?
   userAgent      String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
   reminderLogs   PushReminderLog[]
 }
 

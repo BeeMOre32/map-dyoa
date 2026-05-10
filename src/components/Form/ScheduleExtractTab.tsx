@@ -129,17 +129,19 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
         sessionStorage.removeItem(storageKey);
         return;
       }
-      if (Array.isArray(parsed.extracted) && parsed.extracted.length > 0) {
-        setExtracted(parsed.extracted);
-        setStep(parsed.step === 'review' ? 'review' : 'input');
-      }
-      if (typeof parsed.textInput === 'string') {
-        setTextInput(parsed.textInput);
-      }
-      if (typeof parsed.previewDataUrl === 'string' && parsed.previewDataUrl.length > 0) {
-        setPersistedPreviewDataUrl(parsed.previewDataUrl);
-        setPreviewUrl(parsed.previewDataUrl);
-      }
+      queueMicrotask(() => {
+        if (Array.isArray(parsed.extracted) && parsed.extracted.length > 0) {
+          setExtracted(parsed.extracted);
+          setStep(parsed.step === 'review' ? 'review' : 'input');
+        }
+        if (typeof parsed.textInput === 'string') {
+          setTextInput(parsed.textInput);
+        }
+        if (typeof parsed.previewDataUrl === 'string' && parsed.previewDataUrl.length > 0) {
+          setPersistedPreviewDataUrl(parsed.previewDataUrl);
+          setPreviewUrl(parsed.previewDataUrl);
+        }
+      });
     } catch {
       sessionStorage.removeItem(storageKey);
     }
@@ -163,7 +165,7 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
     } catch {
       // ignore storage errors
     }
-  }, [extracted, textInput, step, mode, storageKey]);
+  }, [extracted, textInput, step, mode, storageKey, persistedPreviewDataUrl]);
 
   const consumeSSE = useCallback(async (res: Response) => {
     if (!res.body) {
@@ -312,7 +314,10 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
         return createScheduleAction({
           title: s.title.trim(),
           startTime: d,
-          participants: s.streamerIds.map((id) => ({ id })),
+          participants: s.streamerIds.map((id) => ({
+            id,
+            isGuest: streamers.find((streamer) => streamer.id === id)?.isGuest ?? false,
+          })),
           gameId: s.gameId ?? undefined,
           isGuerrilla: !hasTime,
           isNaeJeon: false,
@@ -354,11 +359,11 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
 
   useEffect(() => {
     if (step !== 'loading') {
-      setDisplayProgress(5);
+      queueMicrotask(() => setDisplayProgress(5));
       return;
     }
 
-    setDisplayProgress((prev) => Math.max(prev, progressPct));
+    queueMicrotask(() => setDisplayProgress((prev) => Math.max(prev, progressPct)));
     const timer = setInterval(() => {
       setDisplayProgress((prev) => {
         const target = Math.max(progressPct, fakeProgressCap);

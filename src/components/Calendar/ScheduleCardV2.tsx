@@ -182,6 +182,7 @@ export default function ScheduleCardV2({
                     style={{ borderColor: `${c}60`, color: c, backgroundColor: `${c}18` }}
                   >
                     {p.name}
+                    {p.isGuest && <span className="ml-1 opacity-70">게스트</span>}
                   </span>
                 );
               })}

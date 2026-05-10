@@ -33,6 +33,7 @@ type ScheduleWithDetails = {
     streamer: { id: string; name: string; colorCode: string };
     nation?: string | null;
     result?: string | null;
+    isGuest?: boolean;
   }[];
 };
 
@@ -145,7 +146,11 @@ export default function StreamerDetailModal({
                 {streamer.name}
               </h2>
               <div className="flex items-center gap-1.5 flex-wrap">
-                {streamer.generation > 0 && (
+                {streamer.isGuest ? (
+                  <span className="text-xs font-black px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
+                    게스트
+                  </span>
+                ) : streamer.generation > 0 && (
                   <span className="text-xs font-black px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                     {streamer.generation}기
                   </span>

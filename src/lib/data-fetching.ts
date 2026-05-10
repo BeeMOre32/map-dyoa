@@ -55,6 +55,17 @@ export const getAllStreamers = unstable_cache(
   { revalidate: 120, tags: ['streamers'] },
 );
 
+export const getMemberStreamers = unstable_cache(
+  async (): Promise<Streamer[]> => {
+    return prisma.streamer.findMany({
+      where: { isGuest: false },
+      orderBy: { name: 'asc' },
+    });
+  },
+  ['streamers-members'],
+  { revalidate: 120, tags: ['streamers'] },
+);
+
 /**
  * 모든 게임 가져오기 (캐싱 적용)
  */
@@ -245,13 +256,14 @@ export function getStreamerDetail(streamerId: string) {
     async () => {
       const [schedules, linkedClips, scheduleCount, clipCount] = await Promise.all([
         prisma.schedule.findMany({
-          where: { participants: { some: { streamerId } } },
+          where: { participants: { some: { streamerId, isGuest: false } } },
           include: {
             game: { select: { id: true, title: true, isHoi4: true } },
             participants: {
               select: {
                 nation: true,
                 result: true,
+                isGuest: true,
                 streamer: { select: { id: true, name: true, colorCode: true } },
               },
             },
@@ -274,7 +286,7 @@ export function getStreamerDetail(streamerId: string) {
           orderBy: { createdAt: 'desc' },
           take: 8,
         }),
-        prisma.scheduleParticipant.count({ where: { streamerId } }),
+        prisma.scheduleParticipant.count({ where: { streamerId, isGuest: false } }),
         prisma.clip.count({ where: { participants: { some: { streamerId } } } }),
       ]);
       return { schedules, linkedClips, scheduleCount, clipCount };
@@ -292,7 +304,7 @@ export const getAdminStats = unstable_cache(
     const [scheduleCount, clipCount, streamerCount, pendingFeedbackCount] = await Promise.all([
       prisma.schedule.count(),
       prisma.clip.count(),
-      prisma.streamer.count(),
+      prisma.streamer.count({ where: { isGuest: false } }),
       prisma.feedback.count({ where: { status: 'PENDING' } }),
     ]);
     return { scheduleCount, clipCount, streamerCount, pendingFeedbackCount };
@@ -311,7 +323,7 @@ export const getAdminStats = unstable_cache(
 export const getHoi4Leaderboard = unstable_cache(
   async () => {
     const rows = await prisma.scheduleParticipant.findMany({
-      where: { schedule: { game: { isHoi4: true }, isNaeJeon: true } },
+      where: { isGuest: false, schedule: { game: { isHoi4: true }, isNaeJeon: true } },
       select: {
         scheduleId: true,
         streamerId: true,

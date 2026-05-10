@@ -3,8 +3,7 @@
  * 폼 데이터, 요청/응답 모델
  */
 
-import type { Schedule, Streamer, Game } from '@prisma/client';
-import type { ScheduleWithRelations } from './entities';
+import type { Streamer, Game } from '@prisma/client';
 
 /**
  * 스케줄 생성 폼 데이터
@@ -38,6 +37,7 @@ export interface CreateStreamerInput {
   profileImg?: string;
   colorCode?: string;
   chzzkUrl?: string;
+  isGuest?: boolean;
 }
 
 /**

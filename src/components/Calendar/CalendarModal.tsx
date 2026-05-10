@@ -25,7 +25,6 @@ import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { useTheme } from 'next-themes';
 import { FlattenedSchedule } from '@/lib/schedule-formatters';
-import { Streamer } from '@prisma/client';
 
 function ScheduleListItem({
   schedule,
@@ -106,7 +105,7 @@ function ScheduleListItem({
           </div>
 
           <div className="flex flex-wrap gap-2 pt-2">
-            {schedule.participants.map((participant: Streamer) => (
+            {schedule.participants.map((participant) => (
               <span
                 key={participant.id}
                 className="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all shadow-sm"
@@ -117,6 +116,7 @@ function ScheduleListItem({
                 }))(getStreamerColor(participant.id, isDark) ?? participant.colorCode)}
               >
                 {participant.name}
+                {participant.isGuest && <span className="ml-1 opacity-70">게스트</span>}
               </span>
             ))}
           </div>

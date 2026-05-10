@@ -23,6 +23,7 @@ export type ScheduleWithRelations = Schedule & {
 export type ParticipantFlat = Streamer & {
   nation: string | null;
   result: string | null;
+  isGuest: boolean;
 };
 
 /**
@@ -63,8 +64,13 @@ export function flattenScheduleParticipants(
     createdAt: new Date(schedule.createdAt),
     participants: schedule.participants
       .filter((p) => p.streamer !== null)
-      .map((p) => ({ ...p.streamer, nation: p.nation ?? null, result: p.result ?? null }))
-      .sort((a, b) => a.name.localeCompare(b.name, 'ko')) as ParticipantFlat[],
+      .map((p) => ({
+        ...p.streamer,
+        nation: p.nation ?? null,
+        result: p.result ?? null,
+        isGuest: p.isGuest,
+      }))
+      .sort((a, b) => Number(a.isGuest) - Number(b.isGuest) || a.name.localeCompare(b.name, 'ko')) as ParticipantFlat[],
     formattedDate: format(
       new Date(schedule.startTime),
       'yyyy년 MM월 dd일(EEEE)',
@@ -120,6 +126,7 @@ export function groupSchedulesByStreamer(
 
   schedules.forEach((schedule) => {
     schedule.participants.forEach((participant) => {
+      if (participant.isGuest) return;
       const streamerId = participant.id;
       if (!grouped.has(streamerId)) {
         grouped.set(streamerId, []);
@@ -152,7 +159,7 @@ export function filterSchedulesByStreamer(
   streamerId: string,
 ): FlattenedSchedule[] {
   return schedules.filter((schedule) =>
-    schedule.participants.some((p) => p.id === streamerId),
+    schedule.participants.some((p) => p.id === streamerId && !p.isGuest),
   );
 }
 

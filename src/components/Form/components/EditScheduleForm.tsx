@@ -35,6 +35,8 @@ type EditScheduleFormProps = {
   sortedStreamers: Streamer[];
   games: Game[];
   onToggleStreamer: (id: string) => void;
+  onToggleGuest: (id: string) => void;
+  onClearError: (field: keyof EditErrors) => void;
   onUpdateParticipant: (id: string, field: 'nation' | 'result', value: string) => void;
   onLiveUrlBlur: (urlIndex: number) => Promise<void>;
   onSubmit: (e: React.FormEvent) => Promise<void>;
@@ -65,11 +67,15 @@ export default function EditScheduleForm({
   sortedStreamers,
   games,
   onToggleStreamer,
+  onToggleGuest,
+  onClearError,
   onUpdateParticipant,
   onLiveUrlBlur,
   onSubmit,
 }: EditScheduleFormProps) {
   const selectedStreamers = participants.map((p) => p.id);
+  const guestStreamers = participants.filter((p) => p.isGuest).map((p) => p.id);
+  const memberCount = participants.length - guestStreamers.length;
 
   return (
     <form
@@ -96,8 +102,7 @@ export default function EditScheduleForm({
           value={title}
           onChange={(e) => {
             setTitle(e.target.value);
-            if (editErrors.title)
-              editErrors.title = undefined;
+            if (editErrors.title) onClearError('title');
           }}
           placeholder="예) 문명 6 합방"
           className={`w-full px-4 py-4 bg-slate-50 dark:bg-slate-700 border rounded-xl text-base font-semibold text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all ${editErrors.title ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-slate-600'}`}
@@ -150,8 +155,7 @@ export default function EditScheduleForm({
           value={isTimeTBD ? startTime.split('T')[0] : startTime}
           onChange={(e) => {
             setStartTime(e.target.value);
-            if (editErrors.startTime)
-              editErrors.startTime = undefined;
+            if (editErrors.startTime) onClearError('startTime');
           }}
           className={`w-full p-3 bg-slate-50 dark:bg-slate-700 border rounded-xl font-medium text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all scheme-light dark:scheme-dark ${editErrors.startTime ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-slate-600'}`}
         />
@@ -207,9 +211,9 @@ export default function EditScheduleForm({
       >
         <div className="flex justify-between items-end px-2">
           <label className="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight">
-            참여 멤버 선택{' '}
+            참여자 선택{' '}
             <span className="text-indigo-500 ml-1">
-              ({selectedStreamers.length})
+              (멤버 {memberCount} · 게스트 {guestStreamers.length})
             </span>
           </label>
         </div>
@@ -222,7 +226,9 @@ export default function EditScheduleForm({
         <StreamerSelector
           streamers={sortedStreamers}
           selectedStreamers={selectedStreamers}
+          guestStreamers={guestStreamers}
           toggleStreamer={onToggleStreamer}
+          toggleGuest={onToggleGuest}
         />
       </div>
 
@@ -245,13 +251,13 @@ export default function EditScheduleForm({
         </label>
       )}
 
-      {isHoi4Game && participants.length > 0 && (
+      {isHoi4Game && participants.some((p) => !p.isGuest) && (
         <div className="space-y-3">
           <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
             HOI4 · 국가
           </label>
           <div className="space-y-2">
-            {participants.map(({ id, nation }) => {
+            {participants.filter((p) => !p.isGuest).map(({ id, nation }) => {
               const streamer = sortedStreamers.find((s) => s.id === id);
               if (!streamer) return null;
               return (

@@ -14,6 +14,7 @@ type StreamerItem = {
   colorCode: string;
   chzzkUrl: string | null;
   bio: string | null;
+  isGuest: boolean;
 };
 
 export default function StreamerManagement({
@@ -66,6 +67,11 @@ export default function StreamerManagement({
                   <h3 className="text-lg font-black text-slate-800 dark:text-white truncate">
                     {streamer.name}
                   </h3>
+                  {streamer.isGuest && (
+                    <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
+                      게스트
+                    </span>
+                  )}
                 </div>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                   @{streamer.handle} · {streamer.generation}기{streamer.role ? ` · ${streamer.role}` : ''}
