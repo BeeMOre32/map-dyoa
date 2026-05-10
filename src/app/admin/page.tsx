@@ -64,7 +64,7 @@ export default async function AdminDashboard() {
       date: c.createdAt,
       href: `/clips`,
     })),
-  ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 8);
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 8);
 
   return (
     <div className="p-8 space-y-8 bg-white dark:bg-slate-950 transition-colors">
@@ -203,7 +203,7 @@ export default async function AdminDashboard() {
                 </div>
                 <div className="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500 font-medium shrink-0">
                   <Clock className="w-3 h-3" />
-                  {format(item.date, 'M/d HH:mm', { locale: ko })}
+                  {format(new Date(item.date), 'M/d HH:mm', { locale: ko })}
                 </div>
               </Link>
             ))

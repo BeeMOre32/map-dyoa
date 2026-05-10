@@ -35,7 +35,14 @@ export const feedbackSchema = z.object({
 export const streamerServerSchema = z.object({
   name: z.string().min(1, '이름을 입력해주세요.'),
   handle: z.string().min(1, '핸들을 입력해주세요.'),
-  generation: z.number().int().positive().default(1),
+  generation: z.preprocess(
+    (val) => {
+      const n = typeof val === 'number' ? val : Number(val);
+      if (!Number.isFinite(n) || n < 1) return 1;
+      return Math.floor(n);
+    },
+    z.number().int().positive(),
+  ),
   role: z.string().optional(),
   platform: z.string().default('CHZZK'),
   colorCode: z.string().default('#673AB7'),

@@ -10,6 +10,7 @@ import {
   getErrorMessage,
   logError,
 } from '@/lib/error-handling';
+import { Prisma } from '@prisma/client';
 import {
   getRevalidationPaths,
   getRevalidationPathsMulti,
@@ -22,6 +23,30 @@ import {
   streamerServerSchema,
 } from '@/lib/schemas';
 import type { CreateStreamerInput } from '@/types/models';
+
+function streamerUniqueConstraintFailure(
+  error: unknown,
+): ActionResult | null {
+  if (
+    !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+    error.code !== 'P2002'
+  ) {
+    return null;
+  }
+  const raw = error.meta?.target;
+  const parts = Array.isArray(raw) ? raw.map(String) : raw != null ? [String(raw)] : [];
+  const joined = parts.join(' ');
+  const fieldLabel = joined.includes('handle')
+    ? '영문 ID'
+    : joined.includes('name')
+      ? '이름'
+      : '식별값';
+  return {
+    success: false,
+    error: `이미 사용 중인 ${fieldLabel}입니다.`,
+    errorCode: 'DUPLICATE_ENTRY',
+  };
+}
 
 /**
  * 일정 생성
@@ -167,7 +192,7 @@ export async function createStreamerAction(data: {
     await prisma.streamer.create({
       data: {
         name: validated.name.trim(),
-        handle: validated.handle.trim(),
+        handle: validated.handle.trim().toLowerCase(),
         generation: validated.generation,
         role: validated.role?.trim() || null,
         platform: validated.platform,
@@ -177,15 +202,18 @@ export async function createStreamerAction(data: {
       },
     });
 
-    const paths = getRevalidationPathsMulti(['streamer', 'schedule']);
+    const paths = getRevalidationPathsMulti(['streamer', 'schedule', 'admin']);
     await Promise.all([
       ...paths.map((path: string) => revalidatePath(path)),
       updateTag('calendar'),
       updateTag('streamers'),
+      updateTag('admin'),
     ]);
 
     return { success: true, data: null };
   } catch (error) {
+    const dup = streamerUniqueConstraintFailure(error);
+    if (dup) return dup;
     const { message, code } = getErrorMessage(error);
     logError('createStreamer', error);
     return { success: false, error: message, errorCode: code };
@@ -221,7 +249,7 @@ export async function updateStreamerAction(
       where: { id },
       data: {
         name: validated.name.trim(),
-        handle: validated.handle.trim(),
+        handle: validated.handle.trim().toLowerCase(),
         generation: validated.generation,
         role: validated.role?.trim() || null,
         platform: validated.platform,
@@ -241,6 +269,8 @@ export async function updateStreamerAction(
 
     return { success: true, data: null };
   } catch (error) {
+    const dup = streamerUniqueConstraintFailure(error);
+    if (dup) return dup;
     const { message, code } = getErrorMessage(error);
     logError('updateStreamer', error);
     return { success: false, error: message, errorCode: code };

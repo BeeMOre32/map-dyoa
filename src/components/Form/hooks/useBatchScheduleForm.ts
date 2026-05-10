@@ -7,6 +7,8 @@ import {
   SlotErrors,
   AutoFillResult,
 } from '../types';
+import type { ZodIssue } from 'zod';
+import { scrollToFirstZodField } from '@/lib/zod-scroll';
 
 type UseBatchScheduleFormArgs = {
   games: { id: string; title: string }[];
@@ -148,6 +150,7 @@ export function useBatchScheduleForm({
     setBatchSubmitError(null);
 
     let firstErrorKey: string | null = null;
+    let firstErrorIssues: ZodIssue[] | null = null;
     const validated = slots.map((slot) => {
       const result = slotSchema.safeParse({
         title: slot.title,
@@ -160,14 +163,29 @@ export function useBatchScheduleForm({
           const field = issue.path[0] as keyof SlotErrors;
           errors[field] = issue.message;
         }
-        if (!firstErrorKey) firstErrorKey = slot.key;
+        if (!firstErrorKey) {
+          firstErrorKey = slot.key;
+          firstErrorIssues = result.error.issues;
+        }
         return { ...slot, errors };
       }
       return { ...slot, errors: {} };
     });
     setSlots(validated);
-    if (firstErrorKey) {
+    if (firstErrorKey && firstErrorIssues) {
       setExpandedKey(firstErrorKey);
+      const scrollKey = firstErrorKey;
+      const issues = firstErrorIssues;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const root = document.querySelector(
+            `[data-batch-slot="${CSS.escape(scrollKey)}"]`,
+          );
+          if (root instanceof HTMLElement) {
+            scrollToFirstZodField(issues, { root });
+          }
+        });
+      });
       return;
     }
 

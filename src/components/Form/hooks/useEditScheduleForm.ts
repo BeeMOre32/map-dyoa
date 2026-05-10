@@ -11,6 +11,7 @@ import {
   ParticipantEntry,
   AutoFillResult,
 } from '../types';
+import { scrollToFirstZodField } from '@/lib/zod-scroll';
 
 type UseEditScheduleFormArgs = {
   initialData?: FlattenedSchedule | null;
@@ -167,6 +168,13 @@ export function useEditScheduleForm({
         fieldErrors[field] = issue.message;
       }
       setEditErrors(fieldErrors);
+      const formEl =
+        typeof document !== 'undefined'
+          ? document.getElementById('schedule-form')
+          : null;
+      scrollToFirstZodField(parsed.error.issues, {
+        root: formEl ?? undefined,
+      });
       return;
     }
     setEditErrors({});

@@ -71,6 +71,7 @@ export default function ScheduleSlot({
 
   return (
     <div
+      data-batch-slot={slot.key}
       className={`rounded-2xl border transition-all ${
         hasErrors
           ? 'border-red-300 dark:border-red-700'
@@ -238,7 +239,7 @@ export default function ScheduleSlot({
                 </AnimatePresence>
               </div>
 
-              <div>
+              <div data-zod-field="title">
                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
                   방송 제목
                 </label>
@@ -287,7 +288,7 @@ export default function ScheduleSlot({
                 </select>
               </div>
 
-              <div>
+              <div data-zod-field="startTime">
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                     시작 시간
@@ -334,7 +335,10 @@ export default function ScheduleSlot({
                 )}
               </div>
 
-              <div className="border-t border-slate-100 dark:border-slate-700 pt-4 space-y-3">
+              <div
+                className="border-t border-slate-100 dark:border-slate-700 pt-4 space-y-3"
+                data-zod-field="streamerIds"
+              >
                 <label className="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight">
                   참여 멤버{' '}
                   <span className="text-indigo-500">

@@ -2,10 +2,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { X, UserPlus, Check, Palette, AlertCircle } from 'lucide-react';
 import { z } from 'zod';
 import { createStreamerAction, updateStreamerAction } from '@/app/actions';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
+import { scrollToFirstZodField } from '@/lib/zod-scroll';
 
 const streamerSchema = z.object({
   name: z.string().min(1, '이름을 입력해주세요.'),
@@ -50,6 +52,7 @@ export default function CreateStreamerModal({
   mode?: 'create' | 'edit';
   initialData?: StreamerFormInitialData;
 }) {
+  const router = useRouter();
   const [name, setName] = useState(initialData?.name ?? '');
   const [handle, setHandle] = useState(initialData?.handle ?? '');
   const [generation, setGeneration] = useState<number>(initialData?.generation ?? 1);
@@ -65,7 +68,10 @@ export default function CreateStreamerModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const parsed = streamerSchema.safeParse({ name, handle });
+    const parsed = streamerSchema.safeParse({
+      name: name.trim(),
+      handle: handle.trim().toLowerCase(),
+    });
     if (!parsed.success) {
       const fieldErrors: StreamerErrors = {};
       for (const issue of parsed.error.issues) {
@@ -73,6 +79,7 @@ export default function CreateStreamerModal({
         fieldErrors[field] = issue.message;
       }
       setErrors(fieldErrors);
+      scrollToFirstZodField(parsed.error.issues);
       return;
     }
     setErrors({});
@@ -80,7 +87,7 @@ export default function CreateStreamerModal({
 
     const payload = {
       name,
-      handle,
+      handle: handle.trim().toLowerCase(),
       generation,
       role,
       platform: initialData?.platform || 'CHZZK',
@@ -95,8 +102,18 @@ export default function CreateStreamerModal({
 
     setIsSubmitting(false);
 
-    if (result.success) onClose();
-    else setErrors({ submit: mode === 'edit' ? '스트리머 수정에 실패했습니다. 다시 시도해주세요.' : '스트리머 추가에 실패했습니다. 다시 시도해주세요.' });
+    if (result.success) {
+      router.refresh();
+      onClose();
+    } else {
+      setErrors({
+        submit:
+          result.error ??
+          (mode === 'edit'
+            ? '스트리머 수정에 실패했습니다. 다시 시도해주세요.'
+            : '스트리머 추가에 실패했습니다. 다시 시도해주세요.'),
+      });
+    }
   };
 
   return (
@@ -136,7 +153,7 @@ export default function CreateStreamerModal({
           className="p-8 space-y-6 max-h-[60dvh] overflow-y-auto"
         >
           <div className="grid grid-cols-2 gap-4">
-            <div>
+            <div data-zod-field="name">
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
                 이름
               </label>
@@ -159,7 +176,7 @@ export default function CreateStreamerModal({
                 </p>
               )}
             </div>
-            <div>
+            <div data-zod-field="handle">
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
                 영문 ID (고유값)
               </label>
@@ -191,8 +208,17 @@ export default function CreateStreamerModal({
               </label>
               <input
                 type="number"
+                min={1}
                 value={generation}
-                onChange={(e) => setGeneration(Number(e.target.value))}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === '') {
+                    setGeneration(1);
+                    return;
+                  }
+                  const n = Number(raw);
+                  setGeneration(Number.isFinite(n) && n >= 1 ? Math.floor(n) : 1);
+                }}
                 className="w-full p-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-400/50 outline-none transition-all"
               />
             </div>

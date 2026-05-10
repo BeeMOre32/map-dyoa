@@ -9,6 +9,7 @@ import { isChzzkClipUrl } from '@/lib/chzzk';
 import { isYouTubeUrl } from '@/lib/youtube';
 import { matchesChosung } from '@/lib/chosung';
 import { clipClientSchema } from '@/lib/schemas';
+import { scrollToFirstZodField } from '@/lib/zod-scroll';
 import type { Streamer } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import type { ClipWithParticipants } from '@/types/entities';
@@ -122,6 +123,13 @@ export function useClipForm(
     const parsed = clipClientSchema.safeParse({ title, url, streamerIds: selectedIds });
     if (!parsed.success) {
       setError(parsed.error.issues[0].message);
+      const formRoot =
+        typeof document !== 'undefined'
+          ? document.getElementById('clip-form')
+          : null;
+      scrollToFirstZodField(parsed.error.issues, {
+        root: formRoot ?? undefined,
+      });
       return;
     }
 

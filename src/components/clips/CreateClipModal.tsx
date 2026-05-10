@@ -82,9 +82,13 @@ export default function CreateClipModal({
           </button>
         </div>
 
-        <form onSubmit={form.handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
+        <form
+          id="clip-form"
+          onSubmit={form.handleSubmit}
+          className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0"
+        >
           {/* 클립 URL */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5" data-zod-field="url">
             <label className={labelClass}>클립 URL *</label>
             <div className="relative">
               <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -100,7 +104,7 @@ export default function CreateClipModal({
           </div>
 
           {/* 연관된 스트리머 */}
-          <div className="space-y-2">
+          <div className="space-y-2" data-zod-field="streamerIds">
             <label className={labelClass}>
               <span className="flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5" />
@@ -229,7 +233,7 @@ export default function CreateClipModal({
           </div>
 
           {/* 클립 제목 */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5" data-zod-field="title">
             <label className={labelClass}>클립 제목 *</label>
             <input
               type="text"

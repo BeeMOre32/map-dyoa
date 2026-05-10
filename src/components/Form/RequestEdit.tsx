@@ -8,6 +8,7 @@ import { useTheme } from 'next-themes';
 import { createFeedbackAction } from '@/app/actions';
 import { feedbackSchema } from '@/lib/schemas';
 import { backdropVariants, defaultModalVariants } from '@/lib/modalVariants';
+import { scrollToFirstZodField } from '@/lib/zod-scroll';
 import { getStreamerColor } from '@/constants/streamercolor';
 import type { Streamer } from '@prisma/client';
 
@@ -36,6 +37,7 @@ export default function RequestEditModal({
     const parsed = feedbackSchema.pick({ content: true }).safeParse({ content });
     if (!parsed.success) {
       setContentError(parsed.error.issues[0].message);
+      scrollToFirstZodField(parsed.error.issues);
       return;
     }
     setContentError(null);
@@ -133,7 +135,7 @@ export default function RequestEditModal({
                 </select>
               </div>
 
-              <div>
+              <div data-zod-field="content">
                 <label className="block text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 px-1">
                   상세 내용
                 </label>
