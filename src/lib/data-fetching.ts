@@ -9,6 +9,7 @@ import { flattenScheduleParticipants, flattenSchedules } from './schedule-format
 import type { Streamer, Prisma } from '@prisma/client';
 import type { FlattenedSchedule, ScheduleWithRelations } from './schedule-formatters';
 import {
+  fetchClipMonthsFromServer,
   fetchClipsPaginatedFromServer,
   fetchScheduleClipsFromServer,
 } from './map-dyoa-server-clips';
@@ -165,9 +166,13 @@ export const getAllClips = unstable_cache(
 
 /**
  * 클립 연월 목록 (필터 드롭다운용)
+ * `MAP_DYOA_SERVER_URL`이 있으면 map-dyoa-server가 DB에 붙고, Next는 풀러에 직접 연결하지 않음.
  */
 export const getClipMonths = unstable_cache(
   async () => {
+    if (isScheduleServerEnabled()) {
+      return fetchClipMonthsFromServer();
+    }
     const clips = await prisma.clip.findMany({
       select: { clipDate: true, createdAt: true },
       orderBy: { createdAt: 'desc' },
@@ -175,11 +180,12 @@ export const getClipMonths = unstable_cache(
     const months = new Set<string>();
     for (const c of clips) {
       const d = new Date(c.clipDate ?? c.createdAt);
+      if (!Number.isFinite(d.getTime())) continue;
       months.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
     }
     return Array.from(months).sort().reverse();
   },
-  ['clip-months'],
+  ['clip-months', process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-clip-months'],
   { revalidate: 60, tags: ['clips'] },
 );
 
@@ -238,16 +244,20 @@ export async function getClipsPaginated({
     conditions.push({ participants: { some: { streamerId } } });
   }
 
-  if (month) {
-    const [year, monthNum] = month.split('-').map(Number);
-    const start = new Date(year, monthNum - 1, 1);
-    const end = new Date(year, monthNum, 1);
-    conditions.push({
-      OR: [
-        { clipDate: { gte: start, lt: end } },
-        { clipDate: null, createdAt: { gte: start, lt: end } },
-      ],
-    });
+  const monthKey = month?.trim();
+  if (monthKey && /^\d{4}-\d{2}$/.test(monthKey)) {
+    const year = Number(monthKey.slice(0, 4));
+    const monthNum = Number(monthKey.slice(5, 7));
+    if (Number.isFinite(year) && Number.isFinite(monthNum) && monthNum >= 1 && monthNum <= 12) {
+      const start = new Date(year, monthNum - 1, 1);
+      const end = new Date(year, monthNum, 1);
+      conditions.push({
+        OR: [
+          { clipDate: { gte: start, lt: end } },
+          { clipDate: null, createdAt: { gte: start, lt: end } },
+        ],
+      });
+    }
   }
 
   if (q) {
@@ -515,6 +525,7 @@ export const getFeedbacks = unstable_cache(
     return prisma.feedback.findMany({
       select: {
         id: true,
+        type: true,
         status: true,
         category: true,
         streamerName: true,

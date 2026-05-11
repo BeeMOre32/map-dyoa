@@ -6,7 +6,7 @@ import {
   ArrowRight, Gamepad2, Users, Mail, LayoutGrid, Search, Zap, Palette,
   Keyboard, ExternalLink, Clock, ChevronLeft, ChevronRight, SlidersHorizontal,
   Radio, Clapperboard, Puzzle, Move, Maximize2, Sword, Wifi, EyeOff, Bot,
-  Smartphone, Share, Download,
+  Smartphone, Share, Download, AlertTriangle,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -161,6 +161,27 @@ export default function HelpPage() {
             <p>• 스케줄 연속 작성 기능으로 여러 일정을 빠르게 등록할 수 있습니다.</p>
             <p>• AI 일정 업로드(텍스트/이미지)로 일정 자동 추출 및 입력이 가능합니다.</p>
           </div>
+        </motion.div>
+
+        <motion.div
+          {...fadeUp}
+          className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-4xl p-6 shadow-sm"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+            <h2 className="text-lg font-black text-slate-800 dark:text-white">
+              페이지 오류가 났을 때
+            </h2>
+          </div>
+          <p className="text-sm font-bold text-slate-600 dark:text-slate-300 leading-relaxed">
+            오류 화면에 <strong className="text-slate-900 dark:text-white">제보 참조 번호</strong>(고유
+            UUID), 필요 시 <strong className="text-slate-900 dark:text-white">Next digest</strong>·
+            <strong className="text-slate-900 dark:text-white">백엔드 requestId</strong>가 표시됩니다.{' '}
+            <strong className="text-indigo-600 dark:text-indigo-400">관리자에게 보내기</strong> 버튼으로
+            같은 내용을 관리자 피드백으로 바로 접수할 수 있고,{' '}
+            <strong className="text-indigo-600 dark:text-indigo-400">제보용 텍스트만 복사</strong>로
+            외부 문의에 붙여 보낼 수도 있습니다.
+          </p>
         </motion.div>
 
         {/* 1. 캘린더 뷰 */}

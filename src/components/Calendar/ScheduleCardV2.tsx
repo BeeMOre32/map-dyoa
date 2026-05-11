@@ -1,6 +1,6 @@
 'use client';
 
-import { format, isToday } from 'date-fns';
+import { format, isToday, isValid } from 'date-fns';
 import Link from 'next/link';
 import { Clock, Gamepad2, CircleAlert } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -8,6 +8,18 @@ import { motion } from 'framer-motion';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
+
+function formatScheduleHHmm(schedule: FlattenedSchedule): string {
+  if (schedule.isGuerrilla) return '미정';
+  const d = new Date(schedule.startTime);
+  return isValid(d) ? format(d, 'HH:mm') : '–';
+}
+
+function formatEndHHmmIfValid(end: Date | string | null | undefined): string | null {
+  if (end == null) return null;
+  const d = new Date(end);
+  return isValid(d) ? format(d, 'HH:mm') : null;
+}
 
 function LiveBadge() {
   return (
@@ -44,7 +56,8 @@ export default function ScheduleCardV2({
   const stopProp = (e: React.MouseEvent) => e.stopPropagation();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
-  const isToday_ = isToday(new Date(schedule.startTime));
+  const startD = new Date(schedule.startTime);
+  const isToday_ = isValid(startD) && isToday(startD);
   const isLive =
     !schedule.isLiveEnded &&
     liveStreamerIds !== undefined &&
@@ -53,6 +66,7 @@ export default function ScheduleCardV2({
   const isEnded = schedule.isLiveEnded && isToday_;
   const gameColor = schedule.game ? getGameColor(schedule.game.id, isDark) : null;
   const hasGameTitle = Boolean(schedule.game?.title?.trim());
+  const endTimeHm = formatEndHHmmIfValid(schedule.endTime);
 
   // mobile / monthly — same as original
   if (variant === 'mobile') {
@@ -71,7 +85,7 @@ export default function ScheduleCardV2({
           style={gameColor ? { backgroundColor: `${gameColor}20`, borderColor: `${gameColor}55`, color: gameColor } : undefined}
         >
           <span className="text-xs opacity-60 shrink-0 font-semibold">
-            {schedule.isGuerrilla ? '미정' : format(new Date(schedule.startTime), 'HH:mm')}
+            {formatScheduleHHmm(schedule)}
           </span>
           <span className="truncate flex-1">{schedule.title}</span>
           {isLive && <LiveBadge />}
@@ -96,7 +110,7 @@ export default function ScheduleCardV2({
             style={gameColor ? { backgroundColor: `${gameColor}25`, borderColor: `${gameColor}55`, color: gameColor } : undefined}
           >
             <span className="opacity-70 shrink-0 font-semibold">
-              {schedule.isGuerrilla ? '미정' : format(new Date(schedule.startTime), 'HH:mm')}
+              {formatScheduleHHmm(schedule)}
             </span>
             <span className="truncate flex-1">{schedule.title}</span>
             {isLive && <LiveBadge />}
@@ -158,10 +172,8 @@ export default function ScheduleCardV2({
           ) : (
             <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
               <Clock className="w-2.5 h-2.5 shrink-0" />
-              {format(new Date(schedule.startTime), 'HH:mm')}
-              {schedule.endTime && (
-                <span className="opacity-70">→ {format(new Date(schedule.endTime), 'HH:mm')}</span>
-              )}
+              {formatScheduleHHmm(schedule)}
+              {endTimeHm ? <span className="opacity-70">→ {endTimeHm}</span> : null}
             </div>
           )}
 

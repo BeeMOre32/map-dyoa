@@ -31,6 +31,7 @@ export async function fetchFeedbacksFromServer() {
   if (!Array.isArray(data.feedbacks)) return []
   return data.feedbacks as Array<{
     id: string
+    type: string
     status: string
     category: string
     streamerName: string | null

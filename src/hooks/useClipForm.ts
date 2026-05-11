@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { useTheme } from 'next-themes';
 import { createClipAction, updateClipAction } from '@/app/actions';
 import { getStreamerColor } from '@/constants/streamercolor';
@@ -30,9 +30,11 @@ export function useClipForm(
   const [url, setUrl] = useState(initialData?.url ?? '');
   const [thumbnailUrl, setThumbnailUrl] = useState(initialData?.thumbnailUrl ?? '');
   const [description, setDescription] = useState(initialData?.description ?? '');
-  const [clipDate, setClipDate] = useState(
-    initialData?.clipDate ? format(new Date(initialData.clipDate), 'yyyy-MM-dd') : '',
-  );
+  const [clipDate, setClipDate] = useState(() => {
+    if (!initialData?.clipDate) return '';
+    const d = new Date(initialData.clipDate);
+    return isValid(d) ? format(d, 'yyyy-MM-dd') : '';
+  });
   const [selectedIds, setSelectedIds] = useState<string[]>(
     initialData?.participants.map((p) => p.streamerId) ?? [],
   );

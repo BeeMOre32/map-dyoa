@@ -88,9 +88,16 @@ export function hydrateClipApiRow(raw: Record<string, unknown>): ClipWithPartici
     url: String(raw.url),
     thumbnailUrl: raw.thumbnailUrl != null ? String(raw.thumbnailUrl) : null,
     description: raw.description != null ? String(raw.description) : null,
-    clipDate: raw.clipDate != null ? new Date(String(raw.clipDate)) : null,
+    clipDate: (() => {
+      if (raw.clipDate == null) return null;
+      const d = new Date(String(raw.clipDate));
+      return Number.isNaN(d.getTime()) ? null : d;
+    })(),
     scheduleId: raw.scheduleId != null ? String(raw.scheduleId) : null,
-    createdAt: new Date(String(raw.createdAt)),
+    createdAt: (() => {
+      const d = new Date(String(raw.createdAt));
+      return Number.isNaN(d.getTime()) ? new Date(0) : d;
+    })(),
     participants,
     schedule,
   } as ClipWithParticipants;
@@ -139,7 +146,7 @@ export async function fetchClipsPaginatedFromServer(
   if (args.clipsOnly) qs.set('clipsOnly', '1');
 
   const res = await fetchWithBackoff(`${base}/clips?${qs.toString()}`, {
-    next: { revalidate: 60 },
+    cache: 'no-store',
   });
   const data = await readJsonSafely<{
     clips?: unknown[];
@@ -165,6 +172,24 @@ export async function fetchClipsPaginatedFromServer(
         : Math.ceil(total / args.pageSize);
 
   return { clips, total, totalPages };
+}
+
+/** `GET /clips/months` — 필터 드롭다운용 연-월 목록 */
+export async function fetchClipMonthsFromServer(): Promise<string[]> {
+  const base = requireServerBaseUrl();
+  const res = await fetchWithBackoff(`${base}/clips/months`, {
+    next: { revalidate: 60 },
+  });
+  const data = await readJsonSafely<{ months?: unknown[] }>(
+    res,
+    `클립 월 목록 API ${res.status}`,
+  );
+  if (!Array.isArray(data.months)) {
+    return [];
+  }
+  return (data.months as unknown[])
+    .map((m) => String(m))
+    .filter((s) => /^\d{4}-\d{2}$/.test(s));
 }
 
 const SCHEDULE_CLIPS_PAGE_SIZE = 100;

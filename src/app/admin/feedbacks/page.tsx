@@ -53,10 +53,10 @@ export default async function AdminFeedbackPage({
       <div>
         <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
           <MessageSquare className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
-          수정 요청 관리
+          피드백 관리
         </h1>
         <p className="text-slate-500 dark:text-slate-400 font-bold mt-2">
-          총 {allFeedbacks.length}건 · 미처리 {counts.PENDING}건
+          수정 요청·오류 제보 등 총 {allFeedbacks.length}건 · 미처리 {counts.PENDING}건
         </p>
       </div>
 
@@ -109,14 +109,23 @@ export default async function AdminFeedbackPage({
               </div>
 
               <div className="flex-1 space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-full text-xs font-black">
+                <div className="flex flex-wrap items-center gap-2">
+                  {(item.type ?? 'EDIT_REQUEST') === 'ERROR_REPORT' ? (
+                    <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+                      오류 제보
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                      정보 수정
+                    </span>
+                  )}
+                  <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400">
                     {item.category}
                   </span>
-                  <span className="text-slate-400 dark:text-slate-500 font-bold text-sm">
-                    Target:{' '}
+                  <span className="text-sm font-bold text-slate-400 dark:text-slate-500">
+                    대상:{' '}
                     <span className="text-slate-700 dark:text-slate-300">
-                      {item.streamerName || '전체'}
+                      {item.streamerName || '—'}
                     </span>
                   </span>
                 </div>

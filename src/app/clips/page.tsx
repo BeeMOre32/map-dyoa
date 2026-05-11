@@ -3,6 +3,7 @@ import ClipView from '@/components/clips/ClipView';
 
 const PAGE_SIZE = 20;
 const VALID_SORTS: ClipSortOption[] = ['newest', 'oldest', 'date_desc', 'date_asc', 'title'];
+const CLIP_MONTH_PARAM = /^\d{4}-\d{2}$/;
 
 export default async function ClipsPage({
   searchParams,
@@ -12,7 +13,8 @@ export default async function ClipsPage({
   const params = await searchParams;
   const page = Math.max(1, Number(params.page ?? 1));
   const streamerId = params.streamer ?? '';
-  const month = params.month ?? '';
+  const rawMonth = params.month ?? '';
+  const month = CLIP_MONTH_PARAM.test(rawMonth) ? rawMonth : '';
   const q = params.q ?? '';
   const sort: ClipSortOption = VALID_SORTS.includes(params.sort as ClipSortOption)
     ? (params.sort as ClipSortOption)

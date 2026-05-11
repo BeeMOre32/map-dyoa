@@ -25,6 +25,7 @@ import {
   isToday,
   addWeeks,
   subWeeks,
+  isValid,
 } from 'date-fns';
 import {
   ChevronLeft,
@@ -217,7 +218,9 @@ export default function CalendarView({
 
     const map = new Map<string, FlattenedSchedule[]>();
     filtered.forEach((schedule) => {
-      const dateKey = format(new Date(schedule.startTime), 'yyyy-MM-dd');
+      const st = new Date(schedule.startTime);
+      if (!isValid(st)) return;
+      const dateKey = format(st, 'yyyy-MM-dd');
       if (!map.has(dateKey)) map.set(dateKey, []);
       map.get(dateKey)!.push(schedule);
     });
@@ -380,7 +383,7 @@ export default function CalendarView({
 
               return (
                 <div
-                  key={day.toString()}
+                  key={format(day, 'yyyy-MM-dd')}
                   ref={today ? todayMobileRef : null}
                   className="border-b border-slate-100 dark:border-slate-800 last:border-b-0"
                 >
@@ -449,7 +452,7 @@ export default function CalendarView({
 
                   return (
                     <div
-                      key={day.toString()}
+                      key={format(day, 'yyyy-MM-dd')}
                       onClick={() => handleDayClick(day)}
                       className={`flex flex-col rounded-xl border cursor-pointer transition-all h-full min-h-0 overflow-hidden ${
                         today
@@ -528,7 +531,7 @@ export default function CalendarView({
                   style={{
                     gridTemplateRows:
                       viewMode === 'monthly'
-                        ? `repeat(${days.length / 7}, minmax(100px, 1fr))`
+                        ? `repeat(${Math.max(1, Math.floor(days.length / 7))}, minmax(100px, 1fr))`
                         : `repeat(1, 1fr)`,
                   }}
                 >
@@ -540,7 +543,7 @@ export default function CalendarView({
 
                     return (
                       <div
-                        key={day.toString()}
+                        key={format(day, 'yyyy-MM-dd')}
                         onClick={() => handleDayClick(day)}
                         className={`flex flex-col p-2 border-b border-r border-slate-100 dark:border-slate-800 group cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/80 transition-all duration-300 overflow-hidden ${!isSelectedMonth && viewMode === 'monthly' ? 'bg-slate-50/30 dark:bg-slate-950/60 opacity-50' : ''} ${idx % 7 === 6 ? 'border-r-0' : ''}`}
                       >

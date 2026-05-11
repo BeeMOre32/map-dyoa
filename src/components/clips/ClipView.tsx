@@ -4,7 +4,7 @@ import { useState, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Clapperboard, Plus, Search, X, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { format } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import type { ClipWithParticipants } from '@/types/entities';
 import type { Streamer } from '@prisma/client';
@@ -157,11 +157,15 @@ export default function ClipView({
                   className="px-3 py-1.5 text-sm font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700 transition-all"
                 >
                   <option value="">전체 기간</option>
-                  {monthOptions.map((m) => (
-                    <option key={m} value={m}>
-                      {format(new Date(`${m}-01`), 'yyyy년 M월', { locale: ko })}
-                    </option>
-                  ))}
+                  {monthOptions.map((m) => {
+                    const d = parseISO(`${m}-01`);
+                    const label = isValid(d) ? format(d, 'yyyy년 M월', { locale: ko }) : m;
+                    return (
+                      <option key={m} value={m}>
+                        {label}
+                      </option>
+                    );
+                  })}
                 </select>
 
                 <select

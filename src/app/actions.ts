@@ -18,6 +18,7 @@ import {
 import { fetchWithBackoff } from '@/lib/map-dyoa-server-http-utils';
 import { getScheduleServerBaseUrl } from '@/lib/map-dyoa-server-schedules';
 import { runDeleteSchedule } from '@/lib/schedule-delete-server';
+import { submitFeedbackCore } from '@/lib/feedback-submit';
 import {
   scheduleServerSchema,
   clipServerSchema,
@@ -713,60 +714,47 @@ export async function deleteGameAction(id: string): Promise<ActionResult> {
 }
 
 /**
- * 피드백 생성
+ * 피드백 생성 (정보 수정 요청 / 에러 제보 등)
  */
 export async function createFeedbackAction(formData: {
-  streamerId: string;
-  streamerName: string;
+  streamerId?: string;
+  streamerName?: string;
   category: string;
   content: string;
+  /** 에러 제보·사이트 문제는 `ERROR_REPORT`로 어드민 피드백 목록에서 구분 */
+  type?: 'EDIT_REQUEST' | 'ERROR_REPORT';
 }): Promise<ActionResult> {
   try {
     const validated = feedbackSchema.parse(formData);
+    const contentTrimmed = validated.content.trim();
+    const contentOut =
+      contentTrimmed.length > 5000 ? contentTrimmed.slice(0, 5000) : contentTrimmed;
 
-    const base = getScheduleServerBaseUrl();
-    if (base) {
-      const res = await fetchWithBackoff(`${base}/feedbacks`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          streamerId: formData.streamerId || undefined,
-          streamerName: formData.streamerName || undefined,
-          category: validated.category.trim(),
-          content: validated.content.trim(),
-        }),
-      });
-      const json = (await res.json()) as { error?: string; message?: string };
-      if (!res.ok) {
-        return {
-          success: false,
-          error: json.message ?? '피드백 등록에 실패했습니다.',
-          errorCode: json.error ?? 'API_ERROR',
-        };
-      }
+    const inserted = await submitFeedbackCore({
+      category: validated.category.trim(),
+      content: contentOut,
+      streamerId: formData.streamerId,
+      streamerName: formData.streamerName,
+      type: formData.type,
+    });
+
+    if (!inserted.ok) {
+      return {
+        success: false,
+        error: inserted.error,
+        errorCode: inserted.errorCode,
+      };
+    }
+
+    try {
       const paths = getRevalidationPaths('admin');
       await Promise.all([
         ...paths.map((path: string) => revalidatePath(path)),
         updateTag('admin'),
       ]);
-      return { success: true, data: null };
+    } catch (e) {
+      logError('createFeedbackRevalidate', e);
     }
-
-    await prisma.feedback.create({
-      data: {
-        type: 'EDIT_REQUEST',
-        category: validated.category.trim(),
-        content: validated.content.trim(),
-        streamerId: formData.streamerId || null,
-        streamerName: formData.streamerName || null,
-      },
-    });
-
-    const paths = getRevalidationPaths('admin');
-    await Promise.all([
-      ...paths.map((path: string) => revalidatePath(path)),
-      updateTag('admin'),
-    ]);
 
     return { success: true, data: null };
   } catch (error) {

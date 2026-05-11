@@ -1,6 +1,6 @@
 'use client';
 
-import { format, isToday } from 'date-fns';
+import { format, isToday, isValid } from 'date-fns';
 import Link from 'next/link';
 import { Clock, Gamepad2, Zap } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -9,6 +9,18 @@ import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { track } from '@vercel/analytics';
+
+function formatScheduleHHmm(schedule: FlattenedSchedule): string {
+  if (schedule.isGuerrilla) return '미정';
+  const d = new Date(schedule.startTime);
+  return isValid(d) ? format(d, 'HH:mm') : '–';
+}
+
+function formatEndHHmmIfValid(end: Date | string | null | undefined): string | null {
+  if (end == null) return null;
+  const d = new Date(end);
+  return isValid(d) ? format(d, 'HH:mm') : null;
+}
 
 function LiveBadge() {
   return (
@@ -59,7 +71,8 @@ export default function ScheduleCard({
       variant,
     });
   };
-  const isToday_ = isToday(new Date(schedule.startTime));
+  const startD = new Date(schedule.startTime);
+  const isToday_ = isValid(startD) && isToday(startD);
   const isLive =
     !schedule.isLiveEnded &&
     liveStreamerIds !== undefined &&
@@ -69,6 +82,7 @@ export default function ScheduleCard({
   const gameColor = schedule.game
     ? getGameColor(schedule.game.id, resolvedTheme === 'dark')
     : null;
+  const endTimeHm = formatEndHHmmIfValid(schedule.endTime);
 
   if (variant === 'mobile') {
     return (
@@ -109,9 +123,7 @@ export default function ScheduleCard({
           }
         >
           <span className="text-xs opacity-60 shrink-0 font-semibold">
-            {schedule.isGuerrilla
-              ? '미정'
-              : format(new Date(schedule.startTime), 'HH:mm')}
+            {formatScheduleHHmm(schedule)}
           </span>
           <span className="truncate flex-1">{schedule.title}</span>
           {isLive && <LiveBadge />}
@@ -162,7 +174,7 @@ export default function ScheduleCard({
             }
           >
             <span className="opacity-70 shrink-0 font-semibold">
-              {format(new Date(schedule.startTime), 'HH:mm')}
+              {formatScheduleHHmm(schedule)}
             </span>
             <span className="truncate flex-1">{schedule.title}</span>
             {isLive && <LiveBadge />}
@@ -252,12 +264,8 @@ export default function ScheduleCard({
           {!schedule.isGuerrilla && (
             <div className="flex items-center gap-1 text-[13px] font-semibold text-slate-400 dark:text-slate-500">
               <Clock className="w-3 h-3 shrink-0" />
-              {format(new Date(schedule.startTime), 'HH:mm')}
-              {schedule.endTime && (
-                <span className="opacity-70">
-                  → {format(new Date(schedule.endTime), 'HH:mm')}
-                </span>
-              )}
+              {formatScheduleHHmm(schedule)}
+              {endTimeHm ? <span className="opacity-70">→ {endTimeHm}</span> : null}
             </div>
           )}
 

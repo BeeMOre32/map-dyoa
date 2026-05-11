@@ -1,5 +1,19 @@
 /** map-dyoa-server로 나가는 fetch 공통 (순환 import 없음) */
 
+import { randomUUID } from "node:crypto";
+
+import { MapDyoaServerRequestFailedError } from "@/lib/map-dyoa-server-client-error";
+
+const REQUEST_ID_HEADER = "x-request-id";
+
+function mergeRequestIdHeaders(init?: RequestInit): Headers {
+  const headers = new Headers(init?.headers);
+  if (!headers.has(REQUEST_ID_HEADER)) {
+    headers.set(REQUEST_ID_HEADER, randomUUID());
+  }
+  return headers;
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -56,7 +70,8 @@ export async function fetchWithBackoff(
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const res = await fetch(url, init)
+      const headers = mergeRequestIdHeaders(init);
+      const res = await fetch(url, { ...init, headers });
       if (RETRYABLE_HTTP.has(res.status) && attempt < maxRetries) {
         await sleep(baseDelayMs * 2 ** attempt)
         continue
@@ -87,11 +102,55 @@ export async function readJsonSafely<T>(
     }
   }
   if (!res.ok) {
-    const message =
-      typeof (data as { message?: unknown }).message === 'string'
-        ? (data as { message: string }).message
-        : fallbackMessage
-    throw new Error(message)
+    const body = data as Record<string, unknown>;
+    const requestId = res.headers.get(REQUEST_ID_HEADER)?.trim() ?? null;
+
+    const nestedError = body.error;
+    let serverErrorCode: string | undefined;
+    if (typeof nestedError === "string") {
+      serverErrorCode = nestedError;
+    } else if (
+      nestedError &&
+      typeof nestedError === "object" &&
+      "code" in nestedError &&
+      typeof (nestedError as { code: unknown }).code === "string"
+    ) {
+      serverErrorCode = (nestedError as { code: string }).code;
+    }
+
+    const nestedMessage =
+      nestedError &&
+      typeof nestedError === "object" &&
+      "message" in nestedError &&
+      typeof (nestedError as { message: unknown }).message === "string"
+        ? (nestedError as { message: string }).message
+        : undefined;
+
+    const flatMessage =
+      typeof body.message === "string" ? body.message : undefined;
+
+    const detail =
+      nestedMessage ??
+      flatMessage ??
+      (serverErrorCode ? `code=${serverErrorCode}` : null);
+
+    const message = [
+      fallbackMessage,
+      `HTTP ${res.status}`,
+      requestId ? `requestId=${requestId}` : null,
+      detail ? `detail=${detail}` : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+
+    throw new MapDyoaServerRequestFailedError({
+      message,
+      status: res.status,
+      requestId,
+      url: res.url,
+      body,
+      serverErrorCode,
+    });
   }
   return data as T
 }
