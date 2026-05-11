@@ -5,7 +5,7 @@
 import type { ClipParticipant, Game, Streamer } from '@prisma/client';
 import type { ClipWithParticipants } from '@/types/entities';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
-import { getScheduleServerBaseUrl } from './map-dyoa-server-schedules';
+import { readJsonSafely, requireServerBaseUrl } from './map-dyoa-server-fetch';
 
 function hydrateStreamerFromClipApi(s: Record<string, unknown>): Streamer {
   return {
@@ -126,8 +126,7 @@ export type FetchClipsPaginatedServerArgs = {
 export async function fetchClipsPaginatedFromServer(
   args: FetchClipsPaginatedServerArgs,
 ): Promise<{ clips: ClipWithParticipants[]; total: number; totalPages: number }> {
-  const base = getScheduleServerBaseUrl();
-  if (!base) throw new Error('MAP_DYOA_SERVER_URL이 설정되지 않았습니다.');
+  const base = requireServerBaseUrl();
 
   const qs = new URLSearchParams();
   qs.set('page', String(args.page));
@@ -139,16 +138,12 @@ export async function fetchClipsPaginatedFromServer(
   if (args.clipsOnly) qs.set('clipsOnly', '1');
 
   const res = await fetch(`${base}/clips?${qs.toString()}`, { next: { revalidate: 60 } });
-  const data = (await res.json()) as {
+  const data = await readJsonSafely<{
     clips?: unknown[];
     total?: number;
     totalPages?: number;
     message?: string;
-  };
-
-  if (!res.ok) {
-    throw new Error(data.message ?? `클립 API ${res.status}`);
-  }
+  }>(res, `클립 API ${res.status}`);
   if (!Array.isArray(data.clips)) {
     throw new Error('클립 API 응답 형식이 올바르지 않습니다.');
   }
@@ -176,8 +171,7 @@ const SCHEDULE_CLIPS_MAX_PAGES = 200;
 export async function fetchScheduleClipsFromServer(
   scheduleId: string,
 ): Promise<ClipWithParticipants[]> {
-  const base = getScheduleServerBaseUrl();
-  if (!base) throw new Error('MAP_DYOA_SERVER_URL이 설정되지 않았습니다.');
+  const base = requireServerBaseUrl();
 
   const out: ClipWithParticipants[] = [];
   let page = 1;
@@ -188,14 +182,10 @@ export async function fetchScheduleClipsFromServer(
       `${base}/schedules/${encodeURIComponent(scheduleId)}/clips?page=${page}&pageSize=${SCHEDULE_CLIPS_PAGE_SIZE}`,
       { next: { revalidate: 60 } },
     );
-    if (!res.ok) {
-      const data = (await res.json().catch(() => ({}))) as { message?: string };
-      throw new Error(data.message ?? `일정 클립 API ${res.status}`);
-    }
-    const data = (await res.json()) as {
+    const data = await readJsonSafely<{
       clips?: unknown[];
       totalPages?: number;
-    };
+    }>(res, `일정 클립 API ${res.status}`);
     if (!Array.isArray(data.clips)) {
       throw new Error('일정 클립 API 응답 형식이 올바르지 않습니다.');
     }

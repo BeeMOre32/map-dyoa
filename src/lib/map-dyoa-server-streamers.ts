@@ -3,7 +3,7 @@
  */
 
 import type { Streamer } from '@prisma/client';
-import { getScheduleServerBaseUrl } from './map-dyoa-server-schedules';
+import { readJsonSafely, requireServerBaseUrl } from './map-dyoa-server-fetch';
 
 export function hydrateStreamerFromApi(raw: Record<string, unknown>): Streamer {
   return {
@@ -25,16 +25,14 @@ export function hydrateStreamerFromApi(raw: Record<string, unknown>): Streamer {
 export async function fetchAllStreamersFromServer(
   membersOnly: boolean,
 ): Promise<Streamer[]> {
-  const base = getScheduleServerBaseUrl();
-  if (!base) throw new Error('MAP_DYOA_SERVER_URL이 설정되지 않았습니다.');
+  const base = requireServerBaseUrl();
 
   const qs = membersOnly ? '?membersOnly=1' : '';
   const res = await fetch(`${base}/streamers${qs}`, { next: { revalidate: 120 } });
-  const data = (await res.json()) as { streamers?: unknown[]; message?: string };
-
-  if (!res.ok) {
-    throw new Error(data.message ?? `스트리머 API ${res.status}`);
-  }
+  const data = await readJsonSafely<{ streamers?: unknown[]; message?: string }>(
+    res,
+    `스트리머 API ${res.status}`,
+  );
   if (!Array.isArray(data.streamers)) {
     throw new Error('스트리머 API 응답 형식이 올바르지 않습니다.');
   }
@@ -44,18 +42,16 @@ export async function fetchAllStreamersFromServer(
 export async function fetchStreamerByIdFromServer(
   streamerId: string,
 ): Promise<Streamer | null> {
-  const base = getScheduleServerBaseUrl();
-  if (!base) throw new Error('MAP_DYOA_SERVER_URL이 설정되지 않았습니다.');
+  const base = requireServerBaseUrl();
 
   const res = await fetch(`${base}/streamers/${encodeURIComponent(streamerId)}`, {
     next: { revalidate: 120 },
   });
   if (res.status === 404) return null;
-  if (!res.ok) {
-    const data = (await res.json().catch(() => ({}))) as { message?: string };
-    throw new Error(data.message ?? `스트리머 API ${res.status}`);
-  }
-  const raw = (await res.json()) as Record<string, unknown>;
+  const raw = await readJsonSafely<Record<string, unknown>>(
+    res,
+    `스트리머 API ${res.status}`,
+  );
   if (raw.error === 'NOT_FOUND') return null;
   return hydrateStreamerFromApi(raw);
 }
@@ -152,8 +148,7 @@ export type StreamerDetailBundle = {
 export async function fetchStreamerDetailFromServer(
   streamerId: string,
 ): Promise<StreamerDetailBundle> {
-  const base = getScheduleServerBaseUrl();
-  if (!base) throw new Error('MAP_DYOA_SERVER_URL이 설정되지 않았습니다.');
+  const base = requireServerBaseUrl();
 
   const res = await fetch(
     `${base}/streamers/${encodeURIComponent(streamerId)}/detail`,
@@ -163,18 +158,13 @@ export async function fetchStreamerDetailFromServer(
   if (res.status === 404) {
     return { schedules: [], linkedClips: [], scheduleCount: 0, clipCount: 0 };
   }
-  if (!res.ok) {
-    const data = (await res.json().catch(() => ({}))) as { message?: string };
-    throw new Error(data.message ?? `스트리머 상세 API ${res.status}`);
-  }
-
-  const data = (await res.json()) as {
+  const data = await readJsonSafely<{
     error?: string;
     schedules?: unknown[];
     linkedClips?: unknown[];
     scheduleCount?: number;
     clipCount?: number;
-  };
+  }>(res, `스트리머 상세 API ${res.status}`);
 
   if (data.error === 'NOT_FOUND') {
     return { schedules: [], linkedClips: [], scheduleCount: 0, clipCount: 0 };

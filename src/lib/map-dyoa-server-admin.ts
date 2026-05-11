@@ -1,25 +1,9 @@
-import { getScheduleServerBaseUrl } from "./map-dyoa-server-schedules"
+import { readJsonSafely, requireServerBaseUrl } from "./map-dyoa-server-fetch"
 
 async function fetchJson<T>(path: string, revalidate = 60): Promise<T> {
-  const base = getScheduleServerBaseUrl()
-  if (!base) throw new Error("MAP_DYOA_SERVER_URL이 설정되지 않았습니다.")
+  const base = requireServerBaseUrl()
   const res = await fetch(`${base}${path}`, { next: { revalidate } })
-  const raw = await res.text()
-  let data: unknown = {}
-  if (raw.trim().length > 0) {
-    try {
-      data = JSON.parse(raw)
-    } catch {
-      data = { message: raw }
-    }
-  }
-  if (!res.ok) {
-    const msg = typeof (data as { message?: unknown }).message === "string"
-      ? (data as { message: string }).message
-      : `관리자 API 오류: ${res.status}`
-    throw new Error(msg)
-  }
-  return data as T
+  return readJsonSafely<T>(res, `관리자 API 오류: ${res.status}`)
 }
 
 export function fetchAdminStatsFromServer() {

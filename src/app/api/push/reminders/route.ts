@@ -10,6 +10,8 @@ function hasCronAuth(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  return NextResponse.json({ ok: false, disabled: true }, { status: 503 });
+
   if (!hasCronAuth(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
