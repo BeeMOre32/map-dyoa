@@ -3,6 +3,7 @@
  */
 
 import type { Streamer } from '@prisma/client';
+import { fetchWithBackoff } from './map-dyoa-server-http-utils';
 import { readJsonSafely, requireServerBaseUrl } from './map-dyoa-server-fetch';
 
 export function hydrateStreamerFromApi(raw: Record<string, unknown>): Streamer {
@@ -28,7 +29,7 @@ export async function fetchAllStreamersFromServer(
   const base = requireServerBaseUrl();
 
   const qs = membersOnly ? '?membersOnly=1' : '';
-  const res = await fetch(`${base}/streamers${qs}`, { next: { revalidate: 120 } });
+  const res = await fetchWithBackoff(`${base}/streamers${qs}`, { next: { revalidate: 120 } });
   const data = await readJsonSafely<{ streamers?: unknown[]; message?: string }>(
     res,
     `스트리머 API ${res.status}`,
@@ -44,7 +45,7 @@ export async function fetchStreamerByIdFromServer(
 ): Promise<Streamer | null> {
   const base = requireServerBaseUrl();
 
-  const res = await fetch(`${base}/streamers/${encodeURIComponent(streamerId)}`, {
+  const res = await fetchWithBackoff(`${base}/streamers/${encodeURIComponent(streamerId)}`, {
     next: { revalidate: 120 },
   });
   if (res.status === 404) return null;
@@ -150,7 +151,7 @@ export async function fetchStreamerDetailFromServer(
 ): Promise<StreamerDetailBundle> {
   const base = requireServerBaseUrl();
 
-  const res = await fetch(
+  const res = await fetchWithBackoff(
     `${base}/streamers/${encodeURIComponent(streamerId)}/detail`,
     { next: { revalidate: 120 } },
   );

@@ -15,6 +15,7 @@ import {
   getRevalidationPaths,
   getRevalidationPathsMulti,
 } from '@/constants/revalidation-paths';
+import { fetchWithBackoff } from '@/lib/map-dyoa-server-http-utils';
 import { getScheduleServerBaseUrl } from '@/lib/map-dyoa-server-schedules';
 import { runDeleteSchedule } from '@/lib/schedule-delete-server';
 import {
@@ -67,7 +68,7 @@ export async function createScheduleAction(data: {
 
     const base = getScheduleServerBaseUrl();
     if (base) {
-      const res = await fetch(`${base}/schedules`, {
+      const res = await fetchWithBackoff(`${base}/schedules`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -176,7 +177,7 @@ export async function updateScheduleAction(
 
     const base = getScheduleServerBaseUrl();
     if (base) {
-      const res = await fetch(`${base}/schedules/${encodeURIComponent(id)}`, {
+      const res = await fetchWithBackoff(`${base}/schedules/${encodeURIComponent(id)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -561,7 +562,7 @@ export async function createGameAction(data: {
 
     const base = getScheduleServerBaseUrl();
     if (base) {
-      const res = await fetch(`${base}/games`, {
+      const res = await fetchWithBackoff(`${base}/games`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -617,7 +618,7 @@ export async function updateGameAction(
 
     const base = getScheduleServerBaseUrl();
     if (base) {
-      const res = await fetch(`${base}/games/${encodeURIComponent(id)}`, {
+      const res = await fetchWithBackoff(`${base}/games/${encodeURIComponent(id)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -673,7 +674,7 @@ export async function deleteGameAction(id: string): Promise<ActionResult> {
 
     const base = getScheduleServerBaseUrl();
     if (base) {
-      const res = await fetch(`${base}/games/${encodeURIComponent(id)}`, {
+      const res = await fetchWithBackoff(`${base}/games/${encodeURIComponent(id)}`, {
         method: 'DELETE',
       });
       const json = (await res.json()) as { error?: string; message?: string };
@@ -725,7 +726,7 @@ export async function createFeedbackAction(formData: {
 
     const base = getScheduleServerBaseUrl();
     if (base) {
-      const res = await fetch(`${base}/feedbacks`, {
+      const res = await fetchWithBackoff(`${base}/feedbacks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -782,7 +783,7 @@ export async function rejectFeedbackAction(
     await requireAdmin();
     const base = getScheduleServerBaseUrl();
     if (base) {
-      const res = await fetch(`${base}/feedbacks/${encodeURIComponent(feedbackId)}/reject`, {
+      const res = await fetchWithBackoff(`${base}/feedbacks/${encodeURIComponent(feedbackId)}/reject`, {
         method: 'PATCH',
       });
       const json = (await res.json()) as { error?: string; message?: string };
@@ -829,7 +830,7 @@ export async function resolveFeedbackAction(
     await requireAdmin();
     const base = getScheduleServerBaseUrl();
     if (base) {
-      const res = await fetch(`${base}/feedbacks/${encodeURIComponent(feedbackId)}/resolve`, {
+      const res = await fetchWithBackoff(`${base}/feedbacks/${encodeURIComponent(feedbackId)}/resolve`, {
         method: 'PATCH',
       });
       const json = (await res.json()) as { error?: string; message?: string };

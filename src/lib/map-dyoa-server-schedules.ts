@@ -8,6 +8,7 @@
 
 import type { FlattenedSchedule, ParticipantFlat } from '@/lib/schedule-formatters';
 import type { Game } from '@prisma/client';
+import { fetchWithBackoff, readJsonSafely } from '@/lib/map-dyoa-server-http-utils';
 
 export function getScheduleServerBaseUrl(): string | null {
   const u = process.env.MAP_DYOA_SERVER_URL?.trim();
@@ -84,16 +85,13 @@ export async function fetchSchedulesFromServer(
   if (!base) throw new Error('MAP_DYOA_SERVER_URL이 설정되지 않았습니다.');
 
   const url = `${base}/schedules?from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`;
-  const res = await fetch(url, { next: { revalidate: 60 } });
-  const data = (await res.json()) as {
+  const res = await fetchWithBackoff(url, { next: { revalidate: 60 } });
+  const data = await readJsonSafely<{
     schedules?: unknown[];
     error?: string;
     message?: string;
-  };
+  }>(res, `일정 API ${res.status}`);
 
-  if (!res.ok) {
-    throw new Error(data.message ?? `일정 API ${res.status}`);
-  }
   if (!Array.isArray(data.schedules)) {
     throw new Error('일정 API 응답 형식이 올바르지 않습니다.');
   }
@@ -114,15 +112,14 @@ export async function fetchScheduleByIdFromServer(
   const base = getScheduleServerBaseUrl();
   if (!base) throw new Error('MAP_DYOA_SERVER_URL이 설정되지 않았습니다.');
 
-  const res = await fetch(`${base}/schedules/${encodeURIComponent(id)}`, {
+  const res = await fetchWithBackoff(`${base}/schedules/${encodeURIComponent(id)}`, {
     next: { revalidate: 60 },
   });
   if (res.status === 404) return null;
-  if (!res.ok) {
-    const data = (await res.json().catch(() => ({}))) as { message?: string };
-    throw new Error(data.message ?? `일정 API ${res.status}`);
-  }
-  const raw = (await res.json()) as Record<string, unknown>;
+  const raw = await readJsonSafely<Record<string, unknown>>(
+    res,
+    `일정 API ${res.status}`,
+  );
   if (raw.error === 'NOT_FOUND') return null;
   return hydrateFlattenedSchedule(raw);
 }

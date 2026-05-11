@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractChzzkClipId } from '@/lib/chzzk';
+import { fetchWithBackoff } from '@/lib/map-dyoa-server-http-utils';
 import { getScheduleServerBaseUrl } from '@/lib/map-dyoa-server-schedules';
 
 function findCoverUrl(obj: unknown): string | null {
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
   const base = getScheduleServerBaseUrl();
   if (base) {
     try {
-      const res = await fetch(`${base}/chzzk/clip-meta?url=${encodeURIComponent(url)}`, {
+      const res = await fetchWithBackoff(`${base}/chzzk/clip-meta?url=${encodeURIComponent(url)}`, {
         cache: 'no-store',
       });
       const json = await res.json();

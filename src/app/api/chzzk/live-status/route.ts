@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { prisma } from '@/lib/prisma';
+import { fetchWithBackoff } from '@/lib/map-dyoa-server-http-utils';
 
 export const revalidate = 0;
 
@@ -52,7 +53,7 @@ export async function GET() {
   const base = process.env.MAP_DYOA_SERVER_URL?.trim()?.replace(/\/$/, '');
   if (base) {
     try {
-      const res = await fetch(`${base}/chzzk/live-status`, { cache: 'no-store' });
+      const res = await fetchWithBackoff(`${base}/chzzk/live-status`, { cache: 'no-store' });
       if (res.ok) {
         const data = (await res.json()) as { liveStreamerIds?: unknown[] };
         const liveStreamerIds = Array.isArray(data.liveStreamerIds)

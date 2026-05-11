@@ -5,6 +5,7 @@
 import type { ClipParticipant, Game, Streamer } from '@prisma/client';
 import type { ClipWithParticipants } from '@/types/entities';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
+import { fetchWithBackoff } from './map-dyoa-server-http-utils';
 import { readJsonSafely, requireServerBaseUrl } from './map-dyoa-server-fetch';
 
 function hydrateStreamerFromClipApi(s: Record<string, unknown>): Streamer {
@@ -137,7 +138,9 @@ export async function fetchClipsPaginatedFromServer(
   if (args.q) qs.set('q', args.q);
   if (args.clipsOnly) qs.set('clipsOnly', '1');
 
-  const res = await fetch(`${base}/clips?${qs.toString()}`, { next: { revalidate: 60 } });
+  const res = await fetchWithBackoff(`${base}/clips?${qs.toString()}`, {
+    next: { revalidate: 60 },
+  });
   const data = await readJsonSafely<{
     clips?: unknown[];
     total?: number;
@@ -178,7 +181,7 @@ export async function fetchScheduleClipsFromServer(
   let totalPages = 1;
 
   do {
-    const res = await fetch(
+    const res = await fetchWithBackoff(
       `${base}/schedules/${encodeURIComponent(scheduleId)}/clips?page=${page}&pageSize=${SCHEDULE_CLIPS_PAGE_SIZE}`,
       { next: { revalidate: 60 } },
     );

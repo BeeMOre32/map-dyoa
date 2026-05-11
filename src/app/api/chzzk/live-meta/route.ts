@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { fetchWithBackoff } from '@/lib/map-dyoa-server-http-utils';
 import { getScheduleServerBaseUrl } from '@/lib/map-dyoa-server-schedules';
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
   const base = getScheduleServerBaseUrl();
   if (base) {
     try {
-      const res = await fetch(`${base}/chzzk/live-meta?url=${encodeURIComponent(url)}`, {
+      const res = await fetchWithBackoff(`${base}/chzzk/live-meta?url=${encodeURIComponent(url)}`, {
         cache: 'no-store',
       });
       const json = await res.json();

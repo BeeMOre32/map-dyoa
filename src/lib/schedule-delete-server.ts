@@ -1,6 +1,7 @@
 import { revalidatePath, updateTag } from 'next/cache';
 import { getRevalidationPaths } from '@/constants/revalidation-paths';
 import { ValidationError } from '@/lib/error-handling';
+import { fetchWithBackoff } from '@/lib/map-dyoa-server-http-utils';
 import { getScheduleServerBaseUrl } from '@/lib/map-dyoa-server-schedules';
 
 /** 서버 액션·API 라우트에서만 호출 (next/cache 사용) */
@@ -14,7 +15,7 @@ export async function runDeleteSchedule(id: string): Promise<void> {
     throw new ValidationError('MAP_DYOA_SERVER_URL이 설정되지 않았습니다.');
   }
 
-  const res = await fetch(`${base}/schedules/${encodeURIComponent(id)}`, {
+  const res = await fetchWithBackoff(`${base}/schedules/${encodeURIComponent(id)}`, {
     method: 'DELETE',
   });
   if (res.status === 404) {

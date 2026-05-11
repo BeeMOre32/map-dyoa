@@ -1,8 +1,9 @@
+import { fetchWithBackoff } from "@/lib/map-dyoa-server-http-utils"
 import { readJsonSafely, requireServerBaseUrl } from "./map-dyoa-server-fetch"
 
 async function fetchJson<T>(path: string, revalidate = 60): Promise<T> {
   const base = requireServerBaseUrl()
-  const res = await fetch(`${base}${path}`, { next: { revalidate } })
+  const res = await fetchWithBackoff(`${base}${path}`, { next: { revalidate } })
   return readJsonSafely<T>(res, `관리자 API 오류: ${res.status}`)
 }
 
