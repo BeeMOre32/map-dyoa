@@ -1,6 +1,6 @@
 /**
  * map-dyoa-server 일정 API (MAP_DYOA_SERVER_URL 설정 시 사용).
- * 예: MAP_DYOA_SERVER_URL=http://localhost:3001
+ * 예(로컬): http://localhost:3001 · 예(배포): https://map-dyoa-server.fly.dev
  *
  * 브라우저(클라이언트 컴포넌트)에서 부를 때는 CORS 대신 Next `rewrites`로
  * 동일 출처 `/map-dyoa-api/...` 프록시를 쓰거나, 백엔드 `CORS_ORIGINS`에 프론트 출처를 넣으면 됩니다.
