@@ -4,7 +4,15 @@ async function fetchJson<T>(path: string, revalidate = 60): Promise<T> {
   const base = getScheduleServerBaseUrl()
   if (!base) throw new Error("MAP_DYOA_SERVER_URL이 설정되지 않았습니다.")
   const res = await fetch(`${base}${path}`, { next: { revalidate } })
-  const data = await res.json()
+  const raw = await res.text()
+  let data: unknown = {}
+  if (raw.trim().length > 0) {
+    try {
+      data = JSON.parse(raw)
+    } catch {
+      data = { message: raw }
+    }
+  }
   if (!res.ok) {
     const msg = typeof (data as { message?: unknown }).message === "string"
       ? (data as { message: string }).message

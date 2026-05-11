@@ -427,7 +427,11 @@ export const getAdminStats = unstable_cache(
 export const getHoi4Leaderboard = unstable_cache(
   async () => {
     if (isScheduleServerEnabled()) {
-      return fetchHoi4LeaderboardFromServer();
+      try {
+        return await fetchHoi4LeaderboardFromServer();
+      } catch {
+        // 서버 응답이 비정상인 경우 기존 Prisma 경로로 폴백해 빌드/프리렌더를 유지한다.
+      }
     }
     const rows = await prisma.scheduleParticipant.findMany({
       where: { isGuest: false, schedule: { game: { isHoi4: true }, isNaeJeon: true } },
