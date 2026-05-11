@@ -2,7 +2,6 @@
 import ScheduleDetailView from '@/components/Calendar/ScheduleDetailModalWrapper';
 import { notFound } from 'next/navigation';
 import CalendarView from '@/components/Calendar/CalendarView';
-import { flattenScheduleParticipants } from '@/lib/schedule-formatters';
 import { getCalendarData, getScheduleDetail, getScheduleClips } from '@/lib/data-fetching';
 
 export default async function FullSchedulePage({
@@ -29,7 +28,7 @@ export default async function FullSchedulePage({
         games={games}
       />
       <ScheduleDetailView
-        schedule={flattenScheduleParticipants(targetSchedule)}
+        schedule={targetSchedule}
         streamers={streamers}
         games={games}
         clips={clips}

@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 import { getScheduleDetail } from '@/lib/data-fetching';
-import { flattenScheduleParticipants } from '@/lib/schedule-formatters';
 import MultiView from '@/components/multiview/MultiView';
 
 export default async function MultiViewPage({
@@ -12,12 +11,11 @@ export default async function MultiViewPage({
   const schedule = await getScheduleDetail(id);
   if (!schedule) return notFound();
 
-  const flat = flattenScheduleParticipants(schedule);
   return (
     <MultiView
-      participants={flat.participants}
-      title={flat.title}
-      backHref={`/calendar/schedule/${flat.id}`}
+      participants={schedule.participants}
+      title={schedule.title}
+      backHref={`/calendar/schedule/${schedule.id}`}
     />
   );
 }

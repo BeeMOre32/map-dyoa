@@ -15,6 +15,7 @@ import {
   getRevalidationPaths,
   getRevalidationPathsMulti,
 } from '@/constants/revalidation-paths';
+import { getScheduleServerBaseUrl } from '@/lib/map-dyoa-server-schedules';
 import { runDeleteSchedule } from '@/lib/schedule-delete-server';
 import {
   scheduleServerSchema,
@@ -63,6 +64,47 @@ export async function createScheduleAction(data: {
   try {
     await requireAuth();
     const validated = scheduleServerSchema.parse(data);
+
+    const base = getScheduleServerBaseUrl();
+    if (base) {
+      const res = await fetch(`${base}/schedules`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: validated.title.trim(),
+          startTime: validated.startTime.toISOString(),
+          participants: validated.participants.map(({ id, nation, result, isGuest }) => ({
+            id,
+            nation,
+            result,
+            isGuest,
+          })),
+          gameId: validated.gameId?.trim() || undefined,
+          liveUrls: validated.liveUrls?.map((u) => u.trim()).filter(Boolean) ?? [],
+          isGuerrilla: validated.isGuerrilla ?? false,
+          isNaeJeon: validated.isNaeJeon ?? false,
+        }),
+      });
+      const json = (await res.json()) as { id?: string; error?: string; message?: string; issues?: unknown };
+      if (!res.ok) {
+        const msg =
+          res.status === 400 && json.error === 'VALIDATION'
+            ? '입력 값을 확인해주세요.'
+            : typeof json.message === 'string'
+              ? json.message
+              : '일정 저장에 실패했습니다.';
+        return { success: false, error: msg, errorCode: json.error ?? 'API_ERROR' };
+      }
+      if (!json.id) {
+        return { success: false, error: '응답에 일정 ID가 없습니다.', errorCode: 'API_ERROR' };
+      }
+      const paths = getRevalidationPaths('schedule');
+      await Promise.all([
+        ...paths.map((path: string) => revalidatePath(path)),
+        updateTag('calendar'),
+      ]);
+      return { success: true, data: { id: json.id } };
+    }
 
     const created = await prisma.schedule.create({
       data: {
@@ -131,6 +173,49 @@ export async function updateScheduleAction(
   try {
     await requireAuth();
     const validated = scheduleServerSchema.parse(data);
+
+    const base = getScheduleServerBaseUrl();
+    if (base) {
+      const res = await fetch(`${base}/schedules/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: validated.title.trim(),
+          startTime: validated.startTime.toISOString(),
+          participants: validated.participants.map(({ id: sid, nation, result, isGuest }) => ({
+            id: sid,
+            nation,
+            result,
+            isGuest,
+          })),
+          gameId: validated.gameId?.trim() || undefined,
+          liveUrls: validated.liveUrls?.map((u) => u.trim()).filter(Boolean) ?? [],
+          isGuerrilla: validated.isGuerrilla ?? false,
+          isNaeJeon: validated.isNaeJeon ?? false,
+          isLiveEnded: validated.isLiveEnded ?? false,
+        }),
+      });
+      const json = (await res.json()) as { error?: string; message?: string };
+      if (res.status === 404) {
+        return { success: false, error: '일정을 찾을 수 없습니다.', errorCode: 'NOT_FOUND' };
+      }
+      if (!res.ok) {
+        const msg =
+          res.status === 400 && json.error === 'VALIDATION'
+            ? '입력 값을 확인해주세요.'
+            : typeof json.message === 'string'
+              ? json.message
+              : '일정 수정에 실패했습니다.';
+        return { success: false, error: msg, errorCode: json.error ?? 'API_ERROR' };
+      }
+      const paths = getRevalidationPaths('schedule');
+      await Promise.all([
+        ...paths.map((path: string) => revalidatePath(path)),
+        updateTag('calendar'),
+      ]);
+      return { success: true, data: null };
+    }
+
     const newStreamerIds = validated.participants.map((p) => p.id);
 
     await prisma.$transaction([

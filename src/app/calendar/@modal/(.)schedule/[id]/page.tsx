@@ -1,6 +1,5 @@
 import ScheduleDetailModal from '@/components/Calendar/ScheduleDetailModalWrapper';
 import { notFound } from 'next/navigation';
-import { flattenScheduleParticipants } from '@/lib/schedule-formatters';
 import { getAllStreamers, getAllGames, getScheduleDetail, getScheduleClips } from '@/lib/data-fetching';
 
 export default async function InterceptedSchedulePage({
@@ -21,7 +20,7 @@ export default async function InterceptedSchedulePage({
 
   return (
     <ScheduleDetailModal
-      schedule={flattenScheduleParticipants(schedule)}
+      schedule={schedule}
       streamers={streamers}
       games={games}
       clips={clips}

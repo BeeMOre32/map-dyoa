@@ -5,8 +5,15 @@
 
 import { prisma } from '@/lib/prisma';
 import { unstable_cache } from 'next/cache';
-import { flattenSchedules } from './schedule-formatters';
+import { flattenScheduleParticipants, flattenSchedules } from './schedule-formatters';
 import type { Streamer, Prisma } from '@prisma/client';
+import type { ScheduleWithRelations } from './schedule-formatters';
+import {
+  defaultScheduleFetchWindow,
+  fetchScheduleByIdFromServer,
+  fetchSchedulesFromServer,
+  isScheduleServerEnabled,
+} from './map-dyoa-server-schedules';
 
 /**
  * 캘린더 데이터 가져오기 (캐싱 적용)
@@ -15,15 +22,22 @@ import type { Streamer, Prisma } from '@prisma/client';
 export const getCalendarData = unstable_cache(
   async () => {
     const [schedules, streamers, games] = await Promise.all([
-      prisma.schedule.findMany({
-        include: {
-          game: true,
-          participants: {
-            include: { streamer: true },
+      (async () => {
+        if (isScheduleServerEnabled()) {
+          const { from, to } = defaultScheduleFetchWindow();
+          return fetchSchedulesFromServer(from, to);
+        }
+        const rows = await prisma.schedule.findMany({
+          include: {
+            game: true,
+            participants: {
+              include: { streamer: true },
+            },
           },
-        },
-        orderBy: { startTime: 'asc' },
-      }),
+          orderBy: { startTime: 'asc' },
+        });
+        return flattenSchedules(rows as ScheduleWithRelations[]);
+      })(),
       prisma.streamer.findMany({
         orderBy: { name: 'asc' },
       }),
@@ -33,12 +47,12 @@ export const getCalendarData = unstable_cache(
     ]);
 
     return {
-      schedules: flattenSchedules(schedules),
+      schedules,
       streamers,
       games,
     };
   },
-  ['calendar-data'],
+  ['calendar-data', process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-schedules'],
   { revalidate: 60, tags: ['calendar'] },
 );
 
@@ -85,6 +99,9 @@ export const getAllGames = unstable_cache(
  * getCalendarData() 캐시에서 필터링해 별도 DB 쿼리 없이 처리
  */
 export async function getSchedulesByDateRange(startDate: Date, endDate: Date) {
+  if (isScheduleServerEnabled()) {
+    return fetchSchedulesFromServer(startDate, endDate);
+  }
   const { schedules } = await getCalendarData();
   const start = startDate.getTime();
   const end = endDate.getTime();
@@ -214,19 +231,30 @@ export async function getClipsPaginated({
 }
 
 /**
- * 특정 스케줄 상세 가져오기 (캐싱 적용)
- * 스케줄 ID별로 별도 캐시 엔트리 생성
+ * 특정 스케줄 상세 (캐싱). `MAP_DYOA_SERVER_URL`이 있으면 외부 API, 없으면 Prisma.
+ * 반환은 항상 `FlattenedSchedule` | null.
  */
 export function getScheduleDetail(scheduleId: string) {
   return unstable_cache(
-    async () => prisma.schedule.findUnique({
-      where: { id: scheduleId },
-      include: {
-        game: true,
-        participants: { include: { streamer: true } },
-      },
-    }),
-    ['schedule-detail', scheduleId],
+    async () => {
+      if (isScheduleServerEnabled()) {
+        return fetchScheduleByIdFromServer(scheduleId);
+      }
+      const row = await prisma.schedule.findUnique({
+        where: { id: scheduleId },
+        include: {
+          game: true,
+          participants: { include: { streamer: true } },
+        },
+      });
+      if (!row) return null;
+      return flattenScheduleParticipants(row as ScheduleWithRelations);
+    },
+    [
+      'schedule-detail',
+      scheduleId,
+      process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-schedule-detail',
+    ],
     { revalidate: 60, tags: ['calendar'] },
   )();
 }
