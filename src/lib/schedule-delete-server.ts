@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/prisma';
 import { revalidatePath, updateTag } from 'next/cache';
 import { getRevalidationPaths } from '@/constants/revalidation-paths';
 import { ValidationError } from '@/lib/error-handling';
@@ -11,21 +10,21 @@ export async function runDeleteSchedule(id: string): Promise<void> {
   }
 
   const base = getScheduleServerBaseUrl();
-  if (base) {
-    const res = await fetch(`${base}/schedules/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-    });
-    if (res.status === 404) {
-      throw new ValidationError('일정을 찾을 수 없습니다.');
-    }
-    if (!res.ok) {
-      const j = (await res.json().catch(() => ({}))) as { message?: string };
-      throw new ValidationError(
-        typeof j.message === 'string' ? j.message : '일정 삭제에 실패했습니다.',
-      );
-    }
-  } else {
-    await prisma.schedule.delete({ where: { id } });
+  if (!base) {
+    throw new ValidationError('MAP_DYOA_SERVER_URL이 설정되지 않았습니다.');
+  }
+
+  const res = await fetch(`${base}/schedules/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+  if (res.status === 404) {
+    throw new ValidationError('일정을 찾을 수 없습니다.');
+  }
+  if (!res.ok) {
+    const j = (await res.json().catch(() => ({}))) as { message?: string };
+    throw new ValidationError(
+      typeof j.message === 'string' ? j.message : '일정 삭제에 실패했습니다.',
+    );
   }
 
   const paths = getRevalidationPaths('schedule');

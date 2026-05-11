@@ -18,6 +18,17 @@ import {
   fetchStreamerDetailFromServer,
 } from './map-dyoa-server-streamers';
 import {
+  fetchAllGamesFromServer,
+  fetchFeedbacksFromServer,
+} from './map-dyoa-server-games-feedback';
+import {
+  fetchAdminClipsFromServer,
+  fetchAdminSchedulesFromServer,
+  fetchAdminStatsFromServer,
+  fetchHoi4LeaderboardFromServer,
+  fetchRecentActivityFromServer,
+} from './map-dyoa-server-admin';
+import {
   defaultScheduleFetchWindow,
   fetchScheduleByIdFromServer,
   fetchSchedulesFromServer,
@@ -100,12 +111,15 @@ export const getMemberStreamers = unstable_cache(
  */
 export const getAllGames = unstable_cache(
   async () => {
+    if (isScheduleServerEnabled()) {
+      return fetchAllGamesFromServer();
+    }
     return prisma.game.findMany({
       orderBy: { title: 'asc' },
       include: { _count: { select: { schedules: true } } },
     });
   },
-  ['games-all'],
+  ['games-all', process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-games-all'],
   { revalidate: 120, tags: ['games', 'calendar'] },
 );
 
@@ -388,6 +402,9 @@ export function getStreamerDetail(streamerId: string) {
  */
 export const getAdminStats = unstable_cache(
   async () => {
+    if (isScheduleServerEnabled()) {
+      return fetchAdminStatsFromServer();
+    }
     const [scheduleCount, clipCount, streamerCount, pendingFeedbackCount] = await Promise.all([
       prisma.schedule.count(),
       prisma.clip.count(),
@@ -409,6 +426,9 @@ export const getAdminStats = unstable_cache(
  */
 export const getHoi4Leaderboard = unstable_cache(
   async () => {
+    if (isScheduleServerEnabled()) {
+      return fetchHoi4LeaderboardFromServer();
+    }
     const rows = await prisma.scheduleParticipant.findMany({
       where: { isGuest: false, schedule: { game: { isHoi4: true }, isNaeJeon: true } },
       select: {
@@ -485,6 +505,9 @@ export const getHoi4Leaderboard = unstable_cache(
 
 export const getFeedbacks = unstable_cache(
   async () => {
+    if (isScheduleServerEnabled()) {
+      return fetchFeedbacksFromServer();
+    }
     return prisma.feedback.findMany({
       select: {
         id: true,
@@ -497,12 +520,15 @@ export const getFeedbacks = unstable_cache(
       orderBy: { createdAt: 'desc' },
     });
   },
-  ['feedbacks-all'],
+  ['feedbacks-all', process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-feedbacks-all'],
   { revalidate: 30, tags: ['admin'] },
 );
 
 export const getAdminClips = unstable_cache(
   async () => {
+    if (isScheduleServerEnabled()) {
+      return fetchAdminClipsFromServer();
+    }
     return prisma.clip.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
@@ -515,6 +541,9 @@ export const getAdminClips = unstable_cache(
 );
 
 export async function getAdminSchedules(from?: string, to?: string) {
+  if (isScheduleServerEnabled()) {
+    return fetchAdminSchedulesFromServer(from, to);
+  }
   const where: Prisma.ScheduleWhereInput = {};
   if (from || to) {
     where.startTime = {
@@ -535,6 +564,9 @@ export async function getAdminSchedules(from?: string, to?: string) {
 
 export const getRecentActivity = unstable_cache(
   async () => {
+    if (isScheduleServerEnabled()) {
+      return fetchRecentActivityFromServer();
+    }
     const [schedules, clips] = await Promise.all([
       prisma.schedule.findMany({
         orderBy: { createdAt: 'desc' },

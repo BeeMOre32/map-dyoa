@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getScheduleServerBaseUrl } from '@/lib/map-dyoa-server-schedules';
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
@@ -21,6 +22,19 @@ export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get('url');
   if (!url) {
     return NextResponse.json({ error: 'url required' }, { status: 400 });
+  }
+
+  const base = getScheduleServerBaseUrl();
+  if (base) {
+    try {
+      const res = await fetch(`${base}/chzzk/live-meta?url=${encodeURIComponent(url)}`, {
+        cache: 'no-store',
+      });
+      const json = await res.json();
+      return NextResponse.json(json, { status: res.status });
+    } catch {
+      // 서버 호출 실패 시 로컬 폴백
+    }
   }
 
   const channelId = extractChannelId(url);

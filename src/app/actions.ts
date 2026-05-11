@@ -559,6 +559,32 @@ export async function createGameAction(data: {
     await requireAdmin();
     if (!data.title?.trim()) throw new ValidationError('게임 제목이 필요합니다.');
 
+    const base = getScheduleServerBaseUrl();
+    if (base) {
+      const res = await fetch(`${base}/games`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: data.title.trim(),
+          isHoi4: data.isHoi4 ?? false,
+        }),
+      });
+      const json = (await res.json()) as { error?: string; message?: string };
+      if (!res.ok) {
+        return {
+          success: false,
+          error: json.message ?? '게임 생성에 실패했습니다.',
+          errorCode: json.error ?? 'API_ERROR',
+        };
+      }
+      const paths = getRevalidationPaths('game');
+      await Promise.all([
+        ...paths.map((path: string) => revalidatePath(path)),
+        updateTag('calendar'),
+      ]);
+      return { success: true, data: null };
+    }
+
     await prisma.game.create({
       data: { title: data.title.trim(), isHoi4: data.isHoi4 ?? false },
     });
@@ -589,6 +615,35 @@ export async function updateGameAction(
     if (!id?.trim()) throw new ValidationError('유효한 게임 ID가 필요합니다.');
     if (!data.title?.trim()) throw new ValidationError('게임 제목이 필요합니다.');
 
+    const base = getScheduleServerBaseUrl();
+    if (base) {
+      const res = await fetch(`${base}/games/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: data.title.trim(),
+          isHoi4: data.isHoi4 ?? false,
+        }),
+      });
+      const json = (await res.json()) as { error?: string; message?: string };
+      if (res.status === 404) {
+        return { success: false, error: '게임을 찾을 수 없습니다.', errorCode: 'NOT_FOUND' };
+      }
+      if (!res.ok) {
+        return {
+          success: false,
+          error: json.message ?? '게임 수정에 실패했습니다.',
+          errorCode: json.error ?? 'API_ERROR',
+        };
+      }
+      const paths = getRevalidationPaths('game');
+      await Promise.all([
+        ...paths.map((path: string) => revalidatePath(path)),
+        updateTag('calendar'),
+      ]);
+      return { success: true, data: null };
+    }
+
     await prisma.game.update({
       where: { id },
       data: { title: data.title.trim(), isHoi4: data.isHoi4 ?? false },
@@ -615,6 +670,30 @@ export async function deleteGameAction(id: string): Promise<ActionResult> {
   try {
     await requireAdmin();
     if (!id?.trim()) throw new ValidationError('유효한 게임 ID가 필요합니다.');
+
+    const base = getScheduleServerBaseUrl();
+    if (base) {
+      const res = await fetch(`${base}/games/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      });
+      const json = (await res.json()) as { error?: string; message?: string };
+      if (res.status === 404) {
+        return { success: false, error: '게임을 찾을 수 없습니다.', errorCode: 'NOT_FOUND' };
+      }
+      if (!res.ok) {
+        return {
+          success: false,
+          error: json.message ?? '게임 삭제에 실패했습니다.',
+          errorCode: json.error ?? 'API_ERROR',
+        };
+      }
+      const paths = getRevalidationPaths('game');
+      await Promise.all([
+        ...paths.map((path: string) => revalidatePath(path)),
+        updateTag('calendar'),
+      ]);
+      return { success: true, data: null };
+    }
 
     await prisma.game.delete({ where: { id } });
 
@@ -643,6 +722,34 @@ export async function createFeedbackAction(formData: {
 }): Promise<ActionResult> {
   try {
     const validated = feedbackSchema.parse(formData);
+
+    const base = getScheduleServerBaseUrl();
+    if (base) {
+      const res = await fetch(`${base}/feedbacks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          streamerId: formData.streamerId || undefined,
+          streamerName: formData.streamerName || undefined,
+          category: validated.category.trim(),
+          content: validated.content.trim(),
+        }),
+      });
+      const json = (await res.json()) as { error?: string; message?: string };
+      if (!res.ok) {
+        return {
+          success: false,
+          error: json.message ?? '피드백 등록에 실패했습니다.',
+          errorCode: json.error ?? 'API_ERROR',
+        };
+      }
+      const paths = getRevalidationPaths('admin');
+      await Promise.all([
+        ...paths.map((path: string) => revalidatePath(path)),
+        updateTag('admin'),
+      ]);
+      return { success: true, data: null };
+    }
 
     await prisma.feedback.create({
       data: {
@@ -673,6 +780,29 @@ export async function rejectFeedbackAction(
 ): Promise<ActionResult> {
   try {
     await requireAdmin();
+    const base = getScheduleServerBaseUrl();
+    if (base) {
+      const res = await fetch(`${base}/feedbacks/${encodeURIComponent(feedbackId)}/reject`, {
+        method: 'PATCH',
+      });
+      const json = (await res.json()) as { error?: string; message?: string };
+      if (res.status === 404) {
+        return { success: false, error: '피드백을 찾을 수 없습니다.', errorCode: 'NOT_FOUND' };
+      }
+      if (!res.ok) {
+        return {
+          success: false,
+          error: json.message ?? '피드백 반려에 실패했습니다.',
+          errorCode: json.error ?? 'API_ERROR',
+        };
+      }
+      const paths = getRevalidationPaths('admin');
+      await Promise.all([
+        ...paths.map((path: string) => revalidatePath(path)),
+        updateTag('admin'),
+      ]);
+      return { success: true, data: null };
+    }
     await prisma.feedback.update({
       where: { id: feedbackId },
       data: { status: 'REJECTED' },
@@ -697,6 +827,29 @@ export async function resolveFeedbackAction(
 ): Promise<ActionResult> {
   try {
     await requireAdmin();
+    const base = getScheduleServerBaseUrl();
+    if (base) {
+      const res = await fetch(`${base}/feedbacks/${encodeURIComponent(feedbackId)}/resolve`, {
+        method: 'PATCH',
+      });
+      const json = (await res.json()) as { error?: string; message?: string };
+      if (res.status === 404) {
+        return { success: false, error: '피드백을 찾을 수 없습니다.', errorCode: 'NOT_FOUND' };
+      }
+      if (!res.ok) {
+        return {
+          success: false,
+          error: json.message ?? '피드백 처리에 실패했습니다.',
+          errorCode: json.error ?? 'API_ERROR',
+        };
+      }
+      const paths = getRevalidationPaths('admin');
+      await Promise.all([
+        ...paths.map((path: string) => revalidatePath(path)),
+        updateTag('admin'),
+      ]);
+      return { success: true, data: null };
+    }
     await prisma.feedback.update({
       where: { id: feedbackId },
       data: { status: 'RESOLVED' },

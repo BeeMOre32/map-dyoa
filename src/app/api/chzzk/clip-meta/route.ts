@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractChzzkClipId } from '@/lib/chzzk';
+import { getScheduleServerBaseUrl } from '@/lib/map-dyoa-server-schedules';
 
 function findCoverUrl(obj: unknown): string | null {
   if (!obj || typeof obj !== 'object') return null;
@@ -31,6 +32,19 @@ export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get('url');
   if (!url) {
     return NextResponse.json({ error: 'url 파라미터가 필요합니다.' }, { status: 400 });
+  }
+
+  const base = getScheduleServerBaseUrl();
+  if (base) {
+    try {
+      const res = await fetch(`${base}/chzzk/clip-meta?url=${encodeURIComponent(url)}`, {
+        cache: 'no-store',
+      });
+      const json = await res.json();
+      return NextResponse.json(json, { status: res.status });
+    } catch {
+      // 서버 호출 실패 시 로컬 폴백
+    }
   }
 
   const clipId = extractChzzkClipId(url);
