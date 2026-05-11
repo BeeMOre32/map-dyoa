@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendPushNotification } from '@/lib/web-push';
 
+function getStatusCodeFromError(error: unknown): number | null {
+  if (typeof error !== 'object' || error === null) return null;
+
+  const record = error as Record<string, unknown>;
+  return typeof record.statusCode === 'number' ? record.statusCode : null;
+}
+
 function hasCronAuth(req: NextRequest) {
   const secret = process.env.REMINDER_CRON_SECRET;
   if (!secret) return process.env.NODE_ENV !== 'production';
@@ -77,13 +84,7 @@ export async function POST(req: NextRequest) {
         });
         sent += 1;
       } catch (error: unknown) {
-        const statusCode =
-          typeof error === 'object' &&
-          error !== null &&
-          'statusCode' in error &&
-          typeof (error as { statusCode?: unknown }).statusCode === 'number'
-            ? (error as { statusCode: number }).statusCode
-            : null;
+        const statusCode = getStatusCodeFromError(error);
 
         if (statusCode === 404 || statusCode === 410) {
           await prisma.pushSubscription.delete({ where: { id: sub.id } });
