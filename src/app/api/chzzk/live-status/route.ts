@@ -49,6 +49,25 @@ const fetchLiveStreamerIds = unstable_cache(
 );
 
 export async function GET() {
+  const base = process.env.MAP_DYOA_SERVER_URL?.trim()?.replace(/\/$/, '');
+  if (base) {
+    try {
+      const res = await fetch(`${base}/chzzk/live-status`, { cache: 'no-store' });
+      if (res.ok) {
+        const data = (await res.json()) as { liveStreamerIds?: unknown[] };
+        const liveStreamerIds = Array.isArray(data.liveStreamerIds)
+          ? data.liveStreamerIds.map(String)
+          : [];
+        return NextResponse.json(
+          { liveStreamerIds },
+          { headers: { 'Cache-Control': 'no-store, max-age=0' } },
+        );
+      }
+    } catch {
+      // 백엔드 서버 호출 실패 시 로컬 Prisma 경로로 폴백
+    }
+  }
+
   const liveStreamerIds = await fetchLiveStreamerIds();
   return NextResponse.json(
     { liveStreamerIds },

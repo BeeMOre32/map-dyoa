@@ -18,7 +18,8 @@ export default async function ClipsPage({
     ? (params.sort as ClipSortOption)
     : 'newest';
 
-  const [{ clips, total, totalPages }, streamers, { schedules }, monthOptions] = await Promise.all([
+  const calendarData = await getCalendarData();
+  const [{ clips, total, totalPages }, streamers, monthOptions] = await Promise.all([
     getClipsPaginated({
       page,
       pageSize: PAGE_SIZE,
@@ -26,11 +27,12 @@ export default async function ClipsPage({
       month: month || undefined,
       q: q || undefined,
       sort,
+      schedulesForClipLinks: calendarData.schedules,
     }),
     getAllStreamers(),
-    getCalendarData(),
     getClipMonths(),
   ]);
+  const { schedules } = calendarData;
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-950 transition-colors">

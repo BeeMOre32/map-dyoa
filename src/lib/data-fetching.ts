@@ -7,7 +7,16 @@ import { prisma } from '@/lib/prisma';
 import { unstable_cache } from 'next/cache';
 import { flattenScheduleParticipants, flattenSchedules } from './schedule-formatters';
 import type { Streamer, Prisma } from '@prisma/client';
-import type { ScheduleWithRelations } from './schedule-formatters';
+import type { FlattenedSchedule, ScheduleWithRelations } from './schedule-formatters';
+import {
+  fetchClipsPaginatedFromServer,
+  fetchScheduleClipsFromServer,
+} from './map-dyoa-server-clips';
+import {
+  fetchAllStreamersFromServer,
+  fetchStreamerByIdFromServer,
+  fetchStreamerDetailFromServer,
+} from './map-dyoa-server-streamers';
 import {
   defaultScheduleFetchWindow,
   fetchScheduleByIdFromServer,
@@ -61,22 +70,28 @@ export const getCalendarData = unstable_cache(
  */
 export const getAllStreamers = unstable_cache(
   async (): Promise<Streamer[]> => {
+    if (isScheduleServerEnabled()) {
+      return fetchAllStreamersFromServer(false);
+    }
     return prisma.streamer.findMany({
       orderBy: { name: 'asc' },
     });
   },
-  ['streamers-all'],
+  ['streamers-all', process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-streamers-all'],
   { revalidate: 120, tags: ['streamers'] },
 );
 
 export const getMemberStreamers = unstable_cache(
   async (): Promise<Streamer[]> => {
+    if (isScheduleServerEnabled()) {
+      return fetchAllStreamersFromServer(true);
+    }
     return prisma.streamer.findMany({
       where: { isGuest: false },
       orderBy: { name: 'asc' },
     });
   },
-  ['streamers-members'],
+  ['streamers-members', process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-streamers-members'],
   { revalidate: 120, tags: ['streamers'] },
 );
 
@@ -179,6 +194,8 @@ export async function getClipsPaginated({
   month,
   q,
   sort = 'newest',
+  /** 서버 `clipsOnly=1`일 때 연결 방송 표시용 (캘린더 일정 목록) */
+  schedulesForClipLinks,
 }: {
   page?: number;
   pageSize?: number;
@@ -186,7 +203,21 @@ export async function getClipsPaginated({
   month?: string;
   q?: string;
   sort?: ClipSortOption;
+  schedulesForClipLinks?: FlattenedSchedule[];
 }) {
+  if (isScheduleServerEnabled()) {
+    return fetchClipsPaginatedFromServer({
+      page,
+      pageSize,
+      streamerId,
+      month,
+      q,
+      sort,
+      clipsOnly: true,
+      schedulesForClipLinks,
+    });
+  }
+
   const conditions: Prisma.ClipWhereInput[] = [];
 
   if (streamerId) {
@@ -259,22 +290,43 @@ export function getScheduleDetail(scheduleId: string) {
   )();
 }
 
+/**
+ * 일정에 연결된 클립 목록. `MAP_DYOA_SERVER_URL`이 있으면 외부 API, 없으면 Prisma.
+ */
 export function getScheduleClips(scheduleId: string) {
   return unstable_cache(
-    async () => prisma.clip.findMany({
-      where: { scheduleId },
-      include: { participants: { include: { streamer: true } } },
-      orderBy: { createdAt: 'asc' },
-    }),
-    ['schedule-clips', scheduleId],
+    async () => {
+      if (isScheduleServerEnabled()) {
+        return fetchScheduleClipsFromServer(scheduleId);
+      }
+      return prisma.clip.findMany({
+        where: { scheduleId },
+        include: { participants: { include: { streamer: true } } },
+        orderBy: { createdAt: 'asc' },
+      });
+    },
+    [
+      'schedule-clips',
+      scheduleId,
+      process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-schedule-clips',
+    ],
     { revalidate: 60, tags: ['clips'] },
   )();
 }
 
 export function getStreamerById(streamerId: string) {
   return unstable_cache(
-    async () => prisma.streamer.findUnique({ where: { id: streamerId } }),
-    ['streamer-by-id', streamerId],
+    async () => {
+      if (isScheduleServerEnabled()) {
+        return fetchStreamerByIdFromServer(streamerId);
+      }
+      return prisma.streamer.findUnique({ where: { id: streamerId } });
+    },
+    [
+      'streamer-by-id',
+      streamerId,
+      process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-streamer-by-id',
+    ],
     { revalidate: 120, tags: ['streamers'] },
   )();
 }
@@ -282,6 +334,9 @@ export function getStreamerById(streamerId: string) {
 export function getStreamerDetail(streamerId: string) {
   return unstable_cache(
     async () => {
+      if (isScheduleServerEnabled()) {
+        return fetchStreamerDetailFromServer(streamerId);
+      }
       const [schedules, linkedClips, scheduleCount, clipCount] = await Promise.all([
         prisma.schedule.findMany({
           where: { participants: { some: { streamerId, isGuest: false } } },
@@ -319,7 +374,11 @@ export function getStreamerDetail(streamerId: string) {
       ]);
       return { schedules, linkedClips, scheduleCount, clipCount };
     },
-    ['streamer-detail', streamerId],
+    [
+      'streamer-detail',
+      streamerId,
+      process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-streamer-detail',
+    ],
     { revalidate: 120, tags: ['streamers', 'calendar', 'clips'] },
   )();
 }
