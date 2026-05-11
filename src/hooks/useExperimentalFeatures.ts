@@ -16,9 +16,6 @@ export const EXPERIMENTAL_FEATURE_ANALYTICS_KEY: Record<keyof ExperimentalFlags,
   showHoi4Tab: 'show_hoi4_tab',
 };
 
-/** 실험 탭의 웹 푸시 알림 (플래그 JSON과 별도 저장) */
-export const WEB_PUSH_REMINDER_ANALYTICS_FEATURE = 'web_push_reminder';
-
 const DEFAULTS: ExperimentalFlags = {
   showHoi4Tab: false,
   newScheduleModal: false,

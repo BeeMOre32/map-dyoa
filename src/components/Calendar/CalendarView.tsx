@@ -47,7 +47,6 @@ import FilterBar from '@/components/Calendar/FilterBar';
 import CalendarWelcomeBanner from '@/components/Calendar/CalendarWelcomeBanner';
 import { useExperimentalFeatures } from '@/hooks/useExperimentalFeatures';
 import { useToast } from '@/components/Common/Toaster';
-import { getReminderEnabled, REMINDER_SETTINGS_KEY } from '@/lib/reminder-settings';
 
 import type { Streamer, Game } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
@@ -92,15 +91,11 @@ export default function CalendarView({
     new Set(),
   );
   const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set());
-  const [isReminderEnabled, setIsReminderEnabled] = useState(() =>
-    getReminderEnabled(),
-  );
   const [isMobileFabOpen, setIsMobileFabOpen] = useState(false);
   const { liveIds: liveStreamerIds } = useLiveStatus();
   const [hideEnded] = useHideEndedStreams();
   const { flags } = useExperimentalFeatures();
   const todayMobileRef = useRef<HTMLDivElement>(null);
-  const notifiedScheduleIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     try {
@@ -271,64 +266,6 @@ export default function CalendarView({
     setCurrentDate(new Date());
     setIsMobileFabOpen(false);
   }, []);
-
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === REMINDER_SETTINGS_KEY) {
-        setIsReminderEnabled(getReminderEnabled());
-      }
-    };
-    const onCustom = () => setIsReminderEnabled(getReminderEnabled());
-
-    window.addEventListener('storage', onStorage);
-    window.addEventListener('reminder-settings-changed', onCustom);
-    return () => {
-      window.removeEventListener('storage', onStorage);
-      window.removeEventListener('reminder-settings-changed', onCustom);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isReminderEnabled) return;
-    if (typeof window === 'undefined' || !('Notification' in window)) return;
-    if (Notification.permission !== 'granted') return;
-
-    const timer = window.setInterval(() => {
-      const now = Date.now();
-      const tenMinutesLater = now + 10 * 60 * 1000;
-
-      optimisticSchedules.forEach((schedule) => {
-        const startMs = new Date(schedule.startTime).getTime();
-        if (schedule.isLiveEnded) return;
-        if (startMs <= now || startMs > tenMinutesLater) return;
-        if (notifiedScheduleIdsRef.current.has(schedule.id)) return;
-
-        const startText = format(new Date(schedule.startTime), 'HH:mm');
-        const notification = new Notification('놓치기 알림', {
-          body: `${schedule.title} · ${startText} 시작`,
-          tag: `schedule-${schedule.id}`,
-        });
-        toast.success(`곧 시작: ${schedule.title} (${startText})`, {
-          actionLabel: '열기',
-          onAction: () =>
-            router.push(`/calendar/schedule/${schedule.id}`, { scroll: false }),
-        });
-        notification.onclick = () => {
-          window.focus();
-          router.push(`/calendar/schedule/${schedule.id}`, { scroll: false });
-        };
-
-        notifiedScheduleIdsRef.current.add(schedule.id);
-      });
-    }, 30 * 1000);
-
-    return () => window.clearInterval(timer);
-  }, [
-    isReminderEnabled,
-    optimisticSchedules,
-    router,
-    toast,
-  ]);
 
   if (!mounted) {
     return <div className="flex-1 bg-slate-50/50 dark:bg-slate-950" />;
