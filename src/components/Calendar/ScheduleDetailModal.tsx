@@ -151,7 +151,7 @@ export default function ScheduleDetailView({
       className="fixed inset-0 z-70 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md"
       onClick={handleClose}
     >
-      <div className="flex sm:flex-row sm:items-start sm:gap-3 w-full sm:w-auto">
+      <div className="flex w-full sm:w-auto sm:flex-row sm:items-stretch sm:gap-3">
         {/* 메인 모달 */}
         <motion.div
           variants={smoothModalVariants}
@@ -197,7 +197,7 @@ export default function ScheduleDetailView({
               initial="hidden"
               animate="visible"
               exit="hidden"
-              className="hidden sm:flex flex-col bg-white dark:bg-slate-800 w-72 rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-700 overflow-hidden max-h-[90dvh]"
+              className="hidden max-h-[90dvh] min-h-0 w-72 flex-col overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-900/50 sm:flex"
               onClick={(e) => e.stopPropagation()}
             >
               <SidePanel {...sidePanelProps} />
@@ -230,21 +230,23 @@ export default function ScheduleDetailView({
               onClick={() => setSheetOpen(false)}
             />
             <motion.div
-              className="sm:hidden fixed inset-x-0 bottom-0 z-85 bg-white dark:bg-slate-800 rounded-t-3xl shadow-2xl border-t border-slate-100 dark:border-slate-700 flex flex-col max-h-[75dvh]"
+              className="fixed inset-x-0 bottom-0 z-85 flex max-h-[75dvh] min-h-0 flex-col rounded-t-3xl border-t border-slate-100 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800 sm:hidden"
               variants={bottomSheetVariants}
               initial="hidden"
               animate="visible"
               exit="hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-center pt-3 pb-1 shrink-0">
-                <div className="w-10 h-1 rounded-full bg-slate-200 dark:bg-slate-700" />
+              <div className="flex shrink-0 justify-center pb-1 pt-3">
+                <div className="h-1 w-10 rounded-full bg-slate-200 dark:bg-slate-700" />
               </div>
-              <SidePanel
-                {...sidePanelProps}
-                onClose={() => setSheetOpen(false)}
-                defaultTab={sheetTab}
-              />
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                <SidePanel
+                  {...sidePanelProps}
+                  onClose={() => setSheetOpen(false)}
+                  defaultTab={sheetTab}
+                />
+              </div>
             </motion.div>
           </>
         )}

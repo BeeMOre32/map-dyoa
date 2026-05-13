@@ -89,7 +89,8 @@ function ClipPanel({
   isDark: boolean;
 }) {
   return (
-    <AnimatePresence mode="wait">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <AnimatePresence mode="wait">
       {selectedClip ? (
         <motion.div
           key="detail"
@@ -219,6 +220,7 @@ function ClipPanel({
         </motion.div>
       )}
     </AnimatePresence>
+    </div>
   );
 }
 
@@ -248,7 +250,7 @@ export function SidePanel({
     }`;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="shrink-0 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/30">
         <div className="flex items-center px-2 pt-2 gap-1">
           <button
@@ -284,22 +286,24 @@ export function SidePanel({
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={tab}
-          className="flex-1 min-h-0 flex flex-col"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.12 }}
-        >
-          {tab === 'clips' ? (
-            <ClipPanel clips={clips} selectedClip={selectedClip} onSelect={setSelectedClip} isDark={isDark} />
-          ) : (
-            <Hoi4Panel participants={participants} isDark={isDark} />
-          )}
-        </motion.div>
-      </AnimatePresence>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={tab}
+            className="flex min-h-0 flex-1 flex-col overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.12 }}
+          >
+            {tab === 'clips' ? (
+              <ClipPanel clips={clips} selectedClip={selectedClip} onSelect={setSelectedClip} isDark={isDark} />
+            ) : (
+              <Hoi4Panel participants={participants} isDark={isDark} />
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
