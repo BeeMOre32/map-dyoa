@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
-import { prisma } from '@/lib/prisma';
+import { getPrismaForDomain } from '@/lib/prisma';
 import { fetchWithBackoff } from '@/lib/map-dyoa-server-http-utils';
+import { fetchAllStreamersFromServer } from '@/lib/map-dyoa-server-streamers';
+import { isScheduleServerEnabled } from '@/lib/map-dyoa-server-schedules';
 
 export const revalidate = 0;
 
@@ -16,10 +18,14 @@ function extractChannelId(url: string): string | null {
 
 const fetchLiveStreamerIds = unstable_cache(
   async (): Promise<string[]> => {
-    const streamers = await prisma.streamer.findMany({
-      select: { id: true, chzzkUrl: true },
-      where: { chzzkUrl: { not: null }, isGuest: false },
-    });
+    const streamers = isScheduleServerEnabled()
+      ? (await fetchAllStreamersFromServer(false))
+          .filter((s) => s.chzzkUrl && !s.isGuest)
+          .map((s) => ({ id: s.id, chzzkUrl: s.chzzkUrl! }))
+      : await getPrismaForDomain().streamer.findMany({
+          select: { id: true, chzzkUrl: true },
+          where: { chzzkUrl: { not: null }, isGuest: false },
+        });
 
     const results = await Promise.all(
       streamers.map(async (s) => {
@@ -45,7 +51,7 @@ const fetchLiveStreamerIds = unstable_cache(
 
     return results.filter((id): id is string => id !== null);
   },
-  ['chzzk-live-status'],
+  ['chzzk-live-status', process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma'],
   { revalidate: 60 },
 );
 

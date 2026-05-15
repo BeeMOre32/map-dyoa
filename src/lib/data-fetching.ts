@@ -1,9 +1,9 @@
 /**
  * 데이터 페칭 캐싱
- * Next.js 캐싱을 활용한 DB 쿼리 최적화
+ * MAP_DYOA_SERVER_URL 있으면 map-dyoa-server만, 없으면 getPrismaForDomain() (로컬 전용).
  */
 
-import { prisma } from '@/lib/prisma';
+import { getPrismaForDomain } from '@/lib/prisma';
 import { unstable_cache } from 'next/cache';
 import { flattenScheduleParticipants, flattenSchedules } from './schedule-formatters';
 import type { Streamer, Prisma } from '@prisma/client';
@@ -48,7 +48,7 @@ export const getCalendarData = unstable_cache(
           const { from, to } = defaultScheduleFetchWindow();
           return fetchSchedulesFromServer(from, to);
         }
-        const rows = await prisma.schedule.findMany({
+        const rows = await getPrismaForDomain().schedule.findMany({
           include: {
             game: true,
             participants: {
@@ -59,12 +59,16 @@ export const getCalendarData = unstable_cache(
         });
         return flattenSchedules(rows as ScheduleWithRelations[]);
       })(),
-      prisma.streamer.findMany({
-        orderBy: { name: 'asc' },
-      }),
-      prisma.game.findMany({
-        orderBy: { title: 'asc' },
-      }),
+      isScheduleServerEnabled()
+        ? fetchAllStreamersFromServer(false)
+        : getPrismaForDomain().streamer.findMany({
+            orderBy: { name: 'asc' },
+          }),
+      isScheduleServerEnabled()
+        ? fetchAllGamesFromServer()
+        : getPrismaForDomain().game.findMany({
+            orderBy: { title: 'asc' },
+          }),
     ]);
 
     return {
@@ -85,7 +89,7 @@ export const getAllStreamers = unstable_cache(
     if (isScheduleServerEnabled()) {
       return fetchAllStreamersFromServer(false);
     }
-    return prisma.streamer.findMany({
+    return getPrismaForDomain().streamer.findMany({
       orderBy: { name: 'asc' },
     });
   },
@@ -98,7 +102,7 @@ export const getMemberStreamers = unstable_cache(
     if (isScheduleServerEnabled()) {
       return fetchAllStreamersFromServer(true);
     }
-    return prisma.streamer.findMany({
+    return getPrismaForDomain().streamer.findMany({
       where: { isGuest: false },
       orderBy: { name: 'asc' },
     });
@@ -115,7 +119,7 @@ export const getAllGames = unstable_cache(
     if (isScheduleServerEnabled()) {
       return fetchAllGamesFromServer();
     }
-    return prisma.game.findMany({
+    return getPrismaForDomain().game.findMany({
       orderBy: { title: 'asc' },
       include: { _count: { select: { schedules: true } } },
     });
@@ -146,7 +150,16 @@ export async function getSchedulesByDateRange(startDate: Date, endDate: Date) {
  */
 export const getAllClips = unstable_cache(
   async () => {
-    return prisma.clip.findMany({
+    if (isScheduleServerEnabled()) {
+      const { clips } = await fetchClipsPaginatedFromServer({
+        page: 1,
+        pageSize: 500,
+        sort: 'newest',
+        clipsOnly: false,
+      });
+      return clips;
+    }
+    return getPrismaForDomain().clip.findMany({
       include: {
         participants: { include: { streamer: true } },
         schedule: {
@@ -160,7 +173,7 @@ export const getAllClips = unstable_cache(
       orderBy: { createdAt: 'desc' },
     });
   },
-  ['clips-all'],
+  ['clips-all', process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-clips-all'],
   { revalidate: 60, tags: ['clips'] },
 );
 
@@ -173,7 +186,7 @@ export const getClipMonths = unstable_cache(
     if (isScheduleServerEnabled()) {
       return fetchClipMonthsFromServer();
     }
-    const clips = await prisma.clip.findMany({
+    const clips = await getPrismaForDomain().clip.findMany({
       select: { clipDate: true, createdAt: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -272,14 +285,14 @@ export async function getClipsPaginated({
   const where: Prisma.ClipWhereInput = conditions.length > 0 ? { AND: conditions } : {};
 
   const [clips, total] = await Promise.all([
-    prisma.clip.findMany({
+    getPrismaForDomain().clip.findMany({
       where,
       include: CLIP_INCLUDE,
       orderBy: CLIP_SORT_MAP[sort],
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
-    prisma.clip.count({ where }),
+    getPrismaForDomain().clip.count({ where }),
   ]);
 
   return { clips, total, totalPages: Math.ceil(total / pageSize) };
@@ -295,7 +308,7 @@ export function getScheduleDetail(scheduleId: string) {
       if (isScheduleServerEnabled()) {
         return fetchScheduleByIdFromServer(scheduleId);
       }
-      const row = await prisma.schedule.findUnique({
+      const row = await getPrismaForDomain().schedule.findUnique({
         where: { id: scheduleId },
         include: {
           game: true,
@@ -323,7 +336,7 @@ export function getScheduleClips(scheduleId: string) {
       if (isScheduleServerEnabled()) {
         return fetchScheduleClipsFromServer(scheduleId);
       }
-      return prisma.clip.findMany({
+      return getPrismaForDomain().clip.findMany({
         where: { scheduleId },
         include: { participants: { include: { streamer: true } } },
         orderBy: { createdAt: 'asc' },
@@ -344,7 +357,7 @@ export function getStreamerById(streamerId: string) {
       if (isScheduleServerEnabled()) {
         return fetchStreamerByIdFromServer(streamerId);
       }
-      return prisma.streamer.findUnique({ where: { id: streamerId } });
+      return getPrismaForDomain().streamer.findUnique({ where: { id: streamerId } });
     },
     [
       'streamer-by-id',
@@ -362,7 +375,7 @@ export function getStreamerDetail(streamerId: string) {
         return fetchStreamerDetailFromServer(streamerId);
       }
       const [schedules, linkedClips, scheduleCount, clipCount] = await Promise.all([
-        prisma.schedule.findMany({
+        getPrismaForDomain().schedule.findMany({
           where: { participants: { some: { streamerId, isGuest: false } } },
           include: {
             game: { select: { id: true, title: true, isHoi4: true } },
@@ -378,7 +391,7 @@ export function getStreamerDetail(streamerId: string) {
           orderBy: { startTime: 'desc' },
           take: 20,
         }),
-        prisma.clip.findMany({
+        getPrismaForDomain().clip.findMany({
           where: { participants: { some: { streamerId } } },
           include: {
             participants: { include: { streamer: true } },
@@ -393,8 +406,8 @@ export function getStreamerDetail(streamerId: string) {
           orderBy: { createdAt: 'desc' },
           take: 8,
         }),
-        prisma.scheduleParticipant.count({ where: { streamerId, isGuest: false } }),
-        prisma.clip.count({ where: { participants: { some: { streamerId } } } }),
+        getPrismaForDomain().scheduleParticipant.count({ where: { streamerId, isGuest: false } }),
+        getPrismaForDomain().clip.count({ where: { participants: { some: { streamerId } } } }),
       ]);
       return { schedules, linkedClips, scheduleCount, clipCount };
     },
@@ -416,14 +429,14 @@ export const getAdminStats = unstable_cache(
       return fetchAdminStatsFromServer();
     }
     const [scheduleCount, clipCount, streamerCount, pendingFeedbackCount] = await Promise.all([
-      prisma.schedule.count(),
-      prisma.clip.count(),
-      prisma.streamer.count({ where: { isGuest: false } }),
-      prisma.feedback.count({ where: { status: 'PENDING' } }),
+      getPrismaForDomain().schedule.count(),
+      getPrismaForDomain().clip.count(),
+      getPrismaForDomain().streamer.count({ where: { isGuest: false } }),
+      getPrismaForDomain().feedback.count({ where: { status: 'PENDING' } }),
     ]);
     return { scheduleCount, clipCount, streamerCount, pendingFeedbackCount };
   },
-  ['admin-stats'],
+  ['admin-stats', process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-admin-stats'],
   { revalidate: 60, tags: ['admin', 'calendar', 'clips', 'streamers'] },
 );
 
@@ -437,13 +450,9 @@ export const getAdminStats = unstable_cache(
 export const getHoi4Leaderboard = unstable_cache(
   async () => {
     if (isScheduleServerEnabled()) {
-      try {
-        return await fetchHoi4LeaderboardFromServer();
-      } catch {
-        // 서버 응답이 비정상인 경우 기존 Prisma 경로로 폴백해 빌드/프리렌더를 유지한다.
-      }
+      return fetchHoi4LeaderboardFromServer();
     }
-    const rows = await prisma.scheduleParticipant.findMany({
+    const rows = await getPrismaForDomain().scheduleParticipant.findMany({
       where: { isGuest: false, schedule: { game: { isHoi4: true }, isNaeJeon: true } },
       select: {
         scheduleId: true,
@@ -513,16 +522,38 @@ export const getHoi4Leaderboard = unstable_cache(
 
     return { leaderboard, sessions, totalSessions: sessionMap.size };
   },
-  ['hoi4-leaderboard'],
+  ['hoi4-leaderboard', process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-hoi4'],
   { revalidate: 120, tags: ['calendar'] },
 );
+
+/** 일정 AI 추출·이미지 분석용 스트리머·게임 목록 */
+export async function fetchExtractContextLists(): Promise<{
+  streamers: { id: string; name: string }[];
+  games: { id: string; title: string }[];
+}> {
+  if (isScheduleServerEnabled()) {
+    const [streamers, games] = await Promise.all([
+      fetchAllStreamersFromServer(false),
+      fetchAllGamesFromServer(),
+    ]);
+    return {
+      streamers: streamers.map((s) => ({ id: s.id, name: s.name })),
+      games: games.map((g) => ({ id: g.id, title: g.title })),
+    };
+  }
+  const [streamers, games] = await Promise.all([
+    getPrismaForDomain().streamer.findMany({ select: { id: true, name: true } }),
+    getPrismaForDomain().game.findMany({ select: { id: true, title: true } }),
+  ]);
+  return { streamers, games };
+}
 
 export const getFeedbacks = unstable_cache(
   async () => {
     if (isScheduleServerEnabled()) {
       return fetchFeedbacksFromServer();
     }
-    return prisma.feedback.findMany({
+    return getPrismaForDomain().feedback.findMany({
       select: {
         id: true,
         type: true,
@@ -544,14 +575,14 @@ export const getAdminClips = unstable_cache(
     if (isScheduleServerEnabled()) {
       return fetchAdminClipsFromServer();
     }
-    return prisma.clip.findMany({
+    return getPrismaForDomain().clip.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
         participants: { include: { streamer: { select: { id: true, name: true, colorCode: true } } } },
       },
     });
   },
-  ['admin-clips-all'],
+  ['admin-clips-all', process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-admin-clips'],
   { revalidate: 30, tags: ['clips', 'admin'] },
 );
 
@@ -566,7 +597,7 @@ export async function getAdminSchedules(from?: string, to?: string) {
       ...(to ? { lte: new Date(to + 'T23:59:59') } : {}),
     };
   }
-  return prisma.schedule.findMany({
+  return getPrismaForDomain().schedule.findMany({
     where,
     orderBy: { startTime: 'desc' },
     include: {
@@ -583,7 +614,7 @@ export const getRecentActivity = unstable_cache(
       return fetchRecentActivityFromServer();
     }
     const [schedules, clips] = await Promise.all([
-      prisma.schedule.findMany({
+      getPrismaForDomain().schedule.findMany({
         orderBy: { createdAt: 'desc' },
         take: 5,
         select: {
@@ -594,7 +625,7 @@ export const getRecentActivity = unstable_cache(
           game: { select: { title: true } },
         },
       }),
-      prisma.clip.findMany({
+      getPrismaForDomain().clip.findMany({
         orderBy: { createdAt: 'desc' },
         take: 5,
         select: {
@@ -607,6 +638,6 @@ export const getRecentActivity = unstable_cache(
     ]);
     return { schedules, clips };
   },
-  ['recent-activity'],
+  ['recent-activity', process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-recent-activity'],
   { revalidate: 60, tags: ['calendar', 'clips'] },
 );

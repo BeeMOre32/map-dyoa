@@ -4,7 +4,12 @@
 
 import type { Streamer } from '@prisma/client';
 import { fetchWithBackoff } from './map-dyoa-server-http-utils';
-import { readJsonSafely, requireServerBaseUrl } from './map-dyoa-server-fetch';
+import {
+  type ApiJson,
+  readApiJson,
+  readJsonSafely,
+  requireServerBaseUrl,
+} from './map-dyoa-server-fetch';
 
 export function hydrateStreamerFromApi(raw: Record<string, unknown>): Streamer {
   return {
@@ -184,4 +189,83 @@ export async function fetchStreamerDetailFromServer(
     scheduleCount: typeof data.scheduleCount === 'number' ? data.scheduleCount : 0,
     clipCount: typeof data.clipCount === 'number' ? data.clipCount : 0,
   };
+}
+
+export type StreamerMutationBody = {
+  name: string;
+  handle: string;
+  generation: number;
+  role?: string;
+  platform: string;
+  profileImg?: string;
+  colorCode: string;
+  chzzkUrl?: string;
+  bio?: string;
+  isGuest?: boolean;
+};
+
+function streamerJsonBody(body: StreamerMutationBody): Record<string, unknown> {
+  return {
+    name: body.name.trim(),
+    handle: body.handle.trim().toLowerCase(),
+    generation: body.generation,
+    role: body.role?.trim() || undefined,
+    platform: body.platform,
+    profileImg: body.profileImg?.trim() || undefined,
+    colorCode: body.colorCode,
+    chzzkUrl: body.chzzkUrl?.trim() || undefined,
+    bio: body.bio?.trim() || undefined,
+    isGuest: body.isGuest ?? false,
+  };
+}
+
+type StreamerMutationFail = { ok: false; status: number; json: ApiJson };
+
+export async function createStreamerOnServer(
+  body: StreamerMutationBody,
+): Promise<{ ok: true; id: string } | StreamerMutationFail> {
+  const base = requireServerBaseUrl();
+  const res = await fetchWithBackoff(`${base}/streamers`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(streamerJsonBody(body)),
+  });
+  const json = await readApiJson(res);
+  if (res.status === 201 && typeof json.id === 'string') {
+    return { ok: true, id: json.id };
+  }
+  return { ok: false, status: res.status, json };
+}
+
+export async function updateStreamerOnServer(
+  streamerId: string,
+  body: StreamerMutationBody,
+): Promise<{ ok: true } | StreamerMutationFail> {
+  const base = requireServerBaseUrl();
+  const res = await fetchWithBackoff(`${base}/streamers/${encodeURIComponent(streamerId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(streamerJsonBody(body)),
+  });
+  const json = await readApiJson(res);
+  if (res.ok) return { ok: true };
+  return { ok: false, status: res.status, json };
+}
+
+export async function bulkCreateStreamersOnServer(
+  streamers: StreamerMutationBody[],
+): Promise<{ ok: true; created: number } | StreamerMutationFail> {
+  const base = requireServerBaseUrl();
+  const res = await fetchWithBackoff(`${base}/streamers/bulk`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      streamers: streamers.map((s) => streamerJsonBody(s)),
+    }),
+  });
+  const json = await readApiJson(res);
+  if (res.status === 201 && typeof json.created === 'number') {
+    return { ok: true, created: json.created };
+  }
+  return { ok: false, status: res.status, json };
 }

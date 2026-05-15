@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'endpoint is required' }, { status: 400 });
     }
 
-    await prisma.pushSubscription.deleteMany({
+    await getPrisma().pushSubscription.deleteMany({
       where: { endpoint: body.endpoint },
     });
 

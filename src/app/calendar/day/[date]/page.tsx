@@ -1,11 +1,6 @@
-import { prisma } from '@/lib/prisma';
 import ScheduleModal from '@/components/Calendar/CalendarModal';
 import CalendarView from '@/components/Calendar/CalendarView';
-import {
-  flattenSchedules,
-  filterSchedulesByDate,
-} from '@/lib/schedule-formatters';
-import { getAllStreamers, getAllGames } from '@/lib/data-fetching';
+import { getAllStreamers, getAllGames, getSchedulesByDateRange } from '@/lib/data-fetching';
 import { notFound } from 'next/navigation';
 
 export default async function FullDayPage({
@@ -21,26 +16,11 @@ export default async function FullDayPage({
   if (isNaN(startKST.getTime())) return notFound();
 
   // 캐싱된 데이터와 함께 당일 일정 페칭
-  const [daySchedules, streamers, games] = await Promise.all([
-    prisma.schedule.findMany({
-      where: {
-        startTime: {
-          gte: startKST,
-          lte: endKST,
-        },
-      },
-      include: {
-        game: true,
-        participants: { include: { streamer: true } },
-      },
-      orderBy: { startTime: 'asc' },
-    }),
+  const [flattenedDaySchedules, streamers, games] = await Promise.all([
+    getSchedulesByDateRange(startKST, endKST),
     getAllStreamers(),
     getAllGames(),
   ]);
-
-  // 포맷팅 함수 사용
-  const flattenedDaySchedules = flattenSchedules(daySchedules);
 
   return (
     <>

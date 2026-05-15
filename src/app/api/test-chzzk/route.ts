@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { isScheduleServerEnabled } from '@/lib/map-dyoa-server-schedules';
+import { getPrismaForDomain } from '@/lib/prisma';
 
 function extractChannelId(chzzkUrl: string): string | null {
   try {
@@ -25,19 +26,21 @@ async function fetchLiveStatus(channelId: string) {
 }
 
 export async function GET() {
-  // 1. DB에서 chzzkUrl 있는 스트리머 조회
-  const streamers = await prisma.streamer.findMany({
+  if (process.env.NODE_ENV === 'production' || isScheduleServerEnabled()) {
+    return NextResponse.json({ error: 'Not available' }, { status: 404 });
+  }
+
+  const streamers = await getPrismaForDomain().streamer.findMany({
     select: { id: true, name: true, chzzkUrl: true },
     where: { chzzkUrl: { not: null } },
   });
 
-  const channelMap = new Map<string, string>(); // chzzkChannelId → streamer name
+  const channelMap = new Map<string, string>();
   for (const s of streamers) {
     const cid = extractChannelId(s.chzzkUrl!);
     if (cid) channelMap.set(cid, s.name);
   }
 
-  // 2. 전체 스트리머 병렬 조회
   const results = await Promise.all(
     [...channelMap.entries()].map(async ([channelId, name]) => {
       const json = await fetchLiveStatus(channelId);

@@ -1,7 +1,7 @@
 // src/app/actions.ts
 'use server';
 
-import { prisma } from '@/lib/prisma';
+import { getPrismaForDomain } from '@/lib/prisma';
 import { revalidatePath, updateTag } from 'next/cache';
 import { requireAdmin, requireAuth } from '@/lib/auth-helpers';
 import { ActionResult } from '@/types/api-response';
@@ -16,7 +16,18 @@ import {
   getRevalidationPathsMulti,
 } from '@/constants/revalidation-paths';
 import { fetchWithBackoff } from '@/lib/map-dyoa-server-http-utils';
+import {
+  createClipOnServer,
+  deleteClipOnServer,
+  updateClipOnServer,
+} from '@/lib/map-dyoa-server-clips';
+import { apiMutationMessage } from '@/lib/map-dyoa-server-fetch';
 import { getScheduleServerBaseUrl } from '@/lib/map-dyoa-server-schedules';
+import {
+  bulkCreateStreamersOnServer,
+  createStreamerOnServer,
+  updateStreamerOnServer,
+} from '@/lib/map-dyoa-server-streamers';
 import { runDeleteSchedule } from '@/lib/schedule-delete-server';
 import { submitFeedbackCore } from '@/lib/feedback-submit';
 import {
@@ -108,7 +119,7 @@ export async function createScheduleAction(data: {
       return { success: true, data: { id: json.id } };
     }
 
-    const created = await prisma.schedule.create({
+    const created = await getPrismaForDomain().schedule.create({
       data: {
         title: validated.title.trim(),
         startTime: validated.startTime,
@@ -220,8 +231,8 @@ export async function updateScheduleAction(
 
     const newStreamerIds = validated.participants.map((p) => p.id);
 
-    await prisma.$transaction([
-      prisma.schedule.update({
+    await getPrismaForDomain().$transaction([
+      getPrismaForDomain().schedule.update({
         where: { id },
         data: {
           title: validated.title.trim(),
@@ -233,11 +244,11 @@ export async function updateScheduleAction(
           isLiveEnded: validated.isLiveEnded ?? false,
         },
       }),
-      prisma.scheduleParticipant.deleteMany({
+      getPrismaForDomain().scheduleParticipant.deleteMany({
         where: { scheduleId: id, streamerId: { notIn: newStreamerIds } },
       }),
       ...validated.participants.map(({ id: streamerId, nation, result, isGuest }) =>
-        prisma.scheduleParticipant.upsert({
+        getPrismaForDomain().scheduleParticipant.upsert({
           where: { scheduleId_streamerId: { scheduleId: id, streamerId } },
           create: {
             scheduleId: id,
@@ -288,21 +299,55 @@ export async function createStreamerAction(data: {
     await requireAdmin();
 
     const validated = streamerServerSchema.parse(data);
+    const payload = {
+      name: validated.name,
+      handle: validated.handle,
+      generation: validated.generation,
+      role: validated.role,
+      platform: validated.platform,
+      profileImg: validated.profileImg,
+      colorCode: validated.colorCode,
+      chzzkUrl: validated.chzzkUrl,
+      bio: validated.bio,
+      isGuest: validated.isGuest,
+    };
 
-    await prisma.streamer.create({
-      data: {
-        name: validated.name.trim(),
-        handle: validated.handle.trim().toLowerCase(),
-        generation: validated.generation,
-        role: validated.role?.trim() || null,
-        platform: validated.platform,
-        profileImg: validated.profileImg?.trim() || null,
-        colorCode: validated.colorCode,
-        chzzkUrl: validated.chzzkUrl?.trim() || null,
-        bio: validated.bio?.trim() || null,
-        isGuest: validated.isGuest ?? false,
-      },
-    });
+    const base = getScheduleServerBaseUrl();
+    if (base) {
+      const r = await createStreamerOnServer(payload);
+      if (!r.ok) {
+        if (r.status === 409 || r.json.error === 'DUPLICATE_ENTRY') {
+          return {
+            success: false,
+            error:
+              typeof r.json.message === 'string'
+                ? r.json.message
+                : '이미 사용 중인 이름 또는 핸들입니다.',
+            errorCode: 'DUPLICATE_ENTRY',
+          };
+        }
+        return {
+          success: false,
+          error: apiMutationMessage(r.status, r.json, '스트리머 생성에 실패했습니다.'),
+          errorCode: String(r.json.error ?? 'API_ERROR'),
+        };
+      }
+    } else {
+      await getPrismaForDomain().streamer.create({
+        data: {
+          name: validated.name.trim(),
+          handle: validated.handle.trim().toLowerCase(),
+          generation: validated.generation,
+          role: validated.role?.trim() || null,
+          platform: validated.platform,
+          profileImg: validated.profileImg?.trim() || null,
+          colorCode: validated.colorCode,
+          chzzkUrl: validated.chzzkUrl?.trim() || null,
+          bio: validated.bio?.trim() || null,
+          isGuest: validated.isGuest ?? false,
+        },
+      });
+    }
 
     const paths = getRevalidationPathsMulti(['streamer', 'schedule', 'admin']);
     await Promise.all([
@@ -348,22 +393,59 @@ export async function updateStreamerAction(
     }
 
     const validated = streamerServerSchema.parse(data);
+    const payload = {
+      name: validated.name,
+      handle: validated.handle,
+      generation: validated.generation,
+      role: validated.role,
+      platform: validated.platform,
+      profileImg: validated.profileImg,
+      colorCode: validated.colorCode,
+      chzzkUrl: validated.chzzkUrl,
+      bio: validated.bio,
+      isGuest: validated.isGuest,
+    };
 
-    await prisma.streamer.update({
-      where: { id },
-      data: {
-        name: validated.name.trim(),
-        handle: validated.handle.trim().toLowerCase(),
-        generation: validated.generation,
-        role: validated.role?.trim() || null,
-        platform: validated.platform,
-        profileImg: validated.profileImg?.trim() || null,
-        colorCode: validated.colorCode,
-        chzzkUrl: validated.chzzkUrl?.trim() || null,
-        bio: validated.bio?.trim() || null,
-        isGuest: validated.isGuest ?? false,
-      },
-    });
+    const base = getScheduleServerBaseUrl();
+    if (base) {
+      const r = await updateStreamerOnServer(id, payload);
+      if (!r.ok) {
+        if (r.status === 404) {
+          return { success: false, error: '스트리머를 찾을 수 없습니다.', errorCode: 'NOT_FOUND' };
+        }
+        if (r.status === 409 || r.json.error === 'DUPLICATE_ENTRY') {
+          return {
+            success: false,
+            error:
+              typeof r.json.message === 'string'
+                ? r.json.message
+                : '이미 사용 중인 이름 또는 핸들입니다.',
+            errorCode: 'DUPLICATE_ENTRY',
+          };
+        }
+        return {
+          success: false,
+          error: apiMutationMessage(r.status, r.json, '스트리머 수정에 실패했습니다.'),
+          errorCode: String(r.json.error ?? 'API_ERROR'),
+        };
+      }
+    } else {
+      await getPrismaForDomain().streamer.update({
+        where: { id },
+        data: {
+          name: validated.name.trim(),
+          handle: validated.handle.trim().toLowerCase(),
+          generation: validated.generation,
+          role: validated.role?.trim() || null,
+          platform: validated.platform,
+          profileImg: validated.profileImg?.trim() || null,
+          colorCode: validated.colorCode,
+          chzzkUrl: validated.chzzkUrl?.trim() || null,
+          bio: validated.bio?.trim() || null,
+          isGuest: validated.isGuest ?? false,
+        },
+      });
+    }
 
     const paths = getRevalidationPathsMulti(['streamer', 'schedule', 'admin']);
     await Promise.all([
@@ -396,20 +478,61 @@ export async function bulkCreateStreamersAction(
       throw new ValidationError('생성할 스트리머 데이터가 필요합니다.');
     }
 
-    const result = await prisma.streamer.createMany({
-      data: streamersData.map((s) => ({
-        name: s.name?.trim(),
-        handle: s.handle?.trim(),
+    const payloads = streamersData.map((s) =>
+      streamerServerSchema.parse({
+        name: s.name,
+        handle: s.handle,
         generation: s.generation || 1,
-        role: s.role?.trim() || null,
+        role: s.role,
         platform: s.platform || 'CHZZK',
-        profileImg: s.profileImg?.trim() || null,
+        profileImg: s.profileImg,
         colorCode: s.colorCode || '#673AB7',
-        chzzkUrl: s.chzzkUrl?.trim() || null,
-        isGuest: s.isGuest ?? false,
-      })),
-      skipDuplicates: true,
-    });
+        chzzkUrl: s.chzzkUrl,
+        isGuest: s.isGuest,
+      }),
+    );
+
+    const base = getScheduleServerBaseUrl();
+    let created: number;
+    if (base) {
+      const r = await bulkCreateStreamersOnServer(
+        payloads.map((v) => ({
+          name: v.name,
+          handle: v.handle,
+          generation: v.generation,
+          role: v.role,
+          platform: v.platform,
+          profileImg: v.profileImg,
+          colorCode: v.colorCode,
+          chzzkUrl: v.chzzkUrl,
+          isGuest: v.isGuest,
+        })),
+      );
+      if (!r.ok) {
+        return {
+          success: false,
+          error: apiMutationMessage(r.status, r.json, '스트리머 일괄 생성에 실패했습니다.'),
+          errorCode: String(r.json.error ?? 'API_ERROR'),
+        };
+      }
+      created = r.created;
+    } else {
+      const result = await getPrismaForDomain().streamer.createMany({
+        data: payloads.map((v) => ({
+          name: v.name.trim(),
+          handle: v.handle.trim().toLowerCase(),
+          generation: v.generation,
+          role: v.role?.trim() || null,
+          platform: v.platform,
+          profileImg: v.profileImg?.trim() || null,
+          colorCode: v.colorCode,
+          chzzkUrl: v.chzzkUrl?.trim() || null,
+          isGuest: v.isGuest ?? false,
+        })),
+        skipDuplicates: true,
+      });
+      created = result.count;
+    }
 
     const paths = getRevalidationPathsMulti(['streamer', 'schedule']);
     await Promise.all([
@@ -418,7 +541,7 @@ export async function bulkCreateStreamersAction(
       updateTag('streamers'),
     ]);
 
-    return { success: true, data: { created: result.count } };
+    return { success: true, data: { created } };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
     logError('bulkCreateStreamers', error);
@@ -441,22 +564,46 @@ export async function createClipAction(data: {
   try {
     await requireAuth();
     const validated = clipServerSchema.parse(data);
+    const payload = {
+      title: validated.title,
+      url: validated.url,
+      streamerIds: validated.streamerIds,
+      thumbnailUrl: validated.thumbnailUrl,
+      description: validated.description,
+      clipDate: validated.clipDate ?? null,
+      scheduleId: validated.scheduleId,
+    };
 
-    const created = await prisma.clip.create({
-      data: {
-        title: validated.title.trim(),
-        url: validated.url.trim(),
-        thumbnailUrl: validated.thumbnailUrl?.trim() || null,
-        description: validated.description?.trim() || null,
-        clipDate: validated.clipDate ?? null,
-        scheduleId: validated.scheduleId || null,
-        participants: {
-          create: validated.streamerIds.map((streamerId) => ({
-            streamer: { connect: { id: streamerId } },
-          })),
+    const base = getScheduleServerBaseUrl();
+    let clipId: string;
+    if (base) {
+      const r = await createClipOnServer(payload);
+      if (!r.ok) {
+        return {
+          success: false,
+          error: apiMutationMessage(r.status, r.json, '클립 저장에 실패했습니다.'),
+          errorCode: String(r.json.error ?? 'API_ERROR'),
+        };
+      }
+      clipId = r.id;
+    } else {
+      const created = await getPrismaForDomain().clip.create({
+        data: {
+          title: validated.title.trim(),
+          url: validated.url.trim(),
+          thumbnailUrl: validated.thumbnailUrl?.trim() || null,
+          description: validated.description?.trim() || null,
+          clipDate: validated.clipDate ?? null,
+          scheduleId: validated.scheduleId || null,
+          participants: {
+            create: validated.streamerIds.map((streamerId) => ({
+              streamer: { connect: { id: streamerId } },
+            })),
+          },
         },
-      },
-    });
+      });
+      clipId = created.id;
+    }
 
     const paths = getRevalidationPaths('clip');
     await Promise.all([
@@ -464,7 +611,7 @@ export async function createClipAction(data: {
       updateTag('clips'),
     ]);
 
-    return { success: true, data: { id: created.id } };
+    return { success: true, data: { id: clipId } };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
     logError('createClip', error);
@@ -490,24 +637,48 @@ export async function updateClipAction(
   try {
     await requireAuth();
     const validated = clipServerSchema.parse(data);
+    const payload = {
+      title: validated.title,
+      url: validated.url,
+      streamerIds: validated.streamerIds,
+      thumbnailUrl: validated.thumbnailUrl,
+      description: validated.description,
+      clipDate: validated.clipDate ?? null,
+      scheduleId: validated.scheduleId,
+    };
 
-    await prisma.clip.update({
-      where: { id },
-      data: {
-        title: validated.title.trim(),
-        url: validated.url.trim(),
-        thumbnailUrl: validated.thumbnailUrl?.trim() || null,
-        description: validated.description?.trim() || null,
-        clipDate: validated.clipDate ?? null,
-        scheduleId: validated.scheduleId || null,
-        participants: {
-          deleteMany: {},
-          create: validated.streamerIds.map((streamerId) => ({
-            streamer: { connect: { id: streamerId } },
-          })),
+    const base = getScheduleServerBaseUrl();
+    if (base) {
+      const r = await updateClipOnServer(id, payload);
+      if (!r.ok) {
+        if (r.status === 404) {
+          return { success: false, error: '클립을 찾을 수 없습니다.', errorCode: 'NOT_FOUND' };
+        }
+        return {
+          success: false,
+          error: apiMutationMessage(r.status, r.json, '클립 수정에 실패했습니다.'),
+          errorCode: String(r.json.error ?? 'API_ERROR'),
+        };
+      }
+    } else {
+      await getPrismaForDomain().clip.update({
+        where: { id },
+        data: {
+          title: validated.title.trim(),
+          url: validated.url.trim(),
+          thumbnailUrl: validated.thumbnailUrl?.trim() || null,
+          description: validated.description?.trim() || null,
+          clipDate: validated.clipDate ?? null,
+          scheduleId: validated.scheduleId || null,
+          participants: {
+            deleteMany: {},
+            create: validated.streamerIds.map((streamerId) => ({
+              streamer: { connect: { id: streamerId } },
+            })),
+          },
         },
-      },
-    });
+      });
+    }
 
     const paths = getRevalidationPaths('clip');
     await Promise.all([
@@ -534,7 +705,22 @@ export async function deleteClipAction(id: string): Promise<ActionResult> {
       throw new ValidationError('유효한 클립 ID가 필요합니다.');
     }
 
-    await prisma.clip.delete({ where: { id } });
+    const base = getScheduleServerBaseUrl();
+    if (base) {
+      const r = await deleteClipOnServer(id);
+      if (!r.ok) {
+        if (r.status === 404) {
+          return { success: false, error: '클립을 찾을 수 없습니다.', errorCode: 'NOT_FOUND' };
+        }
+        return {
+          success: false,
+          error: apiMutationMessage(r.status, r.json, '클립 삭제에 실패했습니다.'),
+          errorCode: String(r.json.error ?? 'API_ERROR'),
+        };
+      }
+    } else {
+      await getPrismaForDomain().clip.delete({ where: { id } });
+    }
 
     const paths = getRevalidationPaths('clip');
     await Promise.all([
@@ -587,7 +773,7 @@ export async function createGameAction(data: {
       return { success: true, data: null };
     }
 
-    await prisma.game.create({
+    await getPrismaForDomain().game.create({
       data: { title: data.title.trim(), isHoi4: data.isHoi4 ?? false },
     });
 
@@ -646,7 +832,7 @@ export async function updateGameAction(
       return { success: true, data: null };
     }
 
-    await prisma.game.update({
+    await getPrismaForDomain().game.update({
       where: { id },
       data: { title: data.title.trim(), isHoi4: data.isHoi4 ?? false },
     });
@@ -697,7 +883,7 @@ export async function deleteGameAction(id: string): Promise<ActionResult> {
       return { success: true, data: null };
     }
 
-    await prisma.game.delete({ where: { id } });
+    await getPrismaForDomain().game.delete({ where: { id } });
 
     const paths = getRevalidationPaths('game');
     await Promise.all([
@@ -792,7 +978,7 @@ export async function rejectFeedbackAction(
       ]);
       return { success: true, data: null };
     }
-    await prisma.feedback.update({
+    await getPrismaForDomain().feedback.update({
       where: { id: feedbackId },
       data: { status: 'REJECTED' },
     });
@@ -839,7 +1025,7 @@ export async function resolveFeedbackAction(
       ]);
       return { success: true, data: null };
     }
-    await prisma.feedback.update({
+    await getPrismaForDomain().feedback.update({
       where: { id: feedbackId },
       data: { status: 'RESOLVED' },
     });

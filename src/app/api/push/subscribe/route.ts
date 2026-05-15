@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma';
 
 type PushSubscriptionInput = {
   endpoint?: string;
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await prisma.pushSubscription.upsert({
+    await getPrisma().pushSubscription.upsert({
       where: { endpoint },
       create: {
         endpoint,

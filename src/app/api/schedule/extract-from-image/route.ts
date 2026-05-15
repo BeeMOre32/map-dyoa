@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { prisma } from '@/lib/prisma';
+import { fetchExtractContextLists } from '@/lib/data-fetching';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -83,10 +83,7 @@ export async function POST(req: NextRequest) {
 
         // Phase 1: DB
         send({ type: 'status', phase: 'db_fetch', message: PHASE_MESSAGES.db_fetch });
-        const [streamers, games] = await Promise.all([
-          prisma.streamer.findMany({ select: { id: true, name: true } }),
-          prisma.game.findMany({ select: { id: true, title: true } }),
-        ]);
+        const { streamers, games } = await fetchExtractContextLists();
 
         // Phase 2: Encode
         send({ type: 'status', phase: 'encoding', message: PHASE_MESSAGES.encoding });

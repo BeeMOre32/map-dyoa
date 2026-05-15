@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
+import { getAllStreamers } from '@/lib/data-fetching';
 import MultiView from '@/components/multiview/MultiView';
 
 export default async function LiveMultiViewPage({
@@ -13,9 +13,8 @@ export default async function LiveMultiViewPage({
   const idList = ids.split(',').filter(Boolean);
   if (idList.length === 0) return notFound();
 
-  const streamers = await prisma.streamer.findMany({
-    where: { id: { in: idList } },
-  });
+  const all = await getAllStreamers();
+  const streamers = all.filter((s) => idList.includes(s.id));
 
   if (streamers.length === 0) return notFound();
 

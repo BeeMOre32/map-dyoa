@@ -7,7 +7,7 @@
  * 비활성화: `FEEDBACK_DEV_PRISMA_FALLBACK=0`
  */
 
-import { prisma } from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma';
 import { fetchWithBackoff } from '@/lib/map-dyoa-server-http-utils';
 import { getScheduleServerBaseUrl } from '@/lib/map-dyoa-server-schedules';
 
@@ -47,7 +47,7 @@ async function persistFeedbackViaPrisma(input: {
   streamerName?: string;
 }): Promise<{ ok: true } | { ok: false; error: string; errorCode?: string }> {
   try {
-    await prisma.feedback.create({
+    await getPrisma().feedback.create({
       data: {
         type: input.feedbackType,
         category: input.categoryTrim,

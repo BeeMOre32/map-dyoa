@@ -6,7 +6,12 @@ import type { ClipParticipant, Game, Streamer } from '@prisma/client';
 import type { ClipWithParticipants } from '@/types/entities';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { fetchWithBackoff } from './map-dyoa-server-http-utils';
-import { readJsonSafely, requireServerBaseUrl } from './map-dyoa-server-fetch';
+import {
+  type ApiJson,
+  readApiJson,
+  readJsonSafely,
+  requireServerBaseUrl,
+} from './map-dyoa-server-fetch';
 
 function hydrateStreamerFromClipApi(s: Record<string, unknown>): Streamer {
   return {
@@ -232,4 +237,71 @@ export async function fetchScheduleClipsFromServer(
   } while (page <= totalPages && page <= SCHEDULE_CLIPS_MAX_PAGES);
 
   return out;
+}
+
+export type ClipMutationBody = {
+  title: string;
+  url: string;
+  streamerIds: string[];
+  thumbnailUrl?: string;
+  description?: string;
+  clipDate?: Date | null;
+  scheduleId?: string;
+};
+
+function clipJsonBody(body: ClipMutationBody): Record<string, unknown> {
+  return {
+    title: body.title.trim(),
+    url: body.url.trim(),
+    streamerIds: body.streamerIds,
+    thumbnailUrl: body.thumbnailUrl?.trim() || undefined,
+    description: body.description?.trim() || undefined,
+    clipDate: body.clipDate ?? null,
+    scheduleId: body.scheduleId?.trim() || undefined,
+  };
+}
+
+type ClipMutationFail = { ok: false; status: number; json: ApiJson };
+
+export async function createClipOnServer(
+  body: ClipMutationBody,
+): Promise<{ ok: true; id: string } | ClipMutationFail> {
+  const base = requireServerBaseUrl();
+  const res = await fetchWithBackoff(`${base}/clips`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(clipJsonBody(body)),
+  });
+  const json = await readApiJson(res);
+  if (res.status === 201 && typeof json.id === 'string') {
+    return { ok: true, id: json.id };
+  }
+  return { ok: false, status: res.status, json };
+}
+
+export async function updateClipOnServer(
+  clipId: string,
+  body: ClipMutationBody,
+): Promise<{ ok: true } | ClipMutationFail> {
+  const base = requireServerBaseUrl();
+  const res = await fetchWithBackoff(`${base}/clips/${encodeURIComponent(clipId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(clipJsonBody(body)),
+  });
+  const json = await readApiJson(res);
+  if (res.ok) return { ok: true };
+  return { ok: false, status: res.status, json };
+}
+
+export async function deleteClipOnServer(
+  clipId: string,
+): Promise<{ ok: true } | ClipMutationFail> {
+  const base = requireServerBaseUrl();
+  const res = await fetchWithBackoff(`${base}/clips/${encodeURIComponent(clipId)}`, {
+    method: 'DELETE',
+  });
+  const json = await readApiJson(res);
+  if (res.ok) return { ok: true };
+  return { ok: false, status: res.status, json };
 }

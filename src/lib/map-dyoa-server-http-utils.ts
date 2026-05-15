@@ -1,10 +1,45 @@
 /** map-dyoa-server로 나가는 fetch 공통 (순환 import 없음) */
 
 import { randomUUID } from "node:crypto";
+import { log } from "next-axiom";
 
 import { MapDyoaServerRequestFailedError } from "@/lib/map-dyoa-server-client-error";
 
 const REQUEST_ID_HEADER = "x-request-id";
+
+function logTargetUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    return `${u.origin}${u.pathname}`;
+  } catch {
+    const q = url.indexOf("?");
+    return q === -1 ? url : url.slice(0, q);
+  }
+}
+
+function buildFetchLogFields(
+  url: string,
+  init: RequestInit | undefined,
+  headers: Headers,
+  attempt: number,
+  durationMs: number,
+  extra?: { status?: number; error?: unknown },
+): Record<string, unknown> {
+  const fields: Record<string, unknown> = {
+    target: "map-dyoa-server",
+    method: (init?.method ?? "GET").toUpperCase(),
+    url: logTargetUrl(url),
+    requestId: headers.get(REQUEST_ID_HEADER) ?? undefined,
+    attempt: attempt + 1,
+    durationMs: Math.round(durationMs),
+  };
+  if (extra?.status !== undefined) fields.status = extra.status;
+  if (extra?.error !== undefined) {
+    fields.error =
+      extra.error instanceof Error ? extra.error.message : String(extra.error);
+  }
+  return fields;
+}
 
 function mergeRequestIdHeaders(init?: RequestInit): Headers {
   const headers = new Headers(init?.headers);
@@ -69,20 +104,48 @@ export async function fetchWithBackoff(
   let lastError: unknown
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const headers = mergeRequestIdHeaders(init);
+    const started = performance.now();
     try {
-      const headers = mergeRequestIdHeaders(init);
       const res = await fetch(url, { ...init, headers });
+      const durationMs = performance.now() - started;
       if (RETRYABLE_HTTP.has(res.status) && attempt < maxRetries) {
-        await sleep(baseDelayMs * 2 ** attempt)
-        continue
+        log.warn(
+          "map-dyoa-server.fetch retry",
+          buildFetchLogFields(url, init, headers, attempt, durationMs, {
+            status: res.status,
+          }),
+        );
+        await sleep(baseDelayMs * 2 ** attempt);
+        continue;
       }
-      return res
+      const level = res.ok ? "info" : "warn";
+      log[level](
+        "map-dyoa-server.fetch",
+        buildFetchLogFields(url, init, headers, attempt, durationMs, {
+          status: res.status,
+        }),
+      );
+      return res;
     } catch (e) {
-      lastError = e
+      lastError = e;
+      const durationMs = performance.now() - started;
       if (!isRetryableFetchError(e) || attempt >= maxRetries) {
-        throw e
+        log.error(
+          "map-dyoa-server.fetch failed",
+          buildFetchLogFields(url, init, headers, attempt, durationMs, {
+            error: e,
+          }),
+        );
+        throw e;
       }
-      await sleep(baseDelayMs * 2 ** attempt)
+      log.warn(
+        "map-dyoa-server.fetch retry",
+        buildFetchLogFields(url, init, headers, attempt, durationMs, {
+          error: e,
+        }),
+      );
+      await sleep(baseDelayMs * 2 ** attempt);
     }
   }
   throw lastError
