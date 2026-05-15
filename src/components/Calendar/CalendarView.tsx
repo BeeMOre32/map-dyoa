@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
+import { calendarColumnVariants, calendarGridSlide } from '@/lib/calendarMotion';
 import { useSession } from 'next-auth/react';
 
 import ScheduleFormModal from '@/components/Form/CreateScheduleModal';
@@ -480,12 +481,13 @@ export default function CalendarView({
         >
           {isV2Weekly ? (
             /* V2 weekly — 카드형 컬럼 레이아웃 */
-            <div
+            <motion.div
               key={`v2-${currentDate.toISOString()}`}
-              className="flex-1 overflow-hidden p-0.5 sm:p-1 animate-in fade-in duration-300"
+              {...calendarGridSlide(slideDirection)}
+              className="flex-1 overflow-hidden p-0.5 sm:p-1"
             >
               <div className="grid h-full min-h-0 grid-cols-7 gap-1.5 sm:gap-2">
-                {days.map((day) => {
+                {days.map((day, colIndex) => {
                   const today = isToday(day);
                   const dateKey = format(day, 'yyyy-MM-dd');
                   const daySchedules = schedulesByDate.get(dateKey) || [];
@@ -498,10 +500,14 @@ export default function CalendarView({
                         : 'text-slate-400 dark:text-slate-500';
 
                   return (
-                    <div
+                    <motion.div
                       key={format(day, 'yyyy-MM-dd')}
+                      custom={colIndex}
+                      initial="hidden"
+                      animate="visible"
+                      variants={calendarColumnVariants}
                       onClick={() => handleDayClick(day)}
-                      className={`group flex h-full min-h-0 cursor-pointer flex-col overflow-hidden rounded-2xl border transition-all ${
+                      className={`group flex h-full min-h-0 cursor-pointer flex-col overflow-hidden rounded-2xl border transition-[box-shadow,border-color] duration-200 ${
                         today
                           ? 'border-indigo-300/70 bg-linear-to-b from-indigo-50/90 via-white to-white shadow-md shadow-indigo-500/10 ring-2 ring-indigo-400/30 dark:border-indigo-700/60 dark:from-indigo-950/50 dark:via-slate-900 dark:to-slate-900 dark:shadow-indigo-900/20 dark:ring-indigo-500/25'
                           : 'border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-600'
@@ -570,11 +576,11 @@ export default function CalendarView({
                           </div>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
-            </div>
+            </motion.div>
           ) : (
             /* V1 — 기존 그리드 레이아웃 */
             <>
@@ -590,9 +596,10 @@ export default function CalendarView({
                 ))}
               </div>
 
-              <div
+              <motion.div
                 key={`${currentDate.toISOString()}-${viewMode}`}
-                className={`sm:flex-1 overflow-y-auto custom-scrollbar animate-in fade-in duration-500 ease-out fill-mode-forwards pb-4 sm:pb-0 ${slideDirection === 'left' ? 'slide-in-from-right-10' : 'slide-in-from-left-10'}`}
+                {...calendarGridSlide(slideDirection)}
+                className="sm:flex-1 overflow-y-auto custom-scrollbar pb-4 sm:pb-0"
               >
                 <div
                   className="grid grid-cols-7 sm:h-full"
@@ -666,7 +673,7 @@ export default function CalendarView({
                     );
                   })}
                 </div>
-              </div>
+              </motion.div>
             </>
           )}
         </div>

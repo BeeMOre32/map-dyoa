@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Clock, Gamepad2, CircleAlert } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion } from 'framer-motion';
+import { scheduleCardVariants } from '@/lib/calendarMotion';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
@@ -110,10 +111,12 @@ export default function ScheduleCardV2({
   if (variant === 'mobile') {
     return (
       <motion.div
-        initial={{ opacity: 0, x: -8 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: index * 0.04, duration: 0.2, ease: 'easeOut' }}
-        whileTap={{ scale: 0.98 }}
+        custom={index}
+        initial="hidden"
+        animate="visible"
+        variants={scheduleCardVariants.mobile}
+        whileTap={{ scale: 0.98, transition: { type: 'spring', stiffness: 500, damping: 30 } }}
+        className="min-w-0"
       >
         <Link
           href={href}
@@ -150,9 +153,10 @@ export default function ScheduleCardV2({
   if (variant === 'monthly') {
     return (
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: index * 0.02, duration: 0.12, ease: 'easeOut' }}
+        custom={index}
+        initial="hidden"
+        animate="visible"
+        variants={scheduleCardVariants.monthly}
         className="min-w-0"
       >
         <Link href={href} scroll={false} className="block min-w-0" onClick={stopProp}>
@@ -191,11 +195,13 @@ export default function ScheduleCardV2({
   // weekly
   return (
     <motion.div
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.18, ease: 'easeOut' }}
-      whileHover={{ y: -1, transition: { duration: 0.1 } }}
-      whileTap={{ scale: 0.98 }}
+      custom={index}
+      initial="hidden"
+      animate="visible"
+      variants={scheduleCardVariants.weekly}
+      whileHover={{ y: -2, transition: { type: 'spring', stiffness: 420, damping: 28 } }}
+      whileTap={{ scale: 0.99, transition: { type: 'spring', stiffness: 500, damping: 32 } }}
+      className="min-w-0"
     >
       <Link href={href} scroll={false} className="block min-w-0" onClick={stopProp}>
         <div

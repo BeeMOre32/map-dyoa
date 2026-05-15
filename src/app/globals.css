@@ -110,3 +110,34 @@ html.dark ::selection {
 .pb-safe-sm {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 }
+
+/* 스켈레톤 shimmer */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgb(226 232 240 / 0.55) 0%,
+    rgb(241 245 249 / 0.95) 45%,
+    rgb(226 232 240 / 0.55) 90%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+html.dark .skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgb(51 65 85 / 0.45) 0%,
+    rgb(71 85 105 / 0.85) 45%,
+    rgb(51 65 85 / 0.45) 90%
+  );
+  background-size: 200% 100%;
+}
