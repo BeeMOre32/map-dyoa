@@ -1,8 +1,12 @@
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = {
-  title: '공지사항 | Map-Dyoa',
-};
+import { buildPageMetadata } from '@/lib/site';
+
+export const metadata: Metadata = buildPageMetadata({
+  title: '공지사항',
+  description: 'Map-Dyoa 서비스 공지와 업데이트 소식입니다.',
+  path: '/announcements',
+});
 
 export default function AnnouncementsLayout({ children }: { children: React.ReactNode }) {
   return children;

@@ -2,7 +2,13 @@ import { Sword, Clock, Users } from 'lucide-react';
 import { getHoi4Leaderboard } from '@/lib/data-fetching';
 import { STREAMER_COLORS } from '@/constants/streamercolor';
 
-export const metadata = { title: 'HOI4 참전 기록 | Map-Dyoa' };
+import { buildPageMetadata } from '@/lib/site';
+
+export const metadata = buildPageMetadata({
+  title: 'HOI4 참전 기록',
+  description: '지도동 Hearts of Iron 4 내전·참전 기록과 누적 통계를 확인하세요.',
+  path: '/hoi4',
+});
 
 function getColor(id: string) {
   return STREAMER_COLORS[id]?.light ?? '#673AB7';

@@ -9,34 +9,12 @@ import PwaRegistrar from '@/components/Common/PwaRegistrar';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ThemeProvider } from '@/providers/ThemeProvider';
+import { getRootMetadata, getWebsiteJsonLd } from '@/lib/site';
 import type { Metadata } from 'next';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export const metadata: Metadata = {
-  title: 'Map-Dyoa | 지도동 일정 관리',
-  description: '지도동 멤버들의 방송 일정을 한눈에 확인하세요.',
-  manifest: '/manifest.webmanifest',
-  icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/brand/map-dyoa-logo.svg', type: 'image/svg+xml' },
-    ],
-    apple: [{ url: '/brand/map-dyoa-logo.svg' }],
-    shortcut: ['/favicon.svg'],
-  },
-  openGraph: {
-    title: 'Map-Dyoa | 지도동 일정 관리',
-    description: '지도동 멤버들의 방송 일정을 한눈에 확인하세요.',
-    type: 'website',
-    locale: 'ko_KR',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Map-Dyoa | 지도동 일정 관리',
-    description: '지도동 멤버들의 방송 일정을 한눈에 확인하세요.',
-  },
-};
+export const metadata: Metadata = getRootMetadata();
 
 export const viewport = {
   width: 'device-width',
@@ -55,6 +33,10 @@ export default function RootLayout({
         className={`${inter.className} antialiased text-slate-900 dark:text-slate-100 transition-colors duration-300`}
         suppressHydrationWarning
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(getWebsiteJsonLd()) }}
+        />
         <ThemeProvider>
           <AuthProvider>
             <ToastProvider>

@@ -1,10 +1,13 @@
 import { Shield } from 'lucide-react';
 import Link from 'next/link';
 
-export const metadata = {
-  title: '개인정보처리방침 | Map-Dyoa',
+import { buildPageMetadata } from '@/lib/site';
+
+export const metadata = buildPageMetadata({
+  title: '개인정보처리방침',
   description: 'Map-Dyoa 서비스 및 확장 프로그램의 개인정보처리방침입니다.',
-};
+  path: '/privacy',
+});
 
 function Section({ number, title, children }: { number: string; title: string; children: React.ReactNode }) {
   return (

@@ -1,5 +1,12 @@
 import { getClipsPaginated, getClipMonths, getAllStreamers, getCalendarData, type ClipSortOption } from '@/lib/data-fetching';
 import ClipView from '@/components/clips/ClipView';
+import { buildPageMetadata } from '@/lib/site';
+
+export const metadata = buildPageMetadata({
+  title: '클립',
+  description: '지도동 방송 클립을 스트리머·월별로 검색하고 시청하세요.',
+  path: '/clips',
+});
 
 const PAGE_SIZE = 20;
 const VALID_SORTS: ClipSortOption[] = ['newest', 'oldest', 'date_desc', 'date_asc', 'title'];

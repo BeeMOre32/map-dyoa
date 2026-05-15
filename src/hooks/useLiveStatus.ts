@@ -72,18 +72,49 @@ function notifyState(overrides: Partial<LiveStatusState> = {}) {
   stateListeners.forEach((fn) => fn(state));
 }
 
-export function useLiveStatus(): LiveStatusState {
-  // 첫 서버 렌더·클라이언트 hydration 첫 프레임은 동일해야 함(SSR/CSR 번들 간에도 라이브 상태로 트리가 갈라지면 hydration 오류 발생).
-  const [state, setState] = useState<LiveStatusState>(() =>
-    lastFetchedAt > 0
-      ? { liveIds: new Set(cache), isLoading: false, isRefreshing: false, lastUpdatedAt: lastFetchedAt }
-      : { liveIds: new Set(), isLoading: true, isRefreshing: false, lastUpdatedAt: null },
-  );
+function seedFromServer(ids: string[], fetchedAt: number) {
+  cache = new Set(ids);
+  lastFetchedAt = fetchedAt;
+}
+
+export function useLiveStatus(
+  initialLiveIds?: string[],
+  initialLiveFetchedAt?: number,
+): LiveStatusState {
+  const [state, setState] = useState<LiveStatusState>(() => {
+    if (initialLiveIds !== undefined) {
+      const fetchedAt = initialLiveFetchedAt ?? 0;
+      return {
+        liveIds: new Set(initialLiveIds),
+        isLoading: false,
+        isRefreshing: false,
+        lastUpdatedAt: fetchedAt > 0 ? fetchedAt : null,
+      };
+    }
+    if (lastFetchedAt > 0) {
+      return {
+        liveIds: new Set(cache),
+        isLoading: false,
+        isRefreshing: false,
+        lastUpdatedAt: lastFetchedAt,
+      };
+    }
+    return {
+      liveIds: new Set(),
+      isLoading: true,
+      isRefreshing: false,
+      lastUpdatedAt: null,
+    };
+  });
 
   useEffect(() => {
     stateListeners.add(setState);
 
     if (stateListeners.size === 1) {
+      const hasServerSeed = initialLiveIds !== undefined;
+      if (hasServerSeed) {
+        seedFromServer(initialLiveIds, initialLiveFetchedAt ?? Date.now());
+      }
       if (lastFetchedAt === 0) {
         fetchLiveStatus();
       }
@@ -98,6 +129,8 @@ export function useLiveStatus(): LiveStatusState {
         document.removeEventListener('visibilitychange', onVisibilityChange);
       }
     };
+    // initialLiveIds는 RSC에서 1회만 전달
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return state;

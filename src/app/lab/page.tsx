@@ -4,10 +4,14 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import Link from 'next/link';
 
-export const metadata = {
-  title: '실험실 | Map-Dyoa',
+import { buildPageMetadata } from '@/lib/site';
+
+export const metadata = buildPageMetadata({
+  title: '실험실',
   description: '개발 중인 기능을 미리 체험해보세요.',
-};
+  path: '/lab',
+  noIndex: true,
+});
 
 export default async function LabPage() {
   const { schedules } = await getCalendarData();

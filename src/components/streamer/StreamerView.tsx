@@ -6,7 +6,11 @@ import { useRouter } from 'next/navigation';
 import { Search, X, LayoutGrid, WifiOff, RefreshCw } from 'lucide-react';
 import { Streamer } from '@prisma/client';
 import { useIsDarkAfterMount } from '@/hooks/useIsDarkAfterMount';
-import RequestEditModal from '../Form/RequestEdit';
+import dynamic from 'next/dynamic';
+
+const RequestEditModal = dynamic(() => import('../Form/RequestEdit'), {
+  ssr: false,
+});
 import StreamerCard from './StreamerCard';
 import StreamerAvatar from './StreamerAvatar';
 import { useChosungSearch } from '@/hooks/useChosungSearch';
@@ -14,9 +18,19 @@ import { useLiveStatus } from '@/hooks/useLiveStatus';
 import { MAX_STREAMS } from '@/components/multiview/utils';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { getStreamerImagePath } from '@/lib/utils';
+import { format } from 'date-fns';
 import { track } from '@vercel/analytics';
 
-export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
+export default function StreamerView({
+  streamers,
+  initialLiveIds,
+  initialLiveFetchedAt,
+}: {
+  streamers: Streamer[];
+  initialLiveIds?: string[];
+  /** RSC에서 라이브 목록을 가져온 시각(ms). hydration 시각 텍스트 일치용 */
+  initialLiveFetchedAt?: number;
+}) {
   const router = useRouter();
   const isDark = useIsDarkAfterMount();
 
@@ -26,7 +40,10 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
   const [selectedOrder, setSelectedOrder] = useState<string[]>([]);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
 
-  const { liveIds, isRefreshing, lastUpdatedAt } = useLiveStatus();
+  const { liveIds, isRefreshing, lastUpdatedAt } = useLiveStatus(
+    initialLiveIds,
+    initialLiveFetchedAt,
+  );
 
   const generations = useMemo(
     () => [...new Set(streamers.map((s) => s.generation))].sort((a, b) => a - b),
@@ -114,10 +131,8 @@ export default function StreamerView({ streamers }: { streamers: Streamer[] }) {
 
     return {
       kind: 'done' as const,
-      text: `${new Date(lastUpdatedAt).toLocaleTimeString('ko-KR', {
-        hour: '2-digit',
-        minute: '2-digit',
-      })} 갱신`,
+      // Node·브라우저 locale 차이(PM vs 오후)로 hydration mismatch 방지 — 24시간 고정 포맷
+      text: `${format(new Date(lastUpdatedAt), 'HH:mm')} 갱신`,
     };
   }, [isRefreshing, lastUpdatedAt]);
 

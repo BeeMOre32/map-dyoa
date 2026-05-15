@@ -1,5 +1,12 @@
 // src/app/admin/layout.tsx
+import { buildPageMetadata } from '@/lib/site';
+
 export const dynamic = 'force-dynamic';
+
+export const metadata = buildPageMetadata({
+  title: '관리자',
+  noIndex: true,
+});
 
 export default function AdminLayout({
   children,

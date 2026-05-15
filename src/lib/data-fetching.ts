@@ -36,6 +36,8 @@ import {
   isScheduleServerEnabled,
 } from './map-dyoa-server-schedules';
 
+export { getLiveStreamerIds } from './chzzk-live-status';
+
 /**
  * 캘린더 데이터 가져오기 (캐싱 적용)
  * 60초마다 재검증
