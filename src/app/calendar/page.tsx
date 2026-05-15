@@ -10,12 +10,10 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function CalendarPage() {
-  // 캐싱된 데이터 페칭
-  //test
   const { schedules, streamers, games } = await getCalendarData();
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-slate-50/50 dark:bg-slate-950 transition-colors">
+    <div className="flex min-h-0 flex-1 flex-col bg-slate-50/50 transition-colors dark:bg-slate-950">
       <CalendarView
         initialSchedules={schedules}
         streamers={streamers}

@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { createScheduleAction } from '@/app/actions';
 import { matchChzzkCategory } from '@/constants/chzzkGameMap';
 import {
@@ -54,6 +55,9 @@ export function useBatchScheduleForm({
   games,
   onClose,
 }: UseBatchScheduleFormArgs): UseBatchScheduleFormReturn {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+
   const [slots, setSlots] = useState<SlotEntry[]>(() => [
     { ...createSlot(), key: 'initial-slot' },
   ]);
@@ -214,6 +218,9 @@ export function useBatchScheduleForm({
         (r.status === 'fulfilled' && !r.value.success),
     ).length;
     if (failCount === 0) {
+      startTransition(() => {
+        router.refresh();
+      });
       onClose();
     } else {
       setBatchSubmitError(

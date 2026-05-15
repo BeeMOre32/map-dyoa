@@ -45,8 +45,9 @@ import ScheduleFormModal from '@/components/Form/CreateScheduleModal';
 import ScheduleCard from '@/components/Calendar/ScheduleCard';
 import ScheduleCardV2 from '@/components/Calendar/ScheduleCardV2';
 import FilterBar from '@/components/Calendar/FilterBar';
-import CalendarWelcomeBanner from '@/components/Calendar/CalendarWelcomeBanner';
 import { useExperimentalFeatures } from '@/hooks/useExperimentalFeatures';
+import CalendarWelcomeBanner from '@/components/Calendar/CalendarWelcomeBanner';
+import { useFavoriteStreamers } from '@/hooks/useFavoriteStreamers';
 import { useToast } from '@/components/Common/Toaster';
 
 import type { Streamer, Game } from '@prisma/client';
@@ -95,7 +96,12 @@ export default function CalendarView({
   const [isMobileFabOpen, setIsMobileFabOpen] = useState(false);
   const { liveIds: liveStreamerIds } = useLiveStatus();
   const [hideEnded] = useHideEndedStreams();
-  const { flags } = useExperimentalFeatures();
+  const { favorites, favoriteIds, toggle: toggleFavorite } = useFavoriteStreamers();
+
+  const applyFavorites = useCallback(() => {
+    if (favorites.length === 0) return;
+    setSelectedStreamers(new Set(favorites));
+  }, [favorites]);
   const todayMobileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -245,7 +251,9 @@ export default function CalendarView({
     setMounted(true);
   }, []);
 
+  const { flags } = useExperimentalFeatures();
   const isV2Weekly = flags.newCalendarUI && viewMode === 'weekly';
+  const useV2Cards = flags.newCalendarUI;
   const isLoggedIn = !!session;
 
   const handleOpenCreateModal = useCallback(() => {
@@ -275,7 +283,11 @@ export default function CalendarView({
   }
 
   return (
-    <div className="flex flex-col p-4 md:p-6 sm:flex-1 sm:min-h-0 sm:overflow-hidden">
+    <div
+      className={`flex flex-col sm:flex-1 sm:min-h-0 sm:overflow-hidden ${
+        isV2Weekly ? 'px-1.5 py-3 md:px-2 md:py-4' : 'p-4 md:p-6'
+      }`}
+    >
       <CalendarWelcomeBanner />
       {/* 상단 컨트롤 영역 */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center shrink-0 mb-4 gap-3">
@@ -346,8 +358,11 @@ export default function CalendarView({
         games={games}
         selectedStreamers={selectedStreamers}
         selectedGames={selectedGames}
+        favoriteIds={favoriteIds}
         onStreamerToggle={handleStreamerToggle}
         onGameToggle={handleGameToggle}
+        onToggleFavorite={toggleFavorite}
+        onApplyFavorites={applyFavorites}
         onClearAll={() => {
           setSelectedStreamers(new Set());
           setSelectedGames(new Set());
@@ -361,13 +376,17 @@ export default function CalendarView({
       )}
       {/* 캘린더 본체 */}
       <div
-        className={`sm:flex-1 sm:overflow-hidden flex flex-col ${isV2Weekly ? '' : 'bg-white dark:bg-slate-900 rounded-4xl shadow-sm border border-slate-100 dark:border-slate-800'}`}
+        className={`sm:flex-1 sm:overflow-hidden flex flex-col ${
+          isV2Weekly
+            ? 'rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-slate-100/40 dark:bg-slate-900/60 shadow-sm'
+            : 'bg-white dark:bg-slate-900 rounded-4xl shadow-sm border border-slate-100 dark:border-slate-800'
+        }`}
       >
         {/* ── 모바일 주간 리스트 (sm 미만 + weekly) ── */}
         {viewMode === 'weekly' && (
           <div
             key={`mobile-${currentDate.toISOString()}`}
-            className="sm:hidden animate-in fade-in duration-300 pb-4"
+            className="sm:hidden animate-in fade-in duration-300 space-y-3 p-2"
           >
             {days.map((day) => {
               const today = isToday(day);
@@ -376,52 +395,80 @@ export default function CalendarView({
               const dayIdx = day.getDay();
               const dayNameColor =
                 dayIdx === 0
-                  ? 'text-red-400'
+                  ? 'text-red-500 dark:text-red-400'
                   : dayIdx === 6
-                    ? 'text-blue-400'
-                    : 'text-slate-400 dark:text-slate-500';
+                    ? 'text-blue-500 dark:text-blue-400'
+                    : 'text-slate-500 dark:text-slate-400';
 
               return (
-                <div
+                <section
                   key={format(day, 'yyyy-MM-dd')}
                   ref={today ? todayMobileRef : null}
-                  className="border-b border-slate-100 dark:border-slate-800 last:border-b-0"
+                  className={`overflow-hidden rounded-2xl border ${
+                    today
+                      ? 'border-indigo-200/80 dark:border-indigo-800/60 bg-white dark:bg-slate-900 shadow-sm ring-1 ring-indigo-100/80 dark:ring-indigo-900/40'
+                      : 'border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80'
+                  }`}
                 >
-                  {/* 날짜 행 */}
-                  <div
+                  <button
+                    type="button"
                     onClick={() => handleDayClick(day)}
-                    className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/50"
                   >
                     <span
-                      className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-black shrink-0 ${today ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 dark:text-slate-200'}`}
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-black ${
+                        today
+                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
+                          : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                      }`}
                     >
                       {format(day, 'd')}
                     </span>
-                    <span className={`text-sm font-black ${dayNameColor}`}>
-                      {weekDays[dayIdx]}요일
-                    </span>
+                    <div className="min-w-0 flex-1">
+                      <span className={`text-sm font-black ${dayNameColor}`}>
+                        {weekDays[dayIdx]}요일
+                      </span>
+                      {today && (
+                        <span className="ml-2 text-[10px] font-black text-indigo-600 dark:text-indigo-400">
+                          오늘
+                        </span>
+                      )}
+                    </div>
                     {daySchedules.length > 0 && (
-                      <span className="ml-auto text-[11px] font-black text-slate-300 dark:text-slate-600">
-                        {daySchedules.length}개
+                      <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                        {daySchedules.length}
                       </span>
                     )}
-                  </div>
+                  </button>
 
-                  {/* 일정 목록 */}
-                  {daySchedules.length > 0 && (
-                    <div className="px-4 pb-3 space-y-1.5">
-                      {daySchedules.map((schedule, i) => (
-                        <ScheduleCard
-                          key={schedule.id}
-                          schedule={schedule}
-                          variant="mobile"
-                          liveStreamerIds={liveStreamerIds}
-                          index={i}
-                        />
-                      ))}
+                  {daySchedules.length > 0 ? (
+                    <div className="space-y-2 border-t border-slate-100 px-3 py-3 dark:border-slate-800">
+                      {daySchedules.map((schedule, i) =>
+                        flags.newCalendarUI ? (
+                          <ScheduleCardV2
+                            key={schedule.id}
+                            schedule={schedule}
+                            variant="mobile"
+                            liveStreamerIds={liveStreamerIds}
+                            index={i}
+                          />
+                        ) : (
+                          <ScheduleCard
+                            key={schedule.id}
+                            schedule={schedule}
+                            variant="mobile"
+                            liveStreamerIds={liveStreamerIds}
+                            index={i}
+                          />
+                        ),
+                      )}
                     </div>
+                  ) : (
+                    <p className="border-t border-slate-100 px-4 py-4 text-center text-xs font-semibold text-slate-400 dark:border-slate-800 dark:text-slate-500">
+                      일정 없음
+                    </p>
                   )}
-                </div>
+                </section>
               );
             })}
           </div>
@@ -435,9 +482,9 @@ export default function CalendarView({
             /* V2 weekly — 카드형 컬럼 레이아웃 */
             <div
               key={`v2-${currentDate.toISOString()}`}
-              className="flex-1 overflow-hidden p-3 animate-in fade-in duration-300"
+              className="flex-1 overflow-hidden p-0.5 sm:p-1 animate-in fade-in duration-300"
             >
-              <div className="grid grid-cols-7 gap-2.5 h-full min-h-0">
+              <div className="grid h-full min-h-0 grid-cols-7 gap-1.5 sm:gap-2">
                 {days.map((day) => {
                   const today = isToday(day);
                   const dateKey = format(day, 'yyyy-MM-dd');
@@ -454,36 +501,57 @@ export default function CalendarView({
                     <div
                       key={format(day, 'yyyy-MM-dd')}
                       onClick={() => handleDayClick(day)}
-                      className={`flex flex-col rounded-xl border cursor-pointer transition-all h-full min-h-0 overflow-hidden ${
+                      className={`group flex h-full min-h-0 cursor-pointer flex-col overflow-hidden rounded-2xl border transition-all ${
                         today
-                          ? 'bg-linear-to-b from-indigo-50/60 dark:from-indigo-950/30 to-white dark:to-slate-900 border-indigo-200 dark:border-indigo-800/50'
-                          : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
+                          ? 'border-indigo-300/70 bg-linear-to-b from-indigo-50/90 via-white to-white shadow-md shadow-indigo-500/10 ring-2 ring-indigo-400/30 dark:border-indigo-700/60 dark:from-indigo-950/50 dark:via-slate-900 dark:to-slate-900 dark:shadow-indigo-900/20 dark:ring-indigo-500/25'
+                          : 'border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-600'
                       }`}
                     >
                       <div
-                        className={`px-2.5 pt-2.5 pb-2.5 shrink-0 border-b ${today ? 'border-indigo-100 dark:border-indigo-900/40' : 'border-slate-100 dark:border-slate-800'}`}
+                        className={`shrink-0 border-b px-2 py-1.5 sm:px-2.5 sm:py-2 ${
+                          today
+                            ? 'border-indigo-100/80 bg-indigo-50/50 dark:border-indigo-900/50 dark:bg-indigo-950/30'
+                            : 'border-slate-100 dark:border-slate-800'
+                        }`}
                       >
-                        <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start justify-between gap-1.5">
                           <div className="min-w-0">
+                            <div className="mb-0.5 flex items-center gap-1.5">
+                              <p
+                                className={`text-[9px] font-black uppercase tracking-widest ${dayNameColor}`}
+                              >
+                                {weekDays[dayIdx]}
+                              </p>
+                              {today && (
+                                <span className="rounded-md bg-indigo-600 px-1 py-px text-[8px] font-black uppercase tracking-wide text-white">
+                                  오늘
+                                </span>
+                              )}
+                            </div>
                             <p
-                              className={`text-[9px] font-black uppercase tracking-widest mb-1 ${dayNameColor}`}
-                            >
-                              {weekDays[dayIdx]}
-                            </p>
-                            <p
-                              className={`text-xl font-black leading-none ${today ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200'}`}
+                              className={`text-lg font-black leading-none sm:text-xl ${
+                                today
+                                  ? 'text-indigo-600 dark:text-indigo-400'
+                                  : 'text-slate-800 dark:text-slate-100'
+                              }`}
                             >
                               {format(day, 'd')}
                             </p>
                           </div>
                           {daySchedules.length > 0 && (
-                            <span className="shrink-0 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-500 dark:text-slate-400">
+                            <span
+                              className={`inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-black ${
+                                today
+                                  ? 'bg-indigo-600 text-white'
+                                  : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                              }`}
+                            >
                               {daySchedules.length}
                             </span>
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col flex-1 min-h-0 gap-2 p-2 overflow-y-auto custom-scrollbar">
+                      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-1.5 custom-scrollbar sm:gap-2 sm:p-2">
                         {daySchedules.length > 0 ? (
                           daySchedules.map((schedule, i) => (
                             <ScheduleCardV2
@@ -495,9 +563,9 @@ export default function CalendarView({
                             />
                           ))
                         ) : (
-                          <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 px-2 text-center">
-                            <span className="text-[12px] font-semibold text-slate-400 dark:text-slate-500">
-                              일정 없음
+                          <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-slate-200/80 bg-slate-50/50 px-2 py-6 text-center dark:border-slate-700 dark:bg-slate-800/30">
+                            <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+                              —
                             </span>
                           </div>
                         )}
@@ -573,16 +641,26 @@ export default function CalendarView({
                         )}
 
                         {/* 데스크탑: 텍스트 카드 */}
-                        <div className="hidden sm:flex flex-col flex-1 min-h-0 gap-1.5 overflow-y-auto custom-scrollbar">
-                          {daySchedules.map((schedule, i) => (
-                            <ScheduleCard
-                              key={schedule.id}
-                              schedule={schedule}
-                              variant={viewMode}
-                              liveStreamerIds={liveStreamerIds}
-                              index={i}
-                            />
-                          ))}
+                        <div className="hidden sm:flex flex-col flex-1 min-h-0 gap-1 overflow-y-auto custom-scrollbar">
+                          {daySchedules.map((schedule, i) =>
+                            useV2Cards ? (
+                              <ScheduleCardV2
+                                key={schedule.id}
+                                schedule={schedule}
+                                variant="monthly"
+                                liveStreamerIds={liveStreamerIds}
+                                index={i}
+                              />
+                            ) : (
+                              <ScheduleCard
+                                key={schedule.id}
+                                schedule={schedule}
+                                variant={viewMode}
+                                liveStreamerIds={liveStreamerIds}
+                                index={i}
+                              />
+                            ),
+                          )}
                         </div>
                       </div>
                     );

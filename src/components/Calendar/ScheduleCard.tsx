@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import { format, isToday, isValid } from 'date-fns';
+import { format, isToday } from 'date-fns';
 import Link from 'next/link';
 import { Clock, Gamepad2, Zap } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -9,18 +9,6 @@ import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { track } from '@vercel/analytics';
-
-function formatScheduleHHmm(schedule: FlattenedSchedule): string {
-  if (schedule.isGuerrilla) return '미정';
-  const d = new Date(schedule.startTime);
-  return isValid(d) ? format(d, 'HH:mm') : '–';
-}
-
-function formatEndHHmmIfValid(end: Date | string | null | undefined): string | null {
-  if (end == null) return null;
-  const d = new Date(end);
-  return isValid(d) ? format(d, 'HH:mm') : null;
-}
 
 function LiveBadge() {
   return (
@@ -71,8 +59,7 @@ export default function ScheduleCard({
       variant,
     });
   };
-  const startD = new Date(schedule.startTime);
-  const isToday_ = isValid(startD) && isToday(startD);
+  const isToday_ = isToday(new Date(schedule.startTime));
   const isLive =
     !schedule.isLiveEnded &&
     liveStreamerIds !== undefined &&
@@ -82,7 +69,6 @@ export default function ScheduleCard({
   const gameColor = schedule.game
     ? getGameColor(schedule.game.id, resolvedTheme === 'dark')
     : null;
-  const endTimeHm = formatEndHHmmIfValid(schedule.endTime);
 
   if (variant === 'mobile') {
     return (
@@ -123,7 +109,9 @@ export default function ScheduleCard({
           }
         >
           <span className="text-xs opacity-60 shrink-0 font-semibold">
-            {formatScheduleHHmm(schedule)}
+            {schedule.isGuerrilla
+              ? '미정'
+              : format(new Date(schedule.startTime), 'HH:mm')}
           </span>
           <span className="truncate flex-1">{schedule.title}</span>
           {isLive && <LiveBadge />}
@@ -136,23 +124,22 @@ export default function ScheduleCard({
   if (variant === 'monthly') {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.88 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: index * 0.04, duration: 0.16, ease: 'easeOut' }}
-        whileHover={{ scale: 1.03, transition: { duration: 0.1 } }}
-        whileTap={{ scale: 0.96 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: index * 0.02, duration: 0.12, ease: 'easeOut' }}
+        className="min-w-0"
       >
         <Link
           href={href}
           scroll={false}
-          className="block"
+          className="block min-w-0"
           onClick={(e) => {
             stopProp(e);
             trackOpen();
           }}
         >
           <div
-            className={`flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-md border shadow-sm shrink-0 ${
+            className={`flex w-full min-w-0 items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-md border shadow-sm shrink-0 ${
               isLive ? 'ring-1 ring-red-400/60 dark:ring-red-500/40' : ''
             } ${
               gameColor
@@ -174,7 +161,7 @@ export default function ScheduleCard({
             }
           >
             <span className="opacity-70 shrink-0 font-semibold">
-              {formatScheduleHHmm(schedule)}
+              {format(new Date(schedule.startTime), 'HH:mm')}
             </span>
             <span className="truncate flex-1">{schedule.title}</span>
             {isLive && <LiveBadge />}
@@ -264,8 +251,12 @@ export default function ScheduleCard({
           {!schedule.isGuerrilla && (
             <div className="flex items-center gap-1 text-[13px] font-semibold text-slate-400 dark:text-slate-500">
               <Clock className="w-3 h-3 shrink-0" />
-              {formatScheduleHHmm(schedule)}
-              {endTimeHm ? <span className="opacity-70">→ {endTimeHm}</span> : null}
+              {format(new Date(schedule.startTime), 'HH:mm')}
+              {schedule.endTime && (
+                <span className="opacity-70">
+                  → {format(new Date(schedule.endTime), 'HH:mm')}
+                </span>
+              )}
             </div>
           )}
 

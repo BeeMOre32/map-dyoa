@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useExperimentalFeatures } from '@/hooks/useExperimentalFeatures';
 import ScheduleDetailModal from './ScheduleDetailModal';
 import ScheduleDetailModalV2 from './ScheduleDetailModalV2';
@@ -14,9 +15,25 @@ interface Props {
   clips?: ClipForSchedule[];
 }
 
-export default function ScheduleDetailModalWrapper(props: Props) {
+export default function ScheduleDetailModalWrapper({
+  schedule: scheduleProp,
+  clips: clipsProp,
+  ...rest
+}: Props) {
   const { flags } = useExperimentalFeatures();
-  return flags.newScheduleModal
-    ? <ScheduleDetailModalV2 {...props} />
-    : <ScheduleDetailModal {...props} />;
+  const [schedule, setSchedule] = useState(scheduleProp);
+  const [clips, setClips] = useState(clipsProp ?? []);
+
+  useEffect(() => {
+    setSchedule(scheduleProp);
+    setClips(clipsProp ?? []);
+  }, [scheduleProp, clipsProp]);
+
+  const modalProps = { schedule, clips, ...rest };
+
+  return flags.newScheduleModal ? (
+    <ScheduleDetailModalV2 {...modalProps} />
+  ) : (
+    <ScheduleDetailModal {...modalProps} />
+  );
 }

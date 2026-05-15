@@ -42,7 +42,8 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 function SettingRow({ onClick, children }: { onClick?: () => void; children: React.ReactNode }) {
-  const cls = 'w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors';
+  const cls =
+    'w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors';
   if (onClick) return <button onClick={onClick} className={cls}>{children}</button>;
   return <div className={cls}>{children}</div>;
 }
@@ -71,7 +72,6 @@ function GeneralTab({
       transition={{ duration: 0.15 }}
       className="space-y-2"
     >
-      {/* 테마 */}
       <div className="px-2 py-1">
         <SectionLabel>화면</SectionLabel>
         <SettingRow onClick={() => setTheme(isDark ? 'light' : 'dark')}>
@@ -84,9 +84,7 @@ function GeneralTab({
                 exit={{ rotate: 45, opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                {isDark
-                  ? <Sun className="w-4 h-4 text-amber-400" />
-                  : <Moon className="w-4 h-4 text-indigo-500" />}
+                {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
               </motion.div>
             </AnimatePresence>
             <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
@@ -97,22 +95,20 @@ function GeneralTab({
         </SettingRow>
       </div>
 
-      {/* 캘린더 */}
       <div className="px-2 py-1">
-        <SectionLabel>캘린더</SectionLabel>
+        <SectionLabel>캐린더</SectionLabel>
         <SettingRow onClick={() => setHideEnded(!hideEnded)}>
           <div className="flex items-center gap-3">
             <EyeOff className="w-4 h-4 text-slate-400 dark:text-slate-500" />
             <div className="text-left">
               <p className="text-sm font-bold text-slate-700 dark:text-slate-200">종료된 방송 숨기기</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">완료 처리된 일정을 캘린더에서 숨깁니다</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">완료 처리된 일정을 캐린더에서 숨깁니다</p>
             </div>
           </div>
           <Toggle on={hideEnded} />
         </SettingRow>
       </div>
 
-      {/* 후원 */}
       <a
         href="https://ctee.kr/place/mapdoya"
         target="_blank"
@@ -126,7 +122,6 @@ function GeneralTab({
         </div>
       </a>
 
-      {/* 정보 */}
       <div className="px-2 py-1">
         <SectionLabel>정보</SectionLabel>
         <div className="space-y-1">
@@ -148,7 +143,6 @@ function GeneralTab({
         </div>
       </div>
 
-      {/* 계정 */}
       <div className="px-2 py-1">
         <SectionLabel>계정</SectionLabel>
         <div className="space-y-1">
@@ -207,8 +201,8 @@ function ExperimentalTab({
     {
       key: 'newCalendarUI' as const,
       icon: <LayoutGrid className="w-4 h-4 text-violet-400 shrink-0" />,
-      label: '새 캘린더 UI',
-      desc: '주간 보기에서 카드형 캘린더 레이아웃을 사용합니다',
+      label: '새 캐린더 UI',
+      desc: '주간 보기에서 카드형 캐린더 레이아웃을 사용합니다',
     },
   ];
 
@@ -223,9 +217,7 @@ function ExperimentalTab({
     >
       <div className="flex gap-3 px-4 py-3 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/50 rounded-2xl">
         <FlaskConical className="w-4 h-4 text-violet-500 dark:text-violet-400 shrink-0 mt-0.5" />
-        <p className="text-xs text-violet-600 dark:text-violet-400 font-medium leading-relaxed">
-          아직 검토 중인 기능들입니다. 예기치 않은 동작이 있을 수 있습니다.
-        </p>
+        <p className="text-xs text-violet-600 dark:text-violet-400 font-medium leading-relaxed">아직 검토 중인 기능들입니다. 예기치 않은 동작이 있을 수 있습니다.</p>
       </div>
 
       <div className="px-2 space-y-1">
@@ -305,9 +297,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           </button>
           <button
             onClick={() => {
-              if (tab !== 'experimental') {
-                track('settings_experimental_tab_opened');
-              }
+              if (tab !== 'experimental') track('settings_experimental_tab_opened');
               setTab('experimental');
             }}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-black transition-colors ${
@@ -333,10 +323,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 session={session}
               />
             ) : (
-              <ExperimentalTab
-                flags={flags}
-                setFlag={setFlag}
-              />
+              <ExperimentalTab flags={flags} setFlag={setFlag} />
             )}
           </AnimatePresence>
         </div>

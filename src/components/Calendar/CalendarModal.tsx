@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -142,6 +142,11 @@ export default function ScheduleModal({
   const [permissionError, setPermissionError] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [daySchedules, setDaySchedules] = useState(schedules);
+
+  useEffect(() => {
+    setDaySchedules(schedules);
+  }, [schedules]);
 
   const isAdmin = !!session;
 
@@ -243,12 +248,12 @@ export default function ScheduleModal({
             </div>
 
             <div className="p-6 md:p-8 space-y-6 overflow-y-auto flex-1 min-h-0 custom-scrollbar bg-slate-50/30 dark:bg-slate-950/40">
-              {schedules.length === 0 ? (
+              {daySchedules.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-slate-400 font-bold">등록된 일정이 없습니다.</p>
                 </div>
               ) : (
-                schedules.map((schedule) => (
+                daySchedules.map((schedule) => (
                   <ScheduleListItem
                     key={schedule.id}
                     schedule={schedule}

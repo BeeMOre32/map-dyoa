@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { FlattenedSchedule, ParticipantFlat } from '@/lib/schedule-formatters';
@@ -67,6 +68,9 @@ export function useEditScheduleForm({
   onOptimisticCreate,
   onClose,
 }: UseEditScheduleFormArgs): UseEditScheduleFormReturn {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+
   const defaultTime = initialData?.startTime
     ? format(new Date(initialData.startTime), "yyyy-MM-dd'T'HH:mm")
     : '';
@@ -261,6 +265,9 @@ export function useEditScheduleForm({
           formattedTime: format(startDate, 'HH:mm'),
         });
       }
+      startTransition(() => {
+        router.refresh();
+      });
       onClose();
     } else {
       setEditErrors({ submit: '일정 저장에 실패했습니다. 다시 시도해주세요.' });

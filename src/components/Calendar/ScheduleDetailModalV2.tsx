@@ -46,7 +46,6 @@ import {
   type ClipForSchedule,
   type SideTab,
 } from './ScheduleSidePanel';
-
 interface Props {
   schedule: FlattenedSchedule;
   streamers: Streamer[];
@@ -520,9 +519,8 @@ function DetailViewV2({
         </div>
       </div>
 
-      {/* 푸터 */}
       {isUser && (
-        <div className="flex gap-3 px-5 pt-4 pb-6 sm:px-8 border-t border-slate-50 dark:border-slate-700 shrink-0">
+        <div className="flex gap-3 px-5 pt-4 pb-6 sm:px-8 border-t border-slate-100 dark:border-slate-700 shrink-0">
           <button
             onClick={onEdit}
             className="flex-1 flex items-center justify-center gap-2 py-3.5 sm:py-4 bg-slate-900 dark:bg-indigo-600 text-white rounded-3xl font-black hover:bg-slate-800 dark:hover:bg-indigo-700 transition-all shadow-xl shadow-slate-200 dark:shadow-indigo-900/30 active:scale-95"

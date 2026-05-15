@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { SlidersHorizontal, X, ChevronDown, Search, Check } from 'lucide-react';
+import { SlidersHorizontal, X, ChevronDown, Search, Check, Star } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import type { Streamer, Game } from '@prisma/client';
@@ -18,8 +18,11 @@ interface FilterPanelProps {
   games: Game[];
   selectedStreamers: Set<string>;
   selectedGames: Set<string>;
+  favoriteIds: Set<string>;
   onStreamerToggle: (id: string) => void;
   onGameToggle: (id: string) => void;
+  onToggleFavorite: (id: string) => void;
+  onApplyFavorites: () => void;
   isDark: boolean;
   onClose?: () => void;
 }
@@ -29,11 +32,15 @@ function FilterPanel({
   games,
   selectedStreamers,
   selectedGames,
+  favoriteIds,
   onStreamerToggle,
   onGameToggle,
+  onToggleFavorite,
+  onApplyFavorites,
   isDark,
   onClose,
 }: FilterPanelProps) {
+  const favoriteCount = favoriteIds.size;
   const [tab, setTab] = useState<Tab>('streamer');
   const {
     search,
@@ -143,19 +150,34 @@ function FilterPanel({
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.13, ease: 'easeInOut' }}
           >
-            {tab === 'streamer' &&
-              (filteredStreamers.length === 0 ? (
-                <p className="text-xs font-bold text-slate-300 dark:text-slate-600 text-center py-4">
-                  결과 없음
-                </p>
-              ) : (
+            {tab === 'streamer' && (
+              <>
+                {favoriteCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onApplyFavorites();
+                      onClose?.();
+                    }}
+                    className="mb-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-amber-100 dark:border-amber-900/40 bg-amber-50/80 dark:bg-amber-950/30 text-xs font-black text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+                  >
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    내 멤버 ({favoriteCount})
+                  </button>
+                )}
+                {filteredStreamers.length === 0 ? (
+                  <p className="text-xs font-bold text-slate-300 dark:text-slate-600 text-center py-4">
+                    결과 없음
+                  </p>
+                ) : (
                 <div className="grid grid-cols-4 gap-1">
                   <AnimatePresence mode="popLayout">
                     {filteredStreamers.map((streamer, i) => {
                       const isSelected = selectedStreamers.has(streamer.id);
+                      const isFav = favoriteIds.has(streamer.id);
                       return (
+                        <div key={streamer.id} className="relative">
                         <motion.button
-                          key={streamer.id}
                           layout
                           initial={{ opacity: 0, scale: 0.85 }}
                           animate={{
@@ -170,7 +192,7 @@ function FilterPanel({
                           }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => onStreamerToggle(streamer.id)}
-                          className={`flex flex-col items-center gap-1.5 p-2 rounded-xl transition-colors ${
+                          className={`w-full flex flex-col items-center gap-1.5 p-2 rounded-xl transition-colors ${
                             isSelected
                               ? 'bg-indigo-50 dark:bg-indigo-900/20'
                               : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
@@ -201,11 +223,31 @@ function FilterPanel({
                             {streamer.name}
                           </span>
                         </motion.button>
+                        <button
+                          type="button"
+                          title={isFav ? '즐겨찾기 해제' : '즐겨찾기'}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleFavorite(streamer.id);
+                          }}
+                          className="absolute top-0.5 right-0.5 p-0.5 rounded-full bg-white/90 dark:bg-slate-900/90 shadow-sm"
+                        >
+                          <Star
+                            className={`w-3 h-3 ${
+                              isFav
+                                ? 'fill-amber-400 text-amber-400'
+                                : 'text-slate-300 dark:text-slate-600'
+                            }`}
+                          />
+                        </button>
+                        </div>
                       );
                     })}
                   </AnimatePresence>
                 </div>
-              ))}
+                )}
+              </>
+            )}
 
             {tab === 'game' && (
               <div className="space-y-0.5">
@@ -262,8 +304,11 @@ interface FilterBarProps {
   games: Game[];
   selectedStreamers: Set<string>;
   selectedGames: Set<string>;
+  favoriteIds: Set<string>;
   onStreamerToggle: (id: string) => void;
   onGameToggle: (id: string) => void;
+  onToggleFavorite: (id: string) => void;
+  onApplyFavorites: () => void;
   onClearAll: () => void;
 }
 
@@ -272,10 +317,14 @@ export default function FilterBar({
   games,
   selectedStreamers,
   selectedGames,
+  favoriteIds,
   onStreamerToggle,
   onGameToggle,
+  onToggleFavorite,
+  onApplyFavorites,
   onClearAll,
 }: FilterBarProps) {
+  const favoriteCount = favoriteIds.size;
   const [isOpen, setIsOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -302,6 +351,16 @@ export default function FilterBar({
 
   return (
     <div className="flex items-center gap-2 flex-wrap shrink-0 mb-3">
+      {favoriteCount > 0 && (
+        <button
+          type="button"
+          onClick={onApplyFavorites}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-100 dark:border-amber-900/40 bg-amber-50/80 dark:bg-amber-950/30 text-sm font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors shadow-sm"
+        >
+          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+          내 멤버
+        </button>
+      )}
       {/* 필터 버튼 + 데스크탑 팝오버 */}
       <div className="relative">
         <button
@@ -352,8 +411,11 @@ export default function FilterBar({
                 games={games}
                 selectedStreamers={selectedStreamers}
                 selectedGames={selectedGames}
+                favoriteIds={favoriteIds}
                 onStreamerToggle={onStreamerToggle}
                 onGameToggle={onGameToggle}
+                onToggleFavorite={onToggleFavorite}
+                onApplyFavorites={onApplyFavorites}
                 isDark={isDark}
               />
             </motion.div>
@@ -464,8 +526,11 @@ export default function FilterBar({
                 games={games}
                 selectedStreamers={selectedStreamers}
                 selectedGames={selectedGames}
+                favoriteIds={favoriteIds}
                 onStreamerToggle={onStreamerToggle}
                 onGameToggle={onGameToggle}
+                onToggleFavorite={onToggleFavorite}
+                onApplyFavorites={onApplyFavorites}
                 isDark={isDark}
                 onClose={() => setIsOpen(false)}
               />

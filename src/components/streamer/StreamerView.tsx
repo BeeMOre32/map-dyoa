@@ -3,7 +3,7 @@
 import { AnimatePresence } from 'framer-motion';
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, X, LayoutGrid, WifiOff, RefreshCw } from 'lucide-react';
+import { Search, X, LayoutGrid, WifiOff, RefreshCw, Star } from 'lucide-react';
 import { Streamer } from '@prisma/client';
 import { useIsDarkAfterMount } from '@/hooks/useIsDarkAfterMount';
 import dynamic from 'next/dynamic';
@@ -20,6 +20,7 @@ import { getStreamerColor } from '@/constants/streamercolor';
 import { getStreamerImagePath } from '@/lib/utils';
 import { format } from 'date-fns';
 import { track } from '@vercel/analytics';
+import { useFavoriteStreamers } from '@/hooks/useFavoriteStreamers';
 
 export default function StreamerView({
   streamers,
@@ -33,9 +34,11 @@ export default function StreamerView({
 }) {
   const router = useRouter();
   const isDark = useIsDarkAfterMount();
+  const { favorites, favoriteIds } = useFavoriteStreamers();
 
   const [requestTarget, setRequestTarget] = useState<Streamer | null>(null);
   const [activeGen, setActiveGen] = useState<number | null>(null);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   // 선택 순서를 유지하는 배열 (Set 대신 Array)
   const [selectedOrder, setSelectedOrder] = useState<string[]>([]);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -51,8 +54,11 @@ export default function StreamerView({
   );
 
   const genFilter = useCallback(
-    (s: Streamer) => activeGen === null || s.generation === activeGen,
-    [activeGen],
+    (s: Streamer) => {
+      if (favoritesOnly && !favoriteIds.has(s.id)) return false;
+      return activeGen === null || s.generation === activeGen;
+    },
+    [activeGen, favoritesOnly, favoriteIds],
   );
 
   const { search, setSearch, filtered } = useChosungSearch(streamers, genFilter);
@@ -197,7 +203,8 @@ export default function StreamerView({
           </div>
 
           <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center">
-            <div className="flex w-fit max-w-full items-center gap-1 rounded-xl border border-slate-100 bg-slate-50 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div className="flex w-fit max-w-full flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1 rounded-xl border border-slate-100 bg-slate-50 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-800">
               {[null, ...generations].map((gen) => {
                 const isActive = activeGen === gen;
                 return (
@@ -221,6 +228,25 @@ export default function StreamerView({
                   </button>
                 );
               })}
+            </div>
+            {favorites.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setFavoritesOnly((v) => !v)}
+                className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-black shadow-sm transition-colors ${
+                  favoritesOnly
+                    ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-400'
+                    : 'border-slate-100 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400'
+                }`}
+              >
+                <Star
+                  className={`h-3.5 w-3.5 ${
+                    favoritesOnly ? 'fill-amber-400 text-amber-400' : ''
+                  }`}
+                />
+                즐겨찾기
+              </button>
+            )}
             </div>
 
             <div className="flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-800">

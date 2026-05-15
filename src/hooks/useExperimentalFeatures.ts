@@ -4,22 +4,18 @@ import { useState, useEffect } from 'react';
 import { track } from '@vercel/analytics';
 
 export type ExperimentalFlags = {
-  showHoi4Tab: boolean;
   newScheduleModal: boolean;
   newCalendarUI: boolean;
 };
 
-/** Vercel Analytics 등에서 필터링하기 위한 고정 식별자 */
 export const EXPERIMENTAL_FEATURE_ANALYTICS_KEY: Record<keyof ExperimentalFlags, string> = {
   newScheduleModal: 'new_schedule_modal',
   newCalendarUI: 'new_calendar_ui',
-  showHoi4Tab: 'show_hoi4_tab',
 };
 
 const DEFAULTS: ExperimentalFlags = {
-  showHoi4Tab: false,
-  newScheduleModal: false,
-  newCalendarUI: false,
+  newScheduleModal: true,
+  newCalendarUI: true,
 };
 
 const KEY = 'experimentalFeatures';

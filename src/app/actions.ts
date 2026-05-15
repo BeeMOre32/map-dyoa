@@ -10,6 +10,16 @@ import {
   getErrorMessage,
   logError,
 } from '@/lib/error-handling';
+import {
+  actorFromSession,
+  logMutation,
+  snapshotClip,
+  snapshotFeedback,
+  snapshotGame,
+  snapshotSchedule,
+  snapshotStreamer,
+} from '@/lib/audit-log';
+import type { Session } from 'next-auth';
 import { Prisma } from '@prisma/client';
 import {
   getRevalidationPaths,
@@ -62,6 +72,13 @@ function streamerUniqueConstraintFailure(
   };
 }
 
+function auditLog(
+  session: Session | null,
+  opts: Omit<Parameters<typeof logMutation>[0], 'actor'>,
+) {
+  logMutation({ ...opts, actor: session ? actorFromSession(session) : undefined });
+}
+
 /**
  * 일정 생성
  */
@@ -75,8 +92,9 @@ export async function createScheduleAction(data: {
   isNaeJeon?: boolean;
 }): Promise<ActionResult<{ id: string }>> {
   try {
-    await requireAuth();
+    const session = await requireAuth();
     const validated = scheduleServerSchema.parse(data);
+    const changes = snapshotSchedule(validated);
 
     const base = getScheduleServerBaseUrl();
     if (base) {
@@ -116,6 +134,13 @@ export async function createScheduleAction(data: {
         ...paths.map((path: string) => revalidatePath(path)),
         updateTag('calendar'),
       ]);
+      auditLog(session, {
+        action: 'create',
+        entity: 'schedule',
+        entityId: json.id,
+        summary: `일정 생성: ${validated.title.trim()}`,
+        changes,
+      });
       return { success: true, data: { id: json.id } };
     }
 
@@ -144,6 +169,13 @@ export async function createScheduleAction(data: {
       updateTag('calendar'),
     ]);
 
+    auditLog(session, {
+      action: 'create',
+      entity: 'schedule',
+      entityId: created.id,
+      summary: `일정 생성: ${validated.title.trim()}`,
+      changes,
+    });
     return { success: true, data: { id: created.id } };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
@@ -157,8 +189,14 @@ export async function createScheduleAction(data: {
  */
 export async function deleteScheduleAction(id: string): Promise<ActionResult> {
   try {
-    await requireAuth();
+    const session = await requireAuth();
     await runDeleteSchedule(id);
+    auditLog(session, {
+      action: 'delete',
+      entity: 'schedule',
+      entityId: id,
+      summary: `일정 삭제 id=${id}`,
+    });
     return { success: true, data: null };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
@@ -184,8 +222,9 @@ export async function updateScheduleAction(
   },
 ): Promise<ActionResult> {
   try {
-    await requireAuth();
+    const session = await requireAuth();
     const validated = scheduleServerSchema.parse(data);
+    const changes = snapshotSchedule(validated);
 
     const base = getScheduleServerBaseUrl();
     if (base) {
@@ -226,6 +265,13 @@ export async function updateScheduleAction(
         ...paths.map((path: string) => revalidatePath(path)),
         updateTag('calendar'),
       ]);
+      auditLog(session, {
+        action: 'update',
+        entity: 'schedule',
+        entityId: id,
+        summary: `일정 수정: ${validated.title.trim()}`,
+        changes,
+      });
       return { success: true, data: null };
     }
 
@@ -272,6 +318,13 @@ export async function updateScheduleAction(
       updateTag('calendar'),
     ]);
 
+    auditLog(session, {
+      action: 'update',
+      entity: 'schedule',
+      entityId: id,
+      summary: `일정 수정: ${validated.title.trim()}`,
+      changes,
+    });
     return { success: true, data: null };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
@@ -296,9 +349,9 @@ export async function createStreamerAction(data: {
   isGuest?: boolean;
 }): Promise<ActionResult> {
   try {
-    await requireAdmin();
-
+    const session = await requireAdmin();
     const validated = streamerServerSchema.parse(data);
+    const changes = snapshotStreamer(validated);
     const payload = {
       name: validated.name,
       handle: validated.handle,
@@ -357,6 +410,12 @@ export async function createStreamerAction(data: {
       updateTag('admin'),
     ]);
 
+    auditLog(session, {
+      action: 'create',
+      entity: 'streamer',
+      summary: `스트리머 생성: ${validated.name.trim()} (@${validated.handle.trim()})`,
+      changes,
+    });
     return { success: true, data: null };
   } catch (error) {
     const dup = streamerUniqueConstraintFailure(error);
@@ -386,13 +445,14 @@ export async function updateStreamerAction(
   },
 ): Promise<ActionResult> {
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
 
     if (!id?.trim()) {
       throw new ValidationError('유효한 스트리머 ID가 필요합니다.');
     }
 
     const validated = streamerServerSchema.parse(data);
+    const changes = snapshotStreamer(validated);
     const payload = {
       name: validated.name,
       handle: validated.handle,
@@ -455,6 +515,13 @@ export async function updateStreamerAction(
       updateTag('admin'),
     ]);
 
+    auditLog(session, {
+      action: 'update',
+      entity: 'streamer',
+      entityId: id,
+      summary: `스트리머 수정: ${validated.name.trim()} (@${validated.handle.trim()})`,
+      changes,
+    });
     return { success: true, data: null };
   } catch (error) {
     const dup = streamerUniqueConstraintFailure(error);
@@ -472,7 +539,7 @@ export async function bulkCreateStreamersAction(
   streamersData: CreateStreamerInput[],
 ): Promise<ActionResult<{ created: number }>> {
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
 
     if (!Array.isArray(streamersData) || streamersData.length === 0) {
       throw new ValidationError('생성할 스트리머 데이터가 필요합니다.');
@@ -541,6 +608,16 @@ export async function bulkCreateStreamersAction(
       updateTag('streamers'),
     ]);
 
+    auditLog(session, {
+      action: 'bulk_create',
+      entity: 'streamer',
+      summary: `스트리머 일괄 생성 ${created}명`,
+      changes: {
+        requested: streamersData.length,
+        created,
+        handles: payloads.map((p) => p.handle.trim().toLowerCase()),
+      },
+    });
     return { success: true, data: { created } };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
@@ -562,8 +639,9 @@ export async function createClipAction(data: {
   scheduleId?: string;
 }): Promise<ActionResult<{ id: string }>> {
   try {
-    await requireAuth();
+    const session = await requireAuth();
     const validated = clipServerSchema.parse(data);
+    const changes = snapshotClip(validated);
     const payload = {
       title: validated.title,
       url: validated.url,
@@ -611,6 +689,13 @@ export async function createClipAction(data: {
       updateTag('clips'),
     ]);
 
+    auditLog(session, {
+      action: 'create',
+      entity: 'clip',
+      entityId: clipId,
+      summary: `클립 생성: ${validated.title.trim()}`,
+      changes,
+    });
     return { success: true, data: { id: clipId } };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
@@ -635,8 +720,9 @@ export async function updateClipAction(
   },
 ): Promise<ActionResult> {
   try {
-    await requireAuth();
+    const session = await requireAuth();
     const validated = clipServerSchema.parse(data);
+    const changes = snapshotClip(validated);
     const payload = {
       title: validated.title,
       url: validated.url,
@@ -686,6 +772,13 @@ export async function updateClipAction(
       updateTag('clips'),
     ]);
 
+    auditLog(session, {
+      action: 'update',
+      entity: 'clip',
+      entityId: id,
+      summary: `클립 수정: ${validated.title.trim()}`,
+      changes,
+    });
     return { success: true, data: null };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
@@ -699,7 +792,7 @@ export async function updateClipAction(
  */
 export async function deleteClipAction(id: string): Promise<ActionResult> {
   try {
-    await requireAuth();
+    const session = await requireAuth();
 
     if (!id?.trim()) {
       throw new ValidationError('유효한 클립 ID가 필요합니다.');
@@ -728,6 +821,12 @@ export async function deleteClipAction(id: string): Promise<ActionResult> {
       updateTag('clips'),
     ]);
 
+    auditLog(session, {
+      action: 'delete',
+      entity: 'clip',
+      entityId: id,
+      summary: `클립 삭제 id=${id}`,
+    });
     return { success: true, data: null };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
@@ -744,8 +843,9 @@ export async function createGameAction(data: {
   isHoi4?: boolean;
 }): Promise<ActionResult> {
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
     if (!data.title?.trim()) throw new ValidationError('게임 제목이 필요합니다.');
+    const changes = snapshotGame(data);
 
     const base = getScheduleServerBaseUrl();
     if (base) {
@@ -770,6 +870,12 @@ export async function createGameAction(data: {
         ...paths.map((path: string) => revalidatePath(path)),
         updateTag('calendar'),
       ]);
+      auditLog(session, {
+        action: 'create',
+        entity: 'game',
+        summary: `게임 생성: ${data.title.trim()}`,
+        changes,
+      });
       return { success: true, data: null };
     }
 
@@ -783,6 +889,12 @@ export async function createGameAction(data: {
       updateTag('calendar'),
     ]);
 
+    auditLog(session, {
+      action: 'create',
+      entity: 'game',
+      summary: `게임 생성: ${data.title.trim()}`,
+      changes,
+    });
     return { success: true, data: null };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
@@ -799,9 +911,10 @@ export async function updateGameAction(
   data: { title: string; isHoi4?: boolean },
 ): Promise<ActionResult> {
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
     if (!id?.trim()) throw new ValidationError('유효한 게임 ID가 필요합니다.');
     if (!data.title?.trim()) throw new ValidationError('게임 제목이 필요합니다.');
+    const changes = snapshotGame(data);
 
     const base = getScheduleServerBaseUrl();
     if (base) {
@@ -829,6 +942,13 @@ export async function updateGameAction(
         ...paths.map((path: string) => revalidatePath(path)),
         updateTag('calendar'),
       ]);
+      auditLog(session, {
+        action: 'update',
+        entity: 'game',
+        entityId: id,
+        summary: `게임 수정: ${data.title.trim()}`,
+        changes,
+      });
       return { success: true, data: null };
     }
 
@@ -843,6 +963,13 @@ export async function updateGameAction(
       updateTag('calendar'),
     ]);
 
+    auditLog(session, {
+      action: 'update',
+      entity: 'game',
+      entityId: id,
+      summary: `게임 수정: ${data.title.trim()}`,
+      changes,
+    });
     return { success: true, data: null };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
@@ -856,7 +983,7 @@ export async function updateGameAction(
  */
 export async function deleteGameAction(id: string): Promise<ActionResult> {
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
     if (!id?.trim()) throw new ValidationError('유효한 게임 ID가 필요합니다.');
 
     const base = getScheduleServerBaseUrl();
@@ -880,6 +1007,12 @@ export async function deleteGameAction(id: string): Promise<ActionResult> {
         ...paths.map((path: string) => revalidatePath(path)),
         updateTag('calendar'),
       ]);
+      auditLog(session, {
+        action: 'delete',
+        entity: 'game',
+        entityId: id,
+        summary: `게임 삭제 id=${id}`,
+      });
       return { success: true, data: null };
     }
 
@@ -891,6 +1024,12 @@ export async function deleteGameAction(id: string): Promise<ActionResult> {
       updateTag('calendar'),
     ]);
 
+    auditLog(session, {
+      action: 'delete',
+      entity: 'game',
+      entityId: id,
+      summary: `게임 삭제 id=${id}`,
+    });
     return { success: true, data: null };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
@@ -942,6 +1081,18 @@ export async function createFeedbackAction(formData: {
       logError('createFeedbackRevalidate', e);
     }
 
+    auditLog(null, {
+      action: 'create',
+      entity: 'feedback',
+      summary: `피드백 접수: ${validated.category.trim()}`,
+      changes: snapshotFeedback({
+        category: validated.category.trim(),
+        type: formData.type,
+        streamerId: formData.streamerId,
+        streamerName: formData.streamerName,
+        contentLength: contentOut.length,
+      }),
+    });
     return { success: true, data: null };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
@@ -954,7 +1105,7 @@ export async function rejectFeedbackAction(
   feedbackId: string,
 ): Promise<ActionResult> {
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
     const base = getScheduleServerBaseUrl();
     if (base) {
       const res = await fetchWithBackoff(`${base}/feedbacks/${encodeURIComponent(feedbackId)}/reject`, {
@@ -976,6 +1127,13 @@ export async function rejectFeedbackAction(
         ...paths.map((path: string) => revalidatePath(path)),
         updateTag('admin'),
       ]);
+      auditLog(session, {
+        action: 'reject',
+        entity: 'feedback',
+        entityId: feedbackId,
+        summary: `피드백 반려 id=${feedbackId}`,
+        changes: { status: 'REJECTED' },
+      });
       return { success: true, data: null };
     }
     await getPrismaForDomain().feedback.update({
@@ -989,6 +1147,13 @@ export async function rejectFeedbackAction(
       updateTag('admin'),
     ]);
 
+    auditLog(session, {
+      action: 'reject',
+      entity: 'feedback',
+      entityId: feedbackId,
+      summary: `피드백 반려 id=${feedbackId}`,
+      changes: { status: 'REJECTED' },
+    });
     return { success: true, data: null };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
@@ -1001,7 +1166,7 @@ export async function resolveFeedbackAction(
   feedbackId: string,
 ): Promise<ActionResult> {
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
     const base = getScheduleServerBaseUrl();
     if (base) {
       const res = await fetchWithBackoff(`${base}/feedbacks/${encodeURIComponent(feedbackId)}/resolve`, {
@@ -1023,6 +1188,13 @@ export async function resolveFeedbackAction(
         ...paths.map((path: string) => revalidatePath(path)),
         updateTag('admin'),
       ]);
+      auditLog(session, {
+        action: 'resolve',
+        entity: 'feedback',
+        entityId: feedbackId,
+        summary: `피드백 처리 완료 id=${feedbackId}`,
+        changes: { status: 'RESOLVED' },
+      });
       return { success: true, data: null };
     }
     await getPrismaForDomain().feedback.update({
@@ -1036,6 +1208,13 @@ export async function resolveFeedbackAction(
       updateTag('admin'),
     ]);
 
+    auditLog(session, {
+      action: 'resolve',
+      entity: 'feedback',
+      entityId: feedbackId,
+      summary: `피드백 처리 완료 id=${feedbackId}`,
+      changes: { status: 'RESOLVED' },
+    });
     return { success: true, data: null };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
