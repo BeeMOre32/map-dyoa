@@ -13,6 +13,9 @@ import {
   Bell,
   ChevronDown,
   Server,
+  Sparkles,
+  LayoutGrid,
+  Radio,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OpenHashDetails from './OpenHashDetails';
@@ -345,6 +348,107 @@ function DonationPostBody() {
   );
 }
 
+function ApiUiUpdatePostBody() {
+  return (
+    <div className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 pt-3">
+      <p>
+        이번 업데이트에서는{' '}
+        <strong className="text-slate-900 dark:text-white">map-dyoa-server(Fly API)</strong>로의
+        데이터 연동을 마무리하고, 지금까지 베타로 테스트하던{' '}
+        <strong className="text-slate-900 dark:text-white">새 캘린더·일정 UI</strong>를 전 사용자에게
+        기본 적용했습니다. 아래에 API·화면·기타 변경 사항을 정리했습니다.
+      </p>
+
+      <div className="flex gap-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl p-4">
+        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+        <div className="text-emerald-700 dark:text-emerald-300 text-sm space-y-2">
+          <p className="font-black text-emerald-900 dark:text-emerald-200">API · 백엔드 연동 (완료)</p>
+          <ul className="list-disc pl-4 space-y-1.5">
+            <li>
+              <code className="text-[12px] font-mono">MAP_DYOA_SERVER_URL</code> 설정 시 일정·스트리머·클립·게임
+              조회를 Fly API로 처리 (Next.js DB 직접 연결 최소화)
+            </li>
+            <li>일정 생성·수정·삭제, 클립·스트리머·게임 관리 등 쓰기 작업 서버 API 연동</li>
+            <li>캘린더·스트리머 상세·클립 목록·HOI4 전적·관리자 통계·피드백 등 읽기 API 일괄 전환</li>
+            <li>치지직 라이브 상태 조회 API 연동 (캘린더 LIVE 뱃지·멤버 탭)</li>
+            <li>
+              <Link href="/health" className="font-black underline underline-offset-2">
+                /health
+              </Link>
+              에서 백엔드 응답·지연 시간 확인 가능
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="flex gap-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 rounded-2xl p-4">
+        <LayoutGrid className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+        <div className="text-indigo-700 dark:text-indigo-300 text-sm space-y-2">
+          <p className="font-black text-indigo-900 dark:text-indigo-200">새 UI (기본 적용)</p>
+          <ul className="list-disc pl-4 space-y-1.5">
+            <li>
+              <strong className="text-indigo-900 dark:text-indigo-200">V2 캘린더 카드</strong> — 주간
+              카드형 컬럼, 게임 색 반영, 모바일·월간 가독성 개선
+            </li>
+            <li>
+              <strong className="text-indigo-900 dark:text-indigo-200">V2 일정 상세 모달</strong> — 클립·HOI4
+              전적 사이드 패널, 데스크탑·모바일 레이아웃 정리
+            </li>
+            <li>주·월 이동 시 그리드 슬라이드·카드 스프링 애니메이션</li>
+            <li>설정의 「실험적 기능」 토글 제거 — 새 UI가 기본, 필요 시 아래 구버전 옵션 사용</li>
+            <li>
+              설정 → 캘린더 →{' '}
+              <strong className="text-indigo-900 dark:text-indigo-200">구버전 UI로 보기</strong>로 이전
+              캘린더·모달 복원 가능
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="flex gap-3 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/50 rounded-2xl p-4">
+        <Sparkles className="w-4 h-4 text-violet-500 shrink-0 mt-0.5" />
+        <div className="text-violet-700 dark:text-violet-300 text-sm space-y-2">
+          <p className="font-black text-violet-900 dark:text-violet-200">기타 개선</p>
+          <ul className="list-disc pl-4 space-y-1.5">
+            <li>
+              <strong className="text-violet-900 dark:text-violet-200">HOI4 내전</strong> — 게스트도 플레이
+              국가 등록 가능, 승·패 기록 UI·저장 제거 (국가만 집계)
+            </li>
+            <li>
+              <Link href="/hoi4" className="font-black underline underline-offset-2">
+                HOI4 참전 기록
+              </Link>
+              탭은 설정과 무관하게 항상 표시
+            </li>
+            <li>
+              <strong className="text-violet-900 dark:text-violet-200">LIVE 표시</strong> — 등록된 시작
+              시각 이전에는 LIVE 뱃지·치지직 라이브 링크·일정 멀티뷰 버튼 숨김 (시간 미정 일정 제외)
+            </li>
+            <li>일정·클립 저장 후 캘린더 자동 갱신, 모달 로딩 스켈레톤 개선</li>
+            <li>설정 모달 한글 표시 오류 수정</li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="flex gap-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+        <Radio className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+        <p className="text-slate-600 dark:text-slate-400 text-sm">
+          문제가 있거나 이전 화면이 더 편하시면{' '}
+          <strong className="text-slate-800 dark:text-slate-200">설정 → 구버전 UI로 보기</strong>를 켜
+          주세요. API·UI 관련 제보는 사이트 내 피드백이나 디스코드로 보내주시면 반영에 참고하겠습니다.
+        </p>
+      </div>
+
+      <p className="text-xs text-slate-500 dark:text-slate-400">
+        <Link href="/calendar" className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+          캘린더
+        </Link>
+        에서 새 UI를 바로 확인할 수 있습니다.
+      </p>
+    </div>
+  );
+}
+
 function BackendProjectPostBody({ active }: { active: boolean }) {
   return (
     <div className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 pt-3">
@@ -414,6 +518,43 @@ export default function AnnouncementsView() {
         </div>
 
         <div className="space-y-3">
+          <details
+            id="api-ui-update-2026-05"
+            className="group scroll-mt-24 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm open:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:open:bg-slate-900"
+          >
+            <summary className="cursor-pointer list-none px-4 py-4 marker:content-none sm:px-5 [&::-webkit-details-marker]:hidden">
+              <span className="flex w-full items-start gap-3 text-left">
+                <span className="min-w-0 flex-1 space-y-2">
+                  <span className="flex flex-wrap items-center gap-2 gap-y-1">
+                    <span
+                      className={cn(
+                        'inline-block rounded-full px-2.5 py-1 text-xs font-black',
+                        'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+                      )}
+                    >
+                      업데이트
+                    </span>
+                    <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                      2026. 05. 15
+                    </span>
+                  </span>
+                  <span className="block pr-1 text-base font-black leading-snug text-slate-900 dark:text-white sm:text-lg">
+                    API 연동 완료 · 새 캘린더 UI 적용
+                  </span>
+                  <span className="block text-sm font-medium leading-relaxed text-slate-500 group-open:hidden dark:text-slate-400">
+                    map-dyoa-server API 전환과 V2 캘린더·일정 모달이 기본으로 적용되었습니다.
+                  </span>
+                </span>
+                <span className="mt-1 shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180 dark:text-slate-500">
+                  <ChevronDown className="h-5 w-5" aria-hidden />
+                </span>
+              </span>
+            </summary>
+            <div className="border-t border-slate-100 px-4 pb-5 pt-1 dark:border-slate-800 sm:px-5">
+              <ApiUiUpdatePostBody />
+            </div>
+          </details>
+
           <details
             id="backend-split-2026-05"
             className="group scroll-mt-24 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm open:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:open:bg-slate-900"

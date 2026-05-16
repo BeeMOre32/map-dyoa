@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Megaphone, X, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { announcements } from '@/config/announcements';
+import { announcementToast } from '@/config/announcements';
+import type { Announcement } from '@/config/announcements';
 
 const STORAGE_KEY = 'dismissedAnnouncements';
 
@@ -14,14 +15,15 @@ type Props = {
 };
 
 export default function AnnouncementToast({ stacked }: Props) {
-  const [target, setTarget] = useState<(typeof announcements)[number] | null>(null);
+  const [target, setTarget] = useState<Announcement | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
         const dismissed: string[] = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
-        const next = announcements.find((a) => !dismissed.includes(a.id));
-        if (next) setTarget(next);
+        if (!dismissed.includes(announcementToast.id)) {
+          setTarget(announcementToast);
+        }
       } catch {}
     }, 1500);
     return () => clearTimeout(timer);
