@@ -2,6 +2,8 @@
 
 import type { CSSProperties } from 'react';
 import { format, isToday, isValid } from 'date-fns';
+import { isScheduleLiveOnCard } from '@/lib/schedule-live';
+import { useMinuteClock } from '@/hooks/useMinuteClock';
 import Link from 'next/link';
 import { Clock, Gamepad2, CircleAlert } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -94,13 +96,10 @@ export default function ScheduleCardV2({
   const stopProp = (e: React.MouseEvent) => e.stopPropagation();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
+  useMinuteClock();
   const startD = new Date(schedule.startTime);
   const isToday_ = isValid(startD) && isToday(startD);
-  const isLive =
-    !schedule.isLiveEnded &&
-    liveStreamerIds !== undefined &&
-    isToday_ &&
-    schedule.participants.some((p) => liveStreamerIds.has(p.id));
+  const isLive = isScheduleLiveOnCard(schedule, liveStreamerIds);
   const isEnded = schedule.isLiveEnded && isToday_;
   const gameColor = schedule.game ? getGameColor(schedule.game.id, isDark) : null;
   const hasGameTitle = Boolean(schedule.game?.title?.trim());

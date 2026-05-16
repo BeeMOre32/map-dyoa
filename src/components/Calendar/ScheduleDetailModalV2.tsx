@@ -46,6 +46,11 @@ import {
   type ClipForSchedule,
   type SideTab,
 } from './ScheduleSidePanel';
+import {
+  filterScheduleLiveUrls,
+  hasScheduleBroadcastStarted,
+} from '@/lib/schedule-live';
+import { useMinuteClock } from '@/hooks/useMinuteClock';
 interface Props {
   schedule: FlattenedSchedule;
   streamers: Streamer[];
@@ -319,7 +324,9 @@ function DetailViewV2({
   onClose: () => void;
   onOpenSheet: (tab: SideTab) => void;
 }) {
-  const liveUrls = schedule.liveUrls ?? [];
+  useMinuteClock();
+  const broadcastStarted = hasScheduleBroadcastStarted(schedule);
+  const liveUrls = filterScheduleLiveUrls(schedule.liveUrls ?? [], schedule);
 
   return (
     <>
@@ -433,7 +440,7 @@ function DetailViewV2({
           </div>
 
           {/* 멀티뷰 CTA */}
-          {schedule.participants.length >= 2 && (
+          {schedule.participants.length >= 2 && broadcastStarted && (
             <Link
               href={`/calendar/schedule/${schedule.id}/multiview`}
               target="_blank"

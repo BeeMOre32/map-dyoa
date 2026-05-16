@@ -9,6 +9,8 @@ import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { track } from '@vercel/analytics';
+import { isScheduleLiveOnCard } from '@/lib/schedule-live';
+import { useMinuteClock } from '@/hooks/useMinuteClock';
 
 function LiveBadge() {
   return (
@@ -59,12 +61,9 @@ export default function ScheduleCard({
       variant,
     });
   };
+  useMinuteClock();
   const isToday_ = isToday(new Date(schedule.startTime));
-  const isLive =
-    !schedule.isLiveEnded &&
-    liveStreamerIds !== undefined &&
-    isToday_ &&
-    schedule.participants.some((p) => liveStreamerIds.has(p.id));
+  const isLive = isScheduleLiveOnCard(schedule, liveStreamerIds);
   const isEnded = schedule.isLiveEnded && isToday_;
   const gameColor = schedule.game
     ? getGameColor(schedule.game.id, resolvedTheme === 'dark')
