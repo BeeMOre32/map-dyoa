@@ -57,7 +57,13 @@ export type CreateScheduleModalProps = ModalProps & {
   games: Game[];
   initialData?: FlattenedSchedule | null;
   isEdit?: boolean;
+  /** 일정 상세 모달 안에 넣을 때 — 별도 오버레이 없이 폼만 렌더 */
+  embedded?: boolean;
   onOptimisticCreate?: (schedule: FlattenedSchedule) => void;
+  /** embedded일 때 취소 버튼 (없으면 onClose) */
+  onCancel?: () => void;
+  /** 수정 저장 직후 상세 화면 즉시 반영 */
+  onScheduleUpdated?: (schedule: FlattenedSchedule) => void;
 };
 
 export type CreateMode = 'single' | 'batch' | 'image' | 'text';

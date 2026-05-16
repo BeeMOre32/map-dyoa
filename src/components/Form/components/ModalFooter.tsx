@@ -42,9 +42,14 @@ export default function ModalFooter({
           취소
         </button>
         <button
-          form={formId}
-          type="submit"
+          type="button"
           disabled={isSubmitting || disabled}
+          onClick={() => {
+            const form = document.getElementById(formId);
+            if (form instanceof HTMLFormElement) {
+              form.requestSubmit();
+            }
+          }}
           className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50"
         >
           {isLoading

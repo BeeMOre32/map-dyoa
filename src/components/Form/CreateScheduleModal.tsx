@@ -18,9 +18,12 @@ export default function CreateScheduleModal({
   streamers,
   games,
   onClose,
+  onCancel,
   initialData,
   isEdit = false,
+  embedded = false,
   onOptimisticCreate,
+  onScheduleUpdated,
 }: CreateScheduleModalProps) {
   const [createMode, setCreateMode] = useState<CreateMode>('single');
 
@@ -30,6 +33,7 @@ export default function CreateScheduleModal({
     games,
     streamers,
     onOptimisticCreate,
+    onScheduleUpdated,
     onClose,
   });
 
@@ -38,7 +42,7 @@ export default function CreateScheduleModal({
     onClose,
   });
 
-  useEscapeKey(onClose);
+  useEscapeKey(embedded ? () => {} : onClose);
 
   const sortedStreamers = [...streamers].sort((a, b) =>
     a.name.localeCompare(b.name, 'ko-KR'),
@@ -49,121 +53,136 @@ export default function CreateScheduleModal({
     !isEdit && (createMode === 'image' || createMode === 'text');
   const showBatch = !isEdit && createMode === 'batch' && !showExtract;
   const modalMaxWidthClass = showExtract ? 'max-w-5xl' : 'max-w-lg';
+  const handleCancel = onCancel ?? onClose;
+
+  const body = (
+    <>
+      {!embedded && (
+        <ModalHeader
+          isEdit={isEdit}
+          createMode={createMode}
+          slotCount={batchForm.slots.length}
+          onClose={onClose}
+        />
+      )}
+
+      {!isEdit && !embedded && (
+        <ModeTabs createMode={createMode} setCreateMode={setCreateMode} />
+      )}
+
+      {showEditOrSingle && (
+        <>
+          <EditScheduleForm
+            title={editForm.title}
+            setTitle={editForm.setTitle}
+            startTime={editForm.startTime}
+            setStartTime={editForm.setStartTime}
+            selectedGameId={editForm.selectedGameId}
+            setSelectedGameId={editForm.setSelectedGameId}
+            participants={editForm.participants}
+            liveUrls={editForm.liveUrls}
+            setLiveUrls={editForm.setLiveUrls}
+            isTimeTBD={editForm.isTimeTBD}
+            setIsTimeTBD={editForm.setIsTimeTBD}
+            isNaeJeon={editForm.isNaeJeon}
+            setIsNaeJeon={editForm.setIsNaeJeon}
+            isLiveEnded={editForm.isLiveEnded}
+            setIsLiveEnded={editForm.setIsLiveEnded}
+            isEdit={isEdit}
+            isHoi4Game={editForm.isHoi4Game}
+            editErrors={editForm.editErrors}
+            editMetaLoading={editForm.editMetaLoading}
+            editAutoFilled={editForm.editAutoFilled}
+            setEditAutoFilled={editForm.setEditAutoFilled}
+            sortedStreamers={sortedStreamers}
+            games={games}
+            onToggleStreamer={editForm.toggleStreamer}
+            onToggleGuest={editForm.toggleGuest}
+            onClearError={editForm.clearEditError}
+            onUpdateParticipant={editForm.updateParticipant}
+            onLiveUrlBlur={editForm.handleLiveUrlBlur}
+            onSubmit={editForm.handleEditSubmit}
+          />
+
+          <ModalFooter
+            error={editForm.editErrors.submit}
+            isSubmitting={editForm.isSubmitting}
+            loadingText="정보 가져오는 중..."
+            submittingText={isEdit ? '수정 중...' : '등록 중...'}
+            submitText={isEdit ? '수정 완료' : '일정 등록'}
+            onClose={handleCancel}
+            formId="schedule-form"
+            disabled={editForm.editMetaLoading}
+          />
+        </>
+      )}
+
+      {showBatch && (
+        <>
+          <BatchScheduleForm
+            slots={batchForm.slots}
+            expandedKey={batchForm.expandedKey}
+            sortedStreamers={sortedStreamers}
+            games={games}
+            onToggleExpand={(key) => batchForm.setExpandedKey(key)}
+            onAddSlot={batchForm.addSlot}
+            onRemoveSlot={batchForm.removeSlot}
+            onUpdateSlot={batchForm.updateSlot}
+            onSlotLiveUrlBlur={batchForm.handleSlotLiveUrlBlur}
+            onSubmit={batchForm.handleBatchSubmit}
+          />
+
+          <ModalFooter
+            error={batchForm.batchSubmitError}
+            isSubmitting={batchForm.isSubmitting}
+            submittingText="등록 중..."
+            submitText={`${batchForm.slots.length}개 일정 등록`}
+            onClose={handleCancel}
+            formId="batch-create-form"
+            disabled={batchForm.slots.some((s) => s.metaLoading)}
+          />
+        </>
+      )}
+
+      {showExtract && (
+        <ScheduleExtractTab
+          key={createMode}
+          mode={createMode}
+          streamers={streamers}
+          games={games}
+          onClose={onClose}
+        />
+      )}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {body}
+      </div>
+    );
+  }
 
   return (
-    <>
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      exit="hidden"
+      variants={backdropVariants}
+      className="fixed inset-0 z-70 flex items-center justify-center p-4 md:p-6 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <motion.div
+        variants={smoothModalVariants}
         initial="hidden"
         animate="visible"
         exit="hidden"
-        variants={backdropVariants}
-        className="fixed inset-0 z-70 flex items-center justify-center p-4 md:p-6 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm"
-        onClick={onClose}
+        className={`bg-white dark:bg-slate-800 w-full ${modalMaxWidthClass} rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 flex flex-col max-h-[90dvh] border border-slate-100 dark:border-slate-700`}
+        onClick={(e) => e.stopPropagation()}
       >
-        <motion.div
-          variants={smoothModalVariants}
-          initial="hidden"
-          animate="visible"
-          exit="hidden"
-          className={`bg-white dark:bg-slate-800 w-full ${modalMaxWidthClass} rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 flex flex-col max-h-[90dvh] border border-slate-100 dark:border-slate-700`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ModalHeader
-            isEdit={isEdit}
-            createMode={createMode}
-            slotCount={batchForm.slots.length}
-            onClose={onClose}
-          />
-
-          {!isEdit && (
-            <ModeTabs createMode={createMode} setCreateMode={setCreateMode} />
-          )}
-
-          {showEditOrSingle && (
-            <>
-              <EditScheduleForm
-                title={editForm.title}
-                setTitle={editForm.setTitle}
-                startTime={editForm.startTime}
-                setStartTime={editForm.setStartTime}
-                selectedGameId={editForm.selectedGameId}
-                setSelectedGameId={editForm.setSelectedGameId}
-                participants={editForm.participants}
-                liveUrls={editForm.liveUrls}
-                setLiveUrls={editForm.setLiveUrls}
-                isTimeTBD={editForm.isTimeTBD}
-                setIsTimeTBD={editForm.setIsTimeTBD}
-                isNaeJeon={editForm.isNaeJeon}
-                setIsNaeJeon={editForm.setIsNaeJeon}
-                isLiveEnded={editForm.isLiveEnded}
-                setIsLiveEnded={editForm.setIsLiveEnded}
-                isEdit={isEdit}
-                isHoi4Game={editForm.isHoi4Game}
-                editErrors={editForm.editErrors}
-                editMetaLoading={editForm.editMetaLoading}
-                editAutoFilled={editForm.editAutoFilled}
-                setEditAutoFilled={editForm.setEditAutoFilled}
-                sortedStreamers={sortedStreamers}
-                games={games}
-                onToggleStreamer={editForm.toggleStreamer}
-                onToggleGuest={editForm.toggleGuest}
-                onClearError={editForm.clearEditError}
-                onUpdateParticipant={editForm.updateParticipant}
-                onLiveUrlBlur={editForm.handleLiveUrlBlur}
-                onSubmit={editForm.handleEditSubmit}
-              />
-
-              <ModalFooter
-                error={editForm.editErrors.submit}
-                isSubmitting={editForm.isSubmitting}
-                loadingText="정보 가져오는 중..."
-                submittingText={isEdit ? '수정 중...' : '등록 중...'}
-                submitText={isEdit ? '수정 완료' : '일정 등록'}
-                onClose={onClose}
-                formId="schedule-form"
-                disabled={editForm.editMetaLoading}
-              />
-            </>
-          )}
-
-          {showBatch && (
-            <>
-              <BatchScheduleForm
-                slots={batchForm.slots}
-                expandedKey={batchForm.expandedKey}
-                sortedStreamers={sortedStreamers}
-                games={games}
-                onToggleExpand={(key) => batchForm.setExpandedKey(key)}
-                onAddSlot={batchForm.addSlot}
-                onRemoveSlot={batchForm.removeSlot}
-                onUpdateSlot={batchForm.updateSlot}
-                onSlotLiveUrlBlur={batchForm.handleSlotLiveUrlBlur}
-                onSubmit={batchForm.handleBatchSubmit}
-              />
-
-              <ModalFooter
-                error={batchForm.batchSubmitError}
-                isSubmitting={batchForm.isSubmitting}
-                submittingText="등록 중..."
-                submitText={`${batchForm.slots.length}개 일정 등록`}
-                onClose={onClose}
-                formId="batch-create-form"
-                disabled={batchForm.slots.some((s) => s.metaLoading)}
-              />
-            </>
-          )}
-
-          {showExtract && (
-            <ScheduleExtractTab
-              key={createMode}
-              mode={createMode}
-              streamers={streamers}
-              games={games}
-              onClose={onClose}
-            />
-          )}
-        </motion.div>
+        {body}
       </motion.div>
-    </>
+    </motion.div>
   );
 }

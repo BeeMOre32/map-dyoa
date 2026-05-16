@@ -58,6 +58,7 @@ interface ScheduleDetailViewProps {
   streamers: Streamer[];
   games: Game[];
   clips?: ClipForSchedule[];
+  onScheduleUpdated?: (schedule: FlattenedSchedule) => void;
 }
 
 function getLinkMeta(url: string) {
@@ -90,6 +91,7 @@ export default function ScheduleDetailView({
   streamers,
   games,
   clips = [],
+  onScheduleUpdated,
 }: ScheduleDetailViewProps) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -172,6 +174,7 @@ export default function ScheduleDetailView({
               streamers={streamers}
               games={games}
               onBack={() => setIsEditing(false)}
+              onScheduleUpdated={onScheduleUpdated}
               onSave={() => {
                 setIsEditing(false);
                 router.refresh();
@@ -265,15 +268,17 @@ function EditView({
   games,
   onBack,
   onSave,
+  onScheduleUpdated,
 }: {
   schedule: FlattenedSchedule;
   streamers: Streamer[];
   games: Game[];
   onBack: () => void;
   onSave: () => void;
+  onScheduleUpdated?: (schedule: FlattenedSchedule) => void;
 }) {
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-white dark:bg-slate-800">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white dark:bg-slate-800">
       <div className="px-5 py-4 sm:px-8 sm:py-6 border-b border-slate-50 dark:border-slate-700 flex justify-between items-center shrink-0 bg-slate-50/50 dark:bg-slate-700/30">
         <button
           onClick={onBack}
@@ -287,15 +292,16 @@ function EditView({
         </h3>
         <div className="w-10" />
       </div>
-      <div className="p-5 sm:p-8 overflow-y-auto flex-1 min-h-0 overscroll-y-contain custom-scrollbar">
-        <CreateScheduleModal
-          initialData={schedule}
-          isEdit={true}
-          streamers={streamers}
-          games={games}
-          onClose={onSave}
-        />
-      </div>
+      <CreateScheduleModal
+        embedded
+        initialData={schedule}
+        isEdit
+        streamers={streamers}
+        games={games}
+        onClose={onSave}
+        onCancel={onBack}
+        onScheduleUpdated={onScheduleUpdated}
+      />
     </div>
   );
 }

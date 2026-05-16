@@ -31,7 +31,11 @@ import {
   deleteClipOnServer,
   updateClipOnServer,
 } from '@/lib/map-dyoa-server-clips';
-import { apiMutationMessage } from '@/lib/map-dyoa-server-fetch';
+import {
+  apiMutationMessage,
+  scheduleParticipantsForApi,
+  type ApiJson,
+} from '@/lib/map-dyoa-server-fetch';
 import { getScheduleServerBaseUrl } from '@/lib/map-dyoa-server-schedules';
 import {
   bulkCreateStreamersOnServer,
@@ -104,27 +108,21 @@ export async function createScheduleAction(data: {
         body: JSON.stringify({
           title: validated.title.trim(),
           startTime: validated.startTime.toISOString(),
-          participants: validated.participants.map(({ id, nation, isGuest }) => ({
-            id,
-            nation,
-            result: null,
-            isGuest,
-          })),
+          participants: scheduleParticipantsForApi(validated.participants),
           gameId: validated.gameId?.trim() || undefined,
           liveUrls: validated.liveUrls?.map((u) => u.trim()).filter(Boolean) ?? [],
           isGuerrilla: validated.isGuerrilla ?? false,
           isNaeJeon: validated.isNaeJeon ?? false,
         }),
       });
-      const json = (await res.json()) as { id?: string; error?: string; message?: string; issues?: unknown };
+      const json = (await res.json()) as ApiJson & { id?: string };
       if (!res.ok) {
-        const msg =
-          res.status === 400 && json.error === 'VALIDATION'
-            ? '입력 값을 확인해주세요.'
-            : typeof json.message === 'string'
-              ? json.message
-              : '일정 저장에 실패했습니다.';
-        return { success: false, error: msg, errorCode: json.error ?? 'API_ERROR' };
+        const msg = apiMutationMessage(
+          res.status,
+          json,
+          '일정 저장에 실패했습니다.',
+        );
+        return { success: false, error: msg, errorCode: String(json.error ?? 'API_ERROR') };
       }
       if (!json.id) {
         return { success: false, error: '응답에 일정 ID가 없습니다.', errorCode: 'API_ERROR' };
@@ -234,12 +232,7 @@ export async function updateScheduleAction(
         body: JSON.stringify({
           title: validated.title.trim(),
           startTime: validated.startTime.toISOString(),
-          participants: validated.participants.map(({ id: sid, nation, isGuest }) => ({
-            id: sid,
-            nation,
-            result: null,
-            isGuest,
-          })),
+          participants: scheduleParticipantsForApi(validated.participants),
           gameId: validated.gameId?.trim() || undefined,
           liveUrls: validated.liveUrls?.map((u) => u.trim()).filter(Boolean) ?? [],
           isGuerrilla: validated.isGuerrilla ?? false,
@@ -247,18 +240,17 @@ export async function updateScheduleAction(
           isLiveEnded: validated.isLiveEnded ?? false,
         }),
       });
-      const json = (await res.json()) as { error?: string; message?: string };
+      const json = (await res.json()) as ApiJson;
       if (res.status === 404) {
         return { success: false, error: '일정을 찾을 수 없습니다.', errorCode: 'NOT_FOUND' };
       }
       if (!res.ok) {
-        const msg =
-          res.status === 400 && json.error === 'VALIDATION'
-            ? '입력 값을 확인해주세요.'
-            : typeof json.message === 'string'
-              ? json.message
-              : '일정 수정에 실패했습니다.';
-        return { success: false, error: msg, errorCode: json.error ?? 'API_ERROR' };
+        const msg = apiMutationMessage(
+          res.status,
+          json,
+          '일정 수정에 실패했습니다.',
+        );
+        return { success: false, error: msg, errorCode: String(json.error ?? 'API_ERROR') };
       }
       const paths = getRevalidationPaths('schedule');
       await Promise.all([

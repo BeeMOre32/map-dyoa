@@ -85,7 +85,7 @@ export async function fetchSchedulesFromServer(
   if (!base) throw new Error('MAP_DYOA_SERVER_URL이 설정되지 않았습니다.');
 
   const url = `${base}/schedules?from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`;
-  const res = await fetchWithBackoff(url, { next: { revalidate: 60 } });
+  const res = await fetchWithBackoff(url, { next: { tags: ['calendar'] } });
   const data = await readJsonSafely<{
     schedules?: unknown[];
     error?: string;
@@ -113,7 +113,7 @@ export async function fetchScheduleByIdFromServer(
   if (!base) throw new Error('MAP_DYOA_SERVER_URL이 설정되지 않았습니다.');
 
   const res = await fetchWithBackoff(`${base}/schedules/${encodeURIComponent(id)}`, {
-    next: { revalidate: 60 },
+    next: { tags: ['calendar'] },
   });
   if (res.status === 404) return null;
   const raw = await readJsonSafely<Record<string, unknown>>(

@@ -13,6 +13,7 @@ import {
   AutoFillResult,
 } from '../types';
 import { scrollToFirstZodField } from '@/lib/zod-scroll';
+import { useToast } from '@/components/Common/Toaster';
 
 type UseEditScheduleFormArgs = {
   initialData?: FlattenedSchedule | null;
@@ -20,6 +21,7 @@ type UseEditScheduleFormArgs = {
   games: { id: string; title: string; isHoi4: boolean }[];
   streamers: Streamer[];
   onOptimisticCreate?: (schedule: FlattenedSchedule) => void;
+  onScheduleUpdated?: (schedule: FlattenedSchedule) => void;
   onClose: () => void;
 };
 
@@ -66,9 +68,11 @@ export function useEditScheduleForm({
   games,
   streamers,
   onOptimisticCreate,
+  onScheduleUpdated,
   onClose,
 }: UseEditScheduleFormArgs): UseEditScheduleFormReturn {
   const router = useRouter();
+  const toast = useToast();
   const [, startTransition] = useTransition();
 
   const defaultTime = initialData?.startTime
@@ -230,6 +234,44 @@ export function useEditScheduleForm({
       ? await updateScheduleAction(initialData!.id, payload)
       : await createScheduleAction(payload);
     if (result.success) {
+      if (isEdit && initialData) {
+        const selectedGame = games.find((g) => g.id === selectedGameId) ?? null;
+        const updated: FlattenedSchedule = {
+          ...initialData,
+          title,
+          gameId: selectedGameId || null,
+          game: selectedGame,
+          isGuerrilla: isTimeTBD,
+          isNaeJeon: isHoi4Game ? isNaeJeon : false,
+          isLiveEnded,
+          liveUrls: cleanUrls,
+          startTime: resolvedStartTime,
+          participants: streamers
+            .filter((s) => selectedStreamers.includes(s.id))
+            .map((s) => {
+              const p = participants.find((x) => x.id === s.id);
+              return {
+                ...s,
+                nation: p?.nation.trim() || null,
+                result: null,
+                isGuest: p?.isGuest ?? false,
+              };
+            })
+            .sort(
+              (a, b) =>
+                Number(a.isGuest) - Number(b.isGuest) ||
+                a.name.localeCompare(b.name, 'ko'),
+            ),
+          formattedDate: format(resolvedStartTime, 'yyyy년 MM월 dd일(EEEE)', {
+            locale: ko,
+          }),
+          formattedTime: isTimeTBD
+            ? '시간 미정'
+            : format(resolvedStartTime, 'HH:mm'),
+        };
+        onScheduleUpdated?.(updated);
+        toast.success('일정이 수정되었습니다.');
+      }
       if (!isEdit && onOptimisticCreate) {
         const selectedGame = games.find((g) => g.id === selectedGameId) ?? null;
         const flatParticipants: ParticipantFlat[] = streamers
@@ -269,7 +311,9 @@ export function useEditScheduleForm({
       });
       onClose();
     } else {
-      setEditErrors({ submit: '일정 저장에 실패했습니다. 다시 시도해주세요.' });
+      const msg = result.error ?? '일정 저장에 실패했습니다. 다시 시도해주세요.';
+      setEditErrors({ submit: msg });
+      toast.error(msg);
     }
     setIsSubmitting(false);
   };

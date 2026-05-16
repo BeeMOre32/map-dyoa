@@ -29,7 +29,12 @@ export default function ScheduleDetailModalWrapper({
     setClips(clipsProp ?? []);
   }, [scheduleProp, clipsProp]);
 
-  const modalProps = { schedule, clips, ...rest };
+  const modalProps = {
+    schedule,
+    clips,
+    onScheduleUpdated: setSchedule,
+    ...rest,
+  };
 
   return legacyUi ? (
     <ScheduleDetailModal {...modalProps} />
