@@ -76,6 +76,9 @@ export default function EditScheduleForm({
   const selectedStreamers = participants.map((p) => p.id);
   const guestStreamers = participants.filter((p) => p.isGuest).map((p) => p.id);
   const memberCount = participants.length - guestStreamers.length;
+  const nationEntryParticipants = isNaeJeon
+    ? participants
+    : participants.filter((p) => !p.isGuest);
 
   return (
     <form
@@ -251,13 +254,13 @@ export default function EditScheduleForm({
         </label>
       )}
 
-      {isHoi4Game && participants.some((p) => !p.isGuest) && (
+      {isHoi4Game && nationEntryParticipants.length > 0 && (
         <div className="space-y-3">
           <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
-            HOI4 · 국가
+            {isNaeJeon ? '내전 · 플레이 국가 (게스트 포함)' : 'HOI4 · 국가'}
           </label>
           <div className="space-y-2">
-            {participants.filter((p) => !p.isGuest).map(({ id, nation }) => {
+            {nationEntryParticipants.map(({ id, nation, isGuest }) => {
               const streamer = sortedStreamers.find((s) => s.id === id);
               if (!streamer) return null;
               return (
@@ -265,8 +268,15 @@ export default function EditScheduleForm({
                   key={id}
                   className="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-700/50 rounded-xl"
                 >
-                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200 w-16 shrink-0 truncate">
-                    {streamer.name}
+                  <span className="flex min-w-0 shrink-0 items-center gap-1.5">
+                    <span className="max-w-[4.5rem] truncate text-sm font-bold text-slate-700 dark:text-slate-200">
+                      {streamer.name}
+                    </span>
+                    {isGuest && (
+                      <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-black text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                        게스트
+                      </span>
+                    )}
                   </span>
                   <input
                     type="text"

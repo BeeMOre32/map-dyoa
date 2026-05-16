@@ -215,10 +215,9 @@ export function useEditScheduleForm({
     const payload = {
       title,
       startTime: resolvedStartTime,
-      participants: participants.map(({ id, nation, result, isGuest }) => ({
+      participants: participants.map(({ id, nation, isGuest }) => ({
         id,
         nation: nation.trim() || undefined,
-        result: result || undefined,
         isGuest,
       })),
       gameId: selectedGameId === '' ? undefined : selectedGameId,
@@ -240,7 +239,7 @@ export function useEditScheduleForm({
             return {
               ...s,
               nation: p?.nation.trim() || null,
-              result: p?.result || null,
+              result: null,
               isGuest: p?.isGuest ?? false,
             };
           });

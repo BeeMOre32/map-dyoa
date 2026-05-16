@@ -22,15 +22,8 @@ export type ClipForSchedule = {
 
 export type SideTab = 'clips' | 'hoi4';
 
-const RESULT_LABEL: Record<string, string> = { WIN: '승', LOSE: '패', DNF: '미완' };
-const RESULT_STYLE: Record<string, string> = {
-  WIN: 'bg-emerald-500 text-white',
-  LOSE: 'bg-red-500 text-white',
-  DNF: 'bg-slate-400 text-white',
-};
-
 function Hoi4Panel({ participants, isDark }: { participants: ParticipantFlat[]; isDark: boolean }) {
-  const hasData = participants.some((p) => p.nation || p.result);
+  const hasData = participants.some((p) => p.nation);
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain custom-scrollbar p-3">
@@ -49,13 +42,9 @@ function Hoi4Panel({ participants, isDark }: { participants: ParticipantFlat[]; 
                 <span className="flex-1 text-sm font-bold text-slate-600 dark:text-slate-300 truncate">
                   {p.nation || <span className="text-slate-300 dark:text-slate-600">—</span>}
                 </span>
-                {p.result ? (
-                  <span className={`text-[11px] font-black px-2.5 py-1 rounded-full shrink-0 ${RESULT_STYLE[p.result] ?? 'bg-slate-400 text-white'}`}>
-                    {RESULT_LABEL[p.result] ?? p.result}
-                  </span>
-                ) : (
-                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full shrink-0 bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500">
-                    미등록
+                {p.isGuest && (
+                  <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                    게스트
                   </span>
                 )}
               </div>
@@ -69,7 +58,7 @@ function Hoi4Panel({ participants, isDark }: { participants: ParticipantFlat[]; 
           </div>
           <div className="space-y-1.5">
             <p className="text-sm font-black text-slate-500 dark:text-slate-400">아직 전적이 없어요</p>
-            <p className="text-xs font-bold text-slate-300 dark:text-slate-600">일정 수정에서 국가/결과를 입력하세요</p>
+            <p className="text-xs font-bold text-slate-300 dark:text-slate-600">일정 수정에서 국가를 입력하세요</p>
           </div>
         </div>
       )}

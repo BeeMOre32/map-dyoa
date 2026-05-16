@@ -104,10 +104,10 @@ export async function createScheduleAction(data: {
         body: JSON.stringify({
           title: validated.title.trim(),
           startTime: validated.startTime.toISOString(),
-          participants: validated.participants.map(({ id, nation, result, isGuest }) => ({
+          participants: validated.participants.map(({ id, nation, isGuest }) => ({
             id,
             nation,
-            result,
+            result: null,
             isGuest,
           })),
           gameId: validated.gameId?.trim() || undefined,
@@ -149,10 +149,10 @@ export async function createScheduleAction(data: {
         title: validated.title.trim(),
         startTime: validated.startTime,
         participants: {
-          create: validated.participants.map(({ id, nation, result, isGuest }) => ({
+          create: validated.participants.map(({ id, nation, isGuest }) => ({
             streamer: { connect: { id } },
             nation: nation?.trim() || null,
-            result: result || null,
+            result: null,
             isGuest: isGuest ?? false,
           })),
         },
@@ -234,10 +234,10 @@ export async function updateScheduleAction(
         body: JSON.stringify({
           title: validated.title.trim(),
           startTime: validated.startTime.toISOString(),
-          participants: validated.participants.map(({ id: sid, nation, result, isGuest }) => ({
+          participants: validated.participants.map(({ id: sid, nation, isGuest }) => ({
             id: sid,
             nation,
-            result,
+            result: null,
             isGuest,
           })),
           gameId: validated.gameId?.trim() || undefined,
@@ -293,19 +293,19 @@ export async function updateScheduleAction(
       getPrismaForDomain().scheduleParticipant.deleteMany({
         where: { scheduleId: id, streamerId: { notIn: newStreamerIds } },
       }),
-      ...validated.participants.map(({ id: streamerId, nation, result, isGuest }) =>
+      ...validated.participants.map(({ id: streamerId, nation, isGuest }) =>
         getPrismaForDomain().scheduleParticipant.upsert({
           where: { scheduleId_streamerId: { scheduleId: id, streamerId } },
           create: {
             scheduleId: id,
             streamerId,
             nation: nation?.trim() || null,
-            result: result || null,
+            result: null,
             isGuest: isGuest ?? false,
           },
           update: {
             nation: nation?.trim() || null,
-            result: result || null,
+            result: null,
             isGuest: isGuest ?? false,
           },
         }),

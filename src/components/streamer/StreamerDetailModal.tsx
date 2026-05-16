@@ -226,12 +226,6 @@ export default function StreamerDetailModal({
                   {recentSchedules.map((s) => {
                     const gameColor = s.game ? getGameColor(s.game.id, isDark) : null;
                     const myEntry = s.participants.find((p) => p.streamer.id === streamer.id);
-                    const resultLabel: Record<string, string> = { WIN: '승', LOSE: '패', DNF: '미완' };
-                    const resultStyle: Record<string, string> = {
-                      WIN: 'bg-emerald-500 text-white',
-                      LOSE: 'bg-red-500 text-white',
-                      DNF: 'bg-slate-400 text-white',
-                    };
                     return (
                       <Link
                         key={s.id}
@@ -256,11 +250,6 @@ export default function StreamerDetailModal({
                             {s.game?.isHoi4 && myEntry?.nation && (
                               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
                                 · {myEntry.nation}
-                              </span>
-                            )}
-                            {s.game?.isHoi4 && myEntry?.result && (
-                              <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none ${resultStyle[myEntry.result] ?? 'bg-slate-400 text-white'}`}>
-                                {resultLabel[myEntry.result] ?? myEntry.result}
                               </span>
                             )}
                           </div>

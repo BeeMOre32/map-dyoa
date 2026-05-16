@@ -455,12 +455,11 @@ export const getHoi4Leaderboard = unstable_cache(
       return fetchHoi4LeaderboardFromServer();
     }
     const rows = await getPrismaForDomain().scheduleParticipant.findMany({
-      where: { isGuest: false, schedule: { game: { isHoi4: true }, isNaeJeon: true } },
+      where: { schedule: { game: { isHoi4: true }, isNaeJeon: true } },
       select: {
         scheduleId: true,
         streamerId: true,
         nation: true,
-        result: true,
         streamer: { select: { id: true, name: true, colorCode: true } },
         schedule: {
           select: {

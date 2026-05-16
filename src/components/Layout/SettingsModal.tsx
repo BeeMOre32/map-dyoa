@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import {
   Sun, Moon, HelpCircle, Shield, LogIn, LogOut, UserCheck, X,
-  LayoutDashboard, EyeOff, Heart, Megaphone, FlaskConical, PanelRight, LayoutGrid,
+  LayoutDashboard, EyeOff, Heart, Megaphone, History,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
@@ -13,19 +12,14 @@ import Link from 'next/link';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { useHideEndedStreams } from '@/hooks/useHideEndedStreams';
-import { useExperimentalFeatures } from '@/hooks/useExperimentalFeatures';
-import { track } from '@vercel/analytics';
+import { useLegacyCalendarUi } from '@/hooks/useLegacyCalendarUi';
 
 interface SettingsModalProps {
   onClose: () => void;
 }
 
-type Tab = 'general' | 'experimental';
-
-function Toggle({ on, color = 'indigo' }: { on: boolean; color?: 'indigo' | 'violet' }) {
-  const bg = on
-    ? color === 'violet' ? 'bg-violet-500' : 'bg-indigo-500'
-    : 'bg-slate-200 dark:bg-slate-600';
+function Toggle({ on }: { on: boolean }) {
+  const bg = on ? 'bg-indigo-500' : 'bg-slate-200 dark:bg-slate-600';
   return (
     <div className={`w-10 h-6 rounded-full relative transition-colors ${bg}`}>
       <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${on ? 'translate-x-5' : 'translate-x-1'}`} />
@@ -54,6 +48,8 @@ function GeneralTab({
   setTheme,
   hideEnded,
   setHideEnded,
+  legacyUi,
+  setLegacyUi,
   session,
 }: {
   onClose: () => void;
@@ -61,17 +57,12 @@ function GeneralTab({
   setTheme: (t: string) => void;
   hideEnded: boolean;
   setHideEnded: (v: boolean) => void;
+  legacyUi: boolean;
+  setLegacyUi: (v: boolean) => void;
   session: ReturnType<typeof useSession>['data'];
 }) {
   return (
-    <motion.div
-      key="general"
-      initial={{ opacity: 0, x: -8 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -8 }}
-      transition={{ duration: 0.15 }}
-      className="space-y-2"
-    >
+    <div className="space-y-2">
       <div className="px-2 py-1">
         <SectionLabel>화면</SectionLabel>
         <SettingRow onClick={() => setTheme(isDark ? 'light' : 'dark')}>
@@ -106,6 +97,18 @@ function GeneralTab({
             </div>
           </div>
           <Toggle on={hideEnded} />
+        </SettingRow>
+        <SettingRow onClick={() => setLegacyUi(!legacyUi)}>
+          <div className="flex items-center gap-3">
+            <History className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <div className="text-left">
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">구버전 UI로 보기</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">
+                이전 캘린더·일정 모달 디자인을 사용합니다
+              </p>
+            </div>
+          </div>
+          <Toggle on={legacyUi} />
         </SettingRow>
       </div>
 
@@ -180,69 +183,7 @@ function GeneralTab({
           )}
         </div>
       </div>
-    </motion.div>
-  );
-}
-
-function ExperimentalTab({
-  flags,
-  setFlag,
-}: {
-  flags: ReturnType<typeof useExperimentalFeatures>['flags'];
-  setFlag: ReturnType<typeof useExperimentalFeatures>['setFlag'];
-}) {
-  const featureItems = [
-    {
-      key: 'newScheduleModal' as const,
-      icon: <PanelRight className="w-4 h-4 text-violet-400 shrink-0" />,
-      label: '새 일정 모달 UI',
-      desc: '일정 카드 클릭 시 새 디자인 모달을 사용합니다',
-    },
-    {
-      key: 'newCalendarUI' as const,
-      icon: <LayoutGrid className="w-4 h-4 text-violet-400 shrink-0" />,
-      label: '새 캐린더 UI',
-      desc: '주간 보기에서 카드형 캐린더 레이아웃을 사용합니다',
-    },
-  ];
-
-  return (
-    <motion.div
-      key="experimental"
-      initial={{ opacity: 0, x: 8 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 8 }}
-      transition={{ duration: 0.15 }}
-      className="space-y-4"
-    >
-      <div className="flex gap-3 px-4 py-3 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/50 rounded-2xl">
-        <FlaskConical className="w-4 h-4 text-violet-500 dark:text-violet-400 shrink-0 mt-0.5" />
-        <p className="text-xs text-violet-600 dark:text-violet-400 font-medium leading-relaxed">아직 검토 중인 기능들입니다. 예기치 않은 동작이 있을 수 있습니다.</p>
-      </div>
-
-      <div className="px-2 space-y-1">
-        <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">기능</p>
-        {featureItems.map(({ key, icon, label, desc }) => (
-          <button
-            key={key}
-            onClick={() => setFlag(key, !flags[key])}
-            className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              {icon}
-              <div className="text-left">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{label}</p>
-                  <span className="px-1.5 py-px bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 text-[9px] font-black rounded uppercase tracking-wide">Beta</span>
-                </div>
-                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">{desc}</p>
-              </div>
-            </div>
-            <Toggle on={flags[key]} color="violet" />
-          </button>
-        ))}
-      </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -250,8 +191,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const { data: session } = useSession();
   const [hideEnded, setHideEnded] = useHideEndedStreams();
-  const { flags, setFlag } = useExperimentalFeatures();
-  const [tab, setTab] = useState<Tab>('general');
+  const [legacyUi, setLegacyUi] = useLegacyCalendarUi();
   const isDark = resolvedTheme === 'dark';
 
   useEscapeKey(onClose);
@@ -284,48 +224,17 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           </button>
         </div>
 
-        <div className="flex gap-1 px-4 pt-3 pb-1 shrink-0">
-          <button
-            onClick={() => setTab('general')}
-            className={`flex-1 py-2 rounded-xl text-xs font-black transition-colors ${
-              tab === 'general'
-                ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200'
-                : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
-            }`}
-          >
-            일반
-          </button>
-          <button
-            onClick={() => {
-              if (tab !== 'experimental') track('settings_experimental_tab_opened');
-              setTab('experimental');
-            }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-black transition-colors ${
-              tab === 'experimental'
-                ? 'bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400'
-                : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
-            }`}
-          >
-            <FlaskConical className="w-3 h-3" />
-            실험적 기능
-          </button>
-        </div>
-
         <div className="p-4 space-y-2 overflow-y-auto flex-1 min-h-0">
-          <AnimatePresence mode="wait" initial={false}>
-            {tab === 'general' ? (
-              <GeneralTab
-                onClose={onClose}
-                isDark={isDark}
-                setTheme={setTheme}
-                hideEnded={hideEnded}
-                setHideEnded={setHideEnded}
-                session={session}
-              />
-            ) : (
-              <ExperimentalTab flags={flags} setFlag={setFlag} />
-            )}
-          </AnimatePresence>
+          <GeneralTab
+            onClose={onClose}
+            isDark={isDark}
+            setTheme={setTheme}
+            hideEnded={hideEnded}
+            setHideEnded={setHideEnded}
+            legacyUi={legacyUi}
+            setLegacyUi={setLegacyUi}
+            session={session}
+          />
         </div>
       </motion.div>
     </motion.div>

@@ -46,7 +46,7 @@ import ScheduleFormModal from '@/components/Form/CreateScheduleModal';
 import ScheduleCard from '@/components/Calendar/ScheduleCard';
 import ScheduleCardV2 from '@/components/Calendar/ScheduleCardV2';
 import FilterBar from '@/components/Calendar/FilterBar';
-import { useExperimentalFeatures } from '@/hooks/useExperimentalFeatures';
+import { useLegacyCalendarUi } from '@/hooks/useLegacyCalendarUi';
 import CalendarWelcomeBanner from '@/components/Calendar/CalendarWelcomeBanner';
 import { useFavoriteStreamers } from '@/hooks/useFavoriteStreamers';
 import { useToast } from '@/components/Common/Toaster';
@@ -252,9 +252,8 @@ export default function CalendarView({
     setMounted(true);
   }, []);
 
-  const { flags } = useExperimentalFeatures();
-  const isV2Weekly = flags.newCalendarUI && viewMode === 'weekly';
-  const useV2Cards = flags.newCalendarUI;
+  const [legacyUi] = useLegacyCalendarUi();
+  const isV2Weekly = viewMode === 'weekly' && !legacyUi;
   const isLoggedIn = !!session;
 
   const handleOpenCreateModal = useCallback(() => {
@@ -445,8 +444,8 @@ export default function CalendarView({
                   {daySchedules.length > 0 ? (
                     <div className="space-y-2 border-t border-slate-100 px-3 py-3 dark:border-slate-800">
                       {daySchedules.map((schedule, i) =>
-                        flags.newCalendarUI ? (
-                          <ScheduleCardV2
+                        legacyUi ? (
+                          <ScheduleCard
                             key={schedule.id}
                             schedule={schedule}
                             variant="mobile"
@@ -454,7 +453,7 @@ export default function CalendarView({
                             index={i}
                           />
                         ) : (
-                          <ScheduleCard
+                          <ScheduleCardV2
                             key={schedule.id}
                             schedule={schedule}
                             variant="mobile"
@@ -650,19 +649,19 @@ export default function CalendarView({
                         {/* 데스크탑: 텍스트 카드 */}
                         <div className="hidden sm:flex flex-col flex-1 min-h-0 gap-1 overflow-y-auto custom-scrollbar">
                           {daySchedules.map((schedule, i) =>
-                            useV2Cards ? (
-                              <ScheduleCardV2
-                                key={schedule.id}
-                                schedule={schedule}
-                                variant="monthly"
-                                liveStreamerIds={liveStreamerIds}
-                                index={i}
-                              />
-                            ) : (
+                            legacyUi ? (
                               <ScheduleCard
                                 key={schedule.id}
                                 schedule={schedule}
                                 variant={viewMode}
+                                liveStreamerIds={liveStreamerIds}
+                                index={i}
+                              />
+                            ) : (
+                              <ScheduleCardV2
+                                key={schedule.id}
+                                schedule={schedule}
+                                variant="monthly"
                                 liveStreamerIds={liveStreamerIds}
                                 index={i}
                               />

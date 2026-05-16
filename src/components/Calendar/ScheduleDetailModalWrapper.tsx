@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useExperimentalFeatures } from '@/hooks/useExperimentalFeatures';
 import ScheduleDetailModal from './ScheduleDetailModal';
 import ScheduleDetailModalV2 from './ScheduleDetailModalV2';
+import { useLegacyCalendarUi } from '@/hooks/useLegacyCalendarUi';
 import type { Streamer, Game } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import type { ClipForSchedule } from './ScheduleSidePanel';
@@ -20,7 +20,7 @@ export default function ScheduleDetailModalWrapper({
   clips: clipsProp,
   ...rest
 }: Props) {
-  const { flags } = useExperimentalFeatures();
+  const [legacyUi] = useLegacyCalendarUi();
   const [schedule, setSchedule] = useState(scheduleProp);
   const [clips, setClips] = useState(clipsProp ?? []);
 
@@ -31,9 +31,9 @@ export default function ScheduleDetailModalWrapper({
 
   const modalProps = { schedule, clips, ...rest };
 
-  return flags.newScheduleModal ? (
-    <ScheduleDetailModalV2 {...modalProps} />
-  ) : (
+  return legacyUi ? (
     <ScheduleDetailModal {...modalProps} />
+  ) : (
+    <ScheduleDetailModalV2 {...modalProps} />
   );
 }
