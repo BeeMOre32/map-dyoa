@@ -1,6 +1,5 @@
 /** map-dyoa-server로 나가는 fetch 공통 (순환 import 없음) */
 
-import { randomUUID } from "node:crypto";
 import { log } from "next-axiom";
 
 import { MapDyoaServerRequestFailedError } from "@/lib/map-dyoa-server-client-error";
@@ -44,7 +43,7 @@ function buildFetchLogFields(
 function mergeRequestIdHeaders(init?: RequestInit): Headers {
   const headers = new Headers(init?.headers);
   if (!headers.has(REQUEST_ID_HEADER)) {
-    headers.set(REQUEST_ID_HEADER, randomUUID());
+    headers.set(REQUEST_ID_HEADER, crypto.randomUUID());
   }
   return headers;
 }
