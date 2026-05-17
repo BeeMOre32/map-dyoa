@@ -5,22 +5,68 @@ export const SITE_TAGLINE = '지도동 일정 관리';
 export const DEFAULT_DESCRIPTION =
   '지도동 멤버들의 방송 일정, 스트리머, 클립을 한곳에서 확인하는 팬 서비스입니다.';
 
+function normalizeOrigin(url: string): string {
+  return url.replace(/\/$/, '');
+}
+
+function readPublicSiteUrl(): string | null {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  return explicit ? normalizeOrigin(explicit) : null;
+}
+
+function isLocalHostname(hostname: string): boolean {
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '[::1]'
+  );
+}
+
 /** 프로덕션 URL (Vercel: NEXT_PUBLIC_SITE_URL 또는 VERCEL_* 자동) */
 export function getSiteUrl(): string {
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (explicit) return explicit.replace(/\/$/, '');
+  const publicUrl = readPublicSiteUrl();
+  if (publicUrl) return publicUrl;
 
   const production = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
   if (production) {
-    return `https://${production.replace(/^https?:\/\//, '')}`;
+    return normalizeOrigin(
+      production.startsWith('http') ? production : `https://${production}`,
+    );
   }
 
   const vercel = process.env.VERCEL_URL?.trim();
   if (vercel) {
-    return `https://${vercel.replace(/^https?:\/\//, '')}`;
+    return normalizeOrigin(
+      vercel.startsWith('http') ? vercel : `https://${vercel}`,
+    );
   }
 
   return 'http://localhost:3000';
+}
+
+/**
+ * 링크 복사·네이티브 공유용 (클라이언트).
+ * 로컬에서도 NEXT_PUBLIC_SITE_URL(또는 next.config env 주입)이 있으면 프로덕션 도메인 사용.
+ */
+export function getShareableSiteUrl(): string {
+  const publicUrl = readPublicSiteUrl();
+  if (publicUrl) return publicUrl;
+
+  if (typeof window !== 'undefined') {
+    try {
+      const { origin, hostname } = window.location;
+      if (!isLocalHostname(hostname)) return origin;
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return getSiteUrl();
+}
+
+export function buildScheduleShareUrl(scheduleId: string): string {
+  const path = `/calendar/schedule/${encodeURIComponent(scheduleId)}`;
+  return `${getShareableSiteUrl()}${path}`;
 }
 
 export function absoluteUrl(path: string): string {

@@ -2,11 +2,39 @@
 
 import { motion } from 'framer-motion';
 import {
-  BookOpen, CalendarDays, MousePointerClick, Edit2, Trash2, LogIn, Sparkles,
-  ArrowRight, Gamepad2, Users, Mail, LayoutGrid, Search, Zap, Palette,
-  Keyboard, ExternalLink, Clock, ChevronLeft, ChevronRight, SlidersHorizontal,
-  Radio, Clapperboard, Puzzle, Move, Maximize2, Sword, Wifi, EyeOff, Bot,
-  Smartphone, Share, Download, AlertTriangle,
+  BookOpen,
+  CalendarDays,
+  MousePointerClick,
+  Edit2,
+  Trash2,
+  LogIn,
+  Sparkles,
+  ArrowRight,
+  Gamepad2,
+  Users,
+  Mail,
+  LayoutGrid,
+  Search,
+  Palette,
+  Keyboard,
+  ExternalLink,
+  Clock,
+  SlidersHorizontal,
+  Radio,
+  Clapperboard,
+  Puzzle,
+  Move,
+  Maximize2,
+  Sword,
+  Wifi,
+  EyeOff,
+  Bot,
+  Smartphone,
+  AlertTriangle,
+  Star,
+  Link2,
+  Megaphone,
+  History,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -20,25 +48,44 @@ const fadeUp = {
   transition: { duration: 0.55, ease },
 };
 
-function SectionCard({ icon, iconBg, title, children }: {
-  icon: ReactNode; iconBg: string; title: ReactNode; children: ReactNode;
+function SectionCard({
+  id,
+  icon,
+  iconBg,
+  title,
+  children,
+}: {
+  id?: string;
+  icon: ReactNode;
+  iconBg: string;
+  title: ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <motion.div
+    <motion.section
+      id={id}
       {...fadeUp}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
       className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-xl hover:shadow-slate-200/60 dark:hover:shadow-black/30 transition-shadow"
     >
-      <div className="flex items-center gap-4 mb-6">
+      <motion.div className="flex items-center gap-4 mb-6">
         <div className={`p-3 ${iconBg} rounded-2xl`}>{icon}</div>
         <h2 className="text-2xl font-black text-slate-800 dark:text-white">{title}</h2>
-      </div>
+      </motion.div>
       {children}
-    </motion.div>
+    </motion.section>
   );
 }
 
-function Row({ icon, delay = 0, children }: { icon: ReactNode; delay?: number; children: ReactNode }) {
+function Row({
+  icon,
+  delay = 0,
+  children,
+}: {
+  icon: ReactNode;
+  delay?: number;
+  children: ReactNode;
+}) {
   return (
     <motion.p
       className="flex items-start gap-3"
@@ -48,7 +95,9 @@ function Row({ icon, delay = 0, children }: { icon: ReactNode; delay?: number; c
       transition={{ duration: 0.38, ease, delay }}
     >
       <span className="shrink-0 mt-0.5 text-slate-400 dark:text-slate-500">{icon}</span>
-      <span className="text-slate-600 dark:text-slate-300 font-medium">{children}</span>
+      <span className="text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+        {children}
+      </span>
     </motion.p>
   );
 }
@@ -62,20 +111,7 @@ function Tip({ children }: { children: ReactNode }) {
   );
 }
 
-function Badge({ children }: { children: ReactNode }) {
-  return (
-    <motion.span
-      initial={{ scale: 0.6, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 18, delay: 0.3 }}
-      className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-500 text-white uppercase tracking-wider"
-    >
-      {children}
-    </motion.span>
-  );
-}
-
-function LiveDemo() {
+function LiveBadge() {
   return (
     <span className="inline-flex items-center gap-1 align-middle mx-1 px-2 py-0.5 bg-red-50 dark:bg-red-900/20 rounded-full">
       <span className="relative flex w-1.5 h-1.5">
@@ -87,7 +123,9 @@ function LiveDemo() {
   );
 }
 
-function MiniCardGrid({ items }: {
+function MiniCardGrid({
+  items,
+}: {
   items: { icon: ReactNode; label: string; desc: ReactNode }[];
 }) {
   return (
@@ -103,20 +141,37 @@ function MiniCardGrid({ items }: {
           whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
         >
           <div className="flex items-center gap-2 mb-2 text-slate-800 dark:text-white font-black text-sm">
-            {icon}{label}
+            {icon}
+            {label}
           </div>
-          <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">{desc}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+            {desc}
+          </p>
         </motion.div>
       ))}
     </div>
   );
 }
 
+const TOC = [
+  { href: '#overview', label: '서비스 소개' },
+  { href: '#nav', label: '하단 탭' },
+  { href: '#calendar', label: '캘린더' },
+  { href: '#favorites', label: '관심 멤버' },
+  { href: '#schedule', label: '일정·공유' },
+  { href: '#members', label: '멤버·라이브' },
+  { href: '#multiview', label: '멀티뷰' },
+  { href: '#clips', label: '클립' },
+  { href: '#hoi4', label: 'HOI4 전적' },
+  { href: '#edit', label: '편집·로그인' },
+  { href: '#settings', label: '설정' },
+  { href: '#errors', label: '오류 안내' },
+];
+
 export default function HelpPage() {
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/50 dark:bg-slate-950 py-12 px-4 sm:px-6 transition-colors">
       <div className="max-w-3xl mx-auto space-y-6 pb-12">
-
         {/* 헤더 */}
         <div className="text-center space-y-3 mb-10">
           <motion.div
@@ -140,11 +195,28 @@ export default function HelpPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease, delay: 0.15 }}
           >
-            스트리머 합방 캘린더와 클립 모음을 100% 활용하는 방법
+            Map-Dyoa에 실제로 있는 기능만 정리했습니다
           </motion.p>
         </div>
 
-        {/* 최근 업데이트 요약 */}
+        {/* 목차 */}
+        <motion.nav
+          {...fadeUp}
+          className="flex flex-wrap justify-center gap-2"
+          aria-label="목차"
+        >
+          {TOC.map(({ href, label }) => (
+            <a
+              key={href}
+              href={href}
+              className="rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-black text-slate-600 dark:text-slate-300 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              {label}
+            </a>
+          ))}
+        </motion.nav>
+
+        {/* 최근 기능 */}
         <motion.div
           {...fadeUp}
           className="bg-indigo-50 dark:bg-indigo-900/15 border border-indigo-100 dark:border-indigo-800/40 rounded-4xl p-6 shadow-sm"
@@ -152,18 +224,376 @@ export default function HelpPage() {
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
             <h2 className="text-lg font-black text-indigo-700 dark:text-indigo-300">
-              최근 업데이트 요약
+              최근에 추가·개선된 기능
             </h2>
-            <Badge>latest</Badge>
           </div>
-          <div className="space-y-2 text-sm font-bold text-indigo-700/90 dark:text-indigo-200/90">
-            <p>• Map-Dyoa 멀티뷰 도우미 Chrome 확장 프로그램이 정식 출시되었습니다.</p>
-            <p>• 스케줄 연속 작성 기능으로 여러 일정을 빠르게 등록할 수 있습니다.</p>
-            <p>• AI 일정 업로드(텍스트/이미지)로 일정 자동 추출 및 입력이 가능합니다.</p>
-          </div>
+          <ul className="space-y-2 text-sm font-bold text-indigo-700/90 dark:text-indigo-200/90 list-disc list-inside">
+            <li>
+              <strong>관심 멤버</strong> — 별 등록 후 캘린더·멤버·클립에서 「관심 멤버만」 필터
+            </li>
+            <li>
+              <strong>일정 링크 공유</strong> — 상세 모달에서 링크 복사·OS 공유, SNS 미리보기(OG)
+            </li>
+            <li>
+              <strong>새 캘린더 화면</strong> — 설정에서 이전 화면 디자인으로 바꿀 수 있음
+            </li>
+          </ul>
+          <Link
+            href="/announcements"
+            className="inline-flex items-center gap-1.5 mt-4 text-sm font-black text-indigo-600 dark:text-indigo-400 hover:underline"
+          >
+            <Megaphone className="w-4 h-4" />
+            공지사항에서 자세히 보기
+          </Link>
         </motion.div>
 
-        <motion.div
+        {/* 0. 소개 */}
+        <SectionCard
+          id="overview"
+          icon={<BookOpen className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />}
+          iconBg="bg-indigo-50 dark:bg-indigo-900/20"
+          title="서비스 소개"
+        >
+          <div className="space-y-4">
+            <p className="text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+              <strong>Map-Dyoa</strong>는 지도동 멤버의 <strong>합방 일정</strong>,{' '}
+              <strong>라이브 상태</strong>, <strong>클립</strong>, <strong>HOI4 전적</strong>을
+              한곳에서 보는 팬 서비스입니다. 대부분의 기능은 로그인 없이 이용할 수 있고, 일정·클립
+              기여는 구글 로그인 후 가능합니다.
+            </p>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { href: '/calendar', label: '스케줄', desc: '주간·월간 캘린더' },
+                { href: '/streamers', label: '멤버·라이브', desc: '프로필·방송 중 목록' },
+                { href: '/clips', label: '클립', desc: '치지직 클립 모음' },
+                { href: '/hoi4', label: '전적', desc: 'HOI4 누적 통계' },
+              ].map(({ href, label, desc }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="rounded-2xl border border-slate-100 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 px-4 py-3 hover:border-indigo-200 dark:hover:border-indigo-700 transition-colors"
+                >
+                  <p className="font-black text-slate-800 dark:text-white">{label}</p>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                    {desc}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* 1. 하단 탭 */}
+        <SectionCard
+          id="nav"
+          icon={<LayoutGrid className="w-6 h-6 text-slate-500 dark:text-slate-400" />}
+          iconBg="bg-slate-100 dark:bg-slate-700"
+          title="하단 탭"
+        >
+          <motion.div className="space-y-4">
+            <Row icon={<CalendarDays className="w-5 h-5" />}>
+              <strong>스케줄</strong> — 합방 일정 캘린더(기본 홈)
+            </Row>
+            <Row icon={<Users className="w-5 h-5" />} delay={0.06}>
+              <strong>멤버·라이브</strong> — 멤버 카드·치지직 라이브 여부·멀티뷰 선택. 방송 중이면
+              탭이 붉게 강조됩니다.
+            </Row>
+            <Row icon={<Clapperboard className="w-5 h-5" />} delay={0.12}>
+              <strong>클립</strong> — 멤버·월별 필터로 클립 탐색
+            </Row>
+            <Row icon={<Sword className="w-5 h-5" />} delay={0.18}>
+              <strong>전적</strong> — HOI4 내전·참전 세션·리더보드
+            </Row>
+            <Tip>
+              일정·멤버 상세·멀티뷰가 열리면 하단 탭은 잠시 숨겨져 화면을 넓게 씁니다.
+            </Tip>
+          </motion.div>
+        </SectionCard>
+
+        {/* 2. 캘린더 */}
+        <SectionCard
+          id="calendar"
+          icon={<CalendarDays className="w-6 h-6 text-blue-500 dark:text-blue-400" />}
+          iconBg="bg-blue-50 dark:bg-blue-900/20"
+          title="캘린더 (스케줄)"
+        >
+          <div className="space-y-4">
+            <Row icon={<LayoutGrid className="w-5 h-5" />}>
+              상단 <strong>주간 / 월간</strong>으로 보기를 바꿉니다. <strong>← →</strong>로
+              이전·다음 주·월 이동.
+            </Row>
+            <Row icon={<MousePointerClick className="w-5 h-5" />} delay={0.06}>
+              날짜 칸을 누르면 그날 <strong>일정 목록</strong>이, 카드를 누르면{' '}
+              <strong>일정 상세 모달</strong>이 열립니다.
+            </Row>
+            <Row icon={<SlidersHorizontal className="w-5 h-5" />} delay={0.12}>
+              좌측 상단 <strong>설정(필터)</strong>에서 멤버별로 일정을 걸러 볼 수 있습니다. 이름·
+              <strong>초성</strong> 검색 지원 (
+              <code className="px-1 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-xs font-black">
+                ㄷㅁ
+              </code>{' '}
+              등).
+            </Row>
+            <Row icon={<Gamepad2 className="w-5 h-5" />} delay={0.18}>
+              게임이 연결된 일정은 <strong>게임 색</strong> 배경, 카드 하단 배지는{' '}
+              <strong>멤버 고유 색</strong>입니다. <strong>시간 미정</strong>은 게릴라 일정,
+              오늘 방송 중인 참여자에게 <LiveBadge /> 표시.
+            </Row>
+            <Row icon={<EyeOff className="w-5 h-5" />} delay={0.24}>
+              설정에서 <strong>종료된 방송 숨기기</strong>를 켜면 완료 처리된 일정 카드가
+              사라집니다.
+            </Row>
+          </div>
+        </SectionCard>
+
+        {/* 3. 관심 멤버 */}
+        <SectionCard
+          id="favorites"
+          icon={<Star className="w-6 h-6 text-amber-500 dark:text-amber-400" />}
+          iconBg="bg-amber-50 dark:bg-amber-900/20"
+          title="관심 멤버 (즐겨찾기)"
+        >
+          <div className="space-y-4">
+            <Row icon={<Star className="w-5 h-5" />}>
+              캘린더 필터 드로어에서 멤버 옆 <strong>별</strong>을 누르면 관심 멤버로 등록됩니다.
+              브라우저에 저장되며 기기마다 따로 유지됩니다.
+            </Row>
+            <Row icon={<SlidersHorizontal className="w-5 h-5" />} delay={0.06}>
+              캘린더·멤버·클립 상단의 <strong>전체 / 관심 멤버</strong> 토글으로 관심 멤버만
+              볼 수 있습니다.
+            </Row>
+            <Row icon={<Clapperboard className="w-5 h-5" />} delay={0.12}>
+              클립 탭에서는 관심 멤버 필터 시 URL에 반영되어 링크로 상태를 공유할 수 있습니다.
+            </Row>
+            <Tip>설정 → 「관심 멤버」 안내에서도 같은 내용을 확인할 수 있습니다.</Tip>
+          </div>
+        </SectionCard>
+
+        {/* 4. 일정 상세·공유 */}
+        <SectionCard
+          id="schedule"
+          icon={<Link2 className="w-6 h-6 text-sky-500 dark:text-sky-400" />}
+          iconBg="bg-sky-50 dark:bg-sky-900/20"
+          title="일정 상세 · 링크 공유"
+        >
+          <motion.div className="space-y-4">
+            <Row icon={<Clock className="w-5 h-5" />}>
+              상세에서 <strong>날짜·시간·게임·참여 멤버</strong>, 등록된{' '}
+              <strong>방송·다시보기 링크</strong>를 볼 수 있습니다.
+            </Row>
+            <Row icon={<Users className="w-5 h-5" />} delay={0.06}>
+              멤버 이름을 누르면 <strong>멤버 상세</strong>로 이동합니다.
+            </Row>
+            <Row icon={<Link2 className="w-5 h-5" />} delay={0.12}>
+              하단 <strong>링크 복사</strong>는 일정 전용 URL을 클립보드에 넣습니다.{' '}
+              <strong>공유</strong>는 휴대폰 OS 공유 시트를 엽니다(미지원 시 복사로 대체).
+            </Row>
+            <Row icon={<ExternalLink className="w-5 h-5" />} delay={0.18}>
+              공유 링크를 SNS·메신저에 붙이면 <strong>미리보기 카드</strong>로 제목·일시·멤버가
+              함께 보입니다.
+            </Row>
+            <Row icon={<LayoutGrid className="w-5 h-5" />} delay={0.24}>
+              <strong>멀티뷰로 보기</strong>로 이 일정 참여 멤버 방송을 한 화면에 띄울 수
+              있습니다.
+            </Row>
+          </motion.div>
+        </SectionCard>
+
+        {/* 5. 멤버·라이브 */}
+        <SectionCard
+          id="members"
+          icon={<Radio className="w-6 h-6 text-red-500 dark:text-red-400" />}
+          iconBg="bg-red-50 dark:bg-red-900/20"
+          title="멤버 · 라이브"
+        >
+          <div className="space-y-4">
+            <Row icon={<Users className="w-5 h-5" />}>
+              <Link href="/streamers" className="text-indigo-600 dark:text-indigo-400 font-black hover:underline">
+                멤버·라이브
+              </Link>
+              에서 전체 멤버 카드, <strong>기수 필터</strong>, 이름·초성 검색을 씁니다.
+            </Row>
+            <Row icon={<Wifi className="w-5 h-5" />} delay={0.06}>
+              치지직 <strong>방송 중</strong> 멤버는 상단에 모이고, 상태는 약{' '}
+              <strong>60초마다</strong> 자동 갱신됩니다.
+            </Row>
+            <Row icon={<LayoutGrid className="w-5 h-5" />} delay={0.12}>
+              카드의 <LayoutGrid className="inline w-3.5 h-3.5 mx-0.5 align-text-bottom" />로
+              멀티뷰에 추가합니다(최대 9명, 순서 번호 표시). 하단 바에서 순서를{' '}
+              <strong>드래그</strong>해 바꿀 수 있습니다.
+            </Row>
+            <Row icon={<ExternalLink className="w-5 h-5" />} delay={0.18}>
+              치지직 바로가기·카드 메뉴의 <strong>정보 수정 요청</strong>으로 프로필 오류를
+              제보할 수 있습니다.
+            </Row>
+          </div>
+        </SectionCard>
+
+        {/* 6. 멀티뷰 */}
+        <SectionCard
+          id="multiview"
+          icon={<LayoutGrid className="w-6 h-6 text-cyan-500 dark:text-cyan-400" />}
+          iconBg="bg-cyan-50 dark:bg-cyan-900/20"
+          title="멀티뷰 · Chrome 확장"
+        >
+          <div className="space-y-4">
+            <Row icon={<LayoutGrid className="w-5 h-5" />}>
+              멤버 선택 후 <strong>멀티뷰 시작</strong>, 또는 일정 상세의 멀티뷰 버튼으로 진입합니다.
+            </Row>
+            <Row icon={<Move className="w-5 h-5" />} delay={0.06}>
+              패널 사이를 드래그해 <strong>크기 조절</strong>, 상단 버튼으로 순서 변경·
+              <strong>집중 모드</strong>(한 방송 크게)를 쓸 수 있습니다.
+            </Row>
+            <Row icon={<Puzzle className="w-5 h-5" />} delay={0.12}>
+              치지직 로그인 유지를 위해 <strong>Map-Dyoa 멀티뷰 도우미</strong> Chrome 확장 설치를
+              권장합니다.
+            </Row>
+            <motion.a
+              href="https://chromewebstore.google.com/detail/jmehpmfkiciefbgoebiljadeamohkgfb"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-black rounded-2xl transition-colors shadow-sm"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Chrome 웹스토어에서 설치
+            </motion.a>
+          </div>
+        </SectionCard>
+
+        {/* 7. 클립 */}
+        <SectionCard
+          id="clips"
+          icon={<Clapperboard className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />}
+          iconBg="bg-indigo-50 dark:bg-indigo-900/20"
+          title="클립 모음"
+        >
+          <div className="space-y-4">
+            <Row icon={<Clapperboard className="w-5 h-5" />}>
+              치지직 클립 URL을 넣으면 <strong>썸네일·제목</strong>을 자동으로 가져옵니다.
+            </Row>
+            <Row icon={<Search className="w-5 h-5" />} delay={0.06}>
+              <strong>멤버·연월·검색어·관심 멤버</strong> 필터, 20개 단위 페이지네이션.
+            </Row>
+            <MiniCardGrid
+              items={[
+                {
+                  icon: <Sparkles className="w-4 h-4 text-indigo-500" />,
+                  label: '추가',
+                  desc: (
+                    <>
+                      로그인 후 <strong>+ 클립 추가</strong>
+                    </>
+                  ),
+                },
+                {
+                  icon: <Edit2 className="w-4 h-4 text-indigo-500" />,
+                  label: '수정',
+                  desc: <>카드의 연필 아이콘</>,
+                },
+                {
+                  icon: <Trash2 className="w-4 h-4 text-red-500" />,
+                  label: '삭제',
+                  desc: <>휴지통 아이콘 (복구 불가)</>,
+                },
+              ]}
+            />
+          </div>
+        </SectionCard>
+
+        {/* 8. HOI4 */}
+        <SectionCard
+          id="hoi4"
+          icon={<Sword className="w-6 h-6 text-amber-500 dark:text-amber-400" />}
+          iconBg="bg-amber-50 dark:bg-amber-900/20"
+          title="HOI4 전적"
+        >
+          <div className="space-y-4">
+            <Row icon={<Sword className="w-5 h-5" />}>
+              <Link href="/hoi4" className="text-indigo-600 dark:text-indigo-400 font-black hover:underline">
+                전적
+              </Link>
+              탭에서 HOI4 내전 <strong>세션 목록</strong>과 멤버별 <strong>누적 통계</strong>를
+              봅니다.
+            </Row>
+            <Row icon={<Gamepad2 className="w-5 h-5" />} delay={0.06}>
+              일정 상세(HOI4 게임)에서는 참여 멤버별 <strong>담당 국가·승패</strong>를 확인합니다.
+              로그인 후 일정 수정 화면에서 입력·수정합니다.
+            </Row>
+          </div>
+        </SectionCard>
+
+        {/* 9. 편집·로그인 */}
+        <SectionCard
+          id="edit"
+          icon={<LogIn className="w-6 h-6 text-amber-500 dark:text-amber-400" />}
+          iconBg="bg-amber-50 dark:bg-amber-900/20"
+          title="로그인 · 일정·클립 편집"
+        >
+          <div className="space-y-4">
+            <Row icon={<LogIn className="w-5 h-5" />}>
+              설정 → <strong>로그인</strong>으로 구글 계정에 연결합니다. 로그인하면 일정·클립{' '}
+              <strong>추가·수정·삭제</strong> 버튼이 보입니다.
+            </Row>
+            <MiniCardGrid
+              items={[
+                {
+                  icon: <Sparkles className="w-4 h-4 text-indigo-500" />,
+                  label: '일정 추가',
+                  desc: (
+                    <>
+                      <strong>+ 일정 추가</strong> · AI 텍스트/이미지 추출 ·{' '}
+                      <strong>연속 작성</strong>
+                    </>
+                  ),
+                },
+                {
+                  icon: <Edit2 className="w-4 h-4 text-indigo-500" />,
+                  label: '일정 수정',
+                  desc: <>상세 모달에서 수정, HOI4 국가·결과 포함</>,
+                },
+                {
+                  icon: <Bot className="w-4 h-4 text-violet-500" />,
+                  label: 'AI 업로드',
+                  desc: <>공지 캡처·텍스트에서 일정 필드 자동 채움 (확인 후 저장)</>,
+                },
+              ]}
+            />
+          </div>
+        </SectionCard>
+
+        {/* 10. 설정·편의 */}
+        <SectionCard
+          id="settings"
+          icon={<Palette className="w-6 h-6 text-violet-500 dark:text-violet-400" />}
+          iconBg="bg-violet-50 dark:bg-violet-900/20"
+          title="설정 · 편의 기능"
+        >
+          <div className="space-y-4">
+            <p className="text-slate-600 dark:text-slate-300 font-medium">
+              캘린더 좌측 상단 <strong>톱니바퀴(설정)</strong>에서 다음을 바꿀 수 있습니다.
+            </p>
+            <Row icon={<Palette className="w-5 h-5" />}>
+              <strong>라이트 / 다크</strong> 테마
+            </Row>
+            <Row icon={<EyeOff className="w-5 h-5" />} delay={0.06}>
+              <strong>종료된 방송 숨기기</strong>
+            </Row>
+            <Row icon={<History className="w-5 h-5" />} delay={0.12}>
+              <strong>구버전 UI로 보기</strong> — 이전 캘린더·일정 모달 디자인
+            </Row>
+            <Row icon={<Keyboard className="w-5 h-5" />} delay={0.18}>
+              열린 <strong>모달은 Esc</strong>로 닫기. 모바일 주간 뷰는 리스트형 레이아웃.
+            </Row>
+            <Row icon={<Smartphone className="w-5 h-5" />} delay={0.24}>
+              <strong>홈 화면에 추가</strong> — Chrome·Safari 등에서 앱처럼 설치해 바로 열 수
+              있습니다(브라우저 메뉴 또는 공유 → 홈 화면에 추가).
+            </Row>
+          </div>
+        </SectionCard>
+
+        {/* 오류 제보 */}
+        <motion.section
+          id="errors"
           {...fadeUp}
           className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-4xl p-6 shadow-sm"
         >
@@ -174,427 +604,11 @@ export default function HelpPage() {
             </h2>
           </div>
           <p className="text-sm font-bold text-slate-600 dark:text-slate-300 leading-relaxed">
-            오류 화면에 <strong className="text-slate-900 dark:text-white">제보 참조 번호</strong>(고유
-            UUID), 필요 시 <strong className="text-slate-900 dark:text-white">Next digest</strong>·
-            <strong className="text-slate-900 dark:text-white">백엔드 requestId</strong>가 표시됩니다.{' '}
-            <strong className="text-indigo-600 dark:text-indigo-400">관리자에게 보내기</strong> 버튼으로
-            같은 내용을 관리자 피드백으로 바로 접수할 수 있고,{' '}
-            <strong className="text-indigo-600 dark:text-indigo-400">제보용 텍스트만 복사</strong>로
-            외부 문의에 붙여 보낼 수도 있습니다.
+            오류 화면에 <strong>제보 참조 번호</strong>가 표시됩니다.{' '}
+            <strong>문의 보내기</strong>로 내용을 접수하거나,{' '}
+            <strong>제보용 텍스트 복사</strong>로 이메일·디스코드 등에 붙여 보내 주세요.
           </p>
-        </motion.div>
-
-        {/* 1. 캘린더 뷰 */}
-        <SectionCard
-          icon={<CalendarDays className="w-6 h-6 text-blue-500 dark:text-blue-400" />}
-          iconBg="bg-blue-50 dark:bg-blue-900/20"
-          title="1. 캘린더 뷰 전환"
-        >
-          <div className="space-y-4">
-            <Row icon={<LayoutGrid className="w-5 h-5" />}>
-              우측 상단의 <strong>주간 / 월간</strong> 버튼으로 캘린더 보기 방식을 전환할 수 있습니다.
-            </Row>
-            <Row icon={<ChevronLeft className="w-5 h-5" />} delay={0.07}>
-              <strong>← →</strong> 화살표로 이전/다음 주·월로 이동합니다.
-            </Row>
-            <Row icon={<MousePointerClick className="w-5 h-5" />} delay={0.14}>
-              날짜 셀을 클릭하면 해당 날의 <strong>일정 목록 모달</strong>이 열립니다.
-            </Row>
-            <Tip>주간 뷰는 일정 카드를 더 넓게 보여주고, 월간 뷰는 한 달 흐름을 한눈에 볼 때 유용합니다.</Tip>
-          </div>
-        </SectionCard>
-
-        {/* 2. 스트리머 필터 */}
-        <SectionCard
-          icon={<SlidersHorizontal className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />}
-          iconBg="bg-indigo-50 dark:bg-indigo-900/20"
-          title={<>2. 스트리머 필터<Badge>new</Badge></>}
-        >
-          <div className="space-y-4">
-            <Row icon={<SlidersHorizontal className="w-5 h-5" />}>
-              좌측 상단 <strong>설정 버튼</strong>을 누르면 슬라이드 드로어가 열립니다.
-              스트리머 필터 섹션을 클릭해 원하는 스트리머만 선택해 일정을 필터링할 수 있습니다.
-            </Row>
-            <Row icon={<Search className="w-5 h-5" />} delay={0.07}>
-              <strong>이름 또는 초성</strong>으로 스트리머를 빠르게 찾을 수 있습니다.{' '}
-              <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs font-black">ㄷㅁ</code>{' '}
-              → 두뭉,{' '}
-              <code className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs font-black">ㅎㅇ</code>{' '}
-              → 허인
-            </Row>
-            <Row icon={<Users className="w-5 h-5" />} delay={0.14}>
-              선택된 스트리머의 일정만 캘린더에 표시됩니다. '초기화'로 한 번에 해제됩니다.
-            </Row>
-          </div>
-        </SectionCard>
-
-        {/* 3. 라이브 탭 & 배지 */}
-        <SectionCard
-          icon={<Wifi className="w-6 h-6 text-red-500 dark:text-red-400" />}
-          iconBg="bg-red-50 dark:bg-red-900/20"
-          title="3. 라이브 탭 & 배지"
-        >
-          <div className="space-y-4">
-            <Row icon={<Radio className="w-5 h-5" />}>
-              상단 <strong>라이브</strong> 탭에서 지금 치지직에서 방송 중인 멤버를 실시간으로 확인할 수 있습니다.
-            </Row>
-            <Row icon={<LayoutGrid className="w-5 h-5" />} delay={0.07}>
-              라이브 중인 멤버를 선택하면 하단에 <strong>멀티뷰 시작</strong> 버튼이 나타납니다. 최대 9명까지 선택 가능합니다.
-            </Row>
-            <Row icon={<Clock className="w-5 h-5" />} delay={0.14}>
-              라이브 상태는 <strong>60초마다</strong> 자동 갱신됩니다. 페이지를 새로고침하지 않아도 됩니다.
-            </Row>
-            <Row icon={<Radio className="w-5 h-5" />} delay={0.21}>
-              오늘 일정의 참여자가 현재 방송 중이면 일정 카드에 <LiveDemo /> 뱃지가 자동으로 표시됩니다.
-            </Row>
-            <Tip>라이브 중이 아닌 멤버도 오프라인 섹션에 표시되어 전체 멤버를 한눈에 볼 수 있습니다.</Tip>
-          </div>
-        </SectionCard>
-
-        {/* 4. 일정 카드 색상 */}
-        <SectionCard
-          icon={<Palette className="w-6 h-6 text-violet-500 dark:text-violet-400" />}
-          iconBg="bg-violet-50 dark:bg-violet-900/20"
-          title="4. 일정 카드 색상의 의미"
-        >
-          <div className="space-y-4">
-            <Row icon={<Gamepad2 className="w-5 h-5" />}>
-              <strong>게임 콘텐츠</strong> 일정은 해당 게임의 고유 컬러로 배경이 채워집니다.
-            </Row>
-            <Row icon={<Users className="w-5 h-5" />} delay={0.07}>
-              일정 카드 하단의 <strong>참여자 배지</strong>는 각 스트리머의 고유 색상으로 표시됩니다.
-            </Row>
-            <Row icon={<Zap className="w-5 h-5" />} delay={0.14}>
-              <strong>시간 미정</strong> 배지가 붙은 일정은 방송 시작 시간이 정해지지 않은 게릴라성 일정입니다.
-            </Row>
-            <Tip>다크 모드에서는 컬러가 자동으로 밝은 버전으로 전환되어 가독성을 유지합니다.</Tip>
-          </div>
-        </SectionCard>
-
-        {/* 5. 일정 상세 */}
-        <SectionCard
-          icon={<MousePointerClick className="w-6 h-6 text-sky-500 dark:text-sky-400" />}
-          iconBg="bg-sky-50 dark:bg-sky-900/20"
-          title="5. 일정 상세 보기"
-        >
-          <div className="space-y-4">
-            <Row icon={<Clock className="w-5 h-5" />}>
-              일정 카드를 클릭하면 <strong>시작/종료 시간, 게임, 내용</strong>을 확인할 수 있는 상세 모달이 열립니다.
-            </Row>
-            <Row icon={<Users className="w-5 h-5" />} delay={0.07}>
-              참여 스트리머 이름을 클릭하면 해당 <strong>스트리머 프로필 페이지</strong>로 이동합니다.
-            </Row>
-            <Row icon={<ExternalLink className="w-5 h-5" />} delay={0.14}>
-              방송 링크가 등록된 경우 <strong>CHZZK / YouTube 다시보기</strong> 버튼이 표시됩니다.
-            </Row>
-          </div>
-        </SectionCard>
-
-        {/* 6. 스트리머 페이지 */}
-        <SectionCard
-          icon={<Users className="w-6 h-6 text-emerald-500 dark:text-emerald-400" />}
-          iconBg="bg-emerald-50 dark:bg-emerald-900/20"
-          title="6. 스트리머 페이지"
-        >
-          <div className="space-y-4">
-            <Row icon={<Users className="w-5 h-5" />}>
-              상단 탭의 <strong>스트리머</strong>에서 등록된 모든 스트리머를 카드 형태로 확인할 수 있습니다.
-            </Row>
-            <Row icon={<Search className="w-5 h-5" />} delay={0.07}>
-              기수 필터와 <strong>이름·초성 검색</strong>으로 빠르게 찾을 수 있습니다.
-            </Row>
-            <Row icon={<ExternalLink className="w-5 h-5" />} delay={0.14}>
-              카드 우하단의 <strong>CHZZK 버튼</strong>을 클릭하면 해당 스트리머의 치지직 채널로 바로 이동합니다.
-            </Row>
-            <Row icon={<LayoutGrid className="w-5 h-5" />} delay={0.21}>
-              카드 우하단의{' '}
-              <LayoutGrid className="inline w-3.5 h-3.5 mx-0.5 mb-0.5" />{' '}
-              버튼으로 멀티뷰 추가/제거를 할 수 있습니다. 선택된 순서가 <strong>번호</strong>로 표시됩니다.
-            </Row>
-            <Tip>정보에 오류가 있으면 카드 우상단 ⋯ 버튼 → '정보 수정 요청'으로 제보해주세요.</Tip>
-          </div>
-        </SectionCard>
-
-        {/* 7. HOI4 전적 */}
-        <SectionCard
-          icon={<Sword className="w-6 h-6 text-amber-500 dark:text-amber-400" />}
-          iconBg="bg-amber-50 dark:bg-amber-900/20"
-          title={<>7. HOI4 전적 기록<Badge>new</Badge></>}
-        >
-          <div className="space-y-4">
-            <Row icon={<Sword className="w-5 h-5" />}>
-              HOI4 게임이 포함된 합방 일정에는 <strong>전적 탭</strong>이 추가됩니다.
-              일정 상세 우측 패널(데스크탑) 또는 하단 버튼(모바일)에서 확인하세요.
-            </Row>
-            <Row icon={<Gamepad2 className="w-5 h-5" />} delay={0.07}>
-              참여 스트리머별 <strong>담당 국가</strong>와{' '}
-              <strong className="text-emerald-600 dark:text-emerald-400">승</strong>{' · '}
-              <strong className="text-red-500 dark:text-red-400">패</strong>{' · '}
-              <strong className="text-slate-500">미완</strong>{' '}
-              결과를 확인할 수 있습니다.
-            </Row>
-            <Row icon={<Edit2 className="w-5 h-5" />} delay={0.14}>
-              로그인 후 일정 수정 화면에서 국가명과 결과를 직접 입력할 수 있습니다.
-            </Row>
-          </div>
-        </SectionCard>
-
-        {/* 8. 클립 모음 */}
-        <SectionCard
-          icon={<Clapperboard className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />}
-          iconBg="bg-indigo-50 dark:bg-indigo-900/20"
-          title={<>8. 클립 모음<Badge>new</Badge></>}
-        >
-          <div className="space-y-4">
-            <Row icon={<Clapperboard className="w-5 h-5" />}>
-              방송에서 나온 인상적인 순간을 클립으로 아카이빙합니다.
-              치지직 클립 URL을 붙여넣으면 <strong>썸네일·제목이 자동 추출</strong>됩니다.
-            </Row>
-            <Row icon={<SlidersHorizontal className="w-5 h-5" />} delay={0.07}>
-              <strong>스트리머</strong>와 <strong>월별</strong> 필터, 제목·이름 검색을 지원합니다. 20개씩 페이지네이션으로 표시됩니다.
-            </Row>
-            <MiniCardGrid items={[
-              {
-                icon: <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />,
-                label: '클립 추가',
-                desc: <>로그인 후 <strong>+ 클립 추가</strong> 버튼을 누릅니다. 치지직 URL 입력 시 썸네일·제목이 자동 완성됩니다.</>,
-              },
-              {
-                icon: <Edit2 className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />,
-                label: '클립 수정',
-                desc: <>카드의 <strong>연필 버튼</strong>으로 제목, 스트리머, 날짜, 설명을 수정할 수 있습니다.</>,
-              },
-              {
-                icon: <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />,
-                label: '클립 삭제',
-                desc: <>카드의 <strong>휴지통 버튼</strong>으로 삭제합니다. 삭제 후 복구 불가.</>,
-              },
-            ]} />
-          </div>
-        </SectionCard>
-
-        {/* 9. 멀티뷰 */}
-        <SectionCard
-          icon={<LayoutGrid className="w-6 h-6 text-cyan-500 dark:text-cyan-400" />}
-          iconBg="bg-cyan-50 dark:bg-cyan-900/20"
-          title={<>9. 멀티뷰<Badge>new</Badge></>}
-        >
-          <div className="space-y-4">
-            <Row icon={<LayoutGrid className="w-5 h-5" />}>
-              일정 상세의 <strong>멀티뷰로 보기</strong> 버튼, 또는 스트리머 페이지에서 카드를 직접 선택해 시작할 수 있습니다.
-            </Row>
-            <Row icon={<Users className="w-5 h-5" />} delay={0.07}>
-              카드 우하단{' '}
-              <LayoutGrid className="inline w-3.5 h-3.5 mx-0.5 mb-0.5" />{' '}
-              버튼으로 최대 <strong>9개</strong> 패널을 추가합니다.
-              선택 순서가 <strong>번호</strong>로 표시되며, 하단 바의 아바타를 <strong>드래그</strong>해 순서를 바꿀 수 있습니다.
-            </Row>
-            <Row icon={<ChevronLeft className="w-5 h-5" />} delay={0.14}>
-              멀티뷰 화면에서 각 패널 상단의 <strong>← →</strong> 버튼으로 패널 순서를 바꿀 수 있습니다.
-            </Row>
-            <Row icon={<Move className="w-5 h-5" />} delay={0.21}>
-              패널 사이의 <strong>드래그 핸들</strong>을 잡아 끌면 각 패널 크기를 자유롭게 조절합니다.
-            </Row>
-            <Row icon={<Maximize2 className="w-5 h-5" />} delay={0.28}>
-              패널 상단의 <strong>집중 모드</strong>를 누르면 해당 방송을 좌측에 크게, 나머지를 우측에 세로로 배치합니다.
-            </Row>
-            <div className="flex items-start gap-3 p-4 bg-cyan-50 dark:bg-cyan-900/10 rounded-2xl border border-cyan-100 dark:border-cyan-800/40">
-              <Puzzle className="w-4 h-4 text-cyan-500 dark:text-cyan-400 shrink-0 mt-0.5" />
-              <span className="text-sm font-bold text-cyan-800 dark:text-cyan-300">
-                <strong>Map-Dyoa 멀티뷰 도우미 Chrome 확장 프로그램이 출시되었습니다.</strong>{' '}
-                확장을 설치하고 네이버에 로그인해두면 멀티뷰 iframe에서도 로그인 상태가 안정적으로 유지됩니다.
-              </span>
-            </div>
-          </div>
-        </SectionCard>
-
-        {/* 10. Chrome 확장 */}
-        <SectionCard
-          icon={<Puzzle className="w-6 h-6 text-cyan-500 dark:text-cyan-400" />}
-          iconBg="bg-cyan-50 dark:bg-cyan-900/20"
-          title={<>10. Chrome 확장 프로그램<Badge>released</Badge></>}
-        >
-          <div className="space-y-4">
-            <p className="text-slate-600 dark:text-slate-300 font-medium">
-              멀티뷰 로그인 유지를 위해 <strong>Map-Dyoa 멀티뷰 도우미</strong> 확장을 설치해주세요.
-              아래는 가장 확실한 수동 설치 방법입니다.
-            </p>
-            {([
-              <>아래 버튼으로 확장 프로그램 zip 파일을 다운로드합니다. (출시 버전)</>,
-              <>zip 파일의 압축을 풀어 폴더를 준비합니다.</>,
-              <><strong>Chrome 주소창</strong>에 <code className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-mono">chrome://extensions</code>를 입력해 확장 페이지를 엽니다.</>,
-              <>우측 상단의 <strong>개발자 모드</strong>를 켭니다.</>,
-              <><strong>압축 해제된 확장 프로그램을 로드합니다</strong> 버튼을 누르고 폴더를 선택합니다.</>,
-            ] as ReactNode[]).map((text, i) => (
-              <Row
-                key={i}
-                icon={
-                  <span className="w-5 h-5 flex items-center justify-center rounded-full bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 text-xs font-black shrink-0">
-                    {i + 1}
-                  </span>
-                }
-                delay={i * 0.07}
-              >
-                {text}
-              </Row>
-            ))}
-            <motion.a
-              href="https://chromewebstore.google.com/detail/jmehpmfkiciefbgoebiljadeamohkgfb?utm_source=item-share-cb"
-              target="_blank"
-              rel="noopener noreferrer"
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, ease, delay: 0.35 }}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-black rounded-2xl transition-colors shadow-sm"
-            >
-              <ExternalLink className="w-4 h-4" /> Chrome Web Store에서 설치
-            </motion.a>
-            <div className="grid sm:grid-cols-2 gap-3 pt-1">
-              {[
-                { label: '개발자 모드 활성화 화면', src: '/images/%EA%B0%9C%EB%B0%9C%EC%9E%90%20%EC%82%AC%EC%A7%84%201.png' },
-                { label: '확장 프로그램 로드 화면', src: '/images/%EA%B0%9C%EB%B0%9C%EC%9E%90%20%EC%82%AC%EC%A7%84%202.png' },
-              ].map(({ label, src }) => (
-                <div key={label} className="space-y-1.5">
-                  <img src={src} alt={label} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm" />
-                  <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 font-medium">{label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </SectionCard>
-
-        {/* 11. 로그인 */}
-        <SectionCard
-          icon={<LogIn className="w-6 h-6 text-amber-500 dark:text-amber-400" />}
-          iconBg="bg-amber-50 dark:bg-amber-900/20"
-          title="11. 로그인과 편집 권한"
-        >
-          <div className="space-y-4">
-            <p className="text-slate-600 dark:text-slate-300 font-medium">
-              구글 계정으로 <strong>로그인한 사용자라면 누구나</strong> 캘린더에 기여할 수 있습니다.
-            </p>
-            <Tip>로그인 후에는 숨겨져 있던 '일정 추가', '수정', '삭제' 버튼이 나타납니다.</Tip>
-          </div>
-        </SectionCard>
-
-        {/* 12. CRUD */}
-        <SectionCard
-          icon={<Edit2 className="w-6 h-6 text-rose-500 dark:text-rose-400" />}
-          iconBg="bg-rose-50 dark:bg-rose-900/20"
-          title="12. 일정 추가 · 수정 · 삭제"
-        >
-          <MiniCardGrid items={[
-            {
-              icon: <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />,
-              label: '일정 추가',
-              desc: <>우측 상단 <strong>+ 일정 추가</strong> 버튼으로 제목, 날짜, 시간, 참여자, 게임을 입력합니다.</>,
-            },
-            {
-              icon: <Edit2 className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />,
-              label: '내용 수정',
-              desc: <>상세 모달의 <strong>수정 버튼</strong>을 누르면 화면 이동 없이 그 자리에서 바로 변경합니다.</>,
-            },
-            {
-              icon: <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />,
-              label: '삭제',
-              desc: <>상세 모달의 <strong>휴지통 버튼</strong>으로 삭제합니다. 삭제 후 복구 불가.</>,
-            },
-          ]} />
-        </SectionCard>
-
-        {/* 13. 스케줄 연속 작성 */}
-        <SectionCard
-          icon={<CalendarDays className="w-6 h-6 text-fuchsia-500 dark:text-fuchsia-400" />}
-          iconBg="bg-fuchsia-50 dark:bg-fuchsia-900/20"
-          title={<>13. 스케줄 연속 작성<Badge>new</Badge></>}
-        >
-          <div className="space-y-4">
-            <Row icon={<CalendarDays className="w-5 h-5" />}>
-              일정 추가 모달에서 <strong>스케줄 연속 작성</strong> 기능을 사용하면 여러 일정을 한 번에 빠르게 등록할 수 있습니다.
-            </Row>
-            <Row icon={<Edit2 className="w-5 h-5" />} delay={0.07}>
-              같은 참여자/게임 조합으로 시간대만 바꿔 여러 개 입력할 때 특히 유용합니다.
-            </Row>
-            <Row icon={<Sparkles className="w-5 h-5" />} delay={0.14}>
-              등록 후 캘린더에 즉시 반영되므로 대량 일정 입력 시간을 크게 줄일 수 있습니다.
-            </Row>
-          </div>
-        </SectionCard>
-
-        {/* 14. AI 일정 업로드 */}
-        <SectionCard
-          icon={<Bot className="w-6 h-6 text-violet-500 dark:text-violet-400" />}
-          iconBg="bg-violet-50 dark:bg-violet-900/20"
-          title={<>14. AI 일정 업로드<Badge>new</Badge></>}
-        >
-          <div className="space-y-4">
-            <Row icon={<Sparkles className="w-5 h-5" />}>
-              일정 추가 모달에서 <strong>AI 업로드</strong>를 이용하면 텍스트/이미지에서 일정을 자동 추출해 입력할 수 있습니다.
-            </Row>
-            <Row icon={<Search className="w-5 h-5" />} delay={0.07}>
-              OCR/분석 결과를 바로 폼에 채워주므로 수동 타이핑을 최소화할 수 있습니다.
-            </Row>
-            <Row icon={<Edit2 className="w-5 h-5" />} delay={0.14}>
-              자동 추출 결과는 제출 전에 수정 가능하니, 최종 확인 후 저장하면 됩니다.
-            </Row>
-            <Tip>대량 공지 이미지를 빠르게 일정으로 옮길 때 가장 효과적입니다.</Tip>
-          </div>
-        </SectionCard>
-
-        {/* 15. 편의 기능 */}
-        <SectionCard
-          icon={<Keyboard className="w-6 h-6 text-slate-500 dark:text-slate-400" />}
-          iconBg="bg-slate-100 dark:bg-slate-700"
-          title="15. 편의 기능"
-        >
-          <div className="space-y-4">
-            <Row icon={<Keyboard className="w-5 h-5" />}>
-              열려 있는 <strong>모달은 Esc 키</strong>로 닫을 수 있습니다.
-            </Row>
-            <Row icon={<Palette className="w-5 h-5" />} delay={0.07}>
-              우측 상단 <strong>라이트/다크 모드</strong> 토글로 테마를 전환합니다. 스트리머·게임 색상도 모드에 맞게 자동 조정됩니다.
-            </Row>
-            <Row icon={<EyeOff className="w-5 h-5" />} delay={0.14}>
-              설정에서 <strong>종료된 방송 숨기기</strong>를 켜면 종료된 일정 카드가 캘린더에서 사라집니다.
-            </Row>
-            <Row icon={<ChevronRight className="w-5 h-5" />} delay={0.21}>
-              모바일에서는 주간 뷰가 <strong>리스트 형식</strong>으로 표시되어 일정을 더 편하게 확인할 수 있습니다.
-            </Row>
-          </div>
-        </SectionCard>
-
-        {/* 16. PWA */}
-        <SectionCard
-          icon={<Smartphone className="w-6 h-6 text-teal-500 dark:text-teal-400" />}
-          iconBg="bg-teal-50 dark:bg-teal-900/20"
-          title={<>16. PWA · 앱처럼 설치하기</>}
-        >
-          <div className="space-y-4">
-            <p className="text-slate-600 dark:text-slate-300 font-medium">
-              Map-Dyoa는 <strong>PWA(Progressive Web App)</strong>으로 배포됩니다.
-              설치하지 않아도 브라우저에서 그대로 쓸 수 있고, 원하면 <strong>홈 화면에 추가</strong>해 아이콘으로 바로 열 수 있습니다.
-            </p>
-            <Row icon={<Download className="w-5 h-5" />}>
-              <strong>Chrome / Edge (데스크톱·Android)</strong>
-              주소창 오른쪽의 <strong>설치(⊕)</strong> 아이콘이 보이면 클릭해 설치합니다.
-              메뉴(⋮)에 <strong>앱 설치</strong> 또는 <strong>Map-Dyoa 설치</strong>가 있으면 그 항목을 선택해도 됩니다.
-            </Row>
-            <Row icon={<Share className="w-5 h-5" />} delay={0.07}>
-              <strong>iPhone · iPad (Safari)</strong>
-              하단 <strong>공유</strong> 버튼 → <strong>홈 화면에 추가</strong>를 눌러 아이콘을 만듭니다.
-              다른 브라우저에서는 메뉴에 <strong>홈 화면에 추가</strong> 유사 항목이 있을 수 있습니다.
-            </Row>
-            <Row icon={<Smartphone className="w-5 h-5" />} delay={0.14}>
-              설치 후에는 브라우저 탭 대신 <strong>자체 창(standalone)</strong>처럼 실행되며,
-              manifest에 맞춰 테마 색·시작 주소가 적용됩니다. 캘린더가 기본 진입 화면으로 열립니다.
-            </Row>
-            <Tip>
-              <strong>로컬 개발</strong>(<code className="px-1 rounded bg-slate-200/80 dark:bg-slate-700 text-xs">npm run dev</code>)에서는
-              이전 서비스 워커 캐시와 충돌을 막기 위해 등록이 끊기므로, 설치·오프라인 동작은 <strong>배포된 사이트</strong>에서 확인하는 것이 좋습니다.
-            </Tip>
-          </div>
-        </SectionCard>
+        </motion.section>
 
         {/* 하단 */}
         <motion.div
@@ -619,7 +633,7 @@ export default function HelpPage() {
           <div className="flex flex-col items-center gap-4">
             <motion.a
               href="mailto:windowssart01@gmail.com"
-              title="Send Email"
+              title="이메일 문의"
               className="p-4 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-600 rounded-full shadow-sm border border-slate-100 dark:border-slate-700 transition-colors hover:text-indigo-500 dark:hover:text-indigo-400"
               whileHover={{ y: -4, rotate: 8, transition: { duration: 0.2 } }}
               whileTap={{ scale: 0.92 }}
@@ -627,11 +641,10 @@ export default function HelpPage() {
               <Mail className="w-5 h-5" />
             </motion.a>
             <p className="text-xs font-bold text-slate-400 dark:text-slate-600 tracking-widest uppercase">
-              Created by someone who loves map
+              Map-Dyoa · 지도동 일정
             </p>
           </div>
         </motion.div>
-
       </div>
     </div>
   );

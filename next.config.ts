@@ -1,7 +1,28 @@
 import type { NextConfig } from 'next';
 import { withAxiom } from 'next-axiom';
 
+/** 클라이언트 번들에 프로덕션 origin 주입 (공유 링크·OG) */
+function resolvePublicSiteUrl(): string | undefined {
+  const explicit =
+    process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.SITE_URL?.trim();
+  if (explicit) return explicit.replace(/\/$/, '');
+
+  const production = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (production) {
+    return production.startsWith('http')
+      ? production.replace(/\/$/, '')
+      : `https://${production.replace(/\/$/, '')}`;
+  }
+
+  return undefined;
+}
+
+const publicSiteUrl = resolvePublicSiteUrl();
+
 const nextConfig: NextConfig = {
+  ...(publicSiteUrl
+    ? { env: { NEXT_PUBLIC_SITE_URL: publicSiteUrl } }
+    : {}),
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**.pstatic.net' },

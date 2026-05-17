@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Link2, Check, Share2 } from 'lucide-react';
+import { track } from '@vercel/analytics';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
-import { absoluteUrl } from '@/lib/site';
+import { buildScheduleShareUrl } from '@/lib/site';
 import { useToast } from '@/components/Common/Toaster';
 
 type Props = {
@@ -11,21 +12,36 @@ type Props = {
   className?: string;
 };
 
+function scheduleShareTrackProps(schedule: FlattenedSchedule) {
+  return {
+    schedule_id: schedule.id,
+    schedule_title: schedule.title,
+    game: schedule.game?.title ?? null,
+    start_date: schedule.formattedDate,
+    start_time: schedule.formattedTime,
+    participant_count: schedule.participants.length,
+  };
+}
+
 export default function ScheduleShareButton({ schedule, className = '' }: Props) {
   const toast = useToast();
   const [copied, setCopied] = useState(false);
-  const shareUrl = absoluteUrl(`/calendar/schedule/${schedule.id}`);
+  const shareUrl = useMemo(
+    () => buildScheduleShareUrl(schedule.id),
+    [schedule.id],
+  );
 
   const copyLink = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
+      track('schedule_link_copied', scheduleShareTrackProps(schedule));
       toast.success('일정 링크를 복사했습니다.');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error('링크 복사에 실패했습니다.');
     }
-  }, [shareUrl, toast]);
+  }, [shareUrl, schedule, toast]);
 
   const nativeShare = useCallback(async () => {
     const memberNames = schedule.participants.map((p) => p.name).join(', ');
@@ -45,12 +61,20 @@ export default function ScheduleShareButton({ schedule, className = '' }: Props)
           text,
           url: shareUrl,
         });
+        track('schedule_shared', {
+          ...scheduleShareTrackProps(schedule),
+          method: 'native',
+        });
         return;
       } catch (err) {
         if ((err as Error).name === 'AbortError') return;
       }
     }
     await copyLink();
+    track('schedule_shared', {
+      ...scheduleShareTrackProps(schedule),
+      method: 'clipboard_fallback',
+    });
   }, [schedule, shareUrl, copyLink]);
 
   return (
