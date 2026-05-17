@@ -8,8 +8,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Streamer {
@@ -186,4 +187,21 @@ model PushReminderLog {
 
   @@unique([subscriptionId, scheduleId])
   @@index([scheduleId, scheduledFor])
+}
+
+/// 관리자용 변경 이력 (Next 서버 액션에서 기록)
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entity      String
+  entityId    String?
+  summary     String
+  changes     Json?
+  actorUserId String?
+  actorEmail  String?
+  actorRole   String?
+  createdAt   DateTime @default(now())
+
+  @@index([entity, createdAt(sort: Desc)])
+  @@index([entityId])
 }

@@ -52,6 +52,7 @@ import {
   hasScheduleBroadcastStarted,
 } from '@/lib/schedule-live';
 import { useMinuteClock } from '@/hooks/useMinuteClock';
+import ScheduleShareButton from '@/components/Calendar/ScheduleShareButton';
 
 interface ScheduleDetailViewProps {
   schedule: FlattenedSchedule;
@@ -458,6 +459,10 @@ function DetailView({
               <ExternalLink className="w-4 h-4 text-indigo-400 shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </Link>
           )}
+        </div>
+
+        <div className="px-1 pb-3">
+          <ScheduleShareButton schedule={schedule} />
         </div>
 
         <div className="space-y-3">

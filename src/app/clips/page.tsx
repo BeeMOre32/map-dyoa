@@ -15,11 +15,26 @@ const CLIP_MONTH_PARAM = /^\d{4}-\d{2}$/;
 export default async function ClipsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; streamer?: string; month?: string; q?: string; sort?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    streamer?: string;
+    streamers?: string;
+    favorites?: string;
+    month?: string;
+    q?: string;
+    sort?: string;
+  }>;
 }) {
   const params = await searchParams;
   const page = Math.max(1, Number(params.page ?? 1));
-  const streamerId = params.streamer ?? '';
+  const streamerIds = (params.streamers ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const streamerId =
+    streamerIds.length === 1 ? streamerIds[0] : (params.streamer ?? '');
+  const favoritesOnly =
+    params.favorites === '1' || params.favorites === 'true';
   const rawMonth = params.month ?? '';
   const month = CLIP_MONTH_PARAM.test(rawMonth) ? rawMonth : '';
   const q = params.q ?? '';
@@ -33,6 +48,7 @@ export default async function ClipsPage({
       page,
       pageSize: PAGE_SIZE,
       streamerId: streamerId || undefined,
+      streamerIds: streamerIds.length > 1 ? streamerIds : undefined,
       month: month || undefined,
       q: q || undefined,
       sort,
@@ -53,7 +69,7 @@ export default async function ClipsPage({
         total={total}
         totalPages={totalPages}
         currentPage={page}
-        currentFilters={{ streamerId, month, q, sort }}
+        currentFilters={{ streamerId, month, q, sort, favoritesOnly }}
       />
     </div>
   );

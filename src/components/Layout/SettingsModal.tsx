@@ -87,6 +87,14 @@ function GeneralTab({
       </div>
 
       <div className="px-2 py-1">
+        <SectionLabel>관심 멤버</SectionLabel>
+        <p className="px-4 pb-2 text-xs font-medium text-slate-400 dark:text-slate-500">
+          캘린더·멤버·클립 상단의 「전체 / 관심 멤버」로 즐겨찾기만 볼 수 있습니다. 멤버는
+          캘린더 필터에서 별 아이콘으로 등록하세요.
+        </p>
+      </div>
+
+      <div className="px-2 py-1">
         <SectionLabel>캐린더</SectionLabel>
         <SettingRow onClick={() => setHideEnded(!hideEnded)}>
           <div className="flex items-center gap-3">

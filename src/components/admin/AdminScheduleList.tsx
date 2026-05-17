@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { deleteScheduleAction } from '@/app/actions';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 type ScheduleItem = {
   id: string;
@@ -79,11 +80,19 @@ export default function AdminScheduleList({
 
   return (
     <div className="p-8 space-y-6 bg-white dark:bg-slate-950 transition-colors">
-      <div>
-        <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">일정 관리</h1>
-        <p className="text-slate-500 dark:text-slate-400 font-bold mt-2">
-          {schedules.length}개 표시 중
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">일정 관리</h1>
+          <p className="text-slate-500 dark:text-slate-400 font-bold mt-2">
+            {schedules.length}개 표시 중
+          </p>
+        </div>
+        <Link
+          href="/admin/audit"
+          className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+        >
+          변경 이력 보기
+        </Link>
       </div>
 
       {/* 날짜 필터 */}

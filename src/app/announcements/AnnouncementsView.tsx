@@ -64,7 +64,10 @@ function LoadingSpeedComparison() {
           <div
             key={item}
             className="rounded-xl border border-white/70 dark:border-slate-700 bg-white/70 dark:bg-slate-800/70 px-2 py-2 text-center text-[10px] font-black text-slate-600 dark:text-slate-300 animate-pulse"
-            style={{ animationDelay: `${i * 120}ms`, animationDuration: '1.8s' }}
+            style={{
+              animationDelay: `${i * 120}ms`,
+              animationDuration: '1.8s',
+            }}
           >
             {item}
           </div>
@@ -132,7 +135,9 @@ function ServerLoadingExperience({ active }: { active: boolean }) {
       <div className="pointer-events-none absolute -left-24 top-0 h-full w-24 bg-linear-to-r from-transparent via-white/30 to-transparent dark:via-white/10 animate-[pulse_2.4s_ease-in-out_infinite]" />
 
       <div className="relative z-10 flex items-center justify-between">
-        <p className="text-sm font-black text-slate-900 dark:text-white">서버 로딩 속도 체감</p>
+        <p className="text-sm font-black text-slate-900 dark:text-white">
+          서버 로딩 속도 체감
+        </p>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-100/80 dark:bg-sky-900/40 px-2.5 py-1 text-[11px] font-black text-sky-700 dark:text-sky-300">
           <span className="h-1.5 w-1.5 rounded-full bg-sky-500 animate-ping" />
           튜닝 시뮬레이션
@@ -193,25 +198,41 @@ function PwaPostBody() {
     <div className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 pt-3">
       <p>
         <strong className="text-slate-900 dark:text-white">Map-Dyoa</strong>는{' '}
-        <strong className="text-slate-900 dark:text-white">PWA(Progressive Web App)</strong>로
-        제공됩니다. 브라우저에서{' '}
-        <strong className="text-slate-900 dark:text-white">홈 화면(또는 바탕화면)에 추가</strong>
-        하면 주소를 매번 입력하지 않고 앱처럼 바로 열 수 있고, 전체 화면에 가깝게(
-        <strong className="text-slate-900 dark:text-white">standalone</strong>) 표시됩니다.
+        <strong className="text-slate-900 dark:text-white">
+          PWA(Progressive Web App)
+        </strong>
+        로 제공됩니다. 브라우저에서{' '}
+        <strong className="text-slate-900 dark:text-white">
+          홈 화면(또는 바탕화면)에 추가
+        </strong>
+        하면 주소를 매번 입력하지 않고 앱처럼 바로 열 수 있고, 전체 화면에
+        가깝게(
+        <strong className="text-slate-900 dark:text-white">standalone</strong>)
+        표시됩니다.
       </p>
 
       <div className="flex gap-3 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/50 rounded-2xl p-4">
         <Smartphone className="w-4 h-4 text-violet-500 shrink-0 mt-0.5" />
         <div className="text-violet-700 dark:text-violet-300 text-sm space-y-2">
-          <p className="font-black text-violet-900 dark:text-violet-200">모바일에서 추가하는 법</p>
+          <p className="font-black text-violet-900 dark:text-violet-200">
+            모바일에서 추가하는 법
+          </p>
           <ul className="list-disc pl-4 space-y-1.5">
             <li>
-              <strong className="text-violet-900 dark:text-violet-200">iOS (Safari)</strong>: 하단{' '}
-              <span className="whitespace-nowrap">공유(□↑) → 홈 화면에 추가</span>
+              <strong className="text-violet-900 dark:text-violet-200">
+                iOS (Safari)
+              </strong>
+              : 하단{' '}
+              <span className="whitespace-nowrap">
+                공유(□↑) → 홈 화면에 추가
+              </span>
             </li>
             <li>
-              <strong className="text-violet-900 dark:text-violet-200">Android (Chrome)</strong>: 메뉴(⋮)
-              에서 <strong>앱 설치</strong> 또는 <strong>홈 화면에 추가</strong>
+              <strong className="text-violet-900 dark:text-violet-200">
+                Android (Chrome)
+              </strong>
+              : 메뉴(⋮) 에서 <strong>앱 설치</strong> 또는{' '}
+              <strong>홈 화면에 추가</strong>
             </li>
           </ul>
         </div>
@@ -220,16 +241,23 @@ function PwaPostBody() {
       <div className="flex gap-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 rounded-2xl p-4">
         <Bell className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
         <p className="text-indigo-700 dark:text-indigo-300 text-sm">
-          설정의 <strong className="text-indigo-900 dark:text-indigo-200">실험적 기능</strong>에서{' '}
-          <strong className="text-indigo-900 dark:text-indigo-200">웹 푸시 놓치기 알림</strong>을 켜면
-          방송 시작 전 알림 등을 브라우저로 받을 수 있습니다. PWA로 설치한 뒤에도 동일하게 이용할 수
-          있습니다.
+          설정의{' '}
+          <strong className="text-indigo-900 dark:text-indigo-200">
+            실험적 기능
+          </strong>
+          에서{' '}
+          <strong className="text-indigo-900 dark:text-indigo-200">
+            웹 푸시 놓치기 알림
+          </strong>
+          을 켜면 방송 시작 전 알림 등을 브라우저로 받을 수 있습니다. PWA로
+          설치한 뒤에도 동일하게 이용할 수 있습니다.
         </p>
       </div>
 
       <p className="text-slate-500 dark:text-slate-400 text-xs">
-        서비스 워커가 캐시를 사용해 다시 방문할 때 더 빨리 뜨는 경우가 있습니다. 앱 스토어 설치가
-        아니라 브라우저 기반 설치이며, 사이트가 업데이트되면 자동으로 반영됩니다.
+        서비스 워커가 캐시를 사용해 다시 방문할 때 더 빨리 뜨는 경우가 있습니다.
+        앱 스토어 설치가 아니라 브라우저 기반 설치이며, 사이트가 업데이트되면
+        자동으로 반영됩니다.
       </p>
 
       <LoadingSpeedComparison />
@@ -353,26 +381,43 @@ function ApiUiUpdatePostBody() {
     <div className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 pt-3">
       <p>
         이번 업데이트에서는{' '}
-        <strong className="text-slate-900 dark:text-white">map-dyoa-server(Fly API)</strong>로의
-        데이터 연동을 마무리하고, 지금까지 베타로 테스트하던{' '}
-        <strong className="text-slate-900 dark:text-white">새 캘린더·일정 UI</strong>를 전 사용자에게
-        기본 적용했습니다. 아래에 API·화면·기타 변경 사항을 정리했습니다.
+        <strong className="text-slate-900 dark:text-white">
+          map-dyoa-server(Fly API)
+        </strong>
+        로의 데이터 연동을 마무리하고, 지금까지 베타로 테스트하던{' '}
+        <strong className="text-slate-900 dark:text-white">
+          새 캘린더·일정 UI
+        </strong>
+        를 전 사용자에게 기본 적용했습니다. 아래에 API·화면·기타 변경 사항을
+        정리했습니다.
       </p>
 
       <div className="flex gap-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl p-4">
         <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
         <div className="text-emerald-700 dark:text-emerald-300 text-sm space-y-2">
-          <p className="font-black text-emerald-900 dark:text-emerald-200">API · 백엔드 연동 (완료)</p>
+          <p className="font-black text-emerald-900 dark:text-emerald-200">
+            API · 백엔드 연동 (완료)
+          </p>
           <ul className="list-disc pl-4 space-y-1.5">
             <li>
-              <code className="text-[12px] font-mono">MAP_DYOA_SERVER_URL</code> 설정 시 일정·스트리머·클립·게임
-              조회를 Fly API로 처리 (Next.js DB 직접 연결 최소화)
+              <code className="text-[12px] font-mono">MAP_DYOA_SERVER_URL</code>{' '}
+              설정 시 일정·스트리머·클립·게임 조회를 Fly API로 처리 (Next.js DB
+              직접 연결 최소화)
             </li>
-            <li>일정 생성·수정·삭제, 클립·스트리머·게임 관리 등 쓰기 작업 서버 API 연동</li>
-            <li>캘린더·스트리머 상세·클립 목록·HOI4 전적·관리자 통계·피드백 등 읽기 API 일괄 전환</li>
+            <li>
+              일정 생성·수정·삭제, 클립·스트리머·게임 관리 등 쓰기 작업 서버 API
+              연동
+            </li>
+            <li>
+              캘린더·스트리머 상세·클립 목록·HOI4 전적·관리자 통계·피드백 등
+              읽기 API 일괄 전환
+            </li>
             <li>치지직 라이브 상태 조회 API 연동 (캘린더 LIVE 뱃지·멤버 탭)</li>
             <li>
-              <Link href="/health" className="font-black underline underline-offset-2">
+              <Link
+                href="/health"
+                className="font-black underline underline-offset-2"
+              >
                 /health
               </Link>
               에서 백엔드 응답·지연 시간 확인 가능
@@ -384,22 +429,33 @@ function ApiUiUpdatePostBody() {
       <div className="flex gap-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 rounded-2xl p-4">
         <LayoutGrid className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
         <div className="text-indigo-700 dark:text-indigo-300 text-sm space-y-2">
-          <p className="font-black text-indigo-900 dark:text-indigo-200">새 UI (기본 적용)</p>
+          <p className="font-black text-indigo-900 dark:text-indigo-200">
+            새 UI (기본 적용)
+          </p>
           <ul className="list-disc pl-4 space-y-1.5">
             <li>
-              <strong className="text-indigo-900 dark:text-indigo-200">V2 캘린더 카드</strong> — 주간
-              카드형 컬럼, 게임 색 반영, 모바일·월간 가독성 개선
+              <strong className="text-indigo-900 dark:text-indigo-200">
+                V2 캘린더 카드
+              </strong>{' '}
+              — 주간 카드형 컬럼, 게임 색 반영, 모바일·월간 가독성 개선
             </li>
             <li>
-              <strong className="text-indigo-900 dark:text-indigo-200">V2 일정 상세 모달</strong> — 클립·HOI4
-              전적 사이드 패널, 데스크탑·모바일 레이아웃 정리
+              <strong className="text-indigo-900 dark:text-indigo-200">
+                V2 일정 상세 모달
+              </strong>{' '}
+              — 클립·HOI4 전적 사이드 패널, 데스크탑·모바일 레이아웃 정리
             </li>
             <li>주·월 이동 시 그리드 슬라이드·카드 스프링 애니메이션</li>
-            <li>설정의 「실험적 기능」 토글 제거 — 새 UI가 기본, 필요 시 아래 구버전 옵션 사용</li>
+            <li>
+              설정의 「실험적 기능」 토글 제거 — 새 UI가 기본, 필요 시 아래
+              구버전 옵션 사용
+            </li>
             <li>
               설정 → 캘린더 →{' '}
-              <strong className="text-indigo-900 dark:text-indigo-200">구버전 UI로 보기</strong>로 이전
-              캘린더·모달 복원 가능
+              <strong className="text-indigo-900 dark:text-indigo-200">
+                구버전 UI로 보기
+              </strong>
+              로 이전 캘린더·모달 복원 가능
             </li>
           </ul>
         </div>
@@ -408,21 +464,32 @@ function ApiUiUpdatePostBody() {
       <div className="flex gap-3 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/50 rounded-2xl p-4">
         <Sparkles className="w-4 h-4 text-violet-500 shrink-0 mt-0.5" />
         <div className="text-violet-700 dark:text-violet-300 text-sm space-y-2">
-          <p className="font-black text-violet-900 dark:text-violet-200">기타 개선</p>
+          <p className="font-black text-violet-900 dark:text-violet-200">
+            기타 개선
+          </p>
           <ul className="list-disc pl-4 space-y-1.5">
             <li>
-              <strong className="text-violet-900 dark:text-violet-200">HOI4 내전</strong> — 게스트도 플레이
-              국가 등록 가능, 승·패 기록 UI·저장 제거 (국가만 집계)
+              <strong className="text-violet-900 dark:text-violet-200">
+                HOI4 내전
+              </strong>{' '}
+              — 게스트도 플레이 국가 등록 가능, 승·패 기록 UI·저장 제거 (국가만
+              집계)
             </li>
             <li>
-              <Link href="/hoi4" className="font-black underline underline-offset-2">
+              <Link
+                href="/hoi4"
+                className="font-black underline underline-offset-2"
+              >
                 HOI4 참전 기록
               </Link>
               탭은 설정과 무관하게 항상 표시
             </li>
             <li>
-              <strong className="text-violet-900 dark:text-violet-200">LIVE 표시</strong> — 등록된 시작
-              시각 이전에는 LIVE 뱃지·치지직 라이브 링크·일정 멀티뷰 버튼 숨김 (시간 미정 일정 제외)
+              <strong className="text-violet-900 dark:text-violet-200">
+                LIVE 표시
+              </strong>{' '}
+              — 등록된 시작 시각 이전에는 LIVE 뱃지·치지직 라이브 링크·일정
+              멀티뷰 버튼 숨김 (시간 미정 일정 제외)
             </li>
             <li>일정·클립 저장 후 캘린더 자동 갱신, 모달 로딩 스켈레톤 개선</li>
             <li>설정 모달 한글 표시 오류 수정</li>
@@ -434,13 +501,19 @@ function ApiUiUpdatePostBody() {
         <Radio className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
         <p className="text-slate-600 dark:text-slate-400 text-sm">
           문제가 있거나 이전 화면이 더 편하시면{' '}
-          <strong className="text-slate-800 dark:text-slate-200">설정 → 구버전 UI로 보기</strong>를 켜
-          주세요. API·UI 관련 제보는 사이트 내 피드백이나 디스코드로 보내주시면 반영에 참고하겠습니다.
+          <strong className="text-slate-800 dark:text-slate-200">
+            설정 → 구버전 UI로 보기
+          </strong>
+          를 켜 주세요. API·UI 관련 제보는 사이트 내 피드백이나 이메일로
+          보내주시면 반영에 참고하겠습니다.
         </p>
       </div>
 
       <p className="text-xs text-slate-500 dark:text-slate-400">
-        <Link href="/calendar" className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+        <Link
+          href="/calendar"
+          className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+        >
           캘린더
         </Link>
         에서 새 UI를 바로 확인할 수 있습니다.
@@ -454,14 +527,18 @@ function BackendProjectPostBody({ active }: { active: boolean }) {
     <div className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 pt-3">
       <p>
         서버 성능 개선을 위해 기존 앱과 분리된{' '}
-        <strong className="text-slate-900 dark:text-white">신규 백엔드 프로젝트</strong>를 구성했습니다.
-        목표는 응답 속도 안정화와 동시 연결 처리량 개선입니다.
+        <strong className="text-slate-900 dark:text-white">
+          신규 백엔드 프로젝트
+        </strong>
+        를 구성했습니다. 목표는 응답 속도 안정화와 동시 연결 처리량 개선입니다.
       </p>
 
       <div className="flex gap-3 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800/50 rounded-2xl p-4">
         <Server className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
         <div className="text-sky-700 dark:text-sky-300 text-sm space-y-2">
-          <p className="font-black text-sky-900 dark:text-sky-200">이번 작업에서 완료한 항목</p>
+          <p className="font-black text-sky-900 dark:text-sky-200">
+            이번 작업에서 완료한 항목
+          </p>
           <ul className="list-disc pl-4 space-y-1.5">
             <li>Bun + Elysia 기반 API 서버 초기 구조 구성</li>
             <li>Drizzle + postgres.js DB 연결 계층 구성</li>
@@ -473,9 +550,12 @@ function BackendProjectPostBody({ active }: { active: boolean }) {
 
       <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-900/20 p-4">
         <p className="text-emerald-700 dark:text-emerald-300 text-sm">
-          다음 단계로 기존 API를 우선순위별로 이관하고, 실제 트래픽 기준으로 커넥션 풀/쿼리 최적화를
-          진행할 예정입니다. 현재 상태는{' '}
-          <Link href="/health" className="font-black underline underline-offset-2">
+          다음 단계로 기존 API를 우선순위별로 이관하고, 실제 트래픽 기준으로
+          커넥션 풀/쿼리 최적화를 진행할 예정입니다. 현재 상태는{' '}
+          <Link
+            href="/health"
+            className="font-black underline underline-offset-2"
+          >
             /health
           </Link>
           에서 확인할 수 있습니다.
@@ -542,7 +622,8 @@ export default function AnnouncementsView() {
                     API 연동 완료 · 새 캘린더 UI 적용
                   </span>
                   <span className="block text-sm font-medium leading-relaxed text-slate-500 group-open:hidden dark:text-slate-400">
-                    map-dyoa-server API 전환과 V2 캘린더·일정 모달이 기본으로 적용되었습니다.
+                    map-dyoa-server API 전환과 V2 캘린더·일정 모달이 기본으로
+                    적용되었습니다.
                   </span>
                 </span>
                 <span className="mt-1 shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180 dark:text-slate-500">
@@ -580,7 +661,8 @@ export default function AnnouncementsView() {
                     백엔드 분리 프로젝트 1차 진행
                   </span>
                   <span className="block text-sm font-medium leading-relaxed text-slate-500 group-open:hidden dark:text-slate-400">
-                    Bun · Elysia · Drizzle 기반 신규 서버 초기 구성을 완료했습니다.
+                    Bun · Elysia · Drizzle 기반 신규 서버 초기 구성을
+                    완료했습니다.
                   </span>
                 </span>
                 <span className="mt-1 shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180 dark:text-slate-500">
@@ -617,7 +699,8 @@ export default function AnnouncementsView() {
                     PWA · 홈 화면에 추가하기
                   </span>
                   <span className="block text-sm font-medium leading-relaxed text-slate-500 group-open:hidden dark:text-slate-400">
-                    앱처럼 설치해 빠르게 열고, 웹 푸시 알림과 함께 쓰는 방법을 정리했습니다.
+                    앱처럼 설치해 빠르게 열고, 웹 푸시 알림과 함께 쓰는 방법을
+                    정리했습니다.
                   </span>
                 </span>
                 <span className="mt-1 shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180 dark:text-slate-500">

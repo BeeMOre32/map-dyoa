@@ -51,6 +51,7 @@ import {
   hasScheduleBroadcastStarted,
 } from '@/lib/schedule-live';
 import { useMinuteClock } from '@/hooks/useMinuteClock';
+import ScheduleShareButton from '@/components/Calendar/ScheduleShareButton';
 interface Props {
   schedule: FlattenedSchedule;
   streamers: Streamer[];
@@ -467,6 +468,10 @@ function DetailViewV2({
               <ArrowUpRight className="w-4 h-4 text-indigo-400 shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </Link>
           )}
+        </div>
+
+        <div className="px-5 pt-2 pb-0 sm:px-8">
+          <ScheduleShareButton schedule={schedule} />
         </div>
 
         {/* VOD / Live */}

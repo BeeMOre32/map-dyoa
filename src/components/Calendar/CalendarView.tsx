@@ -97,7 +97,12 @@ export default function CalendarView({
   const [isMobileFabOpen, setIsMobileFabOpen] = useState(false);
   const { liveIds: liveStreamerIds } = useLiveStatus();
   const [hideEnded] = useHideEndedStreams();
-  const { favorites, favoriteIds, toggle: toggleFavorite } = useFavoriteStreamers();
+  const {
+    favorites,
+    favoriteIds,
+    toggle: toggleFavorite,
+    favoritesOnly,
+  } = useFavoriteStreamers();
 
   const applyFavorites = useCallback(() => {
     if (favorites.length === 0) return;
@@ -211,7 +216,11 @@ export default function CalendarView({
       filtered = filtered.filter((s) => !s.isLiveEnded);
     }
 
-    if (selectedStreamers.size > 0) {
+    if (favoritesOnly && favoriteIds.size > 0) {
+      filtered = filtered.filter((s) =>
+        s.participants.some((p) => favoriteIds.has(p.id)),
+      );
+    } else if (selectedStreamers.size > 0) {
       filtered = filtered.filter((s) =>
         s.participants.some((p) => selectedStreamers.has(p.id)),
       );
@@ -237,6 +246,8 @@ export default function CalendarView({
     selectedStreamers,
     selectedGames,
     hideEnded,
+    favoritesOnly,
+    favoriteIds,
   ]);
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 

@@ -128,6 +128,7 @@ export type FetchClipsPaginatedServerArgs = {
   page: number;
   pageSize: number;
   streamerId?: string;
+  streamerIds?: string[];
   month?: string;
   q?: string;
   sort: string;
@@ -145,7 +146,11 @@ export async function fetchClipsPaginatedFromServer(
   qs.set('page', String(args.page));
   qs.set('pageSize', String(args.pageSize));
   qs.set('sort', args.sort);
-  if (args.streamerId) qs.set('streamer', args.streamerId);
+  if (args.streamerIds?.length) {
+    qs.set('streamers', args.streamerIds.join(','));
+  } else if (args.streamerId) {
+    qs.set('streamer', args.streamerId);
+  }
   if (args.month) qs.set('month', args.month);
   if (args.q) qs.set('q', args.q);
   if (args.clipsOnly) qs.set('clipsOnly', '1');

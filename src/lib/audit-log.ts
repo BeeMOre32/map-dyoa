@@ -1,19 +1,15 @@
 import { log } from 'next-axiom';
+import { getPrisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 
-export type MutationAction =
-  | 'create'
-  | 'update'
-  | 'delete'
-  | 'reject'
-  | 'resolve'
-  | 'bulk_create';
+import type { MutationAction, MutationEntity } from '@/lib/audit-log-shared';
 
-export type MutationEntity =
-  | 'schedule'
-  | 'streamer'
-  | 'clip'
-  | 'game'
-  | 'feedback';
+export type {
+  AuditDiffPayload,
+  MutationAction,
+  MutationEntity,
+} from '@/lib/audit-log-shared';
+export { buildAuditDiff, isAuditDiffPayload } from '@/lib/audit-log-shared';
 
 export type AuditActor = {
   userId?: string | null;
@@ -51,7 +47,41 @@ export function actorFromSession(session: {
   };
 }
 
-/** 생성·수정·삭제 성공 시 Axiom 구조화 로그 */
+function persistAuditLog(options: {
+  action: MutationAction;
+  entity: MutationEntity;
+  entityId?: string;
+  actor?: AuditActor;
+  summary: string;
+  changes?: Record<string, unknown>;
+}): void {
+  const changes = options.changes
+    ? (truncateValue(options.changes) as Record<string, unknown>)
+    : undefined;
+
+  void getPrisma()
+    .auditLog.create({
+      data: {
+        action: options.action,
+        entity: options.entity,
+        entityId: options.entityId ?? null,
+        summary: options.summary,
+        changes: changes as Prisma.InputJsonValue | undefined,
+        actorUserId: options.actor?.userId ?? null,
+        actorEmail: options.actor?.email ?? null,
+        actorRole: options.actor?.role ?? null,
+      },
+    })
+    .catch((err) => {
+      log.warn('audit_persist_failed', {
+        entity: options.entity,
+        entityId: options.entityId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
+}
+
+/** 생성·수정·삭제 성공 시 Axiom + DB 이력 */
 export function logMutation(options: {
   action: MutationAction;
   entity: MutationEntity;
@@ -60,15 +90,17 @@ export function logMutation(options: {
   summary: string;
   changes?: Record<string, unknown>;
 }): void {
+  const changes = options.changes
+    ? (truncateValue(options.changes) as Record<string, unknown>)
+    : undefined;
+
   log.info('mutation', {
     target: 'audit',
     action: options.action,
     entity: options.entity,
     entityId: options.entityId,
     summary: options.summary,
-    changes: options.changes
-      ? (truncateValue(options.changes) as Record<string, unknown>)
-      : undefined,
+    changes,
     actorUserId: options.actor?.userId ?? undefined,
     actorEmail: options.actor?.email ?? undefined,
     actorRole: options.actor?.role ?? undefined,
@@ -76,6 +108,8 @@ export function logMutation(options: {
       ? 'map-dyoa-server'
       : 'prisma',
   });
+
+  persistAuditLog(options);
 }
 
 export function snapshotSchedule(data: {

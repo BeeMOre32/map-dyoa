@@ -10,6 +10,7 @@ import { getStreamerImagePath } from '@/lib/utils';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { getGameColor } from '@/constants/gamecolor';
 import { useChosungSearch } from '@/hooks/useChosungSearch';
+import FavoritesOnlyToggle from '@/components/Common/FavoritesOnlyToggle';
 
 type Tab = 'streamer' | 'game';
 
@@ -351,6 +352,7 @@ export default function FilterBar({
 
   return (
     <div className="flex items-center gap-2 flex-wrap shrink-0 mb-3">
+      <FavoritesOnlyToggle />
       {favoriteCount > 0 && (
         <button
           type="button"
@@ -358,7 +360,7 @@ export default function FilterBar({
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-100 dark:border-amber-900/40 bg-amber-50/80 dark:bg-amber-950/30 text-sm font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors shadow-sm"
         >
           <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-          내 멤버
+          필터에 적용
         </button>
       )}
       {/* 필터 버튼 + 데스크탑 팝오버 */}

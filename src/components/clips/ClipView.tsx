@@ -14,6 +14,8 @@ import ClipCard from './ClipCard';
 import CreateClipModal from './CreateClipModal';
 import { ClipSkeletonCard } from './ClipSkeleton';
 import { ClipPagination } from './ClipPagination';
+import FavoritesOnlyToggle from '@/components/Common/FavoritesOnlyToggle';
+import FavoritesClipFilter from './FavoritesClipFilter';
 
 interface ClipViewProps {
   clips: ClipWithParticipants[];
@@ -23,7 +25,13 @@ interface ClipViewProps {
   total: number;
   totalPages: number;
   currentPage: number;
-  currentFilters: { streamerId: string; month: string; q: string; sort: ClipSortOption };
+  currentFilters: {
+    streamerId: string;
+    month: string;
+    q: string;
+    sort: ClipSortOption;
+    favoritesOnly?: boolean;
+  };
 }
 
 export default function ClipView({
@@ -67,6 +75,7 @@ export default function ClipView({
 
   return (
     <div className="h-full flex flex-col bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-800 relative overflow-hidden">
+      <FavoritesClipFilter favoritesParam={!!currentFilters.favoritesOnly} />
       {/* 헤더 */}
       <motion.div
         layout
@@ -95,6 +104,7 @@ export default function ClipView({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            <FavoritesOnlyToggle />
             <button
               type="button"
               onClick={() => setShowFilters((prev) => !prev)}

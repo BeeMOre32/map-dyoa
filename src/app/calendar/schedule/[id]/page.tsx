@@ -20,11 +20,27 @@ export async function generateMetadata({
   const description = gameTitle
     ? `${schedule.title} · ${gameTitle} | 지도동 방송 일정`
     : `${schedule.title} | 지도동 방송 일정`;
-  return buildPageMetadata({
-    title: schedule.title,
-    description,
-    path: `/calendar/schedule/${id}`,
-  });
+  const ogPath = `/calendar/schedule/${id}/opengraph-image`;
+  return {
+    ...buildPageMetadata({
+      title: schedule.title,
+      description,
+      path: `/calendar/schedule/${id}`,
+    }),
+    openGraph: {
+      title: `${schedule.title} | Map-Dyoa`,
+      description,
+      type: 'website',
+      locale: 'ko_KR',
+      images: [{ url: ogPath, width: 1200, height: 630, alt: schedule.title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${schedule.title} | Map-Dyoa`,
+      description,
+      images: [ogPath],
+    },
+  };
 }
 
 export default async function FullSchedulePage({

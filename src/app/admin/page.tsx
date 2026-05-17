@@ -157,6 +157,15 @@ export default async function AdminDashboard() {
             desc: '날짜 범위로 일정을 조회하고 삭제합니다.',
             badge: null,
           },
+          {
+            href: '/admin/audit',
+            bg: 'bg-slate-100 dark:bg-slate-800',
+            iconColor: 'text-slate-600 dark:text-slate-300',
+            icon: Clock,
+            title: '변경 이력',
+            desc: '일정·클립 등 누가 언제 무엇을 바꿨는지 확인합니다.',
+            badge: null,
+          },
         ].map(({ href, bg, iconColor, icon: Icon, title, desc, badge }) => (
           <Link key={href} href={href}>
             <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-xl dark:hover:shadow-slate-900/50 hover:-translate-y-1 transition-all group">

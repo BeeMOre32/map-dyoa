@@ -21,6 +21,7 @@ import { getStreamerImagePath } from '@/lib/utils';
 import { format } from 'date-fns';
 import { track } from '@vercel/analytics';
 import { useFavoriteStreamers } from '@/hooks/useFavoriteStreamers';
+import FavoritesOnlyToggle from '@/components/Common/FavoritesOnlyToggle';
 
 export default function StreamerView({
   streamers,
@@ -34,11 +35,11 @@ export default function StreamerView({
 }) {
   const router = useRouter();
   const isDark = useIsDarkAfterMount();
-  const { favorites, favoriteIds } = useFavoriteStreamers();
+  const { favorites, favoriteIds, favoritesOnly, setFavoritesOnly } =
+    useFavoriteStreamers();
 
   const [requestTarget, setRequestTarget] = useState<Streamer | null>(null);
   const [activeGen, setActiveGen] = useState<number | null>(null);
-  const [favoritesOnly, setFavoritesOnly] = useState(false);
   // 선택 순서를 유지하는 배열 (Set 대신 Array)
   const [selectedOrder, setSelectedOrder] = useState<string[]>([]);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -229,24 +230,7 @@ export default function StreamerView({
                 );
               })}
             </div>
-            {favorites.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setFavoritesOnly((v) => !v)}
-                className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-black shadow-sm transition-colors ${
-                  favoritesOnly
-                    ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-400'
-                    : 'border-slate-100 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400'
-                }`}
-              >
-                <Star
-                  className={`h-3.5 w-3.5 ${
-                    favoritesOnly ? 'fill-amber-400 text-amber-400' : ''
-                  }`}
-                />
-                즐겨찾기
-              </button>
-            )}
+            <FavoritesOnlyToggle className="py-2 text-xs" />
             </div>
 
             <div className="flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-800">

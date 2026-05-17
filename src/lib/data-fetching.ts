@@ -3,7 +3,7 @@
  * MAP_DYOA_SERVER_URL 있으면 map-dyoa-server만, 없으면 getPrismaForDomain() (로컬 전용).
  */
 
-import { getPrismaForDomain } from '@/lib/prisma';
+import { getPrisma, getPrismaForDomain } from '@/lib/prisma';
 import { unstable_cache } from 'next/cache';
 import { flattenScheduleParticipants, flattenSchedules } from './schedule-formatters';
 import type { Streamer, Prisma } from '@prisma/client';
@@ -226,6 +226,7 @@ export async function getClipsPaginated({
   page = 1,
   pageSize = 20,
   streamerId,
+  streamerIds,
   month,
   q,
   sort = 'newest',
@@ -235,16 +236,22 @@ export async function getClipsPaginated({
   page?: number;
   pageSize?: number;
   streamerId?: string;
+  streamerIds?: string[];
   month?: string;
   q?: string;
   sort?: ClipSortOption;
   schedulesForClipLinks?: FlattenedSchedule[];
 }) {
+  const ids =
+    streamerIds?.filter(Boolean) ??
+    (streamerId ? [streamerId] : undefined);
+
   if (isScheduleServerEnabled()) {
     return fetchClipsPaginatedFromServer({
       page,
       pageSize,
-      streamerId,
+      streamerId: ids?.length === 1 ? ids[0] : undefined,
+      streamerIds: ids && ids.length > 1 ? ids : undefined,
       month,
       q,
       sort,
@@ -255,8 +262,12 @@ export async function getClipsPaginated({
 
   const conditions: Prisma.ClipWhereInput[] = [];
 
-  if (streamerId) {
-    conditions.push({ participants: { some: { streamerId } } });
+  if (ids?.length === 1) {
+    conditions.push({ participants: { some: { streamerId: ids[0] } } });
+  } else if (ids && ids.length > 1) {
+    conditions.push({
+      participants: { some: { streamerId: { in: ids } } },
+    });
   }
 
   const monthKey = month?.trim();
@@ -642,3 +653,34 @@ export const getRecentActivity = unstable_cache(
   ['recent-activity', process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-recent-activity'],
   { revalidate: 60, tags: ['calendar', 'clips'] },
 );
+
+export type AuditLogRow = {
+  id: string;
+  action: string;
+  entity: string;
+  entityId: string | null;
+  summary: string;
+  changes: unknown;
+  actorUserId: string | null;
+  actorEmail: string | null;
+  actorRole: string | null;
+  createdAt: Date;
+};
+
+export async function getAuditLogs(options?: {
+  entity?: string;
+  entityId?: string;
+  action?: string;
+  limit?: number;
+}): Promise<AuditLogRow[]> {
+  const limit = Math.min(200, Math.max(1, options?.limit ?? 80));
+  return getPrisma().auditLog.findMany({
+    where: {
+      ...(options?.entity ? { entity: options.entity } : {}),
+      ...(options?.entityId ? { entityId: options.entityId } : {}),
+      ...(options?.action ? { action: options.action } : {}),
+    },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+  });
+}

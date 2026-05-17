@@ -12,6 +12,7 @@ import {
 } from '@/lib/error-handling';
 import {
   actorFromSession,
+  buildAuditDiff,
   logMutation,
   snapshotClip,
   snapshotFeedback,
@@ -19,6 +20,12 @@ import {
   snapshotSchedule,
   snapshotStreamer,
 } from '@/lib/audit-log';
+import {
+  loadClipSnapshotBefore,
+  loadGameSnapshotBefore,
+  loadScheduleSnapshotBefore,
+  loadStreamerSnapshotBefore,
+} from '@/lib/audit-snapshots';
 import type { Session } from 'next-auth';
 import { Prisma } from '@prisma/client';
 import {
@@ -222,7 +229,9 @@ export async function updateScheduleAction(
   try {
     const session = await requireAuth();
     const validated = scheduleServerSchema.parse(data);
-    const changes = snapshotSchedule(validated);
+    const before = await loadScheduleSnapshotBefore(id);
+    const after = snapshotSchedule(validated);
+    const changes = buildAuditDiff(before, after);
 
     const base = getScheduleServerBaseUrl();
     if (base) {
@@ -444,7 +453,9 @@ export async function updateStreamerAction(
     }
 
     const validated = streamerServerSchema.parse(data);
-    const changes = snapshotStreamer(validated);
+    const before = await loadStreamerSnapshotBefore(id);
+    const after = snapshotStreamer(validated);
+    const changes = buildAuditDiff(before, after);
     const payload = {
       name: validated.name,
       handle: validated.handle,
@@ -714,7 +725,9 @@ export async function updateClipAction(
   try {
     const session = await requireAuth();
     const validated = clipServerSchema.parse(data);
-    const changes = snapshotClip(validated);
+    const before = await loadClipSnapshotBefore(id);
+    const after = snapshotClip(validated);
+    const changes = buildAuditDiff(before, after);
     const payload = {
       title: validated.title,
       url: validated.url,
@@ -906,7 +919,9 @@ export async function updateGameAction(
     const session = await requireAdmin();
     if (!id?.trim()) throw new ValidationError('유효한 게임 ID가 필요합니다.');
     if (!data.title?.trim()) throw new ValidationError('게임 제목이 필요합니다.');
-    const changes = snapshotGame(data);
+    const before = await loadGameSnapshotBefore(id);
+    const after = snapshotGame(data);
+    const changes = buildAuditDiff(before, after);
 
     const base = getScheduleServerBaseUrl();
     if (base) {
