@@ -7,6 +7,8 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
+    "db:migrate": "prisma migrate deploy",
+    "db:ensure-youtube-column": "prisma db execute --schema prisma/schema.prisma --file scripts/add-streamer-youtube-url.sql",
     "configure:git-commit": "git config commit.template .gitmessage"
   },
   "dependencies": {

@@ -47,10 +47,12 @@ import { getScheduleServerBaseUrl } from '@/lib/map-dyoa-server-schedules';
 import {
   bulkCreateStreamersOnServer,
   createStreamerOnServer,
+  fetchStreamerByIdFromServer,
   updateStreamerOnServer,
 } from '@/lib/map-dyoa-server-streamers';
 import { runDeleteSchedule } from '@/lib/schedule-delete-server';
 import { submitFeedbackCore } from '@/lib/feedback-submit';
+import { externalUrlsEquivalent } from '@/lib/external-url';
 import {
   scheduleServerSchema,
   clipServerSchema,
@@ -58,6 +60,43 @@ import {
   streamerServerSchema,
 } from '@/lib/schemas';
 import type { CreateStreamerInput } from '@/types/models';
+
+const YOUTUBE_NOT_PERSISTED_MSG =
+  '유튜브 주소가 DB에 저장되지 않았습니다. `npm run db:ensure-youtube-column` 실행 후 map-dyoa-server(Fly) 최신 배포 여부를 확인해주세요.';
+
+async function verifyStreamerYoutubeSaved(
+  streamerId: string,
+  expectedYoutube: string | null | undefined,
+  viaServer: boolean,
+): Promise<ActionResult | null> {
+  const expected = expectedYoutube?.trim() || null;
+  if (!expected) return null;
+
+  if (viaServer) {
+    const saved = await fetchStreamerByIdFromServer(streamerId, { noCache: true });
+    if (!externalUrlsEquivalent(expected, saved?.youtubeUrl)) {
+      return {
+        success: false,
+        error: YOUTUBE_NOT_PERSISTED_MSG,
+        errorCode: 'YOUTUBE_NOT_PERSISTED',
+      };
+    }
+    return null;
+  }
+
+  const saved = await getPrismaForDomain().streamer.findUnique({
+    where: { id: streamerId },
+    select: { youtubeUrl: true },
+  });
+  if (!externalUrlsEquivalent(expected, saved?.youtubeUrl)) {
+    return {
+      success: false,
+      error: YOUTUBE_NOT_PERSISTED_MSG,
+      errorCode: 'YOUTUBE_NOT_PERSISTED',
+    };
+  }
+  return null;
+}
 
 function streamerUniqueConstraintFailure(
   error: unknown,
@@ -346,6 +385,7 @@ export async function createStreamerAction(data: {
   profileImg?: string;
   colorCode: string;
   chzzkUrl: string;
+  youtubeUrl?: string;
   bio?: string;
   isGuest?: boolean;
 }): Promise<ActionResult> {
@@ -362,11 +402,13 @@ export async function createStreamerAction(data: {
       profileImg: validated.profileImg,
       colorCode: validated.colorCode,
       chzzkUrl: validated.chzzkUrl,
+      youtubeUrl: validated.youtubeUrl,
       bio: validated.bio,
       isGuest: validated.isGuest,
     };
 
     const base = getScheduleServerBaseUrl();
+    let createdStreamerId: string | undefined;
     if (base) {
       const r = await createStreamerOnServer(payload);
       if (!r.ok) {
@@ -386,8 +428,9 @@ export async function createStreamerAction(data: {
           errorCode: String(r.json.error ?? 'API_ERROR'),
         };
       }
+      createdStreamerId = r.id;
     } else {
-      await getPrismaForDomain().streamer.create({
+      const created = await getPrismaForDomain().streamer.create({
         data: {
           name: validated.name.trim(),
           handle: validated.handle.trim().toLowerCase(),
@@ -397,11 +440,20 @@ export async function createStreamerAction(data: {
           profileImg: validated.profileImg?.trim() || null,
           colorCode: validated.colorCode,
           chzzkUrl: validated.chzzkUrl?.trim() || null,
+          youtubeUrl: validated.youtubeUrl?.trim() || null,
           bio: validated.bio?.trim() || null,
           isGuest: validated.isGuest ?? false,
         },
       });
+      createdStreamerId = created.id;
     }
+
+    const youtubeCheck = await verifyStreamerYoutubeSaved(
+      createdStreamerId,
+      validated.youtubeUrl,
+      Boolean(base),
+    );
+    if (youtubeCheck) return youtubeCheck;
 
     const paths = getRevalidationPathsMulti(['streamer', 'schedule', 'admin']);
     await Promise.all([
@@ -441,6 +493,7 @@ export async function updateStreamerAction(
     profileImg?: string;
     colorCode: string;
     chzzkUrl: string;
+    youtubeUrl?: string;
     bio?: string;
     isGuest?: boolean;
   },
@@ -465,6 +518,7 @@ export async function updateStreamerAction(
       profileImg: validated.profileImg,
       colorCode: validated.colorCode,
       chzzkUrl: validated.chzzkUrl,
+      youtubeUrl: validated.youtubeUrl,
       bio: validated.bio,
       isGuest: validated.isGuest,
     };
@@ -504,15 +558,24 @@ export async function updateStreamerAction(
           profileImg: validated.profileImg?.trim() || null,
           colorCode: validated.colorCode,
           chzzkUrl: validated.chzzkUrl?.trim() || null,
+          youtubeUrl: validated.youtubeUrl?.trim() || null,
           bio: validated.bio?.trim() || null,
           isGuest: validated.isGuest ?? false,
         },
       });
     }
 
+    const youtubeCheck = await verifyStreamerYoutubeSaved(
+      id,
+      validated.youtubeUrl,
+      Boolean(base),
+    );
+    if (youtubeCheck) return youtubeCheck;
+
     const paths = getRevalidationPathsMulti(['streamer', 'schedule', 'admin']);
     await Promise.all([
       ...paths.map((path: string) => revalidatePath(path)),
+      revalidatePath(`/streamers/detail/${id}`),
       updateTag('calendar'),
       updateTag('streamers'),
       updateTag('admin'),
@@ -558,6 +621,7 @@ export async function bulkCreateStreamersAction(
         profileImg: s.profileImg,
         colorCode: s.colorCode || '#673AB7',
         chzzkUrl: s.chzzkUrl,
+        youtubeUrl: s.youtubeUrl,
         isGuest: s.isGuest,
       }),
     );
@@ -575,6 +639,7 @@ export async function bulkCreateStreamersAction(
           profileImg: v.profileImg,
           colorCode: v.colorCode,
           chzzkUrl: v.chzzkUrl,
+          youtubeUrl: v.youtubeUrl,
           isGuest: v.isGuest,
         })),
       );
@@ -597,6 +662,7 @@ export async function bulkCreateStreamersAction(
           profileImg: v.profileImg?.trim() || null,
           colorCode: v.colorCode,
           chzzkUrl: v.chzzkUrl?.trim() || null,
+          youtubeUrl: v.youtubeUrl?.trim() || null,
           isGuest: v.isGuest ?? false,
         })),
         skipDuplicates: true,

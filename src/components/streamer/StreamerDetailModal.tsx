@@ -170,6 +170,35 @@ export default function StreamerDetailModal({
                   {streamer.platform}
                 </span>
               </div>
+              {(streamer.chzzkUrl || streamer.youtubeUrl) && (
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  {streamer.chzzkUrl && (
+                    <a
+                      href={streamer.chzzkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black text-white shadow-sm hover:opacity-90 transition-opacity"
+                      style={{ backgroundColor: streamerColor }}
+                    >
+                      치지직
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                  {streamer.youtubeUrl && (
+                    <a
+                      href={streamer.youtubeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black text-white bg-red-600 hover:bg-red-700 shadow-sm transition-colors"
+                    >
+                      유튜브
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* 스탯 */}
@@ -390,7 +419,18 @@ export default function StreamerDetailModal({
               className="flex-1 py-3.5 text-white rounded-2xl font-black transition-all shadow-lg flex items-center justify-center gap-2 hover:opacity-90 active:scale-95"
               style={{ backgroundColor: streamerColor }}
             >
-              채널 방문
+              치지직
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          )}
+          {streamer.youtubeUrl && (
+            <a
+              href={streamer.youtubeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black transition-all shadow-lg flex items-center justify-center gap-2 active:scale-95"
+            >
+              유튜브
               <ExternalLink className="w-4 h-4" />
             </a>
           )}

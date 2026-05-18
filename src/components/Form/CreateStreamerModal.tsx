@@ -8,6 +8,8 @@ import { z } from 'zod';
 import { createStreamerAction, updateStreamerAction } from '@/app/actions';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { scrollToFirstZodField } from '@/lib/zod-scroll';
+import { normalizeExternalUrl, normalizeYoutubeUrl } from '@/lib/external-url';
+import { streamerServerSchema } from '@/lib/schemas';
 
 const streamerSchema = z.object({
   name: z.string().min(1, '이름을 입력해주세요.'),
@@ -23,7 +25,9 @@ const streamerSchema = z.object({
     .or(z.literal('')),
 });
 
-type StreamerErrors = Partial<Record<keyof z.infer<typeof streamerSchema> | 'submit', string>>;
+type StreamerErrors = Partial<
+  Record<keyof z.infer<typeof streamerSchema> | 'youtubeUrl' | 'chzzkUrl' | 'submit', string>
+>;
 
 // 캘린더에 예쁘게 보일 추천 파스텔 색상 목록
 const PASTEL_COLORS = [
@@ -47,6 +51,7 @@ type StreamerFormInitialData = {
   profileImg: string | null;
   colorCode: string;
   chzzkUrl: string | null;
+  youtubeUrl: string | null;
   bio: string | null;
   isGuest: boolean;
 };
@@ -69,6 +74,7 @@ export default function CreateStreamerModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileImg, setProfileImg] = useState(initialData?.profileImg ?? '');
   const [chzzkUrl, setChzzkUrl] = useState(initialData?.chzzkUrl ?? '');
+  const [youtubeUrl, setYoutubeUrl] = useState(initialData?.youtubeUrl ?? '');
   const [bio, setBio] = useState(initialData?.bio ?? '');
   const [isGuest, setIsGuest] = useState(initialData?.isGuest ?? false);
   const [errors, setErrors] = useState<StreamerErrors>({});
@@ -93,9 +99,6 @@ export default function CreateStreamerModal({
       scrollToFirstZodField(parsed.error.issues);
       return;
     }
-    setErrors({});
-    setIsSubmitting(true);
-
     const payload = {
       name,
       handle: handle.trim().toLowerCase(),
@@ -104,14 +107,47 @@ export default function CreateStreamerModal({
       platform: initialData?.platform || 'CHZZK',
       profileImg,
       colorCode,
-      chzzkUrl,
+      chzzkUrl: normalizeExternalUrl(chzzkUrl) ?? '',
+      youtubeUrl: normalizeYoutubeUrl(youtubeUrl) ?? '',
       bio,
       isGuest,
     };
 
+    const serverParsed = streamerServerSchema.safeParse(payload);
+    if (!serverParsed.success) {
+      const fieldErrors: StreamerErrors = {};
+      for (const issue of serverParsed.error.issues) {
+        const field = issue.path[0];
+        if (
+          field === 'youtubeUrl' ||
+          field === 'chzzkUrl' ||
+          field === 'name' ||
+          field === 'handle' ||
+          field === 'profileImg'
+        ) {
+          fieldErrors[field] = issue.message;
+        }
+      }
+      if (!fieldErrors.submit) {
+        fieldErrors.submit = serverParsed.error.issues[0]?.message;
+      }
+      setErrors(fieldErrors);
+      scrollToFirstZodField(serverParsed.error.issues);
+      return;
+    }
+
+    setErrors({});
+    setIsSubmitting(true);
+
+    const actionPayload = {
+      ...serverParsed.data,
+      role: serverParsed.data.role ?? '',
+      chzzkUrl: serverParsed.data.chzzkUrl ?? '',
+    };
+
     const result = mode === 'edit' && initialData
-      ? await updateStreamerAction(initialData.id, payload)
-      : await createStreamerAction(payload);
+      ? await updateStreamerAction(initialData.id, actionPayload)
+      : await createStreamerAction(actionPayload);
 
     setIsSubmitting(false);
 
@@ -119,13 +155,16 @@ export default function CreateStreamerModal({
       router.refresh();
       onClose();
     } else {
-      setErrors({
-        submit:
-          result.error ??
-          (mode === 'edit'
-            ? '스트리머 수정에 실패했습니다. 다시 시도해주세요.'
-            : '스트리머 추가에 실패했습니다. 다시 시도해주세요.'),
-      });
+      const msg =
+        result.error ??
+        (mode === 'edit'
+          ? '스트리머 수정에 실패했습니다. 다시 시도해주세요.'
+          : '스트리머 추가에 실패했습니다. 다시 시도해주세요.');
+      const next: StreamerErrors = { submit: msg };
+      if (/유튜브|youtube/i.test(msg)) {
+        next.youtubeUrl = msg;
+      }
+      setErrors(next);
     }
   };
 
@@ -162,6 +201,7 @@ export default function CreateStreamerModal({
         </div>
 
         <form
+          noValidate
           onSubmit={handleSubmit}
           className="p-8 space-y-6 max-h-[60dvh] overflow-y-auto"
         >
@@ -301,12 +341,40 @@ export default function CreateStreamerModal({
               치지직 주소 (선택)
             </label>
             <input
-              type="url"
+              type="text"
+              inputMode="url"
+              autoComplete="url"
               value={chzzkUrl}
               onChange={(e) => setChzzkUrl(e.target.value)}
               placeholder="https://chzzk.naver.com/..."
               className="w-full p-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-400/50 outline-none transition-all"
             />
+          </div>
+
+          <div data-zod-field="youtubeUrl">
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
+              유튜브 주소 (선택)
+            </label>
+            <input
+              type="text"
+              inputMode="url"
+              autoComplete="url"
+              value={youtubeUrl}
+              onChange={(e) => {
+                setYoutubeUrl(e.target.value);
+                if (errors.youtubeUrl) setErrors((er) => ({ ...er, youtubeUrl: undefined }));
+              }}
+              placeholder="https://www.youtube.com/@채널명"
+              className={`w-full p-3 bg-slate-50 dark:bg-slate-700 border rounded-xl font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-400/50 outline-none transition-all ${
+                errors.youtubeUrl ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-slate-600'
+              }`}
+            />
+            {errors.youtubeUrl && (
+              <p className="mt-1.5 flex items-center gap-1 text-xs font-bold text-red-500">
+                <AlertCircle className="w-3 h-3 shrink-0" />
+                {errors.youtubeUrl}
+              </p>
+            )}
           </div>
 
           <div>

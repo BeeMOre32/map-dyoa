@@ -10,6 +10,9 @@ import { getStreamerColor } from '@/constants/streamercolor';
 import type { Streamer } from '@prisma/client';
 import { getLiveUrl } from './utils';
 
+const overlayControlsClass =
+  'opacity-0 pointer-events-none transition-opacity duration-200 [@media(hover:hover)]:group-hover/panel:opacity-100 [@media(hover:hover)]:group-hover/panel:pointer-events-auto';
+
 interface StreamPanelProps {
   streamer: Streamer;
   isLoaded: boolean;
@@ -46,12 +49,12 @@ export function StreamPanel({
             style={{ background: `linear-gradient(135deg, ${color}22, ${color}0a)` }}
             onClick={onLoad}
           >
-            <div
+            <motion.div
               className="w-20 h-20 rounded-3xl flex items-center justify-center text-3xl font-black text-white shadow-lg"
               style={{ backgroundColor: color, boxShadow: `0 8px 32px ${color}50` }}
             >
               {streamer.name[0]}
-            </div>
+            </motion.div>
             <p className="text-white font-black text-base">{streamer.name}</p>
             <motion.div
               whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
@@ -74,8 +77,10 @@ export function StreamPanel({
         />
       )}
 
-      <div className="absolute top-0 left-0 right-0 flex items-start justify-between p-2 gap-2 pointer-events-none">
-        <div className="flex gap-1 pointer-events-auto">
+      <div
+        className={`absolute top-0 left-0 right-0 flex items-start justify-between p-2 gap-2 ${overlayControlsClass}`}
+      >
+        <div className="flex gap-1">
           <button onClick={onSwapLeft} disabled={!canLeft}
             className="p-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white/80 hover:text-white hover:bg-black/70 transition-all shadow-sm disabled:opacity-20 disabled:cursor-not-allowed"
             title="왼쪽으로">
@@ -88,7 +93,7 @@ export function StreamPanel({
           </button>
         </div>
 
-        <div className="flex gap-1 pointer-events-auto">
+        <div className="flex gap-1">
           <button onClick={onToggleFocus}
             className="p-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white/80 hover:text-white hover:bg-black/70 transition-all shadow-sm"
             title={isFocused ? '원래 크기로' : '크게 보기'}>
@@ -112,7 +117,9 @@ export function StreamPanel({
         </div>
       </div>
 
-      <div className="absolute bottom-2 left-2 flex items-center gap-1.5 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-lg pointer-events-none">
+      <div
+        className={`absolute bottom-2 left-2 flex items-center gap-1.5 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-lg ${overlayControlsClass}`}
+      >
         <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
         <span className="text-white text-[10px] font-black">{streamer.name}</span>
       </div>

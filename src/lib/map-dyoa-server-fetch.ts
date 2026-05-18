@@ -61,5 +61,10 @@ export function apiMutationMessage(
   if (typeof json.message === 'string' && json.message.trim()) {
     return json.message.trim();
   }
+  if (json.error === 'INTERNAL') {
+    return typeof json.message === 'string' && json.message.trim()
+      ? json.message.trim()
+      : fallback;
+  }
   return fallback;
 }

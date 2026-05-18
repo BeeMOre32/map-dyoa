@@ -84,8 +84,16 @@ export function getErrorMessage(error: unknown): {
   }
 
   if (error instanceof Error) {
+    const message = error.message || '알 수 없는 오류가 발생했습니다.';
+    if (/youtubeUrl/i.test(message) && /does not exist|Unknown column/i.test(message)) {
+      return {
+        message:
+          'DB에 youtubeUrl 컬럼이 없습니다. Supabase에서 scripts/add-streamer-youtube-url.sql 내용을 실행한 뒤, /admin/streamers 에서 다시 저장해주세요.',
+        code: 'DB_SCHEMA_ERROR',
+      };
+    }
     return {
-      message: error.message || '알 수 없는 오류가 발생했습니다.',
+      message,
       code: 'SERVER_ERROR',
     };
   }

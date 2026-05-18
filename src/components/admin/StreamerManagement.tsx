@@ -14,6 +14,7 @@ type StreamerItem = {
   profileImg: string | null;
   colorCode: string;
   chzzkUrl: string | null;
+  youtubeUrl: string | null;
   bio: string | null;
   isGuest: boolean;
 };

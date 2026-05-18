@@ -45,3 +45,9 @@ export const getStreamerImagePath = (name: string): string => {
   const safeName = encodeURIComponent(name.trim());
   return `/images/streamers/${safeName}.webp`;
 };
+
+export {
+  normalizeExternalUrl,
+  normalizeYoutubeUrl,
+  externalUrlsEquivalent,
+} from '@/lib/external-url';

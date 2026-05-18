@@ -31,6 +31,7 @@ function hydrateParticipant(raw: Record<string, unknown>): ParticipantFlat {
     profileImg: raw.profileImg != null ? String(raw.profileImg) : null,
     colorCode: String(raw.colorCode ?? '#673AB7'),
     chzzkUrl: raw.chzzkUrl != null ? String(raw.chzzkUrl) : null,
+    youtubeUrl: raw.youtubeUrl != null ? String(raw.youtubeUrl) : null,
     bio: raw.bio != null ? String(raw.bio) : null,
     isGuest: Boolean(raw.isGuest),
     createdAt: new Date(String(raw.createdAt)),

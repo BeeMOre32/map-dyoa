@@ -37,6 +37,7 @@ export interface CreateStreamerInput {
   profileImg?: string;
   colorCode?: string;
   chzzkUrl?: string;
+  youtubeUrl?: string;
   isGuest?: boolean;
 }
 

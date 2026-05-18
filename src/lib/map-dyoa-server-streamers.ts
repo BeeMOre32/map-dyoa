@@ -22,6 +22,7 @@ export function hydrateStreamerFromApi(raw: Record<string, unknown>): Streamer {
     profileImg: raw.profileImg != null ? String(raw.profileImg) : null,
     colorCode: String(raw.colorCode ?? '#673AB7'),
     chzzkUrl: raw.chzzkUrl != null ? String(raw.chzzkUrl) : null,
+    youtubeUrl: raw.youtubeUrl != null ? String(raw.youtubeUrl) : null,
     bio: raw.bio != null ? String(raw.bio) : null,
     isGuest: Boolean(raw.isGuest),
     createdAt: new Date(String(raw.createdAt)),
@@ -34,7 +35,9 @@ export async function fetchAllStreamersFromServer(
   const base = requireServerBaseUrl();
 
   const qs = membersOnly ? '?membersOnly=1' : '';
-  const res = await fetchWithBackoff(`${base}/streamers${qs}`, { next: { revalidate: 120 } });
+  const res = await fetchWithBackoff(`${base}/streamers${qs}`, {
+    next: { revalidate: 120, tags: ['streamers'] },
+  });
   const data = await readJsonSafely<{ streamers?: unknown[]; message?: string }>(
     res,
     `스트리머 API ${res.status}`,
@@ -47,12 +50,13 @@ export async function fetchAllStreamersFromServer(
 
 export async function fetchStreamerByIdFromServer(
   streamerId: string,
+  opts?: { noCache?: boolean },
 ): Promise<Streamer | null> {
   const base = requireServerBaseUrl();
 
-  const res = await fetchWithBackoff(`${base}/streamers/${encodeURIComponent(streamerId)}`, {
-    next: { revalidate: 120 },
-  });
+  const res = await fetchWithBackoff(`${base}/streamers/${encodeURIComponent(streamerId)}`, opts?.noCache
+    ? { cache: 'no-store' }
+    : { next: { revalidate: 120, tags: ['streamers'] } });
   if (res.status === 404) return null;
   const raw = await readJsonSafely<Record<string, unknown>>(
     res,
@@ -158,7 +162,7 @@ export async function fetchStreamerDetailFromServer(
 
   const res = await fetchWithBackoff(
     `${base}/streamers/${encodeURIComponent(streamerId)}/detail`,
-    { next: { revalidate: 120 } },
+    { next: { revalidate: 120, tags: ['streamers', 'calendar', 'clips'] } },
   );
 
   if (res.status === 404) {
@@ -200,6 +204,7 @@ export type StreamerMutationBody = {
   profileImg?: string;
   colorCode: string;
   chzzkUrl?: string;
+  youtubeUrl?: string;
   bio?: string;
   isGuest?: boolean;
 };
@@ -213,7 +218,8 @@ function streamerJsonBody(body: StreamerMutationBody): Record<string, unknown> {
     platform: body.platform,
     profileImg: body.profileImg?.trim() || undefined,
     colorCode: body.colorCode,
-    chzzkUrl: body.chzzkUrl?.trim() || undefined,
+    chzzkUrl: body.chzzkUrl?.trim() || null,
+    youtubeUrl: body.youtubeUrl?.trim() || null,
     bio: body.bio?.trim() || undefined,
     isGuest: body.isGuest ?? false,
   };

@@ -48,3 +48,7 @@ next-env.d.ts
 
 
 /.claude
+
+/prisma/migrations
+
+/supabase
