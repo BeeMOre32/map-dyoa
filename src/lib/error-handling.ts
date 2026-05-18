@@ -42,8 +42,21 @@ export function getErrorMessage(error: unknown): {
   code: string;
 } {
   if (error instanceof ZodError) {
+    const issue = error.issues[0];
+    let message = issue?.message ?? '입력값을 확인해주세요.';
+    const pathKey = issue?.path.map(String).join('.') ?? '';
+    if (
+      issue &&
+      (issue.message.includes('received null') ||
+        (issue.code === 'invalid_type' && issue.received === 'null'))
+    ) {
+      if (pathKey === 'gameId') message = '게임을 목록에서 다시 선택해주세요.';
+      else if (pathKey.includes('participants') && pathKey.endsWith('id')) {
+        message = '멤버를 다시 선택해주세요.';
+      } else if (pathKey === 'title') message = '방송 제목을 입력해주세요.';
+    }
     return {
-      message: error.issues[0]?.message ?? '입력값을 확인해주세요.',
+      message,
       code: 'VALIDATION_ERROR',
     };
   }

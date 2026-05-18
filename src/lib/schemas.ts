@@ -1,21 +1,38 @@
 import { z } from 'zod';
 
+/** Server Action·AI 추출 등에서 null/빈 문자열로 오는 optional 문자열 → undefined */
+function optionalString() {
+  return z.preprocess(
+    (val) =>
+      val === null || val === undefined || (typeof val === 'string' && !val.trim())
+        ? undefined
+        : val,
+    z.string().optional(),
+  );
+}
+
 const participant = z.object({
-  id: z.string(),
-  nation: z.string().optional(),
-  result: z.string().optional(),
+  id: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim() : val == null ? '' : String(val)),
+    z.string().min(1, '참여자 ID가 올바르지 않습니다.'),
+  ),
+  nation: optionalString(),
+  result: optionalString(),
   isGuest: z.boolean().optional(),
 });
 
 export const scheduleServerSchema = z.object({
-  title: z.string().min(1, '방송 제목을 입력해주세요.'),
+  title: z.preprocess(
+    (val) => (typeof val === 'string' ? val : val == null ? '' : String(val)),
+    z.string().min(1, '방송 제목을 입력해주세요.'),
+  ),
   startTime: z.coerce
     .date()
     .refine((d) => !isNaN(d.getTime()), '올바른 시간을 입력해주세요.'),
   participants: z
     .array(participant)
     .min(1, '참여자를 최소 1명 이상 선택해주세요.'),
-  gameId: z.string().optional(),
+  gameId: optionalString(),
   liveUrls: z.array(z.string()).optional(),
   isGuerrilla: z.boolean().optional(),
   isNaeJeon: z.boolean().optional(),

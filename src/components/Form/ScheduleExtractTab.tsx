@@ -35,6 +35,44 @@ type ExtractedSchedule = {
   editingStreamers: boolean;
 };
 
+type RawExtractedSchedule = Omit<ExtractedSchedule, 'key' | 'editingStreamers'>;
+
+function normalizeExtractedSchedule(
+  s: Partial<RawExtractedSchedule>,
+  key: string,
+): ExtractedSchedule {
+  return {
+    key,
+    title: s.title ?? '',
+    date: s.date ?? null,
+    time: s.time ?? null,
+    gameId: s.gameId ?? null,
+    gameName: s.gameName ?? null,
+    streamerIds: (s.streamerIds ?? []).filter(
+      (id): id is string => typeof id === 'string' && id.trim().length > 0,
+    ),
+    streamerNames: s.streamerNames ?? [],
+    editingStreamers: s.editingStreamers ?? false,
+  };
+}
+
+function resolveGameId(
+  gameId: string | null,
+  gameName: string | null,
+  games: Game[],
+): string | undefined {
+  const trimmedId = gameId?.trim();
+  if (trimmedId) return trimmedId;
+  const name = gameName?.trim();
+  if (!name) return undefined;
+  const exact = games.find((g) => g.title === name);
+  if (exact) return exact.id;
+  const loose = games.find(
+    (g) => g.title.includes(name) || name.includes(g.title),
+  );
+  return loose?.id;
+}
+
 type Step = 'input' | 'loading' | 'review' | 'submitting';
 
 type PhaseConfig = { phase: string; label: string; Icon: React.ElementType };
@@ -131,7 +169,11 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
       }
       queueMicrotask(() => {
         if (Array.isArray(parsed.extracted) && parsed.extracted.length > 0) {
-          setExtracted(parsed.extracted);
+          setExtracted(
+            parsed.extracted.map((s) =>
+              normalizeExtractedSchedule(s, s.key ?? crypto.randomUUID()),
+            ),
+          );
           setStep(parsed.step === 'review' ? 'review' : 'input');
         }
         if (typeof parsed.textInput === 'string') {
@@ -193,13 +235,9 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
           return;
         } else if (event.type === 'result') {
           setExtracted(
-            (event.schedules as Omit<ExtractedSchedule, 'key' | 'editingStreamers'>[]).map((s) => ({
-              ...s,
-              key: crypto.randomUUID(),
-              streamerIds: s.streamerIds ?? [],
-              streamerNames: s.streamerNames ?? [],
-              editingStreamers: false,
-            })),
+            (event.schedules as Partial<RawExtractedSchedule>[]).map((s) =>
+              normalizeExtractedSchedule(s, crypto.randomUUID()),
+            ),
           );
           setStep('review');
         }
@@ -311,6 +349,7 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
           d.setHours(0, 0, 0, 0);
         }
 
+        const gameId = resolveGameId(s.gameId, s.gameName, games);
         return createScheduleAction({
           title: s.title.trim(),
           startTime: d,
@@ -318,7 +357,7 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
             id,
             isGuest: streamers.find((streamer) => streamer.id === id)?.isGuest ?? false,
           })),
-          gameId: s.gameId ?? undefined,
+          ...(gameId ? { gameId } : {}),
           isGuerrilla: !hasTime,
           isNaeJeon: false,
         });
@@ -586,7 +625,7 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
                         </span>
                         <input
                           type="text"
-                          value={s.title}
+                          value={s.title ?? ''}
                           onChange={(e) => updateSchedule(s.key, { title: e.target.value })}
                           placeholder="방송 제목"
                           className={`flex-1 min-w-0 bg-transparent text-sm font-bold placeholder-slate-400 outline-none ${
