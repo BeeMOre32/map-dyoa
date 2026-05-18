@@ -15,14 +15,14 @@ export default async function CalendarPage() {
   const { schedules, streamers, games } = await getCalendarData();
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-slate-50/50 transition-colors dark:bg-slate-950">
+    <div className="flex flex-col bg-slate-50/50 transition-colors max-sm:flex-none sm:min-h-0 sm:flex-1 sm:overflow-hidden dark:bg-slate-950">
       <header className="sr-only">
         <h1>지도동 방송 일정 캘린더</h1>
         <p>
           Map-Dyoa에서 지도동 스트리머 방송·게임 일정을 한눈에 확인합니다.
         </p>
       </header>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-col max-sm:flex-none sm:min-h-0 sm:flex-1 sm:overflow-hidden">
         <CalendarView
           initialSchedules={schedules}
           streamers={streamers}
