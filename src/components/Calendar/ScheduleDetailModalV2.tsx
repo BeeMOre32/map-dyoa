@@ -148,11 +148,13 @@ export default function ScheduleDetailModalV2({
   };
 
   return (
+    <>
     <motion.div
       initial="hidden"
       animate="visible"
       exit="hidden"
       variants={backdropVariants}
+      style={{ display: 'flex' }}
       className="fixed inset-0 z-70 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md"
       onClick={handleClose}
     >
@@ -214,32 +216,37 @@ export default function ScheduleDetailModalV2({
           )}
         </AnimatePresence>
       </div>
+    </motion.div>
 
-      <AnimatePresence>
-        {showConfirm && (
+    <AnimatePresence>
+      {showConfirm && (
           <ConfirmModal
             message="정말로 이 일정을 삭제할까요? 되돌릴 수 없습니다."
             isLoading={isDeleting}
             onConfirm={handleConfirmDelete}
             onCancel={() => setShowConfirm(false)}
           />
-        )}
-      </AnimatePresence>
+      )}
+    </AnimatePresence>
 
-      {/* 모바일 바텀시트 */}
-      <AnimatePresence>
-        {sheetOpen && (
-          <>
-            <motion.div
-              className="sm:hidden fixed inset-0 z-80 bg-black/40"
+    {/* 모바일 바텀시트 */}
+    <AnimatePresence>
+      {sheetOpen && (
+        <motion.div
+          className="fixed inset-0 z-80 flex flex-col justify-end sm:hidden"
+          style={{ display: 'flex' }}
+          initial={false}
+        >
+          <motion.div
+            className="absolute inset-0 bg-black/40"
               variants={sheetBackdropVariants}
               initial="hidden"
               animate="visible"
               exit="hidden"
               onClick={() => setSheetOpen(false)}
             />
-            <motion.div
-              className="fixed inset-x-0 bottom-0 z-85 flex max-h-[75dvh] min-h-0 flex-col rounded-t-3xl border-t border-slate-100 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800 sm:hidden"
+          <motion.div
+            className="relative z-10 flex max-h-[75dvh] min-h-0 flex-col rounded-t-3xl border-t border-slate-100 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800"
               variants={bottomSheetVariants}
               initial="hidden"
               animate="visible"
@@ -256,11 +263,11 @@ export default function ScheduleDetailModalV2({
                   defaultTab={sheetTab}
                 />
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </motion.div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 }
 

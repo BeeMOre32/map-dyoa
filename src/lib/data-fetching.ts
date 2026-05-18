@@ -35,6 +35,7 @@ import {
   fetchSchedulesFromServer,
   isScheduleServerEnabled,
 } from './map-dyoa-server-schedules';
+import { getSitemapScheduleWindow } from './seo-jsonld';
 
 export { getLiveStreamerIds } from './chzzk-live-status';
 
@@ -146,6 +147,16 @@ export async function getSchedulesByDateRange(startDate: Date, endDate: Date) {
     return t >= start && t <= end;
   });
 }
+
+/** sitemap.xml용 일정 URL 생성 (과거 3개월~향후 6개월) */
+export const getSchedulesForSitemap = unstable_cache(
+  async () => {
+    const { from, to } = getSitemapScheduleWindow();
+    return getSchedulesByDateRange(from, to);
+  },
+  ['sitemap-schedules'],
+  { revalidate: 3600, tags: ['calendar', 'sitemap'] },
+);
 
 /**
  * 클립 목록 가져오기 (캐싱 적용)

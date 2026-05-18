@@ -4,8 +4,9 @@ import StreamerView from '@/components/streamer/StreamerView';
 import { buildPageMetadata } from '@/lib/site';
 
 export const metadata = buildPageMetadata({
-  title: '멤버',
-  description: '지도동 멤버 프로필, 방송 채널, 라이브 상태를 확인하세요.',
+  title: '지도동 멤버',
+  description:
+    '지도동 스트리머 멤버 프로필, 치지직·유튜브 채널, 라이브 상태와 방송 일정을 확인하세요.',
   path: '/streamers',
 });
 

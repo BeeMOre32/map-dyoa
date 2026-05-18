@@ -1,5 +1,6 @@
 // src/app/calendar/schedule/[id]/page.tsx
 import ScheduleDetailView from '@/components/Calendar/ScheduleDetailModalWrapper';
+import ScheduleSeoContent from '@/components/Seo/ScheduleSeoContent';
 import { notFound } from 'next/navigation';
 import CalendarView from '@/components/Calendar/CalendarView';
 import { getCalendarData, getScheduleDetail, getScheduleClips } from '@/lib/data-fetching';
@@ -16,10 +17,16 @@ export async function generateMetadata({
   if (!schedule) {
     return buildPageMetadata({ title: '일정을 찾을 수 없음', noIndex: true });
   }
+  const members = schedule.participants.map((p) => p.name).join(', ');
   const gameTitle = schedule.game?.title;
-  const description = gameTitle
-    ? `${schedule.title} · ${gameTitle} | 지도동 방송 일정`
-    : `${schedule.title} | 지도동 방송 일정`;
+  const description = [
+    schedule.title,
+    gameTitle,
+    members ? `참여: ${members}` : null,
+    '지도동 방송 일정',
+  ]
+    .filter(Boolean)
+    .join(' · ');
   const ogPath = `/calendar/schedule/${id}/opengraph-image`;
   return {
     ...buildPageMetadata({
@@ -61,6 +68,7 @@ export default async function FullSchedulePage({
 
   return (
     <div className="relative w-full h-full min-h-screen">
+      <ScheduleSeoContent schedule={targetSchedule} />
       <CalendarView
         initialSchedules={allSchedules}
         streamers={streamers}

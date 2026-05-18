@@ -150,6 +150,8 @@ function FilterPanel({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.13, ease: 'easeInOut' }}
+            className="flex w-full flex-col gap-2"
+            style={{ display: 'flex' }}
           >
             {tab === 'streamer' && (
               <>
@@ -179,7 +181,6 @@ function FilterPanel({
                       return (
                         <div key={streamer.id} className="relative">
                         <motion.button
-                          layout
                           initial={{ opacity: 0, scale: 0.85 }}
                           animate={{
                             opacity: 1,
@@ -426,6 +427,10 @@ export default function FilterBar({
       </div>
 
       {/* 활성 칩들 + 전체 해제 */}
+      <motion.div
+        className="flex flex-wrap items-center gap-1.5"
+        style={{ display: 'flex' }}
+      >
       <AnimatePresence mode="popLayout">
         {[...selectedStreamers].map((id) => {
           const streamer = streamers.find((s) => s.id === id);
@@ -501,13 +506,18 @@ export default function FilterBar({
           </motion.button>
         )}
       </AnimatePresence>
+      </motion.div>
 
       {/* 모바일 바텀시트 */}
       <AnimatePresence>
         {isOpen && (
-          <>
+          <motion.div
+            className="fixed inset-0 z-40 flex flex-col justify-end sm:hidden"
+            style={{ display: 'flex' }}
+            initial={false}
+          >
             <motion.div
-              className="sm:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -538,7 +548,7 @@ export default function FilterBar({
               />
               <div className="h-6" />
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

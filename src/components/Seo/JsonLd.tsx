@@ -1,0 +1,18 @@
+type Props = {
+  data: Record<string, unknown> | Record<string, unknown>[];
+};
+
+export default function JsonLd({ data }: Props) {
+  const payload = Array.isArray(data) ? data : [data];
+  return (
+    <>
+      {payload.map((entry, index) => (
+        <script
+          key={index}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(entry) }}
+        />
+      ))}
+    </>
+  );
+}
