@@ -21,57 +21,12 @@ import {
 } from 'lucide-react';
 import { createScheduleAction } from '@/app/actions';
 import { Streamer, Game } from '@prisma/client';
+import {
+  type ExtractedSchedule,
+  buildExtractedScheduleActionPayload,
+  normalizeExtractedSchedule,
+} from '@/lib/schedule-extract';
 import StreamerSelector from './StreamerSelctor';
-
-type ExtractedSchedule = {
-  key: string;
-  title: string;
-  date: string | null;
-  time: string | null;
-  gameId: string | null;
-  gameName: string | null;
-  streamerIds: string[];
-  streamerNames: string[];
-  editingStreamers: boolean;
-};
-
-type RawExtractedSchedule = Omit<ExtractedSchedule, 'key' | 'editingStreamers'>;
-
-function normalizeExtractedSchedule(
-  s: Partial<RawExtractedSchedule>,
-  key: string,
-): ExtractedSchedule {
-  return {
-    key,
-    title: s.title ?? '',
-    date: s.date ?? null,
-    time: s.time ?? null,
-    gameId: s.gameId ?? null,
-    gameName: s.gameName ?? null,
-    streamerIds: (s.streamerIds ?? []).filter(
-      (id): id is string => typeof id === 'string' && id.trim().length > 0,
-    ),
-    streamerNames: s.streamerNames ?? [],
-    editingStreamers: s.editingStreamers ?? false,
-  };
-}
-
-function resolveGameId(
-  gameId: string | null,
-  gameName: string | null,
-  games: Game[],
-): string | undefined {
-  const trimmedId = gameId?.trim();
-  if (trimmedId) return trimmedId;
-  const name = gameName?.trim();
-  if (!name) return undefined;
-  const exact = games.find((g) => g.title === name);
-  if (exact) return exact.id;
-  const loose = games.find(
-    (g) => g.title.includes(name) || name.includes(g.title),
-  );
-  return loose?.id;
-}
 
 type Step = 'input' | 'loading' | 'review' | 'submitting';
 
@@ -235,9 +190,9 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
           return;
         } else if (event.type === 'result') {
           setExtracted(
-            (event.schedules as Partial<RawExtractedSchedule>[]).map((s) =>
-              normalizeExtractedSchedule(s, crypto.randomUUID()),
-            ),
+            (event.schedules as Partial<
+              Omit<ExtractedSchedule, 'key' | 'editingStreamers'>
+            >[]).map((s) => normalizeExtractedSchedule(s, crypto.randomUUID())),
           );
           setStep('review');
         }
@@ -340,27 +295,9 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
         if (!s.streamerIds?.length)
           return Promise.resolve({ success: false, error: `"${s.title}" - 멤버를 선택해주세요.` });
 
-        const hasTime = !!s.time;
-        const d = new Date(s.date ?? new Date().toISOString().split('T')[0]);
-        if (hasTime && s.time) {
-          const [h, m] = s.time.split(':');
-          d.setHours(parseInt(h, 10), parseInt(m, 10), 0, 0);
-        } else {
-          d.setHours(0, 0, 0, 0);
-        }
-
-        const gameId = resolveGameId(s.gameId, s.gameName, games);
-        return createScheduleAction({
-          title: s.title.trim(),
-          startTime: d,
-          participants: s.streamerIds.map((id) => ({
-            id,
-            isGuest: streamers.find((streamer) => streamer.id === id)?.isGuest ?? false,
-          })),
-          ...(gameId ? { gameId } : {}),
-          isGuerrilla: !hasTime,
-          isNaeJeon: false,
-        });
+        return createScheduleAction(
+          buildExtractedScheduleActionPayload(s, streamers, games),
+        );
       }),
     );
 

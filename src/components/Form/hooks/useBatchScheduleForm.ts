@@ -1,6 +1,7 @@
 import { useState, useCallback, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { createScheduleAction } from '@/app/actions';
+import { buildScheduleActionPayload } from '@/lib/schedule-payload';
 import { matchChzzkCategory } from '@/constants/chzzkGameMap';
 import {
   slotSchema,
@@ -196,20 +197,22 @@ export function useBatchScheduleForm({
     setIsSubmitting(true);
     const results = await Promise.allSettled(
       slots.map((slot) =>
-        createScheduleAction({
-          title: slot.title,
-          startTime: slot.isTimeTBD
-            ? new Date(slot.startTime.split('T')[0] + 'T00:00')
-            : new Date(slot.startTime),
-          participants: slot.selectedStreamerIds.map((id) => ({
-            id,
-            isGuest: slot.guestStreamerIds.includes(id),
-          })),
-          gameId: slot.selectedGameId || undefined,
-          liveUrls: slot.liveUrls.map((u) => u.trim()).filter(Boolean),
-          isGuerrilla: slot.isTimeTBD,
-          isNaeJeon: false,
-        }),
+        createScheduleAction(
+          buildScheduleActionPayload({
+            title: slot.title,
+            startTime: slot.isTimeTBD
+              ? new Date(slot.startTime.split('T')[0] + 'T00:00')
+              : new Date(slot.startTime),
+            participants: slot.selectedStreamerIds.map((id) => ({
+              id,
+              isGuest: slot.guestStreamerIds.includes(id),
+            })),
+            gameId: slot.selectedGameId || null,
+            liveUrls: slot.liveUrls,
+            isGuerrilla: slot.isTimeTBD,
+            isNaeJeon: false,
+          }),
+        ),
       ),
     );
     const failCount = results.filter(

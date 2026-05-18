@@ -8,6 +8,7 @@ import { getStreamerColor } from '@/constants/streamercolor';
 import { isChzzkClipUrl } from '@/lib/chzzk';
 import { isYouTubeUrl } from '@/lib/youtube';
 import { matchesChosung } from '@/lib/chosung';
+import { buildClipActionPayload } from '@/lib/clip-payload';
 import { clipClientSchema } from '@/lib/schemas';
 import { scrollToFirstZodField } from '@/lib/zod-scroll';
 import type { Streamer } from '@prisma/client';
@@ -135,15 +136,15 @@ export function useClipForm(
       return;
     }
 
-    const payload = {
-      title: title.trim(),
-      url: url.trim(),
+    const payload = buildClipActionPayload({
+      title,
+      url,
       streamerIds: selectedIds,
-      scheduleId: scheduleId || undefined,
-      thumbnailUrl: thumbnailUrl.trim() || undefined,
-      description: description.trim() || undefined,
+      scheduleId,
+      thumbnailUrl,
+      description,
       clipDate: clipDate ? new Date(clipDate) : undefined,
-    };
+    });
 
     setSubmitting(true);
     const result = isEdit

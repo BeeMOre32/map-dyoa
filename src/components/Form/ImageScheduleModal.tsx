@@ -22,21 +22,14 @@ import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { createScheduleAction } from '@/app/actions';
 import { Streamer, Game } from '@prisma/client';
+import {
+  type ExtractedSchedule,
+  buildExtractedScheduleActionPayload,
+  normalizeExtractedSchedule,
+} from '@/lib/schedule-extract';
 import { ModalProps } from '@/types/props';
 import StreamerSelector from './StreamerSelctor';
 import type { AnalysisPhase, SseEvent } from '@/app/api/schedule/extract-from-image/route';
-
-type ExtractedSchedule = {
-  key: string;
-  title: string;
-  date: string | null;
-  time: string | null;
-  gameId: string | null;
-  gameName: string | null;
-  streamerIds: string[];
-  streamerNames: string[];
-  editingStreamers: boolean;
-};
 
 type Step = 'upload' | 'loading' | 'review' | 'submitting';
 
@@ -147,13 +140,9 @@ export default function ImageScheduleModal({
             return;
           } else if (event.type === 'result') {
             setExtracted(
-              (event.schedules as Omit<ExtractedSchedule, 'key' | 'editingStreamers'>[]).map((s) => ({
-                ...s,
-                key: crypto.randomUUID(),
-                streamerIds: s.streamerIds ?? [],
-                streamerNames: s.streamerNames ?? [],
-                editingStreamers: false,
-              })),
+              (event.schedules as Partial<
+                Omit<ExtractedSchedule, 'key' | 'editingStreamers'>
+              >[]).map((s) => normalizeExtractedSchedule(s, crypto.randomUUID())),
             );
             setStep('review');
           }
@@ -210,24 +199,9 @@ export default function ImageScheduleModal({
           return Promise.resolve({ success: false, error: `"${s.title}" - 멤버를 선택해주세요.` });
         }
 
-        const hasTime = !!s.time;
-        const dateStr = s.date ?? new Date().toISOString().split('T')[0];
-        const d = new Date(dateStr);
-        if (hasTime && s.time) {
-          const [hours, minutes] = s.time.split(':');
-          d.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
-        } else {
-          d.setHours(0, 0, 0, 0);
-        }
-
-        return createScheduleAction({
-          title: s.title.trim(),
-          startTime: d,
-          participants: s.streamerIds.map((id) => ({ id })),
-          gameId: s.gameId ?? undefined,
-          isGuerrilla: !hasTime,
-          isNaeJeon: false,
-        });
+        return createScheduleAction(
+          buildExtractedScheduleActionPayload(s, streamers, games),
+        );
       }),
     );
 
@@ -475,7 +449,7 @@ export default function ImageScheduleModal({
                           </span>
                           <input
                             type="text"
-                            value={s.title}
+                            value={s.title ?? ''}
                             onChange={(e) => updateSchedule(s.key, { title: e.target.value })}
                             placeholder="방송 제목"
                             className={`flex-1 min-w-0 bg-transparent text-sm font-bold placeholder-slate-400 outline-none ${

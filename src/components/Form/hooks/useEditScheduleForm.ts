@@ -13,6 +13,7 @@ import {
   AutoFillResult,
 } from '../types';
 import { scrollToFirstZodField } from '@/lib/zod-scroll';
+import { buildScheduleActionPayload } from '@/lib/schedule-payload';
 import { useToast } from '@/components/Common/Toaster';
 
 type UseEditScheduleFormArgs = {
@@ -216,20 +217,21 @@ export function useEditScheduleForm({
       ? new Date(startTime.split('T')[0] + 'T00:00')
       : new Date(startTime);
     const cleanUrls = liveUrls.map((u) => u.trim()).filter(Boolean);
-    const payload = {
+    const payload = buildScheduleActionPayload({
       title,
       startTime: resolvedStartTime,
       participants: participants.map(({ id, nation, isGuest }) => ({
         id,
-        nation: nation.trim() || undefined,
+        nation,
         isGuest,
       })),
-      gameId: selectedGameId === '' ? undefined : selectedGameId,
+      gameId: selectedGameId || null,
+      games,
       liveUrls: cleanUrls,
       isGuerrilla: isTimeTBD,
       isNaeJeon: isHoi4Game ? isNaeJeon : false,
       isLiveEnded: isEdit ? isLiveEnded : false,
-    };
+    });
     const result = isEdit
       ? await updateScheduleAction(initialData!.id, payload)
       : await createScheduleAction(payload);

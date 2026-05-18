@@ -13,7 +13,10 @@ import { ko } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import { useGoBack } from '@/hooks/useGoBack';
 import Link from 'next/link';
-import { deleteScheduleRequest } from '@/lib/schedule-delete-client';
+import {
+  deleteScheduleRequest,
+  navigateToCalendarAfterDelete,
+} from '@/lib/schedule-delete-client';
 import CreateScheduleModal from '../Form/CreateScheduleModal';
 import { useToast } from '@/components/Common/Toaster';
 import ConfirmModal from '@/components/Common/ConfirmModal';
@@ -174,10 +177,10 @@ export default function ScheduleModal({
     setConfirmId(null);
     if (result.success) {
       toast.success('일정이 삭제되었습니다.');
-      router.refresh();
+      navigateToCalendarAfterDelete(router);
       onClose?.();
     } else {
-      toast.error('삭제에 실패했습니다.');
+      toast.error(result.error ?? '삭제에 실패했습니다.');
     }
   };
 

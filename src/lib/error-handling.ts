@@ -47,13 +47,18 @@ export function getErrorMessage(error: unknown): {
     const pathKey = issue?.path.map(String).join('.') ?? '';
     if (
       issue &&
-      (issue.message.includes('received null') ||
-        (issue.code === 'invalid_type' && issue.received === 'null'))
+      issue.message.includes('received null')
     ) {
       if (pathKey === 'gameId') message = '게임을 목록에서 다시 선택해주세요.';
       else if (pathKey.includes('participants') && pathKey.endsWith('id')) {
         message = '멤버를 다시 선택해주세요.';
       } else if (pathKey === 'title') message = '방송 제목을 입력해주세요.';
+      else if (pathKey === 'url') message = '클립 URL을 입력해주세요.';
+      else if (pathKey === 'scheduleId') message = '연결 일정을 다시 선택해주세요.';
+      else if (pathKey === 'streamerIds') message = '스트리머를 다시 선택해주세요.';
+      else if (pathKey === 'handle' || pathKey === 'name') {
+        message = '필수 항목을 입력해주세요.';
+      }
     }
     return {
       message,
