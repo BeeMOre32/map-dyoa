@@ -39,7 +39,11 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { calendarColumnVariants, calendarGridSlide } from '@/lib/calendarMotion';
+import {
+  calendarColumnVariants,
+  calendarGridPresenceVariants,
+  calendarGridSlide,
+} from '@/lib/calendarMotion';
 import { useSession } from 'next-auth/react';
 
 import ScheduleFormModal from '@/components/Form/CreateScheduleModal';
@@ -319,10 +323,19 @@ export default function CalendarView({
               <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
             </button>
           </div>
-          <div className="min-w-0">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight leading-none truncate">
-              {format(currentDate, 'yyyy년 M월')}
-            </h2>
+          <div className="min-w-0 overflow-hidden">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.h2
+                key={format(currentDate, 'yyyy-MM')}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ type: 'spring', damping: 26, stiffness: 380 }}
+                className="text-lg sm:text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight leading-none truncate"
+              >
+                {format(currentDate, 'yyyy년 M월')}
+              </motion.h2>
+            </AnimatePresence>
             {viewMode === 'weekly' && (
               <p className="text-slate-400 dark:text-slate-500 font-bold text-[11px] mt-1 truncate">
                 {format(startOfWeek(currentDate), 'M. d')} -{' '}
@@ -397,9 +410,15 @@ export default function CalendarView({
       >
         {/* ── 모바일 주간 리스트 (sm 미만 + weekly) ── */}
         {viewMode === 'weekly' && (
-          <div
+          <AnimatePresence mode="wait" custom={slideDirection}>
+          <motion.div
             key={`mobile-${currentDate.toISOString()}`}
-            className="sm:hidden animate-in fade-in duration-300 space-y-3 p-2"
+            custom={slideDirection}
+            variants={calendarGridPresenceVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            className="flex flex-col sm:hidden space-y-3 p-2"
           >
             {days.map((day) => {
               const today = isToday(day);
@@ -484,7 +503,8 @@ export default function CalendarView({
                 </section>
               );
             })}
-          </div>
+          </motion.div>
+          </AnimatePresence>
         )}
 
         {/* ── 데스크탑 그리드 / 모바일 월간 그리드 ── */}
@@ -493,9 +513,15 @@ export default function CalendarView({
         >
           {isV2Weekly ? (
             /* V2 weekly — 카드형 컬럼 레이아웃 */
+            <AnimatePresence mode="wait" custom={slideDirection}>
             <motion.div
               key={`v2-${currentDate.toISOString()}`}
-              {...calendarGridSlide(slideDirection)}
+              custom={slideDirection}
+              variants={calendarGridPresenceVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              style={{ display: 'flex', flexDirection: 'column' }}
               className="flex-1 overflow-hidden p-0.5 sm:p-1"
             >
               <div className="grid h-full min-h-0 grid-cols-7 gap-1.5 sm:gap-2">
@@ -593,6 +619,7 @@ export default function CalendarView({
                 })}
               </div>
             </motion.div>
+            </AnimatePresence>
           ) : (
             /* V1 — 기존 그리드 레이아웃 */
             <>
@@ -608,9 +635,14 @@ export default function CalendarView({
                 ))}
               </div>
 
+              <AnimatePresence mode="wait" custom={slideDirection}>
               <motion.div
                 key={`${currentDate.toISOString()}-${viewMode}`}
-                {...calendarGridSlide(slideDirection)}
+                custom={slideDirection}
+                variants={calendarGridPresenceVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
                 className="sm:flex-1 overflow-y-auto custom-scrollbar pb-4 sm:pb-0"
               >
                 <div
@@ -686,6 +718,7 @@ export default function CalendarView({
                   })}
                 </div>
               </motion.div>
+              </AnimatePresence>
             </>
           )}
         </div>

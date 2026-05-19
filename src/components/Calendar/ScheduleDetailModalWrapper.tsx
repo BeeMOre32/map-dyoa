@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { LayoutGroup } from 'framer-motion';
 import ScheduleDetailModal from './ScheduleDetailModal';
 import ScheduleDetailModalV2 from './ScheduleDetailModalV2';
 import { useLegacyCalendarUi } from '@/hooks/useLegacyCalendarUi';
@@ -36,9 +37,13 @@ export default function ScheduleDetailModalWrapper({
     ...rest,
   };
 
-  return legacyUi ? (
-    <ScheduleDetailModal {...modalProps} />
-  ) : (
-    <ScheduleDetailModalV2 {...modalProps} />
+  return (
+    <LayoutGroup id={`schedule-modal-${schedule.id}`}>
+      {legacyUi ? (
+        <ScheduleDetailModal {...modalProps} />
+      ) : (
+        <ScheduleDetailModalV2 {...modalProps} />
+      )}
+    </LayoutGroup>
   );
 }

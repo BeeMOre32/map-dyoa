@@ -3,6 +3,11 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
+  streamerAvatarLayoutId,
+  streamerModalRevealContainer,
+  streamerModalRevealItem,
+} from '@/lib/streamerMotion';
+import {
   X,
   ExternalLink,
   CalendarDays,
@@ -121,20 +126,19 @@ export default function StreamerDetailModal({
 
           {/* 아바타 — 배너 아래로 겹침 */}
           <div className="absolute -bottom-8 left-4 sm:-bottom-10 sm:left-8">
-            <div
-              className="rounded-[1.25rem] shadow-xl ring-4"
+            <motion.div
+              layoutId={streamerAvatarLayoutId(streamer.id)}
+              className="overflow-hidden rounded-[1.25rem] shadow-xl ring-4 ring-white dark:ring-slate-900"
               style={{ '--tw-ring-color': isDark ? '#0f172a' : '#ffffff' } as React.CSSProperties}
             >
-              <div className="ring-4 ring-white dark:ring-slate-900 rounded-[1.25rem]">
-                <StreamerAvatar
-                  size="large"
-                  colorCode={streamer.colorCode}
-                  name={streamer.name}
-                  imgSrc={imgSrc}
-                  streamerId={streamer.id}
-                />
-              </div>
-            </div>
+              <StreamerAvatar
+                size="large"
+                colorCode={streamer.colorCode}
+                name={streamer.name}
+                imgSrc={imgSrc}
+                streamerId={streamer.id}
+              />
+            </motion.div>
           </div>
         </div>
 
@@ -225,11 +229,16 @@ export default function StreamerDetailModal({
 
         {/* ── 스크롤 본문 ── */}
         <div className="overflow-y-auto flex-1 min-h-0 custom-scrollbar">
-          <div className="space-y-5 p-4 sm:space-y-6 sm:p-6 md:space-y-8 md:p-8">
+          <motion.div
+            className="space-y-5 p-4 sm:space-y-6 sm:p-6 md:space-y-8 md:p-8"
+            variants={streamerModalRevealContainer}
+            initial="hidden"
+            animate="visible"
+          >
 
             {/* 자기소개 */}
             {streamer.bio && (
-              <section className="space-y-3">
+              <motion.section variants={streamerModalRevealItem} className="space-y-3">
                 <div className="flex items-center gap-2">
                   <FileText className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
                   <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
@@ -239,12 +248,12 @@ export default function StreamerDetailModal({
                 <p className="text-sm font-medium text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
                   {streamer.bio}
                 </p>
-              </section>
+              </motion.section>
             )}
 
             {/* 참여한 합방 */}
             {recentSchedules.length > 0 && (
-              <section className="space-y-3">
+              <motion.section variants={streamerModalRevealItem} className="space-y-3">
                 <div className="flex items-center gap-2">
                   <CalendarDays className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
                   <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
@@ -288,12 +297,12 @@ export default function StreamerDetailModal({
                     );
                   })}
                 </div>
-              </section>
+              </motion.section>
             )}
 
             {/* 링크된 클립 */}
             {linkedClips.length > 0 && (
-              <section className="space-y-3">
+              <motion.section variants={streamerModalRevealItem} className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Clapperboard className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
                   <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
@@ -387,20 +396,20 @@ export default function StreamerDetailModal({
                     {showAllLinkedClips ? '클립 접기' : `클립 더 보기 (+${linkedClips.length - 4})`}
                   </button>
                 )}
-              </section>
+              </motion.section>
             )}
 
             {/* 데이터 없을 때 */}
             {schedules.length === 0 && linkedClips.length === 0 && !streamer.bio && (
-              <div className="py-16 text-center">
+              <motion.div variants={streamerModalRevealItem} className="py-16 text-center">
                 <Clapperboard className="w-10 h-10 text-slate-200 dark:text-slate-700 mx-auto mb-3" />
                 <p className="text-sm font-bold text-slate-400 dark:text-slate-500">
                   아직 등록된 방송 이력이 없어요
                 </p>
-              </div>
+              </motion.div>
             )}
 
-          </div>
+          </motion.div>
         </div>
 
         {/* ── 하단 버튼 ── */}

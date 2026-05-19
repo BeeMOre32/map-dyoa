@@ -108,7 +108,7 @@ export default function MultiView({ participants, title, backHref }: MultiViewPr
                   transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   onClick={() => mv.restore(s.id)}
                   className="flex items-center gap-1 pl-1.5 pr-2 py-0.5 rounded-full text-[10px] font-black text-white shrink-0 hover:opacity-80 transition-opacity"
-                  style={{ backgroundColor: color }}
+                  style={{ display: 'flex', backgroundColor: color }}
                   title={`${s.name} 복원`}
                 >
                   <Plus className="w-3 h-3" />

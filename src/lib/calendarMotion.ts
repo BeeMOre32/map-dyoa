@@ -49,9 +49,54 @@ export function calendarGridSlide(direction: 'left' | 'right') {
   return {
     initial: { opacity: 0, x },
     animate: { opacity: 1, x: 0 },
+    exit: {
+      opacity: 0,
+      x: direction === 'left' ? -22 : 22,
+      transition: { duration: 0.18, ease: [0.4, 0, 1, 1] as const },
+    },
     transition: { type: 'spring' as const, damping: 28, stiffness: 320 },
   };
 }
+
+/** AnimatePresence mode="wait"용 주·월 그리드 슬라이드 */
+export const calendarGridPresenceVariants: Variants = {
+  enter: (direction: 'left' | 'right') => ({
+    opacity: 0,
+    x: direction === 'left' ? 32 : -32,
+  }),
+  center: {
+    opacity: 1,
+    x: 0,
+    transition: { type: 'spring', damping: 28, stiffness: 320 },
+  },
+  exit: (direction: 'left' | 'right') => ({
+    opacity: 0,
+    x: direction === 'left' ? -24 : 24,
+    transition: { duration: 0.2, ease: [0.4, 0, 1, 1] },
+  }),
+};
+
+/** 일정 카드 → 상세 모달 shared layout */
+export function scheduleSurfaceLayoutId(scheduleId: string) {
+  return `schedule-surface-${scheduleId}`;
+}
+
+/** 모달 본문 stagger 등장 */
+export const modalDetailRevealContainer: Variants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.055, delayChildren: 0.06 },
+  },
+};
+
+export const modalDetailRevealItem: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: springIn(0),
+  },
+};
 
 export const skeletonBarVariants: Variants = {
   hidden: { opacity: 0.35 },

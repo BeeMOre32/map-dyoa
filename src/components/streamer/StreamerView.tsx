@@ -1,6 +1,11 @@
 'use client';
 
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  STREAMER_GEN_TAB_LAYOUT_ID,
+  streamerListPresenceVariants,
+  streamerMultiviewBarVariants,
+} from '@/lib/streamerMotion';
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, X, LayoutGrid, WifiOff, RefreshCw, Star } from 'lucide-react';
@@ -143,22 +148,24 @@ export default function StreamerView({
     };
   }, [isRefreshing, lastUpdatedAt]);
 
-  const cardGrid = (list: Streamer[]) => (
+  const listFilterKey = `${activeGen ?? 'all'}-${search.trim()}-${favoritesOnly}`;
+
+  const cardGrid = (list: Streamer[], startIndex = 0) => (
     <div className="relative z-0 grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
-      {list.map((streamer) => {
+      {list.map((streamer, i) => {
         const idx = selectedOrder.indexOf(streamer.id);
         return (
-          <div key={streamer.id} className="relative z-0">
-            <StreamerCard
-              streamer={streamer}
-              onRequestEdit={handleRequestEdit}
-              isLive={liveIds.has(streamer.id)}
-              isSelected={idx >= 0}
-              isMaxReached={isMaxReached}
-              onToggleMultiview={() => toggleSelect(streamer.id)}
-              selectionIndex={idx >= 0 ? idx + 1 : undefined}
-            />
-          </div>
+          <StreamerCard
+            key={streamer.id}
+            streamer={streamer}
+            onRequestEdit={handleRequestEdit}
+            isLive={liveIds.has(streamer.id)}
+            isSelected={idx >= 0}
+            isMaxReached={isMaxReached}
+            onToggleMultiview={() => toggleSelect(streamer.id)}
+            selectionIndex={idx >= 0 ? idx + 1 : undefined}
+            index={startIndex + i}
+          />
         );
       })}
     </div>
@@ -220,8 +227,10 @@ export default function StreamerView({
                     }`}
                   >
                     {isActive && (
-                      <span
+                      <motion.span
+                        layoutId={STREAMER_GEN_TAB_LAYOUT_ID}
                         className="absolute inset-0 rounded-lg bg-indigo-600"
+                        transition={{ type: 'spring', bounce: 0.2, duration: 0.55 }}
                         aria-hidden
                       />
                     )}
@@ -254,13 +263,28 @@ export default function StreamerView({
           </div>
         </header>
 
-        <div className="relative z-0 space-y-4 p-3 sm:space-y-8 sm:p-6">
+        <motion.div className="relative z-0 space-y-4 p-3 sm:space-y-8 sm:p-6">
+          <AnimatePresence mode="wait">
           {filtered.length === 0 ? (
-            <div className="rounded-2xl border-2 border-dashed border-slate-100 py-12 text-center dark:border-slate-700 sm:rounded-3xl sm:py-20">
+            <motion.div
+              key="empty"
+              variants={streamerListPresenceVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="rounded-2xl border-2 border-dashed border-slate-100 py-12 text-center dark:border-slate-700 sm:rounded-3xl sm:py-20"
+            >
               <p className="font-bold text-slate-400 dark:text-slate-500">검색 결과가 없어요</p>
-            </div>
+            </motion.div>
           ) : (
-            <>
+            <motion.div
+              key={listFilterKey}
+              variants={streamerListPresenceVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="space-y-4 sm:space-y-8"
+            >
               {liveFiltered.length > 0 && (
                 <div className="space-y-2 sm:space-y-3">
                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -291,16 +315,25 @@ export default function StreamerView({
                     </div>
                   )}
                   <div className={liveFiltered.length > 0 ? 'opacity-80' : ''}>
-                    {cardGrid(offlineFiltered)}
+                    {cardGrid(offlineFiltered, liveFiltered.length)}
                   </div>
                 </div>
               )}
-            </>
+            </motion.div>
           )}
-        </div>
+          </AnimatePresence>
+        </motion.div>
 
+        <AnimatePresence>
         {selectedOrder.length > 0 && (
-          <div className="sticky bottom-0 z-20 border-t border-slate-100 bg-white/95 px-3 py-2 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95 sm:px-4 sm:py-4">
+          <motion.div
+            key="multiview-bar"
+            variants={streamerMultiviewBarVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="sticky bottom-0 z-20 border-t border-slate-100 bg-white/95 px-3 py-2 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95 sm:px-4 sm:py-4"
+          >
             <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-2 sm:gap-3 sm:flex-nowrap">
               <div className="flex shrink-0 items-center gap-1.5">
                 {selectedOrder.map((id, index) => {
@@ -366,8 +399,9 @@ export default function StreamerView({
                 멀티뷰 시작
               </button>
             </div>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </div>
 
       <AnimatePresence>

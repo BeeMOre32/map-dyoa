@@ -79,6 +79,7 @@ export default function ClipView({
       {/* 헤더 */}
       <motion.div
         layout
+        style={{ display: 'flex', flexDirection: 'column' }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
         className={`shrink-0 space-y-2 border-b border-slate-50 bg-slate-50/80 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/40 sm:space-y-3 ${
           isHeaderCondensed ? 'p-2.5' : 'p-3 sm:p-4'

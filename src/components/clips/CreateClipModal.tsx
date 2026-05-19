@@ -138,7 +138,7 @@ export default function CreateClipModal({
                           type="button"
                           onClick={() => form.toggleStreamer(id)}
                           className="flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-xl text-[11px] font-black text-white hover:opacity-80 transition-opacity"
-                          style={{ backgroundColor: color }}
+                          style={{ display: 'flex', backgroundColor: color }}
                         >
                           <StreamerAvatar
                             colorCode={color}

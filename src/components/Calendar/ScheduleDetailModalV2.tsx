@@ -38,6 +38,11 @@ import {
   sheetBackdropVariants,
   smoothModalVariants,
 } from '@/lib/modalVariants';
+import {
+  modalDetailRevealContainer,
+  modalDetailRevealItem,
+  scheduleSurfaceLayoutId,
+} from '@/lib/calendarMotion';
 import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { getStreamerImagePath } from '@/lib/utils';
@@ -234,7 +239,6 @@ export default function ScheduleDetailModalV2({
       {sheetOpen && (
         <motion.div
           className="fixed inset-0 z-80 flex flex-col justify-end sm:hidden"
-          style={{ display: 'flex' }}
           initial={false}
         >
           <motion.div
@@ -345,10 +349,17 @@ function DetailViewV2({
   const liveUrls = filterScheduleLiveUrls(schedule.liveUrls ?? [], schedule);
 
   return (
-    <>
-      {/* 컬러 헤더 */}
-      <div
-        className="relative h-16 w-full shrink-0 transition-colors duration-500"
+    <motion.div
+      variants={modalDetailRevealContainer}
+      initial="hidden"
+      animate="visible"
+      style={{ display: 'flex', flexDirection: 'column' }}
+      className="flex min-h-0 flex-1 flex-col overflow-hidden"
+    >
+      {/* 컬러 헤더 — 카드 surface와 shared layout */}
+      <motion.div
+        layoutId={scheduleSurfaceLayoutId(schedule.id)}
+        className="relative h-16 w-full shrink-0"
         style={{ backgroundColor: gameColor }}
       >
         <div
@@ -364,17 +375,23 @@ function DetailViewV2({
         >
           <X className="w-5 h-5" />
         </button>
-      </div>
+      </motion.div>
 
       {/* 제목 */}
-      <div className="px-5 pt-6 pb-4 sm:px-8 sm:pt-7 sm:pb-5 shrink-0">
+      <motion.div
+        variants={modalDetailRevealItem}
+        className="px-5 pt-6 pb-4 sm:px-8 sm:pt-7 sm:pb-5 shrink-0"
+      >
         <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight tracking-tight">
           {schedule.title}
         </h2>
-      </div>
+      </motion.div>
 
       {/* 메타 칩 */}
-      <div className="flex flex-wrap gap-2.5 px-5 pb-5 sm:px-8 sm:pb-6 shrink-0">
+      <motion.div
+        variants={modalDetailRevealItem}
+        style={{ display: 'flex' }}
+        className="flex flex-wrap gap-2.5 px-5 pb-5 sm:px-8 sm:pb-6 shrink-0">
         <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-2xl font-bold text-sm border border-amber-100 dark:border-amber-800 shadow-sm">
           <Gamepad2 className="w-4 h-4" />
           <span>{schedule.game?.title || '기타 방송'}</span>
@@ -391,9 +408,12 @@ function DetailViewV2({
             ? '시간 미정'
             : format(new Date(schedule.startTime), 'a h:mm', { locale: ko })}
         </div>
-      </div>
+      </motion.div>
 
-      <div className="overflow-y-auto flex-1 min-h-0 overscroll-y-contain custom-scrollbar bg-white dark:bg-slate-800">
+      <motion.div
+        variants={modalDetailRevealItem}
+        className="overflow-y-auto flex-1 min-h-0 overscroll-y-contain custom-scrollbar bg-white dark:bg-slate-800"
+      >
         {/* 참여 방송인 */}
         <div className="px-5 py-5 sm:px-8 sm:py-6 border-t border-slate-50 dark:border-slate-700 space-y-4">
           <div className="flex items-center gap-2">
@@ -544,7 +564,7 @@ function DetailViewV2({
             </button>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {isUser && (
         <div className="flex gap-3 px-5 pt-4 pb-6 sm:px-8 border-t border-slate-100 dark:border-slate-700 shrink-0">
@@ -563,6 +583,6 @@ function DetailViewV2({
           </button>
         </div>
       )}
-    </>
+    </motion.div>
   );
 }

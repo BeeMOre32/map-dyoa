@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { Clock, Gamepad2, CircleAlert } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion } from 'framer-motion';
-import { scheduleCardVariants } from '@/lib/calendarMotion';
+import { scheduleCardVariants, scheduleSurfaceLayoutId } from '@/lib/calendarMotion';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
@@ -207,7 +207,15 @@ export default function ScheduleCardV2({
       className="min-w-0"
     >
       <Link href={href} scroll={false} className="block min-w-0" onClick={onScheduleLinkClick}>
-        <div
+        <motion.div
+          layoutId={scheduleSurfaceLayoutId(schedule.id)}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            borderLeftWidth: 4,
+            borderLeftColor: gameColor ?? accentColor,
+            ...(gameColor ? gameCardSurfaceStyle(gameColor, isDark) : {}),
+          }}
           className={`relative flex w-full min-h-20 flex-col gap-2.5 overflow-hidden rounded-xl border px-3.5 py-3 shadow-md transition-[box-shadow,border-color] hover:shadow-lg ${
             isLive
               ? 'ring-1 ring-red-400/55 shadow-[0_2px_14px_rgba(239,68,68,0.18)] dark:ring-red-500/45'
@@ -219,11 +227,6 @@ export default function ScheduleCardV2({
                 ? 'border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/40'
                 : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:hover:border-slate-500'
           }`}
-          style={{
-            borderLeftWidth: 4,
-            borderLeftColor: gameColor ?? accentColor,
-            ...(gameColor ? gameCardSurfaceStyle(gameColor, isDark) : {}),
-          }}
         >
           <div className="flex items-center justify-between gap-2 min-h-[22px]">
             {schedule.isGuerrilla ? (
@@ -309,7 +312,7 @@ export default function ScheduleCardV2({
               )}
             </div>
           )}
-        </div>
+        </motion.div>
       </Link>
     </motion.div>
   );

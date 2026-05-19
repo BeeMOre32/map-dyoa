@@ -77,6 +77,7 @@ export default function StreamerSelector({
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
+                  style={{ display: 'flex', flexDirection: 'column' }}
                   className={compact ? 'flex flex-col items-center' : 'flex flex-col items-center justify-start min-h-27.5'}
                 >
                   <div className={`flex flex-col items-center w-full ${compact ? 'gap-1.5' : 'gap-2.5'}`}>

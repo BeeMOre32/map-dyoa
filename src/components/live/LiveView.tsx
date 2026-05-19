@@ -36,6 +36,7 @@ function StreamerCard({
       transition={{ type: 'spring', stiffness: 300, damping: 24 }}
       onClick={() => onToggle(streamer.id)}
       disabled={isDisabled}
+      style={{ display: 'flex', flexDirection: 'column' }}
       className={`group relative flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all text-left ${
         isSelected
           ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'

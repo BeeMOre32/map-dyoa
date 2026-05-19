@@ -236,7 +236,6 @@ export default function ScheduleDetailView({
       {sheetOpen && (
         <motion.div
           className="fixed inset-0 z-80 flex flex-col justify-end sm:hidden"
-          style={{ display: 'flex' }}
           initial={false}
         >
           <motion.div

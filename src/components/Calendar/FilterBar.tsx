@@ -446,6 +446,7 @@ export default function FilterBar({
               transition={{ type: 'spring', damping: 22, stiffness: 380 }}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border"
               style={{
+                display: 'inline-flex',
                 color,
                 borderColor: `${color}40`,
                 backgroundColor: `${color}12`,
@@ -476,6 +477,7 @@ export default function FilterBar({
               transition={{ type: 'spring', damping: 22, stiffness: 380 }}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border"
               style={{
+                display: 'inline-flex',
                 color,
                 borderColor: `${color}40`,
                 backgroundColor: `${color}12`,
@@ -513,7 +515,6 @@ export default function FilterBar({
         {isOpen && (
           <motion.div
             className="fixed inset-0 z-40 flex flex-col justify-end sm:hidden"
-            style={{ display: 'flex' }}
             initial={false}
           >
             <motion.div
