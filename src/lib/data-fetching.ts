@@ -673,7 +673,6 @@ export type AuditLogRow = {
   summary: string;
   changes: unknown;
   actorUserId: string | null;
-  actorEmail: string | null;
   actorRole: string | null;
   createdAt: Date;
 };

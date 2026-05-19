@@ -13,7 +13,6 @@ export { buildAuditDiff, isAuditDiffPayload } from '@/lib/audit-log-shared';
 
 export type AuditActor = {
   userId?: string | null;
-  email?: string | null;
   role?: string | null;
 };
 
@@ -38,11 +37,10 @@ function truncateValue(value: unknown): unknown {
 }
 
 export function actorFromSession(session: {
-  user?: { id?: string; email?: string | null; role?: string | null };
+  user?: { id?: string; role?: string | null };
 } | null): AuditActor {
   return {
     userId: session?.user?.id ?? null,
-    email: session?.user?.email ?? null,
     role: session?.user?.role ?? null,
   };
 }
@@ -68,7 +66,6 @@ function persistAuditLog(options: {
         summary: options.summary,
         changes: changes as Prisma.InputJsonValue | undefined,
         actorUserId: options.actor?.userId ?? null,
-        actorEmail: options.actor?.email ?? null,
         actorRole: options.actor?.role ?? null,
       },
     })
@@ -102,7 +99,6 @@ export function logMutation(options: {
     summary: options.summary,
     changes,
     actorUserId: options.actor?.userId ?? undefined,
-    actorEmail: options.actor?.email ?? undefined,
     actorRole: options.actor?.role ?? undefined,
     backend: process.env.MAP_DYOA_SERVER_URL?.trim()
       ? 'map-dyoa-server'

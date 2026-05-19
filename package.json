@@ -9,6 +9,10 @@
     "lint": "eslint",
     "db:migrate": "prisma migrate deploy",
     "db:ensure-youtube-column": "prisma db execute --schema prisma/schema.prisma --file scripts/add-streamer-youtube-url.sql",
+    "db:backup-account": "prisma db execute --schema prisma/schema.prisma --file scripts/backup-account.sql",
+    "db:restore-account": "prisma db execute --schema prisma/schema.prisma --file scripts/restore-account-from-backup.sql",
+    "db:export-account": "node scripts/export-account-backup.mjs",
+    "db:strip-auth-pii": "prisma db execute --schema prisma/schema.prisma --file scripts/strip-auth-pii.sql",
     "configure:git-commit": "git config commit.template .gitmessage"
   },
   "dependencies": {

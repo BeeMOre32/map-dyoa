@@ -1,8 +1,8 @@
 // src/auth.ts
 import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
-import { PrismaAdapter } from '@auth/prisma-adapter';
 import { getPrisma } from '@/lib/prisma';
+import { createStrippedPrismaAdapter } from '@/lib/auth-adapter';
 
 declare module 'next-auth' {
   interface User {
@@ -10,26 +10,58 @@ declare module 'next-auth' {
   }
 
   interface Session {
-    user: User & {
+    user: {
+      id: string;
       role?: string;
     };
   }
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(getPrisma()),
+  adapter: createStrippedPrismaAdapter(getPrisma()),
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      /** 이메일·이름·사진만 제외. id(sub)는 Account 연결용으로만 사용 */
+      profile(profile) {
+        return {
+          id: profile.sub,
+          email: null,
+          emailVerified: null,
+          name: null,
+          image: null,
+        };
+      },
     }),
   ],
   callbacks: {
     async session({ session, user }) {
-      if (session.user) {
-        session.user.role = user.role;
-      }
-      return session;
+      return {
+        ...session,
+        user: {
+          id: user.id,
+          role: user.role,
+        },
+      };
+    },
+  },
+  events: {
+    /** Account 행에 OAuth 토큰이 남지 않도록 로그인마다 정리 */
+    async signIn({ user, account }) {
+      if (!account) return;
+      await getPrisma().account.updateMany({
+        where: { userId: user.id!, provider: account.provider },
+        data: {
+          refresh_token: null,
+          access_token: null,
+          id_token: null,
+          expires_at: null,
+          token_type: null,
+          scope: null,
+          session_state: null,
+        },
+      });
     },
   },
 });

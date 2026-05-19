@@ -110,9 +110,12 @@ function AuditLogCard({
           {ACTION_LABEL[log.action] ?? log.action}
         </span>
         <span className="font-bold text-slate-400">{getEntityLabel(log.entity)}</span>
-        {log.actorEmail && (
-          <span className="ml-auto truncate max-w-40 sm:max-w-xs" title={log.actorEmail}>
-            {log.actorEmail}
+        {log.actorUserId && (
+          <span
+            className="ml-auto truncate max-w-40 font-mono text-[10px] sm:max-w-xs sm:text-xs"
+            title={log.actorUserId}
+          >
+            {log.actorUserId}
           </span>
         )}
       </div>

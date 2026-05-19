@@ -82,8 +82,8 @@ export default function PrivacyPage() {
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   <tr>
                     <td className="px-3 py-2 text-slate-600 dark:text-slate-400">관리자 로그인</td>
-                    <td className="px-3 py-2 text-slate-600 dark:text-slate-400">이메일 주소, 세션 정보</td>
-                    <td className="px-3 py-2 text-slate-600 dark:text-slate-400">로그인 시 입력</td>
+                    <td className="px-3 py-2 text-slate-600 dark:text-slate-400">Google 계정 식별자(내부 userId·세션 토큰만 저장, 이메일·이름 미저장)</td>
+                    <td className="px-3 py-2 text-slate-600 dark:text-slate-400">Google OAuth</td>
                     <td className="px-3 py-2 text-slate-600 dark:text-slate-400">관리자 인증</td>
                   </tr>
                   <tr>

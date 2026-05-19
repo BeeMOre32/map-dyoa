@@ -118,17 +118,14 @@ model Feedback {
 
 // prisma/schema.prisma
 
+/// Auth.js 사용자 — Google OAuth는 Account(provider+providerAccountId)로만 연결, 프로필 PII 미저장
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  role          String    @default("USER") // 우리가 추가한 필드
-  accounts      Account[]
-  sessions      Session[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id        String    @id @default(cuid())
+  role      String    @default("USER")
+  accounts  Account[]
+  sessions  Session[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Account {
@@ -199,7 +196,6 @@ model AuditLog {
   summary     String
   changes     Json?
   actorUserId String?
-  actorEmail  String?
   actorRole   String?
   createdAt   DateTime @default(now())
 

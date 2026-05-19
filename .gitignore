@@ -52,3 +52,6 @@ next-env.d.ts
 /prisma/migrations
 
 /supabase
+
+# DB 백업 (OAuth 토큰 등 민감 정보)
+/backups
