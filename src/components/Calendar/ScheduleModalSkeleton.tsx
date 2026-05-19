@@ -1,7 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import ModalOverlayPortal from '@/components/Common/ModalOverlayPortal';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
+import { useScrollLock } from '@/hooks/useScrollLock';
 import {
   skeletonBarVariants,
   skeletonContainerVariants,
@@ -14,14 +16,20 @@ export function ScheduleDetailModalSkeleton({
 }: {
   showSidePanel?: boolean;
 }) {
+  useScrollLock();
+
   return (
+    <ModalOverlayPortal>
     <motion.div
       initial="hidden"
       animate="visible"
       variants={backdropVariants}
-      style={{ display: 'flex' }}
-      className="fixed inset-0 z-70 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md"
+      className="fixed inset-0 z-70 flex items-end justify-center p-0 sm:items-center sm:p-4"
     >
+      <motion.div
+        aria-hidden
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-md dark:bg-slate-950/80"
+      />
       <motion.div
         style={{ display: 'flex' }}
         className="flex w-full sm:w-auto sm:flex-row sm:items-start sm:gap-3"
@@ -104,18 +112,25 @@ export function ScheduleDetailModalSkeleton({
         )}
       </motion.div>
     </motion.div>
+    </ModalOverlayPortal>
   );
 }
 
 export function DayScheduleModalSkeleton() {
+  useScrollLock();
+
   return (
+    <ModalOverlayPortal>
     <motion.div
       initial="hidden"
       animate="visible"
       variants={backdropVariants}
-      style={{ display: 'flex' }}
-      className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm dark:bg-slate-950/60"
+      className="fixed inset-0 z-60 flex items-center justify-center p-4"
     >
+      <motion.div
+        aria-hidden
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm dark:bg-slate-950/60"
+      />
       <motion.div
         variants={smoothModalVariants}
         style={{ display: 'flex', flexDirection: 'column' }}
@@ -157,6 +172,7 @@ export function DayScheduleModalSkeleton() {
         </motion.div>
       </motion.div>
     </motion.div>
+    </ModalOverlayPortal>
   );
 }
 

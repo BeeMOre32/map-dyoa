@@ -1,15 +1,27 @@
-export function ClipSkeletonCard() {
+'use client';
+
+import { motion } from 'framer-motion';
+import CalendarShimmerBar from '@/components/Calendar/CalendarShimmerBar';
+import { clipSkeletonCardVariants } from '@/lib/clipMotion';
+
+export function ClipSkeletonCard({ index = 0 }: { index?: number }) {
   return (
-    <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 animate-pulse">
-      <div className="aspect-video bg-slate-200 dark:bg-slate-700" />
-      <div className="p-3 space-y-2">
-        <div className="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-full w-4/5" />
-        <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded-full w-2/3" />
+    <motion.div
+      custom={index}
+      initial="hidden"
+      animate="visible"
+      variants={clipSkeletonCardVariants}
+      className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800 sm:rounded-3xl"
+    >
+      <CalendarShimmerBar className="aspect-video w-full rounded-none" />
+      <motion.div className="space-y-2 p-3">
+        <CalendarShimmerBar className="h-3.5 w-4/5" />
+        <CalendarShimmerBar className="h-3 w-2/3" />
         <div className="flex gap-1.5 pt-1">
-          <div className="h-5 w-12 bg-slate-200 dark:bg-slate-700 rounded-full" />
-          <div className="h-5 w-16 bg-slate-200 dark:bg-slate-700 rounded-full" />
+          <CalendarShimmerBar className="h-5 w-12 rounded-full" />
+          <CalendarShimmerBar className="h-5 w-16 rounded-full" />
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

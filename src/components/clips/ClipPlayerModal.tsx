@@ -2,6 +2,7 @@
 
 import { X, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { smoothModalVariants } from '@/lib/modalVariants';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { useModalDismiss } from '@/hooks/useModalDismiss';
 import { useScrollLock } from '@/hooks/useScrollLock';
@@ -55,20 +56,30 @@ export function ClipPlayerModal({ url, clipId, title, onClose }: ClipPlayerModal
       </div>
 
       {/* 플레이어 */}
-      <div
-        className="flex-1 flex items-center justify-center p-4 min-h-0"
+      <motion.div
+        variants={smoothModalVariants}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+        className="flex min-h-0 flex-1 items-center justify-center p-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="w-full max-w-5xl aspect-video">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.96 }}
+          transition={{ type: 'spring', damping: 28, stiffness: 360 }}
+          className="aspect-video w-full max-w-5xl overflow-hidden rounded-xl shadow-2xl"
+        >
           <iframe
             src={`https://chzzk.naver.com/embed/clip/${clipId}`}
             title={title}
-            className="w-full h-full rounded-xl"
+            className="h-full w-full"
             allow="autoplay; clipboard-write; web-share"
             allowFullScreen
           />
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </motion.div>
   );
 }

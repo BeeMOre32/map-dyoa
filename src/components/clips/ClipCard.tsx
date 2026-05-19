@@ -4,7 +4,8 @@ import { ExternalLink, Trash2, Play, Tv, Pencil, ArrowUpRight } from 'lucide-rea
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import { clipCardVariants } from '@/lib/clipMotion';
 import { useRouter } from 'next/navigation';
 import type { ClipWithParticipants } from '@/types/entities';
 import { deleteClipAction } from '@/app/actions';
@@ -18,9 +19,10 @@ import { ClipPlayerModal } from './ClipPlayerModal';
 interface ClipCardProps {
   clip: ClipWithParticipants;
   onEdit?: (clip: ClipWithParticipants) => void;
+  index?: number;
 }
 
-export default function ClipCard({ clip, onEdit }: ClipCardProps) {
+export default function ClipCard({ clip, onEdit, index = 0 }: ClipCardProps) {
   const router = useRouter();
   const { data: session } = useSession();
   const toast = useToast();
@@ -79,7 +81,15 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
 
   return (
     <>
-      <div className="group flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white transition-all hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-700 dark:hover:shadow-indigo-950/50 sm:rounded-3xl">
+      <motion.article
+        custom={index}
+        initial="hidden"
+        animate="visible"
+        variants={clipCardVariants}
+        whileHover={{ y: -3, transition: { type: 'spring', stiffness: 420, damping: 28 } }}
+        whileTap={{ scale: 0.99 }}
+        className="group flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white transition-colors hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-700 dark:hover:shadow-indigo-950/50 sm:rounded-3xl"
+      >
 
         {/* 미디어 영역 */}
         <div className="relative aspect-video bg-black overflow-hidden">
@@ -95,14 +105,16 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
                   src={clip.thumbnailUrl}
                   alt={clip.title}
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-
+                  className="object-cover transition-transform duration-300 group-hover/thumb:scale-105"
                 />
-                <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/25 transition-colors flex items-center justify-center">
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover/thumb:bg-black/25"
+                  initial={false}
+                >
                   <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
                     <Play className="w-6 h-6 text-white fill-white ml-0.5" />
                   </div>
-                </div>
+                </motion.div>
               </button>
             ) : (
               <a href={clip.url} target="_blank" rel="noopener noreferrer" onClick={trackExternal} className="absolute inset-0">
@@ -227,7 +239,7 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
             )}
           </div>
         </div>
-      </div>
+      </motion.article>
 
       <AnimatePresence>
         {showPlayer && chzzkClipId && (

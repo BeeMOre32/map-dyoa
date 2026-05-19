@@ -19,6 +19,7 @@ declare module 'next-auth' {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: createStrippedPrismaAdapter(getPrisma()),
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
@@ -27,7 +28,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       profile(profile) {
         return {
           id: profile.sub,
-          email: null,
+          email: '',
           emailVerified: null,
           name: null,
           image: null,

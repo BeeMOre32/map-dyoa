@@ -44,6 +44,7 @@ export const calendarColumnVariants: Variants = {
   }),
 };
 
+/** @deprecated AnimatePresence용은 `calendarGridPresenceVariants` 사용. 캐시된 클라이언트 번들 호환용 유지 */
 export function calendarGridSlide(direction: 'left' | 'right') {
   const x = direction === 'left' ? 28 : -28;
   return {

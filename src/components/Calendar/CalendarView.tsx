@@ -44,6 +44,9 @@ import {
   calendarGridPresenceVariants,
   calendarGridSlide,
 } from '@/lib/calendarMotion';
+
+/** 이전 배포 클라이언트가 motion 그리드에 spread 하던 헬퍼 — 공유 청크에서 tree-shake 되지 않게 유지 */
+void calendarGridSlide;
 import { useSession } from 'next-auth/react';
 
 import ScheduleFormModal from '@/components/Form/CreateScheduleModal';

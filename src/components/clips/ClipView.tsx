@@ -1,7 +1,11 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  clipEmptyStateVariants,
+  clipGridPresenceVariants,
+} from '@/lib/clipMotion';
 import { Clapperboard, Plus, Search, X, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { format, isValid, parseISO } from 'date-fns';
@@ -58,6 +62,12 @@ export default function ClipView({
   const handleClose = useCallback(() => setShowModal(false), []);
   const shouldShowAdvancedFilters = (showFilters && !isHeaderCondensed) || hasFilter;
 
+  const gridFilterKey = useMemo(
+    () =>
+      `${currentFilters.streamerId}-${currentFilters.month}-${currentFilters.q}-${currentFilters.sort}-${currentFilters.favoritesOnly}-${currentPage}`,
+    [currentFilters, currentPage],
+  );
+
   const handleGridScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const nextTop = e.currentTarget.scrollTop;
     const delta = nextTop - lastScrollTopRef.current;
@@ -79,9 +89,8 @@ export default function ClipView({
       {/* 헤더 */}
       <motion.div
         layout
-        style={{ display: 'flex', flexDirection: 'column' }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className={`shrink-0 space-y-2 border-b border-slate-50 bg-slate-50/80 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/40 sm:space-y-3 ${
+        className={`flex shrink-0 flex-col space-y-2 border-b border-slate-50 bg-slate-50/80 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/40 sm:space-y-3 ${
           isHeaderCondensed ? 'p-2.5' : 'p-3 sm:p-4'
         }`}
       >
@@ -224,16 +233,30 @@ export default function ClipView({
       </motion.div>
 
       {/* 클립 그리드 */}
-      <div className="flex-1 overflow-y-auto p-3 sm:p-4" onScroll={handleGridScroll}>
+      <motion.div className="flex-1 overflow-y-auto p-3 sm:p-4" onScroll={handleGridScroll}>
+        <AnimatePresence mode="wait">
         {isPending ? (
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4"
+          >
             {Array.from({ length: clips.length || 8 }).map((_, i) => (
-              <ClipSkeletonCard key={i} />
+              <ClipSkeletonCard key={i} index={i} />
             ))}
-          </div>
+          </motion.div>
         ) : clips.length === 0 ? (
-          <div className="py-20 text-center border-2 border-dashed border-slate-100 dark:border-slate-700 rounded-3xl">
-            <Clapperboard className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+          <motion.div
+            key="empty"
+            variants={clipEmptyStateVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="rounded-3xl border-2 border-dashed border-slate-100 py-20 text-center dark:border-slate-700"
+          >
+            <Clapperboard className="mx-auto mb-3 h-10 w-10 text-slate-300 dark:text-slate-600" />
             <p className="text-slate-400 dark:text-slate-500 font-bold">
               {hasFilter ? '검색 결과가 없습니다.' : '아직 등록된 클립이 없습니다.'}
             </p>
@@ -253,15 +276,23 @@ export default function ClipView({
                 필터 초기화
               </button>
             )}
-          </div>
+          </motion.div>
         ) : (
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
-            {clips.map((clip) => (
-              <ClipCard key={clip.id} clip={clip} onEdit={setEditingClip} />
+          <motion.div
+            key={gridFilterKey}
+            variants={clipGridPresenceVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4"
+          >
+            {clips.map((clip, i) => (
+              <ClipCard key={clip.id} clip={clip} index={i} onEdit={setEditingClip} />
             ))}
-          </div>
+          </motion.div>
         )}
-      </div>
+        </AnimatePresence>
+      </motion.div>
 
       <ClipPagination
         currentPage={currentPage}

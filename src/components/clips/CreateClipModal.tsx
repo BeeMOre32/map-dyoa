@@ -7,6 +7,7 @@ import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { useModalDismiss } from '@/hooks/useModalDismiss';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
+import { clipModalRevealContainer, clipModalRevealItem } from '@/lib/clipMotion';
 import { useClipForm } from '@/hooks/useClipForm';
 import { getStreamerImagePath } from '@/lib/utils';
 import type { Streamer } from '@prisma/client';
@@ -84,13 +85,16 @@ export default function CreateClipModal({
           </button>
         </div>
 
-        <form
+        <motion.form
           id="clip-form"
           onSubmit={form.handleSubmit}
+          variants={clipModalRevealContainer}
+          initial="hidden"
+          animate="visible"
           className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 sm:p-6"
         >
           {/* 클립 URL */}
-          <div className="space-y-1.5" data-zod-field="url">
+          <motion.section variants={clipModalRevealItem} className="space-y-1.5" data-zod-field="url">
             <label className={labelClass}>클립 URL *</label>
             <div className="relative">
               <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -103,10 +107,10 @@ export default function CreateClipModal({
               />
               <MetaStatusIcon fetchingMeta={form.fetchingMeta} metaStatus={form.metaStatus} />
             </div>
-          </div>
+          </motion.section>
 
           {/* 연관된 스트리머 */}
-          <div className="space-y-2" data-zod-field="streamerIds">
+          <motion.section variants={clipModalRevealItem} className="space-y-2" data-zod-field="streamerIds">
             <label className={labelClass}>
               <span className="flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5" />
@@ -137,8 +141,8 @@ export default function CreateClipModal({
                           transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                           type="button"
                           onClick={() => form.toggleStreamer(id)}
-                          className="flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-xl text-[11px] font-black text-white hover:opacity-80 transition-opacity"
-                          style={{ display: 'flex', backgroundColor: color }}
+                          className="flex items-center gap-1 rounded-xl py-1 pl-2.5 pr-1.5 text-[11px] font-black text-white transition-opacity hover:opacity-80"
+                          style={{ backgroundColor: color }}
                         >
                           <StreamerAvatar
                             colorCode={color}
@@ -215,10 +219,10 @@ export default function CreateClipModal({
                 )}
               </div>
             </div>
-          </div>
+          </motion.section>
 
           {/* 진행된 방송 */}
-          <div className="space-y-1.5">
+          <motion.section variants={clipModalRevealItem} className="space-y-1.5">
             <label className={labelClass}>
               <span className="flex items-center gap-1.5">
                 <Tv className="w-3.5 h-3.5" />
@@ -232,10 +236,10 @@ export default function CreateClipModal({
               onChange={form.setScheduleId}
               disabled={form.selectedIds.length === 0}
             />
-          </div>
+          </motion.section>
 
           {/* 클립 제목 */}
-          <div className="space-y-1.5" data-zod-field="title">
+          <motion.section variants={clipModalRevealItem} className="space-y-1.5" data-zod-field="title">
             <label className={labelClass}>클립 제목 *</label>
             <input
               type="text"
@@ -244,32 +248,41 @@ export default function CreateClipModal({
               placeholder="클립 제목을 입력하세요"
               className={inputClass}
             />
-          </div>
+          </motion.section>
 
           {/* 썸네일 */}
-          <div className="space-y-1.5">
+          <motion.section variants={clipModalRevealItem} className="space-y-1.5">
             <label className={labelClass}>
               썸네일 URL{' '}
               <span className="text-slate-300 normal-case font-bold">(선택 · 치지직 자동 추출)</span>
             </label>
-            {form.thumbnailUrl && (
-              <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={form.thumbnailUrl}
-                  alt="썸네일 미리보기"
-                  className="w-full h-full object-cover"
-                  onError={() => form.setThumbnailUrl('')}
-                />
-                <button
-                  type="button"
-                  onClick={() => form.setThumbnailUrl('')}
-                  className="absolute top-2 right-2 p-1 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
+            <AnimatePresence mode="wait">
+              {form.thumbnailUrl && (
+                <motion.div
+                  key={form.thumbnailUrl}
+                  initial={{ opacity: 0, height: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, height: 'auto', scale: 1 }}
+                  exit={{ opacity: 0, height: 0, scale: 0.98 }}
+                  transition={{ type: 'spring', damping: 28, stiffness: 340 }}
+                  className="relative aspect-video w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800"
                 >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={form.thumbnailUrl}
+                    alt="썸네일 미리보기"
+                    className="h-full w-full object-cover"
+                    onError={() => form.setThumbnailUrl('')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => form.setThumbnailUrl('')}
+                    className="absolute right-2 top-2 rounded-lg bg-black/50 p-1 text-white transition-colors hover:bg-black/70"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div className="relative">
               <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
@@ -280,10 +293,10 @@ export default function CreateClipModal({
                 className={twMerge(inputClass, 'pl-10')}
               />
             </div>
-          </div>
+          </motion.section>
 
           {/* 날짜 & 설명 */}
-          <div className="grid grid-cols-2 gap-3">
+          <motion.section variants={clipModalRevealItem} className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className={labelClass}>
                 클립 날짜{' '}
@@ -309,33 +322,43 @@ export default function CreateClipModal({
                 className={inputClass}
               />
             </div>
-          </div>
+          </motion.section>
 
-          {form.error && (
-            <p className="text-sm font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-4 py-3 rounded-2xl">
-              {form.error}
-            </p>
-          )}
+          <AnimatePresence>
+            {form.error && (
+              <motion.p
+                key={form.error}
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-500 dark:bg-red-900/20"
+              >
+                {form.error}
+              </motion.p>
+            )}
+          </AnimatePresence>
 
-          <div className="flex gap-3 pt-2">
-            <button
+          <motion.div variants={clipModalRevealItem} className="flex gap-3 pt-2">
+            <motion.button
               type="button"
+              whileTap={{ scale: 0.98 }}
               onClick={dismiss}
-              className="flex-1 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 text-sm font-black text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+              className="flex-1 rounded-2xl border border-slate-200 py-3 text-sm font-black text-slate-500 transition-all hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
             >
               취소
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="submit"
               disabled={form.submitting}
-              className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200 dark:shadow-none"
+              whileTap={{ scale: form.submitting ? 1 : 0.98 }}
+              className="flex-1 rounded-2xl bg-indigo-600 py-3 text-sm font-black text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 dark:shadow-none"
             >
               {form.submitting
                 ? form.isEdit ? '수정 중...' : '추가 중...'
                 : form.isEdit ? '수정 완료' : '클립 추가'}
-            </button>
-          </div>
-        </form>
+            </motion.button>
+          </motion.div>
+        </motion.form>
       </motion.div>
     </motion.div>
   );
