@@ -573,7 +573,7 @@ export default function AnnouncementsView() {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white dark:bg-slate-950 transition-colors">
       <OpenHashDetails />
-      <div className="mx-auto w-full max-w-2xl flex-1 space-y-8 px-4 py-8">
+      <div className="mx-auto w-full max-w-2xl flex-1 space-y-6 px-3 py-5 sm:space-y-8 sm:px-4 sm:py-8">
         <div>
           <Link
             href="/"
@@ -587,7 +587,7 @@ export default function AnnouncementsView() {
               <Megaphone className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+              <h1 className="text-xl font-black text-slate-900 dark:text-white sm:text-2xl">
                 공지사항
               </h1>
               <p className="text-sm text-slate-400 dark:text-slate-500 font-medium">

@@ -39,7 +39,7 @@ export default function Navigation() {
             <Link
               key={tab.id}
               href={tab.href}
-              className={`relative flex items-center gap-1 px-2 py-1.5 sm:px-4 md:px-5 rounded-2xl text-sm font-black transition-all z-10 ${
+              className={`relative z-10 flex items-center gap-0.5 rounded-xl px-1.5 py-1 text-xs font-black transition-all sm:gap-1 sm:rounded-2xl sm:px-4 sm:py-1.5 sm:text-sm md:px-5 ${
                 isActive
                   ? isHoi4
                     ? 'text-amber-600 dark:text-amber-400'
@@ -79,7 +79,7 @@ export default function Navigation() {
                 />
               )}
 
-              <tab.icon className="w-4 h-4 z-20" />
+              <tab.icon className="z-20 h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="z-20 hidden sm:inline">{tab.label}</span>
 
               {/* 라이브 중 카운트 배지 */}

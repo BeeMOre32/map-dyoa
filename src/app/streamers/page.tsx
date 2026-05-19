@@ -18,7 +18,7 @@ export default async function StreamersPage() {
   const initialLiveFetchedAt = Date.now();
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-slate-50/50 p-4 transition-colors md:p-6 dark:bg-slate-950">
+    <div className="flex min-h-0 flex-1 flex-col bg-slate-50/50 p-2 transition-colors sm:p-4 md:p-6 dark:bg-slate-950">
       <StreamerView
         streamers={streamers}
         initialLiveIds={initialLiveIds}

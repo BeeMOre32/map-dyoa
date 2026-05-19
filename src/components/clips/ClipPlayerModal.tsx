@@ -3,6 +3,7 @@
 import { X, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
+import { useModalDismiss } from '@/hooks/useModalDismiss';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { backdropVariants } from '@/lib/modalVariants';
 
@@ -14,7 +15,8 @@ interface ClipPlayerModalProps {
 }
 
 export function ClipPlayerModal({ url, clipId, title, onClose }: ClipPlayerModalProps) {
-  useEscapeKey(onClose);
+  const dismiss = useModalDismiss({ mother: '/clips', onClose });
+  useEscapeKey(dismiss);
   useScrollLock();
 
   return (
@@ -24,7 +26,7 @@ export function ClipPlayerModal({ url, clipId, title, onClose }: ClipPlayerModal
       animate="visible"
       exit="hidden"
       className="fixed inset-0 z-[200] flex flex-col bg-black/90 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={dismiss}
     >
       {/* 상단 컨트롤바 */}
       <div
@@ -43,7 +45,7 @@ export function ClipPlayerModal({ url, clipId, title, onClose }: ClipPlayerModal
             원본 보기
           </a>
           <button
-            onClick={onClose}
+            onClick={dismiss}
             className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
             aria-label="닫기"
           >

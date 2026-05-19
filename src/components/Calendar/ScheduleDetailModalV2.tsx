@@ -158,14 +158,14 @@ export default function ScheduleDetailModalV2({
       className="fixed inset-0 z-70 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md"
       onClick={handleClose}
     >
-      <div className="flex w-full sm:w-auto sm:flex-row sm:items-stretch sm:gap-3">
+      <div className="pointer-events-none flex w-full sm:w-auto sm:flex-row sm:items-stretch sm:gap-3">
         {/* 메인 모달 */}
         <motion.div
           variants={smoothModalVariants}
           initial="hidden"
           animate="visible"
           exit="hidden"
-          className="relative bg-white dark:bg-slate-800 w-full sm:max-w-lg rounded-t-4xl sm:rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90dvh] border border-slate-100 dark:border-slate-700"
+          className="pointer-events-auto relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-4xl border border-slate-100 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-900/50 sm:max-h-[90dvh] sm:max-w-lg sm:rounded-[2.5rem]"
           onClick={(e) => e.stopPropagation()}
         >
           {isEditing ? (
@@ -208,7 +208,7 @@ export default function ScheduleDetailModalV2({
               initial="hidden"
               animate="visible"
               exit="hidden"
-              className="hidden max-h-[90dvh] min-h-0 w-72 flex-col overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-900/50 sm:flex"
+              className="pointer-events-auto hidden max-h-[90dvh] min-h-0 w-72 flex-col overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-900/50 sm:flex"
               onClick={(e) => e.stopPropagation()}
             >
               <SidePanel {...sidePanelProps} />

@@ -4,6 +4,7 @@ import { X, Link as LinkIcon, Clapperboard, Tv, Search, Users, Loader2, Check } 
 import { motion, AnimatePresence } from 'framer-motion';
 import { twMerge } from 'tailwind-merge';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
+import { useModalDismiss } from '@/hooks/useModalDismiss';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { useClipForm } from '@/hooks/useClipForm';
@@ -39,8 +40,9 @@ export default function CreateClipModal({
   onClose,
   initialData,
 }: CreateClipModalProps) {
-  const form = useClipForm(streamers, schedules, onClose, initialData);
-  useEscapeKey(onClose);
+  const dismiss = useModalDismiss({ mother: '/clips', onClose });
+  const form = useClipForm(streamers, schedules, dismiss, initialData);
+  useEscapeKey(dismiss);
   useScrollLock();
 
   return (
@@ -51,16 +53,16 @@ export default function CreateClipModal({
       animate="visible"
       exit="hidden"
     >
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={dismiss} />
       <motion.div
-        className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col"
+        className="relative flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-900 sm:rounded-3xl"
         variants={smoothModalVariants}
         initial="hidden"
         animate="visible"
         exit="hidden"
       >
         {/* 헤더 */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800 shrink-0">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 p-4 dark:border-slate-800 sm:p-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/40 rounded-2xl flex items-center justify-center">
               <Clapperboard className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
@@ -75,7 +77,7 @@ export default function CreateClipModal({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={dismiss}
             className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
           >
             <X className="w-5 h-5" />
@@ -85,7 +87,7 @@ export default function CreateClipModal({
         <form
           id="clip-form"
           onSubmit={form.handleSubmit}
-          className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0"
+          className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 sm:p-6"
         >
           {/* 클립 URL */}
           <div className="space-y-1.5" data-zod-field="url">
@@ -318,7 +320,7 @@ export default function CreateClipModal({
           <div className="flex gap-3 pt-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={dismiss}
               className="flex-1 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 text-sm font-black text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
             >
               취소

@@ -42,11 +42,11 @@ export default async function Hoi4Page() {
       {/* Hero */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-linear-to-br from-amber-500/10 via-orange-500/5 to-transparent dark:from-amber-500/15 dark:via-orange-900/10" />
-        <div className="relative px-4 pt-10 pb-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 dark:bg-amber-900/40 rounded-3xl mb-4 shadow-lg shadow-amber-500/10">
-            <Sword className="w-8 h-8 text-amber-500 dark:text-amber-400" />
+        <div className="relative px-4 pb-6 pt-6 text-center sm:pb-8 sm:pt-10">
+          <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 shadow-lg shadow-amber-500/10 dark:bg-amber-900/40 sm:mb-4 sm:h-16 sm:w-16 sm:rounded-3xl">
+            <Sword className="h-6 w-6 text-amber-500 dark:text-amber-400 sm:h-8 sm:w-8" />
           </div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white sm:text-2xl md:text-3xl">
             HOI4 참전 기록
           </h1>
           <div className="flex items-center justify-center gap-4 mt-3">

@@ -74,48 +74,46 @@ export default function ClipView({
   }, []);
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-800 relative overflow-hidden">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-lg shadow-slate-200/40 dark:border-slate-800 dark:bg-slate-900 dark:shadow-slate-900/50 sm:rounded-3xl sm:shadow-xl sm:shadow-slate-200/50">
       <FavoritesClipFilter favoritesParam={!!currentFilters.favoritesOnly} />
       {/* 헤더 */}
       <motion.div
         layout
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className={`border-b border-slate-50 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/40 backdrop-blur-sm shrink-0 space-y-3 ${
-          isHeaderCondensed ? 'p-3' : 'p-4'
+        className={`shrink-0 space-y-2 border-b border-slate-50 bg-slate-50/80 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/40 sm:space-y-3 ${
+          isHeaderCondensed ? 'p-2.5' : 'p-3 sm:p-4'
         }`}
       >
-        <div className="flex justify-between items-center gap-4">
-          <div>
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="min-w-0">
             <h2
-              className={`font-black text-slate-800 dark:text-white flex items-center gap-2 transition-all ${
-                isHeaderCondensed ? 'text-base' : 'text-lg'
+              className={`flex items-center gap-1.5 whitespace-nowrap font-black text-slate-800 transition-all dark:text-white sm:gap-2 ${
+                isHeaderCondensed ? 'text-sm' : 'text-base sm:text-lg'
               }`}
             >
-              <Clapperboard className="w-4.5 h-4.5 text-indigo-500" />
+              <Clapperboard className="h-4 w-4 shrink-0 text-indigo-500 sm:h-[18px] sm:w-[18px]" />
               클립 모음
             </h2>
-            <p
-              className={`text-slate-500 dark:text-slate-400 font-medium transition-all ${
-                isHeaderCondensed ? 'text-[11px] mt-0' : 'text-xs mt-0.5'
-              }`}
-            >
-              총 {total}개의 클립
-            </p>
+            {!isHeaderCondensed && (
+              <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                총 {total}개의 클립
+              </p>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <FavoritesOnlyToggle />
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:shrink-0 sm:justify-end sm:gap-2">
+            <FavoritesOnlyToggle className="!px-2 !py-1 text-[11px] sm:!px-3 sm:!py-1.5 sm:text-sm" />
             <button
               type="button"
               onClick={() => setShowFilters((prev) => !prev)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-100 transition-colors"
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-slate-500 transition-colors hover:text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-slate-100 sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs"
             >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <SlidersHorizontal className="h-3.5 w-3.5" />
               필터
               {shouldShowAdvancedFilters ? (
-                <ChevronUp className="w-3.5 h-3.5" />
+                <ChevronUp className="h-3.5 w-3.5" />
               ) : (
-                <ChevronDown className="w-3.5 h-3.5" />
+                <ChevronDown className="h-3.5 w-3.5" />
               )}
             </button>
             {session && (
@@ -123,29 +121,29 @@ export default function ClipView({
                 onClick={handleOpen}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="relative flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl shadow-lg shadow-indigo-300/40 dark:shadow-indigo-900/30 transition-colors overflow-hidden shrink-0"
+                className="relative ml-auto inline-flex items-center gap-1 overflow-hidden rounded-lg bg-indigo-600 px-2.5 py-1 text-[11px] font-black text-white shadow-lg shadow-indigo-300/40 transition-colors hover:bg-indigo-700 dark:shadow-indigo-900/30 sm:ml-0 sm:gap-1.5 sm:rounded-xl sm:px-3.5 sm:py-2 sm:text-xs"
               >
                 <motion.div
                   className="absolute inset-0 bg-white/10"
                   animate={{ x: ['-100%', '100%'] }}
                   transition={{ duration: 1.8, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 }}
                 />
-                <Plus className="w-3.5 h-3.5 relative z-10" />
-                <span className="relative z-10">클립 추가</span>
+                <Plus className="relative z-10 h-3.5 w-3.5" />
+                <span className="relative z-10">추가</span>
               </motion.button>
             )}
           </div>
         </div>
 
-        {/* 필터 행 */}
-        <div className="relative flex-1 min-w-36">
+        {/* 검색 */}
+        <div className="relative w-full min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
           <input
             type="text"
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             placeholder="제목 · 스트리머 검색"
-            className="w-full pl-9 pr-3 py-1.5 text-sm font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700 transition-all"
+            className="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-8 pr-2.5 text-xs font-medium text-slate-700 transition-all placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:placeholder:text-slate-500 dark:focus:ring-indigo-700 sm:rounded-xl sm:pl-9 sm:pr-3 sm:text-sm"
           />
         </div>
 
@@ -225,9 +223,9 @@ export default function ClipView({
       </motion.div>
 
       {/* 클립 그리드 */}
-      <div className="flex-1 overflow-y-auto p-4" onScroll={handleGridScroll}>
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4" onScroll={handleGridScroll}>
         {isPending ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: clips.length || 8 }).map((_, i) => (
               <ClipSkeletonCard key={i} />
             ))}
@@ -256,7 +254,7 @@ export default function ClipView({
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
             {clips.map((clip) => (
               <ClipCard key={clip.id} clip={clip} onEdit={setEditingClip} />
             ))}

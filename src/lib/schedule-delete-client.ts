@@ -1,12 +1,12 @@
 import type { useRouter } from 'next/navigation';
 import type { ActionResult } from '@/types/api-response';
+import { navigateToMother } from '@/lib/modal-navigation';
 
 type AppRouter = ReturnType<typeof useRouter>;
 
 /** 삭제 성공 후 메인 캘린더로 이동 (parallel @modal 닫기) */
 export function navigateToCalendarAfterDelete(router: AppRouter) {
-  router.replace('/calendar');
-  router.refresh();
+  navigateToMother(router, '/calendar', '/calendar', { force: true });
 }
 
 /** 브라우저에서 일정 삭제 (Server Action ID 불일치 회피용 API 호출) */

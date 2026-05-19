@@ -79,7 +79,7 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
 
   return (
     <>
-      <div className="group flex flex-col rounded-3xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden hover:border-indigo-200 dark:hover:border-indigo-700 hover:shadow-xl hover:shadow-indigo-50 dark:hover:shadow-indigo-950/50 transition-all">
+      <div className="group flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white transition-all hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-700 dark:hover:shadow-indigo-950/50 sm:rounded-3xl">
 
         {/* 미디어 영역 */}
         <div className="relative aspect-video bg-black overflow-hidden">
@@ -150,7 +150,7 @@ export default function ClipCard({ clip, onEdit }: ClipCardProps) {
         </div>
 
         {/* 정보 영역 */}
-        <div className="flex flex-col gap-2 p-4 flex-1">
+        <div className="flex flex-1 flex-col gap-1.5 p-3 sm:gap-2 sm:p-4">
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-black text-slate-800 dark:text-white text-sm leading-snug line-clamp-2 flex-1">
               {clip.title}

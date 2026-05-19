@@ -1,12 +1,8 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useCallback } from 'react';
+import { useModalDismiss } from '@/hooks/useModalDismiss';
 
+/** @deprecated 이름만 유지 — 항상 mother로 `replace` (router.back 미사용) */
 export function useGoBack(fallback: string) {
-  const router = useRouter();
-  return useCallback(() => {
-    if (window.history.length > 1) router.back();
-    else router.push(fallback);
-  }, [router, fallback]);
+  return useModalDismiss({ mother: fallback });
 }

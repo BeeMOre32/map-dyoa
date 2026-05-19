@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
+import { useModalDismiss } from '@/hooks/useModalDismiss';
 import { motion } from 'framer-motion';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { CreateScheduleModalProps, CreateMode } from './types';
@@ -26,6 +27,8 @@ export default function CreateScheduleModal({
   onScheduleUpdated,
 }: CreateScheduleModalProps) {
   const [createMode, setCreateMode] = useState<CreateMode>('single');
+  const dismiss = useModalDismiss({ mother: '/calendar', onClose });
+  const handleDismiss = embedded ? onClose : dismiss;
 
   const editForm = useEditScheduleForm({
     initialData,
@@ -34,15 +37,15 @@ export default function CreateScheduleModal({
     streamers,
     onOptimisticCreate,
     onScheduleUpdated,
-    onClose,
+    onClose: handleDismiss,
   });
 
   const batchForm = useBatchScheduleForm({
     games,
-    onClose,
+    onClose: handleDismiss,
   });
 
-  useEscapeKey(embedded ? () => {} : onClose);
+  useEscapeKey(embedded ? () => {} : handleDismiss);
 
   const sortedStreamers = [...streamers].sort((a, b) =>
     a.name.localeCompare(b.name, 'ko-KR'),
@@ -53,7 +56,7 @@ export default function CreateScheduleModal({
     !isEdit && (createMode === 'image' || createMode === 'text');
   const showBatch = !isEdit && createMode === 'batch' && !showExtract;
   const modalMaxWidthClass = showExtract ? 'max-w-5xl' : 'max-w-lg';
-  const handleCancel = onCancel ?? onClose;
+  const handleCancel = onCancel ?? handleDismiss;
 
   const body = (
     <>
@@ -62,7 +65,7 @@ export default function CreateScheduleModal({
           isEdit={isEdit}
           createMode={createMode}
           slotCount={batchForm.slots.length}
-          onClose={onClose}
+          onClose={handleDismiss}
         />
       )}
 
@@ -150,7 +153,7 @@ export default function CreateScheduleModal({
           mode={createMode}
           streamers={streamers}
           games={games}
-          onClose={onClose}
+          onClose={handleDismiss}
         />
       )}
     </>
@@ -171,7 +174,7 @@ export default function CreateScheduleModal({
       exit="hidden"
       variants={backdropVariants}
       className="fixed inset-0 z-70 flex items-center justify-center p-4 md:p-6 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={handleDismiss}
     >
       <motion.div
         variants={smoothModalVariants}

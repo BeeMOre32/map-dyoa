@@ -17,16 +17,16 @@ export default function ModalHeader({
   onClose,
 }: ModalHeaderProps) {
   return (
-    <div className="p-6 md:p-8 border-b border-slate-50 dark:border-slate-700 flex justify-between items-start shrink-0 bg-slate-50/50 dark:bg-slate-700/30">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-          <CalendarIcon className="w-6 h-6" />
+    <div className="flex shrink-0 items-start justify-between border-b border-slate-50 bg-slate-50/50 p-4 dark:border-slate-700 dark:bg-slate-700/30 sm:p-6 md:p-8">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-400 sm:h-12 sm:w-12 sm:rounded-2xl">
+          <CalendarIcon className="h-5 w-5 sm:h-6 sm:w-6" />
         </div>
-        <div>
-          <p className="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-wider">
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 sm:text-xs">
             {isEdit ? 'Edit Schedule' : 'New Schedule'}
           </p>
-          <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">
+          <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 sm:text-xl md:text-2xl">
             {isEdit
               ? '일정 수정'
               : createMode === 'batch' && slotCount > 1

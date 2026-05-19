@@ -12,6 +12,7 @@ import { scheduleCardVariants } from '@/lib/calendarMotion';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
+import { markModalSoftNav } from '@/lib/modal-navigation';
 
 function formatScheduleHHmm(schedule: FlattenedSchedule): string {
   if (schedule.isGuerrilla) return '미정';
@@ -93,7 +94,10 @@ export default function ScheduleCardV2({
   index = 0,
 }: Props) {
   const href = `/calendar/schedule/${schedule.id}`;
-  const stopProp = (e: React.MouseEvent) => e.stopPropagation();
+  const onScheduleLinkClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    markModalSoftNav();
+  };
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   useMinuteClock();
@@ -120,7 +124,7 @@ export default function ScheduleCardV2({
         <Link
           href={href}
           scroll={false}
-          onClick={stopProp}
+          onClick={onScheduleLinkClick}
           className={`flex items-center gap-2.5 rounded-xl border py-3 pl-3.5 pr-3.5 shadow-md transition-[box-shadow,border-color] hover:shadow-lg ${
             isLive ? 'ring-1 ring-red-400/50' : ''
           } ${
@@ -158,7 +162,7 @@ export default function ScheduleCardV2({
         variants={scheduleCardVariants.monthly}
         className="min-w-0"
       >
-        <Link href={href} scroll={false} className="block min-w-0" onClick={stopProp}>
+        <Link href={href} scroll={false} className="block min-w-0" onClick={onScheduleLinkClick}>
           <div
             className={`flex w-full min-w-0 items-center gap-1.5 rounded-lg border px-2 py-1.5 text-[11px] leading-tight ${
               isLive
@@ -202,7 +206,7 @@ export default function ScheduleCardV2({
       whileTap={{ scale: 0.99, transition: { type: 'spring', stiffness: 500, damping: 32 } }}
       className="min-w-0"
     >
-      <Link href={href} scroll={false} className="block min-w-0" onClick={stopProp}>
+      <Link href={href} scroll={false} className="block min-w-0" onClick={onScheduleLinkClick}>
         <div
           className={`relative flex w-full min-h-20 flex-col gap-2.5 overflow-hidden rounded-xl border px-3.5 py-3 shadow-md transition-[box-shadow,border-color] hover:shadow-lg ${
             isLive

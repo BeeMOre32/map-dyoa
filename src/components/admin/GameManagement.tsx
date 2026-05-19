@@ -5,6 +5,8 @@ import { Plus, SquarePen, Trash2, Gamepad2, X, Check } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { createGameAction, updateGameAction, deleteGameAction } from '@/app/actions';
 import { useRouter } from 'next/navigation';
+import { useModalDismiss } from '@/hooks/useModalDismiss';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 type Game = {
   id: string;
@@ -21,6 +23,8 @@ function GameFormModal({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const dismiss = useModalDismiss({ mother: '/admin/games', onClose });
+  useEscapeKey(dismiss);
   const [isPending, startTransition] = useTransition();
   const [title, setTitle] = useState(initial?.title ?? '');
   const [isHoi4, setIsHoi4] = useState(initial?.isHoi4 ?? false);
@@ -36,7 +40,7 @@ function GameFormModal({
 
       if (result.success) {
         router.refresh();
-        onClose();
+        dismiss();
       } else {
         setError(result.error ?? '오류가 발생했습니다.');
       }
@@ -49,7 +53,7 @@ function GameFormModal({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={dismiss}
     >
       <motion.div
         initial={{ scale: 0.95, opacity: 0, y: 8 }}
@@ -63,7 +67,7 @@ function GameFormModal({
           <h2 className="text-lg font-black text-slate-800 dark:text-white">
             {initial ? '게임 수정' : '게임 추가'}
           </h2>
-          <button onClick={onClose} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400">
+          <button onClick={dismiss} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -97,7 +101,7 @@ function GameFormModal({
           )}
 
           <div className="flex gap-2 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <button type="button" onClick={dismiss} className="flex-1 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
               취소
             </button>
             <button type="submit" disabled={isPending} className="flex-1 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition-colors disabled:opacity-50">

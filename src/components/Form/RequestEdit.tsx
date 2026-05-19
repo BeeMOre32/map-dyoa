@@ -8,6 +8,8 @@ import { useTheme } from 'next-themes';
 import { createFeedbackAction } from '@/app/actions';
 import { feedbackSchema } from '@/lib/schemas';
 import { backdropVariants, defaultModalVariants } from '@/lib/modalVariants';
+import { useModalDismiss } from '@/hooks/useModalDismiss';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { scrollToFirstZodField } from '@/lib/zod-scroll';
 import { getStreamerColor } from '@/constants/streamercolor';
 import type { Streamer } from '@prisma/client';
@@ -22,6 +24,8 @@ export default function RequestEditModal({
   streamer,
   onClose,
 }: RequestEditModalProps) {
+  const dismiss = useModalDismiss({ mother: '/streamers', onClose });
+  useEscapeKey(dismiss);
   const { resolvedTheme } = useTheme();
   const streamerColor = getStreamerColor(streamer.id, resolvedTheme === 'dark') ?? streamer.colorCode;
   const [category, setCategory] = useState('잘못된 핸들/닉네임');
@@ -54,7 +58,7 @@ export default function RequestEditModal({
 
       if (result.success) {
         setIsSuccess(true);
-        setTimeout(onClose, 1800);
+        setTimeout(dismiss, 1800);
       } else {
         setSubmitError(result.error || '요청 중 오류가 발생했습니다.');
       }
@@ -72,7 +76,7 @@ export default function RequestEditModal({
       exit="hidden"
       variants={backdropVariants}
       className="fixed inset-0 z-110 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm"
-      onClick={isPending ? undefined : onClose}
+      onClick={isPending ? undefined : dismiss}
     >
       <motion.div
         variants={defaultModalVariants}
@@ -82,11 +86,11 @@ export default function RequestEditModal({
         className="bg-white dark:bg-slate-800 w-full max-w-md rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 overflow-hidden border border-slate-100 dark:border-slate-700"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-8 bg-slate-50/50 dark:bg-slate-700/30 border-b border-slate-100 dark:border-slate-700">
+        <div className="border-b border-slate-100 bg-slate-50/50 p-4 dark:border-slate-700 dark:bg-slate-700/30 sm:p-6 md:p-8">
           {/* 헤더 */}
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+          <div className="mb-4 flex items-start justify-between sm:mb-6">
+            <div className="min-w-0 pr-2">
+              <h3 className="flex items-center gap-2 text-lg font-black text-slate-800 dark:text-white sm:text-xl">
                 <AlertCircle className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
                 정보 수정 요청
               </h3>
@@ -98,7 +102,7 @@ export default function RequestEditModal({
               </p>
             </div>
             <button
-              onClick={onClose}
+              onClick={dismiss}
               disabled={isPending}
               className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors disabled:opacity-30"
             >
@@ -107,7 +111,7 @@ export default function RequestEditModal({
           </div>
 
           {isSuccess ? (
-            <div className="py-8 flex flex-col items-center gap-3 text-center">
+            <div className="flex flex-col items-center gap-3 py-6 text-center sm:py-8">
               <CheckCircle2 className="w-12 h-12 text-emerald-500" />
               <p className="font-black text-slate-800 dark:text-white">
                 수정 요청이 접수되었습니다!
@@ -117,7 +121,7 @@ export default function RequestEditModal({
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="p-8 space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4 p-4 sm:space-y-5 sm:p-6 md:p-8">
               <div>
                 <label className="block text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 px-1">
                   수정 사유
@@ -170,16 +174,16 @@ export default function RequestEditModal({
               <div className="pt-2 flex gap-3">
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={dismiss}
                   disabled={isPending}
-                  className="flex-1 py-4 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-2xl font-black hover:bg-slate-200 dark:hover:bg-slate-600 transition-all text-sm disabled:opacity-50"
+                  className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-black text-slate-500 transition-all hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-700 dark:text-slate-400 dark:hover:bg-slate-600 sm:rounded-2xl sm:py-4"
                 >
                   취소
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="flex-2 py-4 bg-indigo-600 dark:bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 dark:hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-indigo-950 flex items-center justify-center gap-2 text-sm disabled:bg-indigo-400 dark:disabled:bg-indigo-800"
+                  className="flex-2 flex items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-black text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700 disabled:bg-indigo-400 dark:bg-indigo-600 dark:shadow-indigo-950 dark:hover:bg-indigo-700 dark:disabled:bg-indigo-800 sm:rounded-2xl sm:py-4"
                 >
                   {isPending ? (
                     <>

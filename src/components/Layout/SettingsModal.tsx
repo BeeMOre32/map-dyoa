@@ -10,6 +10,8 @@ import { useTheme } from 'next-themes';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
+import { useModalDismiss } from '@/hooks/useModalDismiss';
+import { usePathname } from 'next/navigation';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { useHideEndedStreams } from '@/hooks/useHideEndedStreams';
 import { useLegacyCalendarUi } from '@/hooks/useLegacyCalendarUi';
@@ -196,13 +198,16 @@ function GeneralTab({
 }
 
 export default function SettingsModal({ onClose }: SettingsModalProps) {
+  const pathname = usePathname();
+  // 설정은 URL을 바꾸지 않음 — 현재 경로를 mother로 두어 replace 방지
+  const dismiss = useModalDismiss({ mother: pathname, onClose });
   const { resolvedTheme, setTheme } = useTheme();
   const { data: session } = useSession();
   const [hideEnded, setHideEnded] = useHideEndedStreams();
   const [legacyUi, setLegacyUi] = useLegacyCalendarUi();
   const isDark = resolvedTheme === 'dark';
 
-  useEscapeKey(onClose);
+  useEscapeKey(dismiss);
   useScrollLock();
 
   return (
@@ -212,7 +217,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       exit="hidden"
       variants={backdropVariants}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 dark:bg-slate-950/50 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={dismiss}
     >
       <motion.div
         variants={smoothModalVariants}
@@ -222,10 +227,10 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         className="w-full max-w-sm max-h-[90dvh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl dark:shadow-black/60 border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800">
-          <h2 className="text-lg font-black text-slate-800 dark:text-white">설정</h2>
+        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800 sm:px-6 sm:py-5">
+          <h2 className="text-base font-black text-slate-800 dark:text-white sm:text-lg">설정</h2>
           <button
-            onClick={onClose}
+            onClick={dismiss}
             className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
           >
             <X className="w-4 h-4" />
@@ -234,7 +239,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
         <div className="p-4 space-y-2 overflow-y-auto flex-1 min-h-0">
           <GeneralTab
-            onClose={onClose}
+            onClose={dismiss}
             isDark={isDark}
             setTheme={setTheme}
             hideEnded={hideEnded}

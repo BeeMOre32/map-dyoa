@@ -26,7 +26,7 @@ export default function ModalFooter({
   const isLoading = false;
 
   return (
-    <div className="p-6 md:p-8 bg-slate-50 dark:bg-slate-800 flex flex-col gap-3 border-t border-slate-100 dark:border-slate-700 shrink-0">
+    <div className="flex shrink-0 flex-col gap-2 border-t border-slate-100 bg-slate-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] dark:border-slate-700 dark:bg-slate-800 sm:gap-3 sm:p-6 md:p-8">
       {error && (
         <p className="flex items-center gap-1.5 text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2.5">
           <AlertCircle className="w-4 h-4 shrink-0" />
@@ -37,7 +37,7 @@ export default function ModalFooter({
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 py-4 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-bold border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
+          className="flex-1 rounded-xl border border-slate-200 bg-white py-3 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 sm:rounded-2xl sm:py-4"
         >
           취소
         </button>
@@ -50,7 +50,7 @@ export default function ModalFooter({
               form.requestSubmit();
             }
           }}
-          className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50"
+          className="flex-1 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white transition-all hover:bg-indigo-700 disabled:opacity-50 sm:rounded-2xl sm:py-4"
         >
           {isLoading
             ? loadingText

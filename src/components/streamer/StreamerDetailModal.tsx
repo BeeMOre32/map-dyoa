@@ -102,12 +102,12 @@ export default function StreamerDetailModal({
         initial="hidden"
         animate="visible"
         exit="hidden"
-        className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/60 overflow-hidden flex flex-col max-h-[90dvh] border border-slate-100 dark:border-slate-800"
+        className="flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 dark:shadow-slate-900/60 sm:rounded-[2.5rem]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── 히어로 배너 ── */}
         <div
-          className="relative h-28 shrink-0"
+          className="relative h-20 shrink-0 sm:h-28"
           style={{
             background: `linear-gradient(135deg, ${streamerColor}CC 0%, ${streamerColor}44 100%)`,
           }}
@@ -120,7 +120,7 @@ export default function StreamerDetailModal({
           </button>
 
           {/* 아바타 — 배너 아래로 겹침 */}
-          <div className="absolute -bottom-10 left-8">
+          <div className="absolute -bottom-8 left-4 sm:-bottom-10 sm:left-8">
             <div
               className="rounded-[1.25rem] shadow-xl ring-4"
               style={{ '--tw-ring-color': isDark ? '#0f172a' : '#ffffff' } as React.CSSProperties}
@@ -139,10 +139,10 @@ export default function StreamerDetailModal({
         </div>
 
         {/* ── 프로필 헤더 ── */}
-        <div className="px-8 pt-14 pb-6 border-b border-slate-100 dark:border-slate-800 shrink-0">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-2 min-w-0">
-              <h2 className="text-3xl font-black text-slate-900 dark:text-white leading-tight truncate">
+        <div className="shrink-0 border-b border-slate-100 px-4 pb-4 pt-11 dark:border-slate-800 sm:px-8 sm:pb-6 sm:pt-14">
+          <div className="flex items-start justify-between gap-3 sm:gap-4">
+            <div className="min-w-0 space-y-1.5 sm:space-y-2">
+              <h2 className="truncate text-xl font-black leading-tight text-slate-900 dark:text-white sm:text-2xl md:text-3xl">
                 {streamer.name}
               </h2>
               <div className="flex items-center gap-1.5 flex-wrap">
@@ -202,9 +202,9 @@ export default function StreamerDetailModal({
             </div>
 
             {/* 스탯 */}
-            <div className="flex items-center gap-6 shrink-0">
+            <div className="flex shrink-0 items-center gap-4 sm:gap-6">
               <div className="text-center">
-                <p className="text-2xl font-black" style={{ color: streamerColor }}>
+                <p className="text-lg font-black sm:text-2xl" style={{ color: streamerColor }}>
                   {scheduleCount}
                 </p>
                 <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-0.5">
@@ -212,7 +212,7 @@ export default function StreamerDetailModal({
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-black" style={{ color: streamerColor }}>
+                <p className="text-lg font-black sm:text-2xl" style={{ color: streamerColor }}>
                   {clipCount}
                 </p>
                 <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-0.5">
@@ -225,7 +225,7 @@ export default function StreamerDetailModal({
 
         {/* ── 스크롤 본문 ── */}
         <div className="overflow-y-auto flex-1 min-h-0 custom-scrollbar">
-          <div className="p-8 space-y-8">
+          <div className="space-y-5 p-4 sm:space-y-6 sm:p-6 md:space-y-8 md:p-8">
 
             {/* 자기소개 */}
             {streamer.bio && (
@@ -404,7 +404,7 @@ export default function StreamerDetailModal({
         </div>
 
         {/* ── 하단 버튼 ── */}
-        <div className="px-8 py-5 border-t border-slate-100 dark:border-slate-800 flex gap-3 shrink-0 bg-slate-50/50 dark:bg-slate-800/30">
+        <div className="flex shrink-0 gap-2 border-t border-slate-100 bg-slate-50/50 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] dark:border-slate-800 dark:bg-slate-800/30 sm:gap-3 sm:px-8 sm:py-5">
           <button
             onClick={goBack}
             className="flex-1 py-3.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-black border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all"

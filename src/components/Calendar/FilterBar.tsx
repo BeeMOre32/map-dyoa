@@ -524,7 +524,7 @@ export default function FilterBar({
               onClick={() => setIsOpen(false)}
             />
             <motion.div
-              className="sm:hidden fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl border-t border-slate-100 dark:border-slate-800"
+              className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-slate-100 bg-white pb-safe shadow-2xl dark:border-slate-800 dark:bg-slate-900 sm:hidden sm:rounded-t-3xl"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}

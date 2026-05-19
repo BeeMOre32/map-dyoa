@@ -28,6 +28,7 @@ import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { useTheme } from 'next-themes';
 import { FlattenedSchedule } from '@/lib/schedule-formatters';
+import { markModalSoftNav } from '@/lib/modal-navigation';
 
 function ScheduleListItem({
   schedule,
@@ -49,6 +50,7 @@ function ScheduleListItem({
       href={`/calendar/schedule/${schedule.id}`}
       scroll={false}
       className="group block"
+      onClick={() => markModalSoftNav()}
     >
       <div className="relative p-6 rounded-4xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm dark:shadow-black/30 group-hover:shadow-md group-hover:border-indigo-100 dark:group-hover:border-indigo-700 transition-all duration-300">
         <div className="flex justify-between items-start mb-4 gap-4">
@@ -210,7 +212,7 @@ export default function ScheduleModal({
       >
         {editingSchedule ? (
           <div className="flex flex-col h-full overflow-hidden">
-            <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 shrink-0">
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 sm:p-6 md:p-8">
               <button
                 onClick={() => exitEditMode()}
                 className="flex items-center gap-2 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-bold transition-colors"
@@ -221,7 +223,7 @@ export default function ScheduleModal({
               <h3 className="text-xl font-black text-slate-800 dark:text-white">일정 수정</h3>
               <div className="w-10" />
             </div>
-            <div className="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar">
+            <div className="custom-scrollbar flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
               <CreateScheduleModal
                 initialData={editingSchedule}
                 isEdit={true}
@@ -233,9 +235,9 @@ export default function ScheduleModal({
           </div>
         ) : (
           <>
-            <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900 shrink-0">
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900 sm:p-6 md:p-8">
               <div>
-                <h3 className="text-2xl font-black text-slate-800 dark:text-white">
+                <h3 className="text-lg font-black text-slate-800 dark:text-white sm:text-xl md:text-2xl">
                   {format(selectedDate, 'M월 d일 (eeee)', { locale: ko })}
                 </h3>
                 <p className="text-slate-400 dark:text-slate-500 font-bold text-sm mt-1 uppercase tracking-wider">
@@ -250,7 +252,7 @@ export default function ScheduleModal({
               </button>
             </div>
 
-            <div className="p-6 md:p-8 space-y-6 overflow-y-auto flex-1 min-h-0 custom-scrollbar bg-slate-50/30 dark:bg-slate-950/40">
+            <div className="custom-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto bg-slate-50/30 p-4 dark:bg-slate-950/40 sm:space-y-6 sm:p-6 md:p-8">
               {daySchedules.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-slate-400 font-bold">등록된 일정이 없습니다.</p>
@@ -269,7 +271,7 @@ export default function ScheduleModal({
               )}
             </div>
 
-            <div className="p-6 md:p-8 bg-slate-50 dark:bg-slate-900 shrink-0 border-t border-slate-100 dark:border-slate-800 flex flex-col items-center gap-3">
+            <div className="flex shrink-0 flex-col items-center gap-2 border-t border-slate-100 bg-slate-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] dark:border-slate-800 dark:bg-slate-900 sm:gap-3 sm:p-6 md:p-8">
               {permissionError && (
                 <p className="w-full flex items-center gap-1.5 text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2.5">
                   <AlertCircle className="w-4 h-4 shrink-0" />

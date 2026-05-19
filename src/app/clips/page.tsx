@@ -60,7 +60,7 @@ export default async function ClipsPage({
   const { schedules } = calendarData;
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-950 transition-colors">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-slate-50/50 p-2 transition-colors dark:bg-slate-950 sm:p-4">
       <ClipView
         clips={clips}
         streamers={streamers}

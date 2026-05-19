@@ -53,6 +53,7 @@ import { useToast } from '@/components/Common/Toaster';
 
 import type { Streamer, Game } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
+import { markModalSoftNav } from '@/lib/modal-navigation';
 
 interface CalendarViewProps {
   initialSchedules: FlattenedSchedule[];
@@ -254,6 +255,7 @@ export default function CalendarView({
   const handleDayClick = useCallback(
     (day: Date) => {
       const dateString = format(day, 'yyyy-MM-dd');
+      markModalSoftNav();
       router.push(`/calendar/day/${dateString}`, { scroll: false });
     },
     [router],
@@ -296,7 +298,7 @@ export default function CalendarView({
   return (
     <div
       className={`flex flex-col sm:flex-1 sm:min-h-0 sm:overflow-hidden ${
-        isV2Weekly ? 'px-1.5 py-3 md:px-2 md:py-4' : 'p-4 md:p-6'
+        isV2Weekly ? 'px-1.5 py-2.5 md:px-2 md:py-4' : 'p-3 sm:p-4 md:p-6'
       }`}
     >
       <CalendarWelcomeBanner />
@@ -755,7 +757,7 @@ export default function CalendarView({
       <button
         type="button"
         onClick={() => setIsMobileFabOpen((prev) => !prev)}
-        className="md:hidden fixed bottom-24 right-4 z-50 w-12 h-12 rounded-full bg-indigo-600 text-white shadow-lg flex items-center justify-center"
+        className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] right-3 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg md:hidden sm:right-4 sm:h-12 sm:w-12"
         aria-label="빠른 메뉴 열기"
       >
         {isMobileFabOpen ? <X className="w-5 h-5" /> : <Clock3 className="w-5 h-5" />}

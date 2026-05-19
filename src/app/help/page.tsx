@@ -66,12 +66,12 @@ function SectionCard({
       id={id}
       {...fadeUp}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-xl hover:shadow-slate-200/60 dark:hover:shadow-black/30 transition-shadow"
+      className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-xl hover:shadow-slate-200/60 dark:border-slate-700 dark:bg-slate-800 dark:hover:shadow-black/30 sm:rounded-[2.5rem] sm:p-6 md:p-8"
     >
-      <motion.div className="flex items-center gap-4 mb-6">
-        <div className={`p-3 ${iconBg} rounded-2xl`}>{icon}</div>
-        <h2 className="text-2xl font-black text-slate-800 dark:text-white">{title}</h2>
-      </motion.div>
+      <div className="mb-4 flex items-center gap-3 sm:mb-6 sm:gap-4">
+        <div className={`rounded-xl p-2.5 sm:rounded-2xl sm:p-3 ${iconBg}`}>{icon}</div>
+        <h2 className="text-lg font-black text-slate-800 dark:text-white sm:text-xl md:text-2xl">{title}</h2>
+      </div>
       {children}
     </motion.section>
   );

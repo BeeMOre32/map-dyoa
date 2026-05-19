@@ -25,7 +25,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="isolate py-3 px-2 sm:px-4 md:px-8 shrink-0 border-b border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950 sticky top-0 z-50 transition-colors duration-300">
+      <header className="sticky top-0 z-50 isolate shrink-0 border-b border-slate-200/80 bg-white px-2 py-2 transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950 sm:px-4 sm:py-3 md:px-8">
         <div className="flex items-center justify-between gap-2 sm:gap-3 w-full">
           <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group min-w-0 max-w-[45%] sm:max-w-none">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl overflow-hidden shadow-lg shadow-indigo-200 dark:shadow-none group-hover:rotate-6 transition-all duration-300">

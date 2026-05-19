@@ -1,12 +1,14 @@
 // src/components/calendar/CreateStreamerModal.tsx
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { X, UserPlus, Check, Palette, AlertCircle } from 'lucide-react';
 import { z } from 'zod';
 import { createStreamerAction, updateStreamerAction } from '@/app/actions';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
+import { useModalDismiss } from '@/hooks/useModalDismiss';
 import { scrollToFirstZodField } from '@/lib/zod-scroll';
 import { normalizeExternalUrl, normalizeYoutubeUrl } from '@/lib/external-url';
 import { streamerServerSchema } from '@/lib/schemas';
@@ -78,8 +80,19 @@ export default function CreateStreamerModal({
   const [bio, setBio] = useState(initialData?.bio ?? '');
   const [isGuest, setIsGuest] = useState(initialData?.isGuest ?? false);
   const [errors, setErrors] = useState<StreamerErrors>({});
+  const [portalReady, setPortalReady] = useState(false);
+  const dismiss = useModalDismiss({ mother: '/admin/streamers', onClose });
 
-  useEscapeKey(onClose);
+  useEscapeKey(dismiss);
+
+  useEffect(() => {
+    setPortalReady(true);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,7 +166,7 @@ export default function CreateStreamerModal({
 
     if (result.success) {
       router.refresh();
-      onClose();
+      dismiss();
     } else {
       const msg =
         result.error ??
@@ -168,14 +181,23 @@ export default function CreateStreamerModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+  if (!portalReady) return null;
+
+  const modal = (
+    <div
+      className="fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={dismiss}
+      role="presentation"
+    >
       <div
-        className="bg-white dark:bg-slate-800 w-full max-w-md rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 overflow-hidden animate-in zoom-in-95 border border-slate-100 dark:border-slate-700"
+        className="bg-white dark:bg-slate-800 flex w-full max-h-[92dvh] sm:max-h-[90dvh] max-w-md flex-col overflow-hidden rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-700 animate-in zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="streamer-modal-title"
       >
         {/* 헤더 */}
-        <div className="p-8 border-b border-slate-50 dark:border-slate-700 flex justify-between items-start bg-slate-50/50 dark:bg-slate-700/30">
+        <div className="shrink-0 p-6 sm:p-8 border-b border-slate-50 dark:border-slate-700 flex justify-between items-start bg-slate-50/50 dark:bg-slate-700/30">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
               <UserPlus className="w-6 h-6" />
@@ -184,7 +206,10 @@ export default function CreateStreamerModal({
               <p className="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-wider">
                 New Member
               </p>
-              <h3 className="text-2xl font-black text-slate-800 dark:text-white">
+              <h3
+                id="streamer-modal-title"
+                className="text-2xl font-black text-slate-800 dark:text-white"
+              >
                 {mode === 'edit' ? '인원 수정' : '인원 추가'}
               </h3>
               <h5 className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -193,7 +218,7 @@ export default function CreateStreamerModal({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={dismiss}
             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
           >
             <X className="w-6 h-6 text-slate-400 dark:text-slate-600" />
@@ -201,10 +226,12 @@ export default function CreateStreamerModal({
         </div>
 
         <form
+          id="streamer-form"
           noValidate
           onSubmit={handleSubmit}
-          className="p-8 space-y-6 max-h-[60dvh] overflow-y-auto"
+          className="flex min-h-0 flex-1 flex-col"
         >
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6 sm:p-8 space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div data-zod-field="name">
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
@@ -254,7 +281,7 @@ export default function CreateStreamerModal({
             </div>
           </div>
 
-          <div className="flex grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase">
                 기수
@@ -467,8 +494,10 @@ export default function CreateStreamerModal({
             </div>
           </div>
 
-          {/* 하단 버튼 */}
-          <div className="p-6 bg-slate-50 dark:bg-slate-700 flex flex-col gap-3 border-t border-slate-100 dark:border-slate-600">
+          </div>
+
+          {/* 하단 버튼 — 스크롤 밖에 고정 (모바일에서 저장 버튼 항상 노출) */}
+          <div className="shrink-0 p-4 sm:p-6 pb-[max(1rem,env(safe-area-inset-bottom))] bg-slate-50 dark:bg-slate-700 flex flex-col gap-3 border-t border-slate-100 dark:border-slate-600">
             {errors.submit && (
               <p className="flex items-center gap-1.5 text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2.5">
                 <AlertCircle className="w-4 h-4 shrink-0" />
@@ -478,15 +507,15 @@ export default function CreateStreamerModal({
             <div className="flex gap-3">
               <button
                 type="button"
-                onClick={onClose}
-                className="flex-1 py-4 bg-white dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-2xl font-bold border border-slate-200 dark:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-500 transition-colors"
+                onClick={dismiss}
+                className="flex-1 py-3.5 sm:py-4 bg-white dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-2xl font-bold border border-slate-200 dark:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-500 transition-colors"
               >
                 취소
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 py-4 bg-indigo-600 dark:bg-indigo-600 text-white dark:text-white rounded-2xl font-bold hover:bg-indigo-700 dark:hover:bg-indigo-700 transition-all disabled:opacity-50"
+                className="flex-1 py-3.5 sm:py-4 bg-indigo-600 dark:bg-indigo-600 text-white dark:text-white rounded-2xl font-bold hover:bg-indigo-700 dark:hover:bg-indigo-700 transition-all disabled:opacity-50"
               >
                 {isSubmitting ? '저장 중...' : mode === 'edit' ? '수정하기' : '인원 추가하기'}
               </button>
@@ -496,4 +525,6 @@ export default function CreateStreamerModal({
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }

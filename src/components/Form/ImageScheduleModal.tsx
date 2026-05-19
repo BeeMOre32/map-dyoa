@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
+import { useModalDismiss } from '@/hooks/useModalDismiss';
 import { createScheduleAction } from '@/app/actions';
 import { Streamer, Game } from '@prisma/client';
 import {
@@ -65,6 +66,7 @@ export default function ImageScheduleModal({
   streamers,
   games,
 }: ImageScheduleModalProps) {
+  const dismiss = useModalDismiss({ mother: '/calendar', onClose });
   const [step, setStep] = useState<Step>('upload');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -75,7 +77,7 @@ export default function ImageScheduleModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  useEscapeKey(onClose);
+  useEscapeKey(dismiss);
 
   useEffect(() => () => abortControllerRef.current?.abort(), []);
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
@@ -216,7 +218,7 @@ export default function ImageScheduleModal({
     });
 
     if (failures.length === 0) {
-      onClose();
+      dismiss();
     } else {
       setSubmitError(failures.join('\n'));
       setStep('review');
@@ -239,7 +241,7 @@ export default function ImageScheduleModal({
       exit="hidden"
       variants={backdropVariants}
       className="fixed inset-0 z-80 flex items-center justify-center p-4 md:p-6 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={dismiss}
     >
       <motion.div
         variants={smoothModalVariants}
@@ -270,7 +272,7 @@ export default function ImageScheduleModal({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={dismiss}
             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-600 rounded-full transition-colors"
           >
             <X className="w-5 h-5 text-slate-400" />
@@ -590,7 +592,7 @@ export default function ImageScheduleModal({
             <div className="flex gap-3">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={dismiss}
                 disabled={step === 'submitting'}
                 className="flex-1 py-3.5 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-bold border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors disabled:opacity-50"
               >

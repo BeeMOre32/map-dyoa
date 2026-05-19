@@ -12,16 +12,16 @@ export default function LoginPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="max-w-md w-full bg-white dark:bg-slate-800 rounded-[3rem] shadow-2xl shadow-slate-200/50 dark:shadow-slate-900/50 p-10 md:p-12 text-center border border-slate-100 dark:border-slate-700"
+        className="w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 text-center shadow-2xl shadow-slate-200/50 dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-900/50 sm:rounded-[2rem] sm:p-8 md:rounded-[3rem] md:p-12"
       >
         {/* 로고 영역 */}
-        <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30">
-          <Map className="w-10 h-10 text-white" />
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 sm:mb-8 sm:h-20 sm:w-20 sm:rounded-3xl">
+          <Map className="h-8 w-8 text-white sm:h-10 sm:w-10" />
         </div>
 
         {/* 텍스트 영역 */}
-        <div className="space-y-3 mb-10">
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">
+        <div className="mb-8 space-y-2 sm:mb-10 sm:space-y-3">
+          <h1 className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white sm:text-3xl">
             MAP-DYOA
           </h1>
           <div className="flex items-center justify-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-sm bg-indigo-50 dark:bg-indigo-900/20 w-fit mx-auto px-4 py-1.5 rounded-full">

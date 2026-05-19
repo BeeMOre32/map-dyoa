@@ -11,6 +11,7 @@ import { getStreamerColor } from '@/constants/streamercolor';
 import { track } from '@vercel/analytics';
 import { isScheduleLiveOnCard } from '@/lib/schedule-live';
 import { useMinuteClock } from '@/hooks/useMinuteClock';
+import { markModalSoftNav } from '@/lib/modal-navigation';
 
 function LiveBadge() {
   return (
@@ -82,6 +83,7 @@ export default function ScheduleCard({
           scroll={false}
           onClick={(e) => {
             stopProp(e);
+            markModalSoftNav();
             trackOpen();
           }}
           className={`flex items-center gap-2.5 px-3 py-2.5 rounded-2xl border text-sm font-bold transition-shadow ${
@@ -134,6 +136,7 @@ export default function ScheduleCard({
           className="block min-w-0"
           onClick={(e) => {
             stopProp(e);
+            markModalSoftNav();
             trackOpen();
           }}
         >
@@ -186,6 +189,7 @@ export default function ScheduleCard({
         className="block"
         onClick={(e) => {
           stopProp(e);
+          markModalSoftNav();
           trackOpen();
         }}
       >
