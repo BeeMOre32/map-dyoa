@@ -35,6 +35,7 @@ import {
   Link2,
   Megaphone,
   History,
+  BarChart3,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -342,6 +343,13 @@ export default function HelpPage() {
             <Row icon={<EyeOff className="w-5 h-5" />} delay={0.24}>
               설정에서 <strong>종료된 방송 숨기기</strong>를 켜면 완료 처리된 일정 카드가
               사라집니다.
+            </Row>
+            <Row icon={<BarChart3 className="w-5 h-5" />} delay={0.3}>
+              <Link href="/calendar/monthly" className="font-black text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400">
+                월간 통계
+              </Link>
+              는 TOP 멤버·게임, 요일별 패턴 등을 모아 봅니다. 상단 설정 → 정보에서도 열 수
+              있어요.
             </Row>
           </div>
         </SectionCard>

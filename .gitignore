@@ -53,6 +53,7 @@ next-env.d.ts
 
 /supabase
 
-# DB 백업 (OAuth 토큰 등 민감 정보, .enc / .json 모두)
+# DB 백업 (OAuth·세션·앱 데이터, .enc / .json 모두)
 /backups
 *.account-backup.enc
+*.app-data.enc

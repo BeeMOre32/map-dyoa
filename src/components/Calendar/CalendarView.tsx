@@ -257,6 +257,7 @@ export default function CalendarView({
     favoritesOnly,
     favoriteIds,
   ]);
+
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
   const handleDayClick = useCallback(
@@ -624,10 +625,9 @@ export default function CalendarView({
             </motion.div>
             </AnimatePresence>
           ) : (
-            /* V1 — 기존 그리드 레이아웃 */
             <>
               {/* 요일 헤더 */}
-              <div className="grid grid-cols-7 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/30 dark:bg-slate-800/60">
+              <div className="grid grid-cols-7 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/50 dark:bg-slate-900/80">
                 {weekDays.map((day, idx) => (
                   <div
                     key={day}

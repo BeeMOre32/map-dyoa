@@ -12,6 +12,8 @@
     "db:backup-account": "prisma db execute --schema prisma/schema.prisma --file scripts/backup-account.sql",
     "db:restore-account": "prisma db execute --schema prisma/schema.prisma --file scripts/restore-account-from-backup.sql",
     "db:export-account": "node scripts/export-account-backup.mjs",
+    "db:export-app": "node scripts/export-db-without-auth.mjs",
+    "db:decrypt-export": "node scripts/decrypt-app-export.mjs",
     "db:decrypt-account": "node scripts/decrypt-account-backup.mjs",
     "db:encrypt-account-backups": "node scripts/encrypt-account-backup-plain.mjs",
     "db:strip-auth-pii": "prisma db execute --schema prisma/schema.prisma --file scripts/strip-auth-pii.sql",

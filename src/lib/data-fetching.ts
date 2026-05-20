@@ -84,6 +84,47 @@ export const getCalendarData = unstable_cache(
   { revalidate: 60, tags: ['calendar'] },
 );
 
+export type PublicSiteOverview = {
+  scheduleCount: number;
+  clipCount: number;
+  memberCount: number;
+  gameCount: number;
+};
+
+/** 공개 가능한 사이트 누적 통계 */
+export const getPublicSiteOverview = unstable_cache(
+  async (): Promise<PublicSiteOverview> => {
+    if (isScheduleServerEnabled()) {
+      const [{ schedules, streamers, games }, clipResult] = await Promise.all([
+        getCalendarData(),
+        fetchClipsPaginatedFromServer({
+          page: 1,
+          pageSize: 1,
+          sort: 'newest',
+          clipsOnly: false,
+        }),
+      ]);
+      return {
+        scheduleCount: schedules.length,
+        clipCount: clipResult.total,
+        memberCount: streamers.filter((s) => !s.isGuest).length,
+        gameCount: games.length,
+      };
+    }
+
+    const [scheduleCount, clipCount, streamers, games] = await Promise.all([
+      getPrismaForDomain().schedule.count(),
+      getPrismaForDomain().clip.count(),
+      getPrismaForDomain().streamer.count({ where: { isGuest: false } }),
+      getPrismaForDomain().game.count(),
+    ]);
+
+    return { scheduleCount, clipCount, memberCount: streamers, gameCount: games };
+  },
+  ['public-site-overview', process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-public-overview'],
+  { revalidate: 120, tags: ['calendar', 'clips', 'streamers', 'games'] },
+);
+
 /**
  * 모든 스트리머 가져오기 (캐싱 적용)
  */
