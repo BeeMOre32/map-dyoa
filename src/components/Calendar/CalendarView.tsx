@@ -27,6 +27,7 @@ import {
   subWeeks,
   isValid,
 } from 'date-fns';
+import { ko } from 'date-fns/locale';
 import {
   ChevronLeft,
   ChevronRight,
@@ -44,6 +45,7 @@ import {
   calendarGridPresenceVariants,
   calendarGridSlide,
 } from '@/lib/calendarMotion';
+import { statsMonthLabelVariants } from '@/lib/statsMotion';
 import { isScheduleLiveOnCard } from '@/lib/schedule-live';
 import CalendarFilterEmptyBanner from '@/components/Calendar/CalendarFilterEmptyBanner';
 import CalendarEmptyDay from '@/components/Calendar/CalendarEmptyDay';
@@ -73,6 +75,19 @@ interface CalendarViewProps {
 }
 
 const CALENDAR_PREFERENCES_KEY = 'calendar:view-preferences:v1';
+
+function formatWeekRangeLabel(start: Date, end: Date): string {
+  const sameYear = format(start, 'yyyy') === format(end, 'yyyy');
+  const sameMonth = sameYear && format(start, 'yyyy-MM') === format(end, 'yyyy-MM');
+
+  if (sameMonth) {
+    return `${format(start, 'M월 d일', { locale: ko })} – ${format(end, 'd일', { locale: ko })}`;
+  }
+  if (sameYear) {
+    return `${format(start, 'M월 d일', { locale: ko })} – ${format(end, 'M월 d일', { locale: ko })}`;
+  }
+  return `${format(start, 'yyyy년 M월 d일', { locale: ko })} – ${format(end, 'yyyy년 M월 d일', { locale: ko })}`;
+}
 
 export default function CalendarView({
   initialSchedules,
@@ -360,6 +375,16 @@ export default function CalendarView({
     setIsMobileFabOpen(false);
   }, []);
 
+  const weekStart = startOfWeek(currentDate);
+  const weekEnd = endOfWeek(currentDate);
+  const weekRangeKey = format(weekStart, 'yyyy-MM-dd');
+  const weekRangeLabel = formatWeekRangeLabel(weekStart, weekEnd);
+  const weekYearLabel =
+    format(weekStart, 'yyyy') === format(weekEnd, 'yyyy')
+      ? `${format(weekStart, 'yyyy')}년`
+      : null;
+  const monthHeaderKey = format(currentDate, 'yyyy-MM');
+
   if (!mounted) {
     return <div className="flex-1 bg-slate-50/50 dark:bg-slate-950" />;
   }
@@ -389,24 +414,42 @@ export default function CalendarView({
             </button>
           </div>
           <div className="min-w-0 overflow-hidden">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.h2
-                key={format(currentDate, 'yyyy-MM')}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ type: 'spring', damping: 26, stiffness: 380 }}
-                className="text-lg sm:text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight leading-none truncate"
-              >
-                {format(currentDate, 'yyyy년 M월')}
-              </motion.h2>
+            <AnimatePresence mode="wait" initial={false} custom={slideDirection}>
+              {viewMode === 'weekly' ? (
+                <motion.div
+                  key={weekRangeKey}
+                  custom={slideDirection}
+                  variants={statsMonthLabelVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className="min-w-0"
+                >
+                  <h2 className="truncate text-lg font-black leading-none tracking-tight text-slate-800 dark:text-white sm:text-xl md:text-2xl">
+                    {weekRangeLabel}
+                  </h2>
+                  {weekYearLabel ? (
+                    <p className="mt-1 truncate text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                      {weekYearLabel}
+                    </p>
+                  ) : null}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={monthHeaderKey}
+                  custom={slideDirection}
+                  variants={statsMonthLabelVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className="min-w-0"
+                >
+                  <h2 className="truncate text-lg font-black leading-none tracking-tight text-slate-800 dark:text-white sm:text-xl md:text-2xl">
+                    {format(currentDate, 'yyyy년 M월', { locale: ko })}
+                  </h2>
+                </motion.div>
+              )}
             </AnimatePresence>
-            {viewMode === 'weekly' && (
-              <p className="text-slate-400 dark:text-slate-500 font-bold text-[11px] mt-1 truncate">
-                {format(startOfWeek(currentDate), 'M. d')} -{' '}
-                {format(endOfWeek(currentDate), 'M. d')}
-              </p>
-            )}
           </div>
         </div>
 
