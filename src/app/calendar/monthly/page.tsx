@@ -6,9 +6,9 @@ import { computeSiteWideReport } from '@/lib/siteWideStats';
 import { buildPageMetadata } from '@/lib/site';
 
 export const metadata = buildPageMetadata({
-  title: '사이트 통계',
+  title: '통계',
   description:
-    'Map-Dyoa 사이트 전체·월간 통계. TOP 멤버·게임, 월별 추이, 클립·일정 누적 데이터를 JSON으로 내보낼 수 있습니다.',
+    '지도동 합방·일정·클립 누적 통계, 월별 Wrapped, TOP 멤버·게임, 월별 추이를 확인하세요.',
   path: '/calendar/monthly',
 });
 
@@ -53,6 +53,10 @@ export default async function MonthlyStatsPage({
   });
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto custom-scrollbar bg-slate-50/80 dark:bg-slate-950">
+      <header className="sr-only">
+        <h1>지도동 방송 통계</h1>
+        <p>지도동 멤버 합방·일정·클립 누적 데이터와 월별 통계입니다.</p>
+      </header>
       <MonthlyStatsView
         initialSchedules={schedules}
         streamers={streamers}

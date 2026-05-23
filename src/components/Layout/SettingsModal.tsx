@@ -140,7 +140,7 @@ function GeneralTab({
         <div className="space-y-1">
           {[
             { href: '/announcements', icon: <Megaphone className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '공지사항' },
-            { href: '/calendar/monthly', icon: <BarChart3 className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '월간 통계' },
+            { href: '/calendar/monthly', icon: <BarChart3 className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '지도동 통계' },
             { href: '/help', icon: <HelpCircle className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '도움말' },
             { href: '/privacy', icon: <Shield className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '개인정보처리방침' },
           ].map(({ href, icon, label }) => (

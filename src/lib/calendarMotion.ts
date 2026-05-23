@@ -1,46 +1,39 @@
 import type { Transition, Variants } from 'framer-motion';
+import { statsMonthPresenceVariants, statsSpring, statsTileVariants } from '@/lib/statsMotion';
 
-const springIn = (delay = 0): Transition => ({
-  type: 'spring',
-  damping: 26,
-  stiffness: 380,
-  delay,
-});
+const calendarSpring = (delay = 0, stiffness = 280, damping = 32): Transition =>
+  statsSpring(delay, stiffness, damping);
 
 export const scheduleCardVariants = {
-  weekly: {
-    hidden: { opacity: 0, y: 12, scale: 0.97 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: springIn(i * 0.04),
-    }),
-  },
+  weekly: statsTileVariants,
   monthly: {
-    hidden: { opacity: 0, x: -8 },
+    hidden: { opacity: 0, x: -12, filter: 'blur(4px)' },
     visible: (i: number) => ({
       opacity: 1,
       x: 0,
-      transition: springIn(i * 0.022),
+      filter: 'blur(0px)',
+      transition: calendarSpring(Math.min(i * 0.04, 0.2), 300, 32),
     }),
   },
   mobile: {
-    hidden: { opacity: 0, x: -14 },
+    hidden: { opacity: 0, x: -14, filter: 'blur(4px)' },
     visible: (i: number) => ({
       opacity: 1,
       x: 0,
-      transition: springIn(i * 0.045),
+      filter: 'blur(0px)',
+      transition: calendarSpring(Math.min(i * 0.045, 0.24), 300, 32),
     }),
   },
 } satisfies Record<string, Variants>;
 
 export const calendarColumnVariants: Variants = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 18, scale: 0.98, filter: 'blur(6px)' },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: springIn(i * 0.05),
+    scale: 1,
+    filter: 'blur(0px)',
+    transition: calendarSpring(Math.min(i * 0.05, 0.28), 260, 34),
   }),
 };
 
@@ -59,23 +52,8 @@ export function calendarGridSlide(direction: 'left' | 'right') {
   };
 }
 
-/** AnimatePresence mode="wait"용 주·월 그리드 슬라이드 */
-export const calendarGridPresenceVariants: Variants = {
-  enter: (direction: 'left' | 'right') => ({
-    opacity: 0,
-    x: direction === 'left' ? 32 : -32,
-  }),
-  center: {
-    opacity: 1,
-    x: 0,
-    transition: { type: 'spring', damping: 28, stiffness: 320 },
-  },
-  exit: (direction: 'left' | 'right') => ({
-    opacity: 0,
-    x: direction === 'left' ? -24 : 24,
-    transition: { duration: 0.2, ease: [0.4, 0, 1, 1] },
-  }),
-};
+/** AnimatePresence mode="wait"용 주·월 그리드 슬라이드 — statsMotion 톤 */
+export const calendarGridPresenceVariants = statsMonthPresenceVariants;
 
 /** 일정 카드 → 상세 모달 shared layout */
 export function scheduleSurfaceLayoutId(scheduleId: string) {
@@ -95,7 +73,7 @@ export const modalDetailRevealItem: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: springIn(0),
+    transition: calendarSpring(0),
   },
 };
 

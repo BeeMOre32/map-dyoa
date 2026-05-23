@@ -1,9 +1,30 @@
 import type { Metadata } from 'next';
 
+/** 검색·브랜드 강조용 커뮤니티명 */
+export const SITE_BRAND = '지도동';
 export const SITE_NAME = 'Map-Dyoa';
-export const SITE_TAGLINE = '지도동 일정 관리';
+/** 홈·캘린더 기본 SEO 타이틀 */
+export const SITE_PRIMARY_TITLE = '지도동 방송 일정';
+export const SITE_TAGLINE = '지도동 팬 일정';
 export const DEFAULT_DESCRIPTION =
-  '지도동 멤버의 치지직·유튜브 방송 일정, 스트리머 프로필, 클립을 캘린더로 모아 보는 Map-Dyoa 팬 서비스입니다.';
+  '지도동 멤버의 치지직·유튜브 합방·게임 방송 일정, 클립·스트리머 프로필을 한곳에서 확인하는 지도동 공식 팬 캘린더(Map-Dyoa)입니다.';
+
+/** 페이지 제목에 지도동이 없으면 앞에 붙임 */
+export function withSiteBrand(title: string): string {
+  if (title.includes(SITE_BRAND)) return title;
+  return `${SITE_BRAND} ${title}`;
+}
+
+/** `<title>` — 지도동을 앞에, Map-Dyoa는 보조 */
+export function formatDocumentTitle(brandedTitle: string): string {
+  if (brandedTitle === SITE_PRIMARY_TITLE) return SITE_PRIMARY_TITLE;
+  return `${brandedTitle} · ${SITE_NAME}`;
+}
+
+/** OG·Twitter — 지도동 브랜드 강조 */
+export function formatSocialTitle(brandedTitle: string): string {
+  return `${brandedTitle} | ${SITE_BRAND}`;
+}
 
 function normalizeOrigin(url: string): string {
   return url.replace(/\/$/, '');
@@ -94,28 +115,31 @@ export function buildPageMetadata(options: {
   path?: string;
   noIndex?: boolean;
 }): Metadata {
+  const branded = withSiteBrand(options.title);
+  const title = formatDocumentTitle(branded);
   const description = options.description ?? DEFAULT_DESCRIPTION;
   const canonical = options.path ? absoluteUrl(options.path) : undefined;
+  const socialTitle = formatSocialTitle(branded);
 
   return {
-    title: options.title,
+    title,
     description,
     alternates: canonical ? { canonical } : undefined,
     robots: options.noIndex
       ? { index: false, follow: false }
       : { index: true, follow: true },
     openGraph: {
-      title: `${options.title} | ${SITE_NAME}`,
+      title: socialTitle,
       description,
       type: 'website',
       locale: 'ko_KR',
-      siteName: SITE_NAME,
+      siteName: SITE_BRAND,
       url: canonical,
-      images: defaultOgImages(options.title),
+      images: defaultOgImages(socialTitle),
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${options.title} | ${SITE_NAME}`,
+      title: socialTitle,
       description,
       images: [DEFAULT_OG_IMAGE_PATH],
     },
@@ -124,29 +148,36 @@ export function buildPageMetadata(options: {
 
 export function getRootMetadata(): Metadata {
   const siteUrl = getSiteUrl();
+  const defaultTitle = SITE_PRIMARY_TITLE;
+  const socialTitle = formatSocialTitle(SITE_PRIMARY_TITLE);
 
   return {
     metadataBase: new URL(siteUrl),
     title: {
-      default: `${SITE_NAME} | ${SITE_TAGLINE}`,
-      template: `%s | ${SITE_NAME}`,
+      default: defaultTitle,
+      template: '%s',
     },
     description: DEFAULT_DESCRIPTION,
     keywords: [
       '지도동',
+      '지도동 방송',
       '지도동 방송 일정',
-      'Map-Dyoa',
       '지도동 일정',
+      '지도동 스케줄',
+      '지도동 합방',
+      '지도동 멤버',
+      '지도동 클립',
+      '지도동 라이브',
+      'Map-Dyoa',
       '스트리머',
       '방송 일정',
       '치지직',
       '유튜브',
-      '클립',
       '캘린더',
     ],
-    applicationName: SITE_NAME,
-    authors: [{ name: SITE_NAME }],
-    creator: SITE_NAME,
+    applicationName: SITE_BRAND,
+    authors: [{ name: SITE_BRAND }],
+    creator: SITE_BRAND,
     formatDetection: { email: false, telephone: false },
     manifest: '/manifest.webmanifest',
     icons: {
@@ -158,17 +189,17 @@ export function getRootMetadata(): Metadata {
       shortcut: ['/favicon.svg'],
     },
     openGraph: {
-      title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+      title: socialTitle,
       description: DEFAULT_DESCRIPTION,
       type: 'website',
       locale: 'ko_KR',
-      siteName: SITE_NAME,
+      siteName: SITE_BRAND,
       url: siteUrl,
-      images: defaultOgImages(SITE_NAME),
+      images: defaultOgImages(socialTitle),
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+      title: socialTitle,
       description: DEFAULT_DESCRIPTION,
       images: [DEFAULT_OG_IMAGE_PATH],
     },
@@ -187,15 +218,27 @@ export function getWebsiteJsonLd() {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: SITE_NAME,
-    alternateName: ['지도동', 'Map-Dyoa', '지도동 일정'],
+    name: SITE_BRAND,
+    alternateName: [SITE_PRIMARY_TITLE, SITE_NAME, '지도동 일정', '지도동 스케줄', '지도동 방송'],
     description: DEFAULT_DESCRIPTION,
     url: getSiteUrl(),
     inLanguage: 'ko-KR',
     publisher: {
       '@type': 'Organization',
-      name: SITE_NAME,
+      name: SITE_BRAND,
+      alternateName: [SITE_NAME, SITE_PRIMARY_TITLE],
       url: getSiteUrl(),
     },
+  };
+}
+
+export function getOrganizationJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: SITE_BRAND,
+    alternateName: [SITE_NAME, SITE_PRIMARY_TITLE, '지도동 일정'],
+    description: DEFAULT_DESCRIPTION,
+    url: getSiteUrl(),
   };
 }

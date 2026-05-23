@@ -4,7 +4,7 @@ import ScheduleSeoContent from '@/components/Seo/ScheduleSeoContent';
 import { notFound } from 'next/navigation';
 import CalendarView from '@/components/Calendar/CalendarView';
 import { getCalendarData, getScheduleDetail, getScheduleClips } from '@/lib/data-fetching';
-import { buildPageMetadata } from '@/lib/site';
+import { buildPageMetadata, formatSocialTitle, withSiteBrand } from '@/lib/site';
 import type { Metadata } from 'next';
 
 export async function generateMetadata({
@@ -28,6 +28,8 @@ export async function generateMetadata({
     .filter(Boolean)
     .join(' · ');
   const ogPath = `/calendar/schedule/${id}/opengraph-image`;
+  const pageTitle = withSiteBrand(schedule.title);
+  const ogTitle = formatSocialTitle(pageTitle);
   return {
     ...buildPageMetadata({
       title: schedule.title,
@@ -35,15 +37,15 @@ export async function generateMetadata({
       path: `/calendar/schedule/${id}`,
     }),
     openGraph: {
-      title: `${schedule.title} | Map-Dyoa`,
+      title: ogTitle,
       description,
       type: 'website',
       locale: 'ko_KR',
-      images: [{ url: ogPath, width: 1200, height: 630, alt: schedule.title }],
+      images: [{ url: ogPath, width: 1200, height: 630, alt: pageTitle }],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${schedule.title} | Map-Dyoa`,
+      title: ogTitle,
       description,
       images: [ogPath],
     },

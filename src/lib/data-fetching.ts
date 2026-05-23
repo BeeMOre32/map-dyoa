@@ -37,6 +37,7 @@ import {
 } from './map-dyoa-server-schedules';
 import { getSitemapScheduleWindow } from './seo-jsonld';
 
+export type { Hoi4LeaderboardData } from './map-dyoa-server-admin';
 export { getLiveStreamerIds } from './chzzk-live-status';
 
 /**
@@ -523,6 +524,7 @@ export const getHoi4Leaderboard = unstable_cache(
         scheduleId: true,
         streamerId: true,
         nation: true,
+        result: true,
         streamer: { select: { id: true, name: true, colorCode: true } },
         schedule: {
           select: {
@@ -543,7 +545,11 @@ export const getHoi4Leaderboard = unstable_cache(
     type SessionEntry = {
       id: string; title: string; startTime: Date | string;
       game: { title: string } | null;
-      participants: { streamer: { id: string; name: string; colorCode: string }; nation: string | null }[];
+      participants: {
+        streamer: { id: string; name: string; colorCode: string };
+        nation: string | null;
+        result: string | null;
+      }[];
     };
 
     const statsMap = new Map<string, StatEntry>();
@@ -569,6 +575,7 @@ export const getHoi4Leaderboard = unstable_cache(
       sessionMap.get(row.scheduleId)!.participants.push({
         streamer: row.streamer,
         nation: row.nation,
+        result: row.result,
       });
     }
 
@@ -576,7 +583,6 @@ export const getHoi4Leaderboard = unstable_cache(
 
     const sessions = Array.from(sessionMap.values())
       .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
-      .slice(0, 8)
       .map((s) => ({
         ...s,
         participants: [...s.participants].sort((a, b) =>

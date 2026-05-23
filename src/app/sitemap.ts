@@ -4,6 +4,7 @@ import { absoluteUrl } from '@/lib/site';
 
 const STATIC_ROUTES: MetadataRoute.Sitemap = [
   { url: absoluteUrl('/calendar'), changeFrequency: 'hourly', priority: 1 },
+  { url: absoluteUrl('/calendar/monthly'), changeFrequency: 'daily', priority: 0.85 },
   { url: absoluteUrl('/streamers'), changeFrequency: 'daily', priority: 0.9 },
   { url: absoluteUrl('/clips'), changeFrequency: 'daily', priority: 0.85 },
   { url: absoluteUrl('/hoi4'), changeFrequency: 'weekly', priority: 0.7 },

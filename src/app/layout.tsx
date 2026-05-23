@@ -9,7 +9,7 @@ import PwaRegistrar from '@/components/Common/PwaRegistrar';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ThemeProvider } from '@/providers/ThemeProvider';
-import { getRootMetadata, getWebsiteJsonLd } from '@/lib/site';
+import { getOrganizationJsonLd, getRootMetadata, getWebsiteJsonLd } from '@/lib/site';
 import type { Metadata } from 'next';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -36,6 +36,10 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(getWebsiteJsonLd()) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(getOrganizationJsonLd()) }}
         />
         <ThemeProvider>
           <AuthProvider>

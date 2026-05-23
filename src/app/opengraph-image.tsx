@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'Map-Dyoa | 지도동 일정 관리';
+export const alt = '지도동 방송 일정 · Map-Dyoa';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -30,23 +30,33 @@ export default function OgImage() {
         >
           <div
             style={{
-              fontSize: 72,
+              fontSize: 80,
               fontWeight: 900,
               color: 'white',
               letterSpacing: '-2px',
             }}
           >
-            Map-Dyoa
+            지도동
           </div>
           <div
             style={{
-              fontSize: 28,
+              fontSize: 36,
+              fontWeight: 800,
+              color: 'rgba(199, 210, 254, 0.95)',
+              letterSpacing: '-1px',
+            }}
+          >
+            방송 일정 · 클립 · 멀티뷰
+          </div>
+          <div
+            style={{
+              fontSize: 18,
               fontWeight: 600,
-              color: 'rgba(199, 210, 254, 0.9)',
+              color: 'rgba(165, 180, 252, 0.75)',
               letterSpacing: '2px',
             }}
           >
-            지도동 방송 일정 · 클립 · 멀티뷰
+            map-dyoa.site
           </div>
         </div>
         <div

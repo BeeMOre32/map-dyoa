@@ -40,7 +40,7 @@ const TIPS: { id: string; icon: typeof LayoutGrid; text: ReactNode }[] = [
     icon: BarChart3,
     text: (
       <>
-        <span className="font-black text-indigo-600 dark:text-indigo-400">월간 통계</span>
+        <span className="font-black text-indigo-600 dark:text-indigo-400">지도동 통계</span>
         는 설정 → 정보 메뉴에서도 열 수 있어요.
       </>
     ),
@@ -128,7 +128,7 @@ export default function CalendarWelcomeBanner() {
                     className="inline-flex items-center gap-1 rounded-xl border border-indigo-200 bg-white/80 px-3 py-1.5 text-[11px] font-black text-indigo-600 transition-colors hover:border-indigo-300 hover:bg-white sm:text-xs dark:border-indigo-800 dark:bg-slate-900/60 dark:text-indigo-400"
                   >
                     <BarChart3 className="h-3.5 w-3.5" aria-hidden />
-                    월간 통계 보기
+                    지도동 통계 보기
                   </Link>
                 </motion.div>
                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 sm:text-[11px]">

@@ -125,7 +125,11 @@ export type Hoi4LeaderboardData = {
     title: string
     startTime: string | Date
     game: { title: string } | null
-    participants: { streamer: { id: string; name: string; colorCode: string }; nation: string | null }[]
+    participants: {
+      streamer: { id: string; name: string; colorCode: string }
+      nation: string | null
+      result?: string | null
+    }[]
   }[]
   totalSessions: number
 }

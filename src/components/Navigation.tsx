@@ -27,7 +27,7 @@ export default function Navigation() {
   if (isModalOpen) return null;
 
   return (
-    <nav className="flex justify-center py-0 shrink-0 transition-colors z-30 w-max mx-auto">
+    <nav className="flex justify-center py-0 shrink-0 transition-colors z-30 w-max mx-auto" aria-label="지도동 메뉴">
       <div className="rounded-xl flex bg-slate-100 dark:bg-slate-900 p-1 border-2 border-slate-200 dark:border-slate-800 relative shadow-inner">
         {tabs.map((tab) => {
           const isActive = pathname.startsWith(tab.href);

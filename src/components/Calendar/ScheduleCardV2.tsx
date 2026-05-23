@@ -105,6 +105,7 @@ export default function ScheduleCardV2({
   const isToday_ = isValid(startD) && isToday(startD);
   const isLive = isScheduleLiveOnCard(schedule, liveStreamerIds);
   const isEnded = schedule.isLiveEnded && isToday_;
+  const fadedEnded = isEnded && !isLive;
   const gameColor = schedule.game ? getGameColor(schedule.game.id, isDark) : null;
   const hasGameTitle = Boolean(schedule.game?.title?.trim());
   const endTimeHm = formatEndHHmmIfValid(schedule.endTime);
@@ -125,9 +126,9 @@ export default function ScheduleCardV2({
           href={href}
           scroll={false}
           onClick={onScheduleLinkClick}
-          className={`flex items-center gap-2.5 rounded-xl border py-3 pl-3.5 pr-3.5 shadow-md transition-[box-shadow,border-color] hover:shadow-lg ${
+          className={`flex items-center gap-2.5 rounded-xl border py-3 pl-3.5 pr-3.5 shadow-md transition-[box-shadow,border-color,opacity] hover:shadow-lg ${
             isLive ? 'ring-1 ring-red-400/50' : ''
-          } ${
+          } ${fadedEnded ? 'opacity-55 saturate-50' : ''} ${
             gameColor
               ? 'bg-white dark:bg-slate-800'
               : hasGame
@@ -168,7 +169,7 @@ export default function ScheduleCardV2({
               isLive
                 ? 'ring-1 ring-red-400/50 dark:ring-red-500/40'
                 : ''
-            } ${
+            } ${fadedEnded ? 'opacity-55 saturate-50' : ''} ${
               gameColor
                 ? 'bg-white dark:bg-slate-800'
                 : hasGame
@@ -216,11 +217,11 @@ export default function ScheduleCardV2({
             borderLeftColor: gameColor ?? accentColor,
             ...(gameColor ? gameCardSurfaceStyle(gameColor, isDark) : {}),
           }}
-          className={`relative flex w-full min-h-20 flex-col gap-2.5 overflow-hidden rounded-xl border px-3.5 py-3 shadow-md transition-[box-shadow,border-color] hover:shadow-lg ${
+          className={`relative flex w-full min-h-20 flex-col gap-2.5 overflow-hidden rounded-xl border px-3.5 py-3 shadow-md transition-[box-shadow,border-color,opacity] hover:shadow-lg ${
             isLive
               ? 'ring-1 ring-red-400/55 shadow-[0_2px_14px_rgba(239,68,68,0.18)] dark:ring-red-500/45'
               : ''
-          } ${
+          } ${fadedEnded ? 'opacity-55 saturate-50' : ''} ${
             gameColor
               ? 'bg-white dark:bg-slate-800'
               : hasGame

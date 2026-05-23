@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -32,6 +32,7 @@ import type { Game, Streamer } from '@prisma/client';
 import MonthlyWrappedHero, {
   getMonthlyWrapperTheme,
 } from '@/components/Calendar/MonthlyWrappedHero';
+import StatsCountUp from '@/components/Calendar/StatsCountUp';
 import { monthlyWrapperMesh } from '@/lib/monthlyWrapperTheme';
 import type { PublicSiteOverview } from '@/lib/data-fetching';
 import type { MonthlyClipStats } from '@/lib/monthlyClipStats';
@@ -133,12 +134,18 @@ function AnimatedSection({
 function StatTile({
   label,
   value,
+  countUp,
+  suffix = '',
+  countDelay = 0,
   sub,
   reducedMotion,
   accent,
 }: {
   label: string;
-  value: string;
+  value?: string;
+  countUp?: number;
+  suffix?: string;
+  countDelay?: number;
   sub?: string;
   reducedMotion: boolean;
   accent?: string;
@@ -168,7 +175,16 @@ function StatTile({
       <p className="relative text-[10px] font-black uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
         {label}
       </p>
-      <p className="relative mt-1 text-lg font-black text-slate-900 dark:text-white">{value}</p>
+      <p className="relative mt-1 text-lg font-black tabular-nums text-slate-900 dark:text-white">
+        {countUp !== undefined ? (
+          <>
+            <StatsCountUp value={countUp} delay={countDelay} />
+            {suffix}
+          </>
+        ) : (
+          value
+        )}
+      </p>
       {sub ? (
         <p className="relative mt-0.5 text-[10px] font-bold text-slate-400 dark:text-slate-500">{sub}</p>
       ) : null}
@@ -176,13 +192,22 @@ function StatTile({
   );
 }
 
+type StatTileItem = {
+  label: string;
+  value?: string;
+  countUp?: number;
+  suffix?: string;
+  countDelay?: number;
+  sub?: string;
+};
+
 function StatTileGrid({
   tiles,
   reducedMotion,
   columns = 4,
   accent,
 }: {
-  tiles: { label: string; value: string; sub?: string }[];
+  tiles: StatTileItem[];
   reducedMotion: boolean;
   columns?: 3 | 4;
   accent?: string;
@@ -308,6 +333,7 @@ export default function MonthlyStatsView({
 }: MonthlyStatsViewProps) {
   const router = useRouter();
   const reducedMotion = useReducedMotion();
+  const monthlySectionRef = useRef<HTMLDivElement>(null);
   const [month, setMonth] = useState(() => parseMonthParam(initialMonth));
   const [slideDirection, setSlideDirection] = useState<StatsSlideDirection>('left');
 
@@ -337,8 +363,8 @@ export default function MonthlyStatsView({
     [router],
   );
 
-  const goPrev = () => syncMonth(subMonths(month, 1), 'right');
-  const goNext = () => syncMonth(addMonths(month, 1), 'left');
+  const goPrev = useCallback(() => syncMonth(subMonths(month, 1), 'right'), [month, syncMonth]);
+  const goNext = useCallback(() => syncMonth(addMonths(month, 1), 'left'), [month, syncMonth]);
   const goToday = () => {
     const today = startOfMonth(new Date());
     if (format(today, 'yyyy-MM') === monthKey) return;
@@ -346,6 +372,50 @@ export default function MonthlyStatsView({
     setMonth(today);
     router.replace(`/calendar/monthly?month=${format(today, 'yyyy-MM')}`, { scroll: false });
   };
+
+  const scrollToMonthlySection = useCallback(() => {
+    monthlySectionRef.current?.scrollIntoView({
+      behavior: reducedMotion ? 'auto' : 'smooth',
+      block: 'start',
+    });
+  }, [reducedMotion]);
+
+  const handleTrendMonthClick = useCallback(
+    (rowMonth: string) => {
+      if (rowMonth === monthKey) {
+        scrollToMonthlySection();
+        return;
+      }
+      const parsed = startOfMonth(parse(rowMonth, 'yyyy-MM', new Date()));
+      if (!isValid(parsed)) return;
+      syncMonth(parsed, parsed > month ? 'left' : 'right');
+      window.requestAnimationFrame(() => scrollToMonthlySection());
+    },
+    [month, monthKey, scrollToMonthlySection, syncMonth],
+  );
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT')
+      ) {
+        return;
+      }
+      event.preventDefault();
+      if (event.key === 'ArrowLeft') goPrev();
+      else goNext();
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [goNext, goPrev]);
+
   const handleExport = () => downloadSiteStatsExport(siteReport);
 
   const dataRangeLabel =
@@ -355,6 +425,9 @@ export default function MonthlyStatsView({
 
   return (
     <div className="relative mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-6 pb-16 sm:px-6 sm:py-8 sm:pb-20">
+      <p className="sr-only" aria-live="polite" aria-atomic="true">
+        {monthTitle} 통계
+      </p>
       {/* 월 테마 앰비언트 글로우 */}
       {!reducedMotion ? (
         <motion.div
@@ -385,16 +458,18 @@ export default function MonthlyStatsView({
           <div>
             <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500 dark:text-indigo-400">
               <BarChart3 className="h-3 w-3" />
-              사이트 통계
+              지도동 통계
             </p>
             <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white sm:text-2xl">
-              사이트 통계
+              지도동 통계
             </h1>
             <motion.div
-              className="mt-1.5 h-0.5 w-16 rounded-full"
-              style={{ background: `linear-gradient(90deg, ${theme.accent}, ${theme.to})` }}
-              layoutId="stats-header-accent"
+              key={monthKey}
+              initial={reducedMotion ? false : { opacity: 0.6, scaleX: 0.75 }}
+              animate={{ opacity: 1, scaleX: 1 }}
               transition={statsSpring(0, 320, 32)}
+              className="mt-1.5 h-0.5 w-16 origin-left rounded-full"
+              style={{ background: `linear-gradient(90deg, ${theme.accent}, ${theme.to})` }}
             />
             <p className="mt-0.5 text-xs font-bold text-slate-400 dark:text-slate-500">
               전체 누적 +{' '}
@@ -412,6 +487,7 @@ export default function MonthlyStatsView({
                 </motion.span>
               </AnimatePresence>
               {' '}· {dataRangeLabel}
+              <span className="hidden sm:inline"> · ← → 월 이동</span>
             </p>
           </div>
         </div>
@@ -466,10 +542,10 @@ export default function MonthlyStatsView({
           reducedMotion={!!reducedMotion}
           accent={theme.accent}
           tiles={[
-            { label: '등록 일정', value: `${siteOverview.scheduleCount.toLocaleString()}개`, sub: '전체 DB' },
-            { label: '등록 클립', value: `${siteOverview.clipCount.toLocaleString()}개`, sub: '전체 아카이브' },
-            { label: '지도동 멤버', value: `${siteOverview.memberCount}명`, sub: `게스트 제외 · 전체 ${streamers.length}명` },
-            { label: '게임', value: `${siteOverview.gameCount}종`, sub: `등록 게임 ${games.length}종` },
+            { label: '등록 일정', countUp: siteOverview.scheduleCount, suffix: '개', countDelay: 0.04, sub: '전체 DB' },
+            { label: '등록 클립', countUp: siteOverview.clipCount, suffix: '개', countDelay: 0.08, sub: '전체 아카이브' },
+            { label: '지도동 멤버', countUp: siteOverview.memberCount, suffix: '명', countDelay: 0.12, sub: `게스트 제외 · 전체 ${streamers.length}명` },
+            { label: '게임', countUp: siteOverview.gameCount, suffix: '종', countDelay: 0.16, sub: `등록 게임 ${games.length}종` },
           ]}
         />
       </AnimatedSection>
@@ -504,6 +580,7 @@ export default function MonthlyStatsView({
       </AnimatedSection>
 
       {siteReport.monthlyTrend.length > 0 ? (
+        <LayoutGroup id="stats-monthly-trend">
         <AnimatedSection index={2} title="월별 추이" icon={<LineChart className="h-4 w-4 text-cyan-500" />} reducedMotion={!!reducedMotion}>
           <div className="overflow-x-auto">
             <table className="relative w-full min-w-[480px] text-left text-xs">
@@ -523,7 +600,6 @@ export default function MonthlyStatsView({
                     <motion.tr
                       key={row.month}
                       custom={idx}
-                      layout
                       variants={statsTableRowVariants}
                       initial={reducedMotion ? false : 'hidden'}
                       whileInView={reducedMotion ? undefined : 'visible'}
@@ -535,21 +611,22 @@ export default function MonthlyStatsView({
                           <motion.div
                             layoutId={STATS_MONTH_ROW_LAYOUT_ID}
                             className="absolute inset-0 rounded-xl bg-indigo-50/90 dark:bg-indigo-950/35"
-                            transition={statsSpring(0, 320, 34)}
+                            transition={{ type: 'spring', stiffness: 420, damping: 36 }}
                           />
                         </td>
                       ) : null}
                       <td className="relative py-2.5 pr-3">
-                        <Link
-                          href={`/calendar/monthly?month=${row.month}`}
-                          className={`relative z-10 font-black transition-colors ${
+                        <button
+                          type="button"
+                          onClick={() => handleTrendMonthClick(row.month)}
+                          className={`relative z-10 cursor-pointer font-black transition-colors ${
                             isSelected
                               ? 'text-indigo-600 dark:text-indigo-400'
                               : 'text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400'
                           }`}
                         >
                           {row.label}
-                        </Link>
+                        </button>
                       </td>
                       <td className="relative z-10 py-2.5 pr-3 font-bold text-slate-600 dark:text-slate-300">{row.scheduleCount}</td>
                       <td className="relative z-10 py-2.5 pr-3 font-bold text-slate-600 dark:text-slate-300">{row.clipCount}</td>
@@ -569,6 +646,7 @@ export default function MonthlyStatsView({
             {' '}· JSON 공개
           </p>
         </AnimatedSection>
+        </LayoutGroup>
       ) : null}
 
       <AnimatedSection index={3} title="콘텐츠 누적 상세" icon={<BarChart3 className="h-4 w-4 text-teal-500" />} reducedMotion={!!reducedMotion}>
@@ -578,26 +656,27 @@ export default function MonthlyStatsView({
           accent={theme.via}
           tiles={[
             { label: '합방 / 솔로', value: `${contentStats.collabScheduleCount} / ${contentStats.soloScheduleCount}`, sub: '2인 이상 · 1인' },
-            { label: '게임 연결', value: `${contentStats.gameLinkedScheduleCount}개`, sub: `HOI4 ${contentStats.hoi4ScheduleCount}회` },
-            { label: '게릴라', value: `${contentStats.guerrillaCount}개`, sub: '시간 미정' },
-            { label: '내전', value: `${contentStats.naejeonCount}회`, sub: '내전 플래그' },
+            { label: '게임 연결', countUp: contentStats.gameLinkedScheduleCount, suffix: '개', countDelay: 0.04, sub: `HOI4 ${contentStats.hoi4ScheduleCount}회` },
+            { label: '게릴라', countUp: contentStats.guerrillaCount, suffix: '개', countDelay: 0.08, sub: '시간 미정' },
+            { label: '내전', countUp: contentStats.naejeonCount, suffix: '회', countDelay: 0.12, sub: '내전 플래그' },
             { label: '평균 참여', value: `${contentStats.avgParticipantsPerSchedule}명`, sub: '합방당' },
-            { label: '게스트', value: `${contentStats.guestStreamerCount}명`, sub: '등록 멤버' },
+            { label: '게스트', countUp: contentStats.guestStreamerCount, suffix: '명', countDelay: 0.16, sub: '등록 멤버' },
           ]}
         />
       </AnimatedSection>
 
       <AnimatePresence mode="wait" custom={slideDirection} initial={false}>
         <motion.div
+          ref={monthlySectionRef}
           key={monthKey}
           custom={slideDirection}
           variants={statsMonthPresenceVariants}
           initial="enter"
           animate="center"
           exit="exit"
-          className="flex flex-col gap-5"
+          className="flex scroll-mt-6 flex-col gap-5"
         >
-          <LayoutGroup id={`monthly-stats-${monthKey}`}>
+          <LayoutGroup id="monthly-stats">
           <AnimatedSection
             index={4}
             title={`${monthTitle} 요약`}
@@ -647,7 +726,6 @@ export default function MonthlyStatsView({
                 >
                   <div className="flex h-24 w-full items-end justify-center overflow-hidden rounded-2xl bg-slate-50 px-1 dark:bg-slate-800/80">
                     <motion.div
-                      layout
                       className="h-24 w-full max-w-8 rounded-t-xl shadow-[0_-4px_16px_-4px]"
                       style={{
                         backgroundColor: theme.via,

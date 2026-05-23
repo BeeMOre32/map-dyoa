@@ -2,10 +2,11 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Map-Dyoa',
-    short_name: 'Map-Dyoa',
-    description: '지도동 멤버들의 방송 일정을 한눈에 확인하세요.',
-    start_url: '/',
+    name: '지도동 방송 일정',
+    short_name: '지도동',
+    description:
+      '지도동 멤버의 치지직·유튜브 합방·게임 방송 일정과 클립을 확인하세요.',
+    start_url: '/calendar',
     display: 'standalone',
     background_color: '#020617',
     theme_color: '#4f46e5',

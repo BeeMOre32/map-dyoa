@@ -9,6 +9,7 @@ import { signOut, useSession } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import Navigation from '../Navigation';
 import SettingsModal from './SettingsModal';
+import { SITE_BRAND, SITE_NAME, SITE_PRIMARY_TITLE } from '@/lib/site';
 
 export default function Header() {
   const { data: session } = useSession();
@@ -27,23 +28,27 @@ export default function Header() {
     <>
       <header className="sticky top-0 z-50 isolate shrink-0 border-b border-slate-200/80 bg-white px-2 py-2 transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950 sm:px-4 sm:py-3 md:px-8">
         <div className="flex items-center justify-between gap-2 sm:gap-3 w-full">
-          <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group min-w-0 max-w-[45%] sm:max-w-none">
+          <Link
+            href="/"
+            aria-label={`${SITE_BRAND} ${SITE_PRIMARY_TITLE}`}
+            className="flex items-center gap-2 sm:gap-2.5 group min-w-0 max-w-[52%] sm:max-w-none"
+          >
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl overflow-hidden shadow-lg shadow-indigo-200 dark:shadow-none group-hover:rotate-6 transition-all duration-300">
               <Image
                 src="/brand/map-dyoa-logo.svg"
-                alt="Map-Dyoa 로고"
+                alt={`${SITE_BRAND} 로고`}
                 width={40}
                 height={40}
                 className="w-full h-full object-cover"
                 priority
               />
             </div>
-            <div className="flex flex-col min-w-0 max-[390px]:hidden">
-              <h1 className="text-sm sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none truncate">
-                Map-Dyoa
-              </h1>
-              <span className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 mt-0.5 tracking-wider uppercase hidden sm:block">
-                Management
+            <div className="flex min-w-0 flex-col">
+              <p className="truncate text-sm font-black leading-none tracking-tight text-slate-900 dark:text-white sm:text-xl">
+                {SITE_BRAND}
+              </p>
+              <span className="mt-0.5 hidden truncate text-[10px] font-bold tracking-wide text-indigo-500 dark:text-indigo-400 sm:block">
+                방송 일정 · 클립 · {SITE_NAME}
               </span>
             </div>
           </Link>

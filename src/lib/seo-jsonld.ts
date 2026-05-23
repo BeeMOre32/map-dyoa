@@ -1,7 +1,7 @@
 import { addMonths, subMonths } from 'date-fns';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import type { Streamer } from '@prisma/client';
-import { absoluteUrl, SITE_NAME } from '@/lib/site';
+import { absoluteUrl, SITE_BRAND, SITE_NAME } from '@/lib/site';
 
 export function getSitemapScheduleWindow(): { from: Date; to: Date } {
   const now = new Date();
@@ -36,7 +36,8 @@ export function getScheduleEventJsonLd(schedule: FlattenedSchedule) {
     },
     organizer: {
       '@type': 'Organization',
-      name: SITE_NAME,
+      name: SITE_BRAND,
+      alternateName: SITE_NAME,
       url: absoluteUrl('/calendar'),
     },
     ...(performers.length > 0 ? { performer: performers } : {}),
@@ -56,7 +57,7 @@ export function getScheduleBreadcrumbJsonLd(schedule: FlattenedSchedule) {
       {
         '@type': 'ListItem',
         position: 1,
-        name: '방송 일정',
+        name: '지도동 방송 일정',
         item: absoluteUrl('/calendar'),
       },
       {
@@ -99,7 +100,7 @@ export function getStreamerBreadcrumbJsonLd(streamer: Pick<Streamer, 'id' | 'nam
       {
         '@type': 'ListItem',
         position: 1,
-        name: '멤버',
+        name: '지도동 멤버',
         item: absoluteUrl('/streamers'),
       },
       {

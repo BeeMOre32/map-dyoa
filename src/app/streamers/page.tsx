@@ -19,6 +19,10 @@ export default async function StreamersPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-slate-50/50 p-2 transition-colors sm:p-4 md:p-6 dark:bg-slate-950">
+      <header className="sr-only">
+        <h1>지도동 멤버</h1>
+        <p>지도동 스트리머 프로필, 라이브 상태, 방송 일정을 확인합니다.</p>
+      </header>
       <StreamerView
         streamers={streamers}
         initialLiveIds={initialLiveIds}

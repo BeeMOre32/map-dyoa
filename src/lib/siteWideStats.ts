@@ -187,7 +187,7 @@ export function computeSiteWideReport(input: {
 
   return {
     generatedAt: new Date().toISOString(),
-    siteName: 'Map-Dyoa',
+    siteName: '지도동',
     dataRange: {
       scheduleFrom: scheduleRange.from,
       scheduleTo: scheduleRange.to,

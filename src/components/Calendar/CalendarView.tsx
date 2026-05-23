@@ -44,6 +44,10 @@ import {
   calendarGridPresenceVariants,
   calendarGridSlide,
 } from '@/lib/calendarMotion';
+import { isScheduleLiveOnCard } from '@/lib/schedule-live';
+import CalendarFilterEmptyBanner from '@/components/Calendar/CalendarFilterEmptyBanner';
+import CalendarEmptyDay from '@/components/Calendar/CalendarEmptyDay';
+import CalendarMobileDaySheet from '@/components/Calendar/CalendarMobileDaySheet';
 
 /** 이전 배포 클라이언트가 motion 그리드에 spread 하던 헬퍼 — 공유 청크에서 tree-shake 되지 않게 유지 */
 void calendarGridSlide;
@@ -103,6 +107,7 @@ export default function CalendarView({
   );
   const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set());
   const [isMobileFabOpen, setIsMobileFabOpen] = useState(false);
+  const [mobileMonthDay, setMobileMonthDay] = useState<Date | null>(null);
   const { liveIds: liveStreamerIds } = useLiveStatus();
   const [hideEnded] = useHideEndedStreams();
   const {
@@ -110,6 +115,7 @@ export default function CalendarView({
     favoriteIds,
     toggle: toggleFavorite,
     favoritesOnly,
+    setFavoritesOnly,
   } = useFavoriteStreamers();
 
   const applyFavorites = useCallback(() => {
@@ -258,6 +264,46 @@ export default function CalendarView({
     favoriteIds,
   ]);
 
+  const visibleScheduleCount = useMemo(() => {
+    let count = 0;
+    schedulesByDate.forEach((arr) => {
+      count += arr.length;
+    });
+    return count;
+  }, [schedulesByDate]);
+
+  const unfilteredScheduleCountInPeriod = useMemo(() => {
+    let filtered = optimisticSchedules;
+    if (hideEnded) {
+      filtered = filtered.filter((s) => !s.isLiveEnded);
+    }
+    let count = 0;
+    for (const day of days) {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      count += filtered.filter((s) => {
+        const st = new Date(s.startTime);
+        return isValid(st) && format(st, 'yyyy-MM-dd') === dateKey;
+      }).length;
+    }
+    return count;
+  }, [optimisticSchedules, days, hideEnded]);
+
+  const hasActiveFilters =
+    selectedStreamers.size > 0 ||
+    selectedGames.size > 0 ||
+    favoritesOnly;
+
+  const showFilterEmpty =
+    hasActiveFilters &&
+    visibleScheduleCount === 0 &&
+    unfilteredScheduleCountInPeriod > 0;
+
+  const clearAllFilters = useCallback(() => {
+    setSelectedStreamers(new Set());
+    setSelectedGames(new Set());
+    setFavoritesOnly(false);
+  }, [setFavoritesOnly]);
+
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
   const handleDayClick = useCallback(
@@ -267,6 +313,21 @@ export default function CalendarView({
       router.push(`/calendar/day/${dateString}`, { scroll: false });
     },
     [router],
+  );
+
+  const handleMonthCellClick = useCallback(
+    (day: Date) => {
+      if (
+        viewMode === 'monthly' &&
+        typeof window !== 'undefined' &&
+        window.matchMedia('(max-width: 639px)').matches
+      ) {
+        setMobileMonthDay(day);
+        return;
+      }
+      handleDayClick(day);
+    },
+    [viewMode, handleDayClick],
   );
 
   useEffect(() => {
@@ -393,11 +454,14 @@ export default function CalendarView({
         onGameToggle={handleGameToggle}
         onToggleFavorite={toggleFavorite}
         onApplyFavorites={applyFavorites}
-        onClearAll={() => {
-          setSelectedStreamers(new Set());
-          setSelectedGames(new Set());
-        }}
+        onClearAll={clearAllFilters}
       />
+      {showFilterEmpty && (
+        <CalendarFilterEmptyBanner
+          favoritesOnly={favoritesOnly}
+          onClear={clearAllFilters}
+        />
+      )}
       {hideEnded && (
         <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl w-fit text-xs font-black text-amber-600 dark:text-amber-400 shrink-0">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400 dark:bg-amber-500" />
@@ -500,9 +564,10 @@ export default function CalendarView({
                       )}
                     </div>
                   ) : (
-                    <p className="border-t border-slate-100 px-4 py-4 text-center text-xs font-semibold text-slate-400 dark:border-slate-800 dark:text-slate-500">
-                      일정 없음
-                    </p>
+                    <CalendarEmptyDay
+                      isLoggedIn={isLoggedIn}
+                      onAdd={handleOpenCreateModal}
+                    />
                   )}
                 </section>
               );
@@ -534,6 +599,9 @@ export default function CalendarView({
                   const dateKey = format(day, 'yyyy-MM-dd');
                   const daySchedules = schedulesByDate.get(dateKey) || [];
                   const dayIdx = day.getDay();
+                  const liveCount = daySchedules.filter((s) =>
+                    isScheduleLiveOnCard(s, liveStreamerIds),
+                  ).length;
                   const dayNameColor =
                     dayIdx === 0
                       ? 'text-red-400'
@@ -575,6 +643,14 @@ export default function CalendarView({
                                   오늘
                                 </span>
                               )}
+                              {liveCount > 0 && (
+                                <span className="inline-flex items-center gap-0.5 rounded-full bg-red-500 px-1.5 py-px shadow-sm shadow-red-500/30">
+                                  <span className="h-1 w-1 rounded-full bg-white animate-ping" />
+                                  <span className="text-[8px] font-black tracking-wide text-white">
+                                    LIVE
+                                  </span>
+                                </span>
+                              )}
                             </div>
                             <p
                               className={`text-lg font-black leading-none sm:text-xl ${
@@ -611,11 +687,11 @@ export default function CalendarView({
                             />
                           ))
                         ) : (
-                          <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-slate-200/80 bg-slate-50/50 px-2 py-6 text-center dark:border-slate-700 dark:bg-slate-800/30">
-                            <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
-                              —
-                            </span>
-                          </div>
+                          <CalendarEmptyDay
+                            compact
+                            isLoggedIn={isLoggedIn}
+                            onAdd={handleOpenCreateModal}
+                          />
                         )}
                       </div>
                     </motion.div>
@@ -666,7 +742,7 @@ export default function CalendarView({
                     return (
                       <div
                         key={format(day, 'yyyy-MM-dd')}
-                        onClick={() => handleDayClick(day)}
+                        onClick={() => handleMonthCellClick(day)}
                         className={`flex flex-col p-2 border-b border-r border-slate-100 dark:border-slate-800 group cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/80 transition-all duration-300 overflow-hidden ${!isSelectedMonth && viewMode === 'monthly' ? 'bg-slate-50/30 dark:bg-slate-950/60 opacity-50' : ''} ${idx % 7 === 6 ? 'border-r-0' : ''}`}
                       >
                         <div className="flex justify-between items-start mb-1 shrink-0">
@@ -677,20 +753,17 @@ export default function CalendarView({
                           </span>
                         </div>
 
-                        {/* 월간 모바일: 점 */}
+                        {/* 월간 모바일: 첫 일정 + 더보기 */}
                         {daySchedules.length > 0 && (
-                          <div className="flex sm:hidden flex-col items-start gap-1 mt-0.5 shrink-0">
-                            <div className="flex flex-wrap gap-0.5">
-                              {daySchedules.slice(0, 3).map((schedule) => (
-                                <div
-                                  key={schedule.id}
-                                  className={`w-1.5 h-1.5 rounded-full ${schedule.game ? 'bg-amber-400' : 'bg-slate-400 dark:bg-slate-500'}`}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">
-                              {daySchedules.length}개
+                          <div className="mt-auto flex min-w-0 shrink-0 flex-col gap-0.5 sm:hidden">
+                            <span className="truncate text-[9px] font-bold leading-tight text-slate-700 dark:text-slate-200">
+                              {daySchedules[0].title}
                             </span>
+                            {daySchedules.length > 1 && (
+                              <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400">
+                                +{daySchedules.length - 1}
+                              </span>
+                            )}
                           </div>
                         )}
 
@@ -746,6 +819,23 @@ export default function CalendarView({
           />
         )}
       </AnimatePresence>
+
+      <CalendarMobileDaySheet
+        day={mobileMonthDay}
+        schedules={
+          mobileMonthDay
+            ? schedulesByDate.get(format(mobileMonthDay, 'yyyy-MM-dd')) ?? []
+            : []
+        }
+        liveStreamerIds={liveStreamerIds}
+        isLoggedIn={isLoggedIn}
+        onClose={() => setMobileMonthDay(null)}
+        onAdd={handleOpenCreateModal}
+        onOpenDay={(day) => {
+          setMobileMonthDay(null);
+          handleDayClick(day);
+        }}
+      />
 
       {/* 모바일 플로팅 액션 메뉴 */}
       <AnimatePresence>

@@ -45,7 +45,6 @@ export default function MonthlyWrappedHero({
 
   return (
     <motion.div
-      layout
       initial={reducedMotion ? false : 'hidden'}
       animate="visible"
       variants={statsWrappedHeroPresence}
@@ -127,7 +126,6 @@ export default function MonthlyWrappedHero({
         <div className="mb-5 flex items-end justify-between gap-3">
           <div>
             <motion.p
-              layoutId={`wrapped-month-${monthKey}`}
               initial={reducedMotion ? false : 'hidden'}
               animate="visible"
               variants={statsTileVariants}
@@ -155,7 +153,6 @@ export default function MonthlyWrappedHero({
         </div>
 
         <motion.div
-          layoutId={`wrapped-main-stat-${monthKey}`}
           initial={reducedMotion ? false : 'hidden'}
           animate="visible"
           variants={statsTileVariants}

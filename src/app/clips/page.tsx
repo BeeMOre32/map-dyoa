@@ -61,6 +61,10 @@ export default async function ClipsPage({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-slate-50/50 p-2 transition-colors dark:bg-slate-950 sm:p-4">
+      <header className="sr-only">
+        <h1>지도동 방송 클립</h1>
+        <p>지도동 멤버 방송 클립을 스트리머·월별로 검색하고 시청합니다.</p>
+      </header>
       <ClipView
         clips={clips}
         streamers={streamers}
