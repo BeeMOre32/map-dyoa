@@ -36,6 +36,7 @@ import {
   isScheduleServerEnabled,
 } from './map-dyoa-server-schedules';
 import { getSitemapScheduleWindow } from './seo-jsonld';
+import { SCHEDULE_DATA_CACHE_TAGS } from './schedule-cache';
 
 export type { Hoi4LeaderboardData } from './map-dyoa-server-admin';
 export { getLiveStreamerIds } from './chzzk-live-status';
@@ -593,7 +594,7 @@ export const getHoi4Leaderboard = unstable_cache(
     return { leaderboard, sessions, totalSessions: sessionMap.size };
   },
   ['hoi4-leaderboard', process.env.MAP_DYOA_SERVER_URL ?? 'local-prisma-hoi4'],
-  { revalidate: 120, tags: ['calendar'] },
+  { revalidate: 120, tags: [...SCHEDULE_DATA_CACHE_TAGS] },
 );
 
 /** 일정 AI 추출·이미지 분석용 스트리머·게임 목록 */

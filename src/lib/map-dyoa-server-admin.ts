@@ -135,5 +135,11 @@ export type Hoi4LeaderboardData = {
 }
 
 export function fetchHoi4LeaderboardFromServer() {
-  return fetchJson<Hoi4LeaderboardData>("/admin/hoi4-leaderboard", 120)
+  const base = requireServerBaseUrl()
+  return fetchWithBackoff(`${base}/admin/hoi4-leaderboard`, {
+    // time-based revalidate만 쓰면 일정 수정 직후에도 stale 응답이 남을 수 있음
+    next: { revalidate: 120, tags: ["calendar", "hoi4"] },
+  }).then((res) =>
+    readJsonSafely<Hoi4LeaderboardData>(res, `관리자 API 오류: ${res.status}`),
+  )
 }

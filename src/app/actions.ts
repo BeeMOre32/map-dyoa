@@ -51,6 +51,7 @@ import {
   updateStreamerOnServer,
 } from '@/lib/map-dyoa-server-streamers';
 import { runDeleteSchedule } from '@/lib/schedule-delete-server';
+import { revalidateScheduleDataCaches } from '@/lib/schedule-cache';
 import { submitFeedbackCore } from '@/lib/feedback-submit';
 import { externalUrlsEquivalent } from '@/lib/external-url';
 import {
@@ -173,11 +174,7 @@ export async function createScheduleAction(data: {
       if (!json.id) {
         return { success: false, error: '응답에 일정 ID가 없습니다.', errorCode: 'API_ERROR' };
       }
-      const paths = getRevalidationPaths('schedule');
-      await Promise.all([
-        ...paths.map((path: string) => revalidatePath(path)),
-        updateTag('calendar'),
-      ]);
+      await revalidateScheduleDataCaches();
       auditLog(session, {
         action: 'create',
         entity: 'schedule',
@@ -207,11 +204,7 @@ export async function createScheduleAction(data: {
       },
     });
 
-    const paths = getRevalidationPaths('schedule');
-    await Promise.all([
-      ...paths.map((path: string) => revalidatePath(path)),
-      updateTag('calendar'),
-    ]);
+    await revalidateScheduleDataCaches();
 
     auditLog(session, {
       action: 'create',
@@ -300,11 +293,7 @@ export async function updateScheduleAction(
         );
         return { success: false, error: msg, errorCode: String(json.error ?? 'API_ERROR') };
       }
-      const paths = getRevalidationPaths('schedule');
-      await Promise.all([
-        ...paths.map((path: string) => revalidatePath(path)),
-        updateTag('calendar'),
-      ]);
+      await revalidateScheduleDataCaches();
       auditLog(session, {
         action: 'update',
         entity: 'schedule',
@@ -352,11 +341,7 @@ export async function updateScheduleAction(
       ),
     ]);
 
-    const paths = getRevalidationPaths('schedule');
-    await Promise.all([
-      ...paths.map((path: string) => revalidatePath(path)),
-      updateTag('calendar'),
-    ]);
+    await revalidateScheduleDataCaches();
 
     auditLog(session, {
       action: 'update',
