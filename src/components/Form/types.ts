@@ -31,6 +31,8 @@ export type SlotEntry = {
   selectedGameId: string;
   selectedStreamerIds: string[];
   guestStreamerIds: string[];
+  participants: ParticipantEntry[];
+  isNaeJeon: boolean;
   liveUrls: string[];
   isTimeTBD: boolean;
   metaLoading: boolean;
@@ -42,7 +44,7 @@ export type EditErrors = Partial<
   Record<keyof z.infer<typeof editSchema> | 'submit', string>
 >;
 
-export type ParticipantEntry = { id: string; nation: string; result: string; isGuest: boolean };
+export type ParticipantEntry = { id: string; nation: string; isGuest: boolean };
 
 export type AutoFillResult = {
   title: string | null;

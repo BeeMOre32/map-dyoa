@@ -3,7 +3,6 @@ import type { Game } from '@prisma/client';
 export type ScheduleParticipantInput = {
   id: string;
   nation?: string;
-  result?: string;
   isGuest?: boolean;
 };
 
@@ -18,6 +17,7 @@ export type BuildScheduleActionPayloadInput = {
   isGuerrilla?: boolean;
   isNaeJeon?: boolean;
   isLiveEnded?: boolean;
+  expectedUpdatedAt?: Date;
 };
 
 export function resolveGameId(
@@ -44,10 +44,9 @@ export function resolveGameId(
 export function buildScheduleActionPayload(input: BuildScheduleActionPayloadInput) {
   const participants = input.participants
     .filter((p) => typeof p.id === 'string' && p.id.trim().length > 0)
-    .map(({ id, nation, result, isGuest }) => ({
+    .map(({ id, nation, isGuest }) => ({
       id: id.trim(),
       ...(nation?.trim() ? { nation: nation.trim() } : {}),
-      ...(result?.trim() ? { result: result.trim() } : {}),
       ...(isGuest !== undefined ? { isGuest } : {}),
     }));
 
@@ -67,5 +66,6 @@ export function buildScheduleActionPayload(input: BuildScheduleActionPayloadInpu
     isGuerrilla: input.isGuerrilla ?? false,
     isNaeJeon: input.isNaeJeon ?? false,
     ...(input.isLiveEnded !== undefined ? { isLiveEnded: input.isLiveEnded } : {}),
+    ...(input.expectedUpdatedAt ? { expectedUpdatedAt: input.expectedUpdatedAt } : {}),
   };
 }

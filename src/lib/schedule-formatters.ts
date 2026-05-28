@@ -31,11 +31,12 @@ export type ParticipantFlat = Streamer & {
  */
 export type FlattenedSchedule = Omit<
   Schedule,
-  'startTime' | 'endTime' | 'createdAt'
+  'startTime' | 'endTime' | 'createdAt' | 'updatedAt'
 > & {
   startTime: Date;
   endTime: Date | null;
   createdAt: Date;
+  updatedAt: Date;
   participants: ParticipantFlat[];
   game?: Game | null;
   formattedDate: string;
@@ -62,6 +63,7 @@ export function flattenScheduleParticipants(
     startTime: new Date(schedule.startTime),
     endTime: schedule.endTime ? new Date(schedule.endTime) : null,
     createdAt: new Date(schedule.createdAt),
+    updatedAt: new Date(schedule.updatedAt ?? schedule.createdAt),
     participants: schedule.participants
       .filter((p) => p.streamer !== null)
       .map((p) => ({

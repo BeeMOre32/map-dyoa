@@ -13,6 +13,7 @@ import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { markModalSoftNav } from '@/lib/modal-navigation';
+import NaeJeonBadge from '@/components/Calendar/atoms/NaeJeonBadge';
 
 function formatScheduleHHmm(schedule: FlattenedSchedule): string {
   if (schedule.isGuerrilla) return '미정';
@@ -290,6 +291,7 @@ export default function ScheduleCardV2({
                   <span className="truncate">{schedule.game.title}</span>
                 </span>
               )}
+              {schedule.isNaeJeon ? <NaeJeonBadge compact /> : null}
               {schedule.participants.slice(0, 3).map((p) => {
                 const c = getStreamerColor(p.id, isDark) ?? p.colorCode;
                 return (

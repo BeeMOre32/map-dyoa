@@ -1,8 +1,15 @@
+import type { ParticipantEntry } from '@/components/Form/types';
 import type { Game, Streamer } from '@prisma/client';
 import {
   buildScheduleActionPayload,
   resolveGameId,
 } from '@/lib/schedule-payload';
+import {
+  createEmptyParticipant,
+  isHoi4GameById,
+  resolveNaeJeonForPayload,
+  syncParticipantEntries,
+} from '@/lib/hoi4/hoi4FormUtils';
 
 export { resolveGameId };
 
@@ -16,6 +23,8 @@ export type ExtractedSchedule = {
   streamerIds: string[];
   streamerNames: string[];
   editingStreamers: boolean;
+  isNaeJeon: boolean;
+  participants: ParticipantEntry[];
 };
 
 export type RawExtractedSchedule = Omit<ExtractedSchedule, 'key' | 'editingStreamers'>;
@@ -39,16 +48,51 @@ export function normalizeExtractedSchedule(
       'editingStreamers' in s && typeof s.editingStreamers === 'boolean'
         ? s.editingStreamers
         : false,
+    isNaeJeon: Boolean(s.isNaeJeon),
+    participants:
+      Array.isArray(s.participants) && s.participants.length > 0
+        ? (s.participants as ParticipantEntry[])
+        : (s.streamerIds ?? []).map((id) => createEmptyParticipant(id)),
   };
+}
+
+export function syncExtractedParticipants(
+  schedule: Pick<ExtractedSchedule, 'streamerIds' | 'participants' | 'isNaeJeon'>,
+  streamers: Pick<Streamer, 'id' | 'isGuest'>[],
+  updates: {
+    streamerIds?: string[];
+    participants?: ParticipantEntry[];
+    isNaeJeon?: boolean;
+  },
+): Pick<ExtractedSchedule, 'streamerIds' | 'participants' | 'isNaeJeon'> {
+  const streamerIds = updates.streamerIds ?? schedule.streamerIds;
+  const guestIds = (updates.participants ?? schedule.participants)
+    .filter((p) => p.isGuest)
+    .map((p) => p.id);
+  const participants = syncParticipantEntries(
+    streamerIds,
+    guestIds,
+    updates.participants ?? schedule.participants,
+    streamers,
+  );
+  const isNaeJeon = updates.isNaeJeon ?? schedule.isNaeJeon;
+  return { streamerIds, participants, isNaeJeon };
 }
 
 export function buildExtractedScheduleActionPayload(
   s: Pick<
     ExtractedSchedule,
-    'title' | 'date' | 'time' | 'gameId' | 'gameName' | 'streamerIds'
+    | 'title'
+    | 'date'
+    | 'time'
+    | 'gameId'
+    | 'gameName'
+    | 'streamerIds'
+    | 'participants'
+    | 'isNaeJeon'
   >,
   streamers: Pick<Streamer, 'id' | 'isGuest'>[],
-  games: Pick<Game, 'id' | 'title'>[],
+  games: Pick<Game, 'id' | 'title' | 'isHoi4'>[],
 ) {
   const hasTime = !!s.time?.trim();
   const d = new Date(s.date ?? new Date().toISOString().split('T')[0]);
@@ -59,17 +103,30 @@ export function buildExtractedScheduleActionPayload(
     d.setHours(0, 0, 0, 0);
   }
 
+  const resolvedGameId = resolveGameId(s.gameId, s.gameName, games);
+  const isHoi4Game = resolvedGameId
+    ? isHoi4GameById(resolvedGameId, games)
+    : false;
+  const participants =
+    s.participants.length > 0
+      ? s.participants
+      : s.streamerIds.map((id) => ({
+          ...createEmptyParticipant(id),
+          isGuest: streamers.find((st) => st.id === id)?.isGuest ?? false,
+        }));
+
   return buildScheduleActionPayload({
     title: s.title,
     startTime: d,
-    participants: s.streamerIds.map((id) => ({
+    participants: participants.map(({ id, nation, isGuest }) => ({
       id,
-      isGuest: streamers.find((st) => st.id === id)?.isGuest ?? false,
+      nation,
+      isGuest,
     })),
     gameId: s.gameId,
     gameName: s.gameName,
     games,
     isGuerrilla: !hasTime,
-    isNaeJeon: false,
+    isNaeJeon: resolveNaeJeonForPayload(isHoi4Game, s.isNaeJeon, participants),
   });
 }

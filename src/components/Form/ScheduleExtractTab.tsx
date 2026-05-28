@@ -25,8 +25,10 @@ import {
   type ExtractedSchedule,
   buildExtractedScheduleActionPayload,
   normalizeExtractedSchedule,
+  syncExtractedParticipants,
 } from '@/lib/schedule-extract';
 import StreamerSelector from './StreamerSelctor';
+import Hoi4ParticipantFields, { isHoi4GameSelected } from './components/Hoi4ParticipantFields';
 
 type Step = 'input' | 'loading' | 'review' | 'submitting';
 
@@ -541,6 +543,7 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
                   const hasEmptyTitle = !s.title?.trim();
                   const hasNoStreamers = !s.streamerIds?.length;
                   const hasErrors = hasEmptyTitle || hasNoStreamers;
+                  const isHoi4 = isHoi4GameSelected(s.gameId ?? '', games);
 
                   return (
                     <div
@@ -606,7 +609,15 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
                           <Gamepad2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <select
                             value={s.gameId ?? ''}
-                            onChange={(e) => updateSchedule(s.key, { gameId: e.target.value || null })}
+                            onChange={(e) => {
+                              const gameId = e.target.value || null;
+                              updateSchedule(s.key, {
+                                gameId,
+                                ...(gameId && !isHoi4GameSelected(gameId, games)
+                                  ? { isNaeJeon: false }
+                                  : {}),
+                              });
+                            }}
                             className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent outline-none"
                           >
                             <option value="">게임 선택 안 함</option>
@@ -665,10 +676,13 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
                                   selectedStreamers={s.streamerIds}
                                   toggleStreamer={(id) => {
                                     const has = s.streamerIds.includes(id);
+                                    const nextIds = has
+                                      ? s.streamerIds.filter((x) => x !== id)
+                                      : [...s.streamerIds, id];
                                     updateSchedule(s.key, {
-                                      streamerIds: has
-                                        ? s.streamerIds.filter((x) => x !== id)
-                                        : [...s.streamerIds, id],
+                                      ...syncExtractedParticipants(s, streamers, {
+                                        streamerIds: nextIds,
+                                      }),
                                     });
                                   }}
                                 />
@@ -676,6 +690,28 @@ export default function ScheduleExtractTab({ mode, streamers, games, onClose }: 
                             )}
                           </AnimatePresence>
                         </div>
+
+                        <Hoi4ParticipantFields
+                          compact
+                          isHoi4Game={isHoi4}
+                          isNaeJeon={s.isNaeJeon}
+                          onSetIsNaeJeon={(value) =>
+                            updateSchedule(s.key, { isNaeJeon: value })
+                          }
+                          participants={s.participants}
+                          streamers={sortedStreamers}
+                          onUpdateParticipant={(id, field, value) => {
+                            const nextParticipants = s.participants.map((p) =>
+                              p.id === id ? { ...p, [field]: value } : p,
+                            );
+                            updateSchedule(s.key, {
+                              participants: nextParticipants,
+                              ...(field === 'nation' && value.trim() && isHoi4
+                                ? { isNaeJeon: true }
+                                : {}),
+                            });
+                          }}
+                        />
                       </div>
                     </div>
                   );

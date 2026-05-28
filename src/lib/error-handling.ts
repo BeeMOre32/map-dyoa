@@ -37,6 +37,13 @@ export class ForbiddenError extends Error {
   }
 }
 
+export class ScheduleConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ScheduleConflictError';
+  }
+}
+
 export function getErrorMessage(error: unknown): {
   message: string;
   code: string;
@@ -98,6 +105,13 @@ export function getErrorMessage(error: unknown): {
     return {
       message: error.message,
       code: 'FORBIDDEN',
+    };
+  }
+
+  if (error instanceof ScheduleConflictError) {
+    return {
+      message: error.message,
+      code: 'CONFLICT',
     };
   }
 

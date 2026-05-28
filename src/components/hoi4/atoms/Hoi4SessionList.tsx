@@ -8,7 +8,6 @@ import { getStreamerColor } from '@/constants/streamercolor';
 import type { Hoi4LeaderboardData } from '@/lib/data-fetching';
 import {
   formatHoi4SessionDate,
-  hoi4ResultBadgeClass,
 } from '@/lib/hoi4/hoi4ViewUtils';
 import { markModalSoftNav } from '@/lib/modal-navigation';
 import {
@@ -95,7 +94,6 @@ export default function Hoi4SessionList({
                 {session.participants.map((p) => {
                   const c =
                     getStreamerColor(p.streamer.id, isDark) ?? p.streamer.colorCode;
-                  const resultClass = hoi4ResultBadgeClass(p.result);
                   return (
                     <Link
                       key={p.streamer.id}
@@ -117,13 +115,6 @@ export default function Hoi4SessionList({
                       {p.nation ? (
                         <span className="text-[11px] font-semibold leading-none text-slate-500 dark:text-slate-400">
                           {p.nation}
-                        </span>
-                      ) : null}
-                      {p.result?.trim() ? (
-                        <span
-                          className={`rounded-md px-1.5 py-0.5 text-[10px] font-black leading-none ${resultClass}`}
-                        >
-                          {p.result.trim()}
                         </span>
                       ) : null}
                     </Link>

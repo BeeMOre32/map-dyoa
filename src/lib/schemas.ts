@@ -31,6 +31,7 @@ export const scheduleServerSchema = z.object({
   isGuerrilla: z.boolean().optional(),
   isNaeJeon: z.boolean().optional(),
   isLiveEnded: z.boolean().optional(),
+  expectedUpdatedAt: z.coerce.date().optional(),
 });
 
 export const clipServerSchema = z.object({

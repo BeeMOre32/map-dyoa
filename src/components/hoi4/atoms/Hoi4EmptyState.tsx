@@ -18,8 +18,12 @@ export default function Hoi4EmptyState() {
         <p className="font-black text-slate-500 dark:text-slate-400">
           아직 HOI4 전적이 없습니다
         </p>
-        <p className="text-sm font-medium text-slate-400 dark:text-slate-500">
-          내전 일정에서 멤버별 국가를 입력하면 여기에 모입니다
+        <p className="text-sm font-medium leading-relaxed text-slate-400 dark:text-slate-500">
+          HOI4 일정에서 <strong className="text-amber-600 dark:text-amber-400">내전 세션</strong>을
+          체크하거나
+          <br />
+          멤버별 <strong className="text-amber-600 dark:text-amber-400">국가</strong>를 입력하면
+          여기에 모입니다
         </p>
       </motion.div>
     </div>

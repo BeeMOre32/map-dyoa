@@ -3,54 +3,68 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useFavoriteStreamers } from '@/hooks/useFavoriteStreamers';
 import type { Hoi4LeaderboardData } from '@/lib/data-fetching';
+import {
+  filterHoi4LeaderboardData,
+  type Hoi4FilterState,
+} from '@/lib/hoi4/hoi4FormUtils';
 import { HOI4_SESSIONS_PAGE } from '@/lib/hoi4/hoi4ViewUtils';
 
+const DEFAULT_FILTERS: Hoi4FilterState = {
+  memberId: null,
+  nationQuery: '',
+  periodMonths: null,
+};
+
 export function useHoi4ViewState(data: Hoi4LeaderboardData) {
-  const { leaderboard, sessions, totalSessions } = data;
-  const { favoriteIds, favoritesOnly, setFavoritesOnly } = useFavoriteStreamers();
+  const { favoritesOnly, setFavoritesOnly, favoriteIds } = useFavoriteStreamers();
+  const [filters, setFilters] = useState<Hoi4FilterState>(DEFAULT_FILTERS);
   const [visibleSessions, setVisibleSessions] = useState(HOI4_SESSIONS_PAGE);
 
   useEffect(() => {
     setVisibleSessions(HOI4_SESSIONS_PAGE);
-  }, [favoritesOnly]);
+  }, [filters, favoritesOnly]);
 
-  const filteredLeaderboard = useMemo(() => {
-    if (!favoritesOnly || favoriteIds.size === 0) return leaderboard;
-    return leaderboard.filter((entry) => favoriteIds.has(entry.streamer.id));
-  }, [leaderboard, favoritesOnly, favoriteIds]);
+  const filtered = useMemo(
+    () =>
+      filterHoi4LeaderboardData(data, filters, {
+        favoritesOnly,
+        favoriteIds,
+      }),
+    [data, filters, favoritesOnly, favoriteIds],
+  );
 
-  const filteredSessions = useMemo(() => {
-    if (!favoritesOnly || favoriteIds.size === 0) return sessions;
-    return sessions.filter((session) =>
-      session.participants.some((p) => favoriteIds.has(p.streamer.id)),
-    );
-  }, [sessions, favoritesOnly, favoriteIds]);
-
-  const hasActiveFilter = favoritesOnly && favoriteIds.size > 0;
   const showFilterEmpty =
-    hasActiveFilter &&
-    filteredLeaderboard.length === 0 &&
-    filteredSessions.length === 0 &&
-    (leaderboard.length > 0 || sessions.length > 0);
+    filtered.hasActiveFilter &&
+    filtered.leaderboard.length === 0 &&
+    filtered.sessions.length === 0 &&
+    (data.leaderboard.length > 0 || data.sessions.length > 0);
 
-  const visibleSessionList = filteredSessions.slice(0, visibleSessions);
-  const canLoadMore = visibleSessions < filteredSessions.length;
-  const maxParticipations = filteredLeaderboard[0]?.total ?? 1;
+  const visibleSessionList = filtered.sessions.slice(0, visibleSessions);
+  const canLoadMore = visibleSessions < filtered.sessions.length;
+  const maxParticipations = filtered.leaderboard[0]?.total ?? 1;
 
   return {
-    leaderboard,
-    sessions,
-    totalSessions,
+    leaderboard: data.leaderboard,
+    sessions: data.sessions,
+    totalSessions: data.totalSessions,
     favoritesOnly,
     setFavoritesOnly,
-    filteredLeaderboard,
-    filteredSessions,
-    hasActiveFilter,
+    filters,
+    setFilters,
+    filteredLeaderboard: filtered.leaderboard,
+    filteredSessions: filtered.sessions,
+    filteredTotalSessions: filtered.totalSessions,
+    hasActiveFilter: filtered.hasActiveFilter,
     showFilterEmpty,
     visibleSessionList,
     canLoadMore,
     maxParticipations,
     loadMoreSessions: () => setVisibleSessions((n) => n + HOI4_SESSIONS_PAGE),
-    clearFilter: () => setFavoritesOnly(false),
+    clearFilters: () => {
+      setFilters(DEFAULT_FILTERS);
+      setFavoritesOnly(false);
+    },
+    updateFilters: (next: Partial<Hoi4FilterState>) =>
+      setFilters((prev) => ({ ...prev, ...next })),
   };
 }

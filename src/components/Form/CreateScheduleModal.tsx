@@ -42,6 +42,7 @@ export default function CreateScheduleModal({
 
   const batchForm = useBatchScheduleForm({
     games,
+    streamers,
     onClose: handleDismiss,
   });
 

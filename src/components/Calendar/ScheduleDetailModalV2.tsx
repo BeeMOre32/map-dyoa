@@ -60,6 +60,7 @@ import {
 } from '@/lib/schedule-live';
 import { useMinuteClock } from '@/hooks/useMinuteClock';
 import ScheduleShareButton from '@/components/Calendar/ScheduleShareButton';
+import NaeJeonBadge from '@/components/Calendar/atoms/NaeJeonBadge';
 interface Props {
   schedule: FlattenedSchedule;
   streamers: Streamer[];
@@ -396,6 +397,7 @@ function DetailViewV2({
           <Gamepad2 className="w-4 h-4" />
           <span>{schedule.game?.title || '기타 방송'}</span>
         </div>
+        {schedule.isNaeJeon ? <NaeJeonBadge /> : null}
         <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 font-bold text-sm border border-slate-100 dark:border-slate-600">
           <Calendar className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
           {format(new Date(schedule.startTime), 'yyyy년 M월 d일 (eee)', {

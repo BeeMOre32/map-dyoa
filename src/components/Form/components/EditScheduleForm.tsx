@@ -3,6 +3,7 @@
 import { AlertCircle, WifiOff } from 'lucide-react';
 import StreamerSelector from '../StreamerSelctor';
 import LiveUrlInput from './LiveUrlInput';
+import Hoi4ParticipantFields from './Hoi4ParticipantFields';
 import {
   EditErrors,
   ParticipantEntry,
@@ -37,7 +38,7 @@ type EditScheduleFormProps = {
   onToggleStreamer: (id: string) => void;
   onToggleGuest: (id: string) => void;
   onClearError: (field: keyof EditErrors) => void;
-  onUpdateParticipant: (id: string, field: 'nation' | 'result', value: string) => void;
+  onUpdateParticipant: (id: string, field: 'nation', value: string) => void;
   onLiveUrlBlur: (urlIndex: number) => Promise<void>;
   onSubmit: (e: React.FormEvent) => Promise<void>;
 };
@@ -76,9 +77,6 @@ export default function EditScheduleForm({
   const selectedStreamers = participants.map((p) => p.id);
   const guestStreamers = participants.filter((p) => p.isGuest).map((p) => p.id);
   const memberCount = participants.length - guestStreamers.length;
-  const nationEntryParticipants = isNaeJeon
-    ? participants
-    : participants.filter((p) => !p.isGuest);
 
   return (
     <form
@@ -235,62 +233,14 @@ export default function EditScheduleForm({
         />
       </div>
 
-      {isHoi4Game && (
-        <label className="flex items-center justify-between gap-3 px-4 py-3 bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-800/50 rounded-2xl cursor-pointer">
-          <div>
-            <p className="text-sm font-bold text-amber-700 dark:text-amber-400">
-              내전 세션
-            </p>
-            <p className="text-xs font-medium text-amber-500 dark:text-amber-600 mt-0.5">
-              체크 시 HOI4 참전 기록 페이지에 집계됩니다
-            </p>
-          </div>
-          <input
-            type="checkbox"
-            checked={isNaeJeon}
-            onChange={(e) => setIsNaeJeon(e.target.checked)}
-            className="w-4 h-4 rounded accent-amber-500 shrink-0"
-          />
-        </label>
-      )}
-
-      {isHoi4Game && nationEntryParticipants.length > 0 && (
-        <div className="space-y-3">
-          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
-            {isNaeJeon ? '내전 · 플레이 국가 (게스트 포함)' : 'HOI4 · 국가'}
-          </label>
-          <div className="space-y-2">
-            {nationEntryParticipants.map(({ id, nation, isGuest }) => {
-              const streamer = sortedStreamers.find((s) => s.id === id);
-              if (!streamer) return null;
-              return (
-                <div
-                  key={id}
-                  className="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-700/50 rounded-xl"
-                >
-                  <span className="flex min-w-0 shrink-0 items-center gap-1.5">
-                    <span className="max-w-[4.5rem] truncate text-sm font-bold text-slate-700 dark:text-slate-200">
-                      {streamer.name}
-                    </span>
-                    {isGuest && (
-                      <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-black text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                        게스트
-                      </span>
-                    )}
-                  </span>
-                  <input
-                    type="text"
-                    value={nation}
-                    onChange={(e) => onUpdateParticipant(id, 'nation', e.target.value)}
-                    placeholder="국가명"
-                    className="flex-1 min-w-0 px-2.5 py-1.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500/40"
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <Hoi4ParticipantFields
+        isHoi4Game={isHoi4Game}
+        isNaeJeon={isNaeJeon}
+        onSetIsNaeJeon={setIsNaeJeon}
+        participants={participants}
+        streamers={sortedStreamers}
+        onUpdateParticipant={onUpdateParticipant}
+      />
     </form>
   );
 }

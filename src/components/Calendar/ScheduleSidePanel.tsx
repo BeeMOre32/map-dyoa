@@ -58,7 +58,7 @@ function Hoi4Panel({ participants, isDark }: { participants: ParticipantFlat[]; 
           </div>
           <div className="space-y-1.5">
             <p className="text-sm font-black text-slate-500 dark:text-slate-400">아직 전적이 없어요</p>
-            <p className="text-xs font-bold text-slate-300 dark:text-slate-600">일정 수정에서 국가를 입력하세요</p>
+            <p className="text-xs font-bold text-slate-300 dark:text-slate-600">일정 수정에서 내전 체크·국가를 입력하세요</p>
           </div>
         </div>
       )}

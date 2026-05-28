@@ -20,7 +20,7 @@ export default function Hoi4FilterEmptyBanner({
       <div className="flex items-start gap-2.5">
         <FilterX className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
         <p className="text-sm font-bold text-amber-900 dark:text-amber-100">
-          관심 멤버의 HOI4 참전 기록이 없어요
+          선택한 필터 조건에 맞는 HOI4 참전 기록이 없어요
         </p>
       </div>
       <motion.button

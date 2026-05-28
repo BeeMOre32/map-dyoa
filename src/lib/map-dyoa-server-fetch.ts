@@ -1,4 +1,5 @@
 import { getScheduleServerBaseUrl } from './map-dyoa-server-schedules';
+import { SCHEDULE_CONFLICT_MESSAGE } from './schedule-concurrency';
 
 export { fetchWithBackoff, readJsonSafely } from './map-dyoa-server-http-utils';
 
@@ -23,13 +24,15 @@ export async function readApiJson(res: Response): Promise<ApiJson> {
 /** 서버 액션용 공통 오류 메시지 */
 /** Fly API 일정 본문용 — `result: null` 은 Zod optional(string) 에서 거절됨 */
 export function scheduleParticipantsForApi(
-  participants: { id: string; nation?: string; isGuest?: boolean }[],
+  participants: { id: string; nation?: string; result?: string; isGuest?: boolean }[],
 ) {
-  return participants.map(({ id, nation, isGuest }) => {
-    const trimmed = nation?.trim();
+  return participants.map(({ id, nation, result, isGuest }) => {
+    const trimmedNation = nation?.trim();
+    const trimmedResult = result?.trim();
     return {
       id,
-      ...(trimmed ? { nation: trimmed } : {}),
+      ...(trimmedNation ? { nation: trimmedNation } : {}),
+      ...(trimmedResult ? { result: trimmedResult } : {}),
       isGuest: isGuest ?? false,
     };
   });
@@ -40,6 +43,11 @@ export function apiMutationMessage(
   json: ApiJson,
   fallback: string,
 ): string {
+  if (status === 409 || json.error === 'CONFLICT') {
+    return typeof json.message === 'string' && json.message.trim()
+      ? json.message.trim()
+      : SCHEDULE_CONFLICT_MESSAGE;
+  }
   if (status === 400 && json.error === 'VALIDATION') {
     const issues = json.issues as
       | { fieldErrors?: Record<string, string[]>; formErrors?: string[] }

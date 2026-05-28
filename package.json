@@ -9,6 +9,7 @@
     "lint": "eslint",
     "db:migrate": "prisma migrate deploy",
     "db:ensure-youtube-column": "prisma db execute --schema prisma/schema.prisma --file scripts/add-streamer-youtube-url.sql",
+    "db:ensure-schedule-updated-at": "prisma db execute --schema prisma/schema.prisma --file scripts/add-schedule-updated-at.sql",
     "db:backup-account": "prisma db execute --schema prisma/schema.prisma --file scripts/backup-account.sql",
     "db:restore-account": "prisma db execute --schema prisma/schema.prisma --file scripts/restore-account-from-backup.sql",
     "db:export-account": "node scripts/export-account-backup.mjs",

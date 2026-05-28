@@ -5,6 +5,7 @@ import type { Hoi4LeaderboardData } from '@/lib/data-fetching';
 import { countUniqueHoi4Nations } from '@/lib/hoi4/hoi4ViewUtils';
 import { useHoi4ViewState } from '@/hooks/useHoi4ViewState';
 import Hoi4EmptyState from '@/components/hoi4/atoms/Hoi4EmptyState';
+import Hoi4FilterBar from '@/components/hoi4/atoms/Hoi4FilterBar';
 import Hoi4FilterEmptyBanner from '@/components/hoi4/atoms/Hoi4FilterEmptyBanner';
 import Hoi4Hero from '@/components/hoi4/atoms/Hoi4Hero';
 import Hoi4MemberGrid from '@/components/hoi4/atoms/Hoi4MemberGrid';
@@ -21,12 +22,10 @@ export default function Hoi4View({ data }: Hoi4ViewProps) {
     return <Hoi4EmptyState />;
   }
 
-  const nationCount = countUniqueHoi4Nations(state.leaderboard);
-  const memberCount = state.hasActiveFilter
-    ? state.filteredLeaderboard.length
-    : state.leaderboard.length;
+  const nationCount = countUniqueHoi4Nations(state.filteredLeaderboard);
+  const memberCount = state.filteredLeaderboard.length;
   const sessionCount = state.hasActiveFilter
-    ? state.filteredSessions.length
+    ? state.filteredTotalSessions
     : state.totalSessions;
 
   return (
@@ -38,17 +37,27 @@ export default function Hoi4View({ data }: Hoi4ViewProps) {
       />
 
       <div className="mx-auto max-w-4xl space-y-8 px-4 pb-16 pt-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <FavoritesOnlyToggle />
-          {state.hasActiveFilter ? (
-            <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400">
-              관심 멤버 기준으로 표시 중
-            </span>
-          ) : null}
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <FavoritesOnlyToggle />
+            {state.hasActiveFilter ? (
+              <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                필터 적용 중
+              </span>
+            ) : null}
+          </div>
+
+          <Hoi4FilterBar
+            filters={state.filters}
+            members={state.leaderboard}
+            onChange={state.updateFilters}
+            onClear={state.clearFilters}
+            hasActiveFilter={state.hasActiveFilter}
+          />
         </div>
 
         {state.showFilterEmpty ? (
-          <Hoi4FilterEmptyBanner onClear={state.clearFilter} />
+          <Hoi4FilterEmptyBanner onClear={state.clearFilters} />
         ) : null}
 
         {state.filteredLeaderboard.length > 0 ? (

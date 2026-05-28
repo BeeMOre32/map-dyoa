@@ -14,6 +14,12 @@ import {
 } from '../types';
 import { scrollToFirstZodField } from '@/lib/zod-scroll';
 import { buildScheduleActionPayload } from '@/lib/schedule-payload';
+import {
+  createEmptyParticipant,
+  isHoi4GameById,
+  resolveNaeJeonForPayload,
+} from '@/lib/hoi4/hoi4FormUtils';
+import { pickScheduleRevision } from '@/lib/schedule-concurrency';
 import { useToast } from '@/components/Common/Toaster';
 
 type UseEditScheduleFormArgs = {
@@ -27,7 +33,7 @@ type UseEditScheduleFormArgs = {
 };
 
 function createParticipant(streamer: Pick<Streamer, 'id' | 'isGuest'>): ParticipantEntry {
-  return { id: streamer.id, nation: '', result: '', isGuest: streamer.isGuest };
+  return { id: streamer.id, nation: '', isGuest: streamer.isGuest };
 }
 
 type UseEditScheduleFormReturn = {
@@ -58,7 +64,7 @@ type UseEditScheduleFormReturn = {
   toggleStreamer: (id: string) => void;
   toggleGuest: (id: string) => void;
   clearEditError: (field: keyof EditErrors) => void;
-  updateParticipant: (id: string, field: 'nation' | 'result', value: string) => void;
+  updateParticipant: (id: string, field: 'nation', value: string) => void;
   handleLiveUrlBlur: (urlIndex: number) => Promise<void>;
   handleEditSubmit: (e: React.FormEvent) => Promise<void>;
 };
@@ -87,7 +93,6 @@ export function useEditScheduleForm({
     initialData?.participants?.map((p) => ({
       id: p.id,
       nation: p.nation ?? '',
-      result: p.result ?? '',
       isGuest: p.isGuest ?? false,
     })) || [],
   );
@@ -105,7 +110,7 @@ export function useEditScheduleForm({
   const selectedStreamers = participants.map((p) => p.id);
   const guestStreamers = participants.filter((p) => p.isGuest).map((p) => p.id);
   const isHoi4Game =
-    games.find((g) => g.id === selectedGameId)?.isHoi4 ||
+    isHoi4GameById(selectedGameId, games) ||
     (initialData?.gameId === selectedGameId && initialData?.game?.isHoi4) ||
     false;
   const streamerMap = useMemo(() => new Map(streamers.map((s) => [s.id, s])), [streamers]);
@@ -132,10 +137,13 @@ export function useEditScheduleForm({
     setEditErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  const updateParticipant = (id: string, field: 'nation' | 'result', value: string) => {
+  const updateParticipant = (id: string, field: 'nation', value: string) => {
     setParticipants((prev) =>
       prev.map((p) => (p.id === id ? { ...p, [field]: value } : p)),
     );
+    if (field === 'nation' && value.trim() && isHoi4Game) {
+      setIsNaeJeon(true);
+    }
   };
 
   const handleLiveUrlBlur = useCallback(
@@ -217,6 +225,9 @@ export function useEditScheduleForm({
       ? new Date(startTime.split('T')[0] + 'T00:00')
       : new Date(startTime);
     const cleanUrls = liveUrls.map((u) => u.trim()).filter(Boolean);
+    const resolvedNaeJeon = resolveNaeJeonForPayload(isHoi4Game, isNaeJeon, participants);
+    const expectedUpdatedAt =
+      isEdit && initialData ? pickScheduleRevision(initialData) ?? undefined : undefined;
     const payload = buildScheduleActionPayload({
       title,
       startTime: resolvedStartTime,
@@ -229,8 +240,9 @@ export function useEditScheduleForm({
       games,
       liveUrls: cleanUrls,
       isGuerrilla: isTimeTBD,
-      isNaeJeon: isHoi4Game ? isNaeJeon : false,
+      isNaeJeon: resolvedNaeJeon,
       isLiveEnded: isEdit ? isLiveEnded : false,
+      ...(expectedUpdatedAt ? { expectedUpdatedAt } : {}),
     });
     const result = isEdit
       ? await updateScheduleAction(initialData!.id, payload)
@@ -244,10 +256,11 @@ export function useEditScheduleForm({
           gameId: selectedGameId || null,
           game: selectedGame,
           isGuerrilla: isTimeTBD,
-          isNaeJeon: isHoi4Game ? isNaeJeon : false,
+          isNaeJeon: resolvedNaeJeon,
           isLiveEnded,
           liveUrls: cleanUrls,
           startTime: resolvedStartTime,
+          updatedAt: new Date(),
           participants: streamers
             .filter((s) => selectedStreamers.includes(s.id))
             .map((s) => {
@@ -294,12 +307,13 @@ export function useEditScheduleForm({
           content: null,
           gameId: selectedGameId || null,
           isGuerrilla: isTimeTBD,
-          isNaeJeon: isHoi4Game ? isNaeJeon : false,
+          isNaeJeon: resolvedNaeJeon,
           isLiveEnded: false,
           liveUrls: cleanUrls,
           startTime: startDate,
           endTime: null,
           createdAt: new Date(),
+          updatedAt: new Date(),
           participants: flatParticipants,
           game: selectedGame,
           formattedDate: format(startDate, 'yyyy년 MM월 dd일(EEEE)', {
@@ -316,6 +330,11 @@ export function useEditScheduleForm({
       const msg = result.error ?? '일정 저장에 실패했습니다. 다시 시도해주세요.';
       setEditErrors({ submit: msg });
       toast.error(msg);
+      if (result.errorCode === 'CONFLICT') {
+        startTransition(() => {
+          router.refresh();
+        });
+      }
     }
     setIsSubmitting(false);
   };

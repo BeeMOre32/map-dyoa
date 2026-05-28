@@ -7,6 +7,7 @@ import { requireAdmin, requireAuth } from '@/lib/auth-helpers';
 import { ActionResult } from '@/types/api-response';
 import {
   ValidationError,
+  ScheduleConflictError,
   getErrorMessage,
   logError,
 } from '@/lib/error-handling';
@@ -43,7 +44,15 @@ import {
   scheduleParticipantsForApi,
   type ApiJson,
 } from '@/lib/map-dyoa-server-fetch';
-import { getScheduleServerBaseUrl } from '@/lib/map-dyoa-server-schedules';
+import {
+  getScheduleServerBaseUrl,
+  fetchScheduleByIdFromServer,
+} from '@/lib/map-dyoa-server-schedules';
+import {
+  SCHEDULE_CONFLICT_MESSAGE,
+  pickScheduleRevision,
+  scheduleRevisionsMatch,
+} from '@/lib/schedule-concurrency';
 import {
   bulkCreateStreamersOnServer,
   createStreamerOnServer,
@@ -190,10 +199,10 @@ export async function createScheduleAction(data: {
         title: validated.title.trim(),
         startTime: validated.startTime,
         participants: {
-          create: validated.participants.map(({ id, nation, isGuest }) => ({
+          create: validated.participants.map(({ id, nation, result, isGuest }) => ({
             streamer: { connect: { id } },
             nation: nation?.trim() || null,
-            result: null,
+            result: result?.trim() || null,
             isGuest: isGuest ?? false,
           })),
         },
@@ -256,6 +265,7 @@ export async function updateScheduleAction(
     isGuerrilla?: boolean;
     isNaeJeon?: boolean;
     isLiveEnded?: boolean;
+    expectedUpdatedAt?: Date;
   },
 ): Promise<ActionResult> {
   try {
@@ -267,6 +277,25 @@ export async function updateScheduleAction(
 
     const base = getScheduleServerBaseUrl();
     if (base) {
+      if (validated.expectedUpdatedAt) {
+        const fresh = await fetchScheduleByIdFromServer(id);
+        if (!fresh) {
+          return { success: false, error: '일정을 찾을 수 없습니다.', errorCode: 'NOT_FOUND' };
+        }
+        if (
+          !scheduleRevisionsMatch(
+            validated.expectedUpdatedAt,
+            pickScheduleRevision(fresh),
+          )
+        ) {
+          return {
+            success: false,
+            error: SCHEDULE_CONFLICT_MESSAGE,
+            errorCode: 'CONFLICT',
+          };
+        }
+      }
+
       const res = await fetchWithBackoff(`${base}/schedules/${encodeURIComponent(id)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -279,11 +308,21 @@ export async function updateScheduleAction(
           isGuerrilla: validated.isGuerrilla ?? false,
           isNaeJeon: validated.isNaeJeon ?? false,
           isLiveEnded: validated.isLiveEnded ?? false,
+          ...(validated.expectedUpdatedAt
+            ? { expectedUpdatedAt: validated.expectedUpdatedAt.toISOString() }
+            : {}),
         }),
       });
       const json = (await res.json()) as ApiJson;
       if (res.status === 404) {
         return { success: false, error: '일정을 찾을 수 없습니다.', errorCode: 'NOT_FOUND' };
+      }
+      if (res.status === 409 || json.error === 'CONFLICT') {
+        return {
+          success: false,
+          error: SCHEDULE_CONFLICT_MESSAGE,
+          errorCode: 'CONFLICT',
+        };
       }
       if (!res.ok) {
         const msg = apiMutationMessage(
@@ -305,41 +344,68 @@ export async function updateScheduleAction(
     }
 
     const newStreamerIds = validated.participants.map((p) => p.id);
+    const scheduleScalars = {
+      title: validated.title.trim(),
+      startTime: validated.startTime,
+      liveUrls: validated.liveUrls?.map((u) => u.trim()).filter(Boolean) ?? [],
+      isGuerrilla: validated.isGuerrilla ?? false,
+      isNaeJeon: validated.isNaeJeon ?? false,
+      isLiveEnded: validated.isLiveEnded ?? false,
+    };
 
-    await getPrismaForDomain().$transaction([
-      getPrismaForDomain().schedule.update({
-        where: { id },
-        data: {
-          title: validated.title.trim(),
-          startTime: validated.startTime,
-          game: validated.gameId ? { connect: { id: validated.gameId } } : { disconnect: true },
-          liveUrls: validated.liveUrls?.map((u) => u.trim()).filter(Boolean) ?? [],
-          isGuerrilla: validated.isGuerrilla ?? false,
-          isNaeJeon: validated.isNaeJeon ?? false,
-          isLiveEnded: validated.isLiveEnded ?? false,
-        },
-      }),
-      getPrismaForDomain().scheduleParticipant.deleteMany({
+    await getPrismaForDomain().$transaction(async (tx) => {
+      if (validated.expectedUpdatedAt) {
+        const bump = await tx.schedule.updateMany({
+          where: { id, updatedAt: validated.expectedUpdatedAt },
+          data: {
+            ...scheduleScalars,
+            gameId: validated.gameId?.trim() || null,
+          },
+        });
+        if (bump.count === 0) {
+          const exists = await tx.schedule.findUnique({
+            where: { id },
+            select: { id: true },
+          });
+          if (!exists) {
+            throw new ValidationError('일정을 찾을 수 없습니다.');
+          }
+          throw new ScheduleConflictError(SCHEDULE_CONFLICT_MESSAGE);
+        }
+      } else {
+        await tx.schedule.update({
+          where: { id },
+          data: {
+            ...scheduleScalars,
+            game: validated.gameId
+              ? { connect: { id: validated.gameId } }
+              : { disconnect: true },
+          },
+        });
+      }
+
+      await tx.scheduleParticipant.deleteMany({
         where: { scheduleId: id, streamerId: { notIn: newStreamerIds } },
-      }),
-      ...validated.participants.map(({ id: streamerId, nation, isGuest }) =>
-        getPrismaForDomain().scheduleParticipant.upsert({
+      });
+
+      for (const { id: streamerId, nation, result, isGuest } of validated.participants) {
+        await tx.scheduleParticipant.upsert({
           where: { scheduleId_streamerId: { scheduleId: id, streamerId } },
           create: {
             scheduleId: id,
             streamerId,
             nation: nation?.trim() || null,
-            result: null,
+            result: result?.trim() || null,
             isGuest: isGuest ?? false,
           },
           update: {
             nation: nation?.trim() || null,
-            result: null,
+            result: result?.trim() || null,
             isGuest: isGuest ?? false,
           },
-        }),
-      ),
-    ]);
+        });
+      }
+    });
 
     await revalidateScheduleDataCaches();
 

@@ -10,18 +10,6 @@ export function formatHoi4SessionDate(d: Date | string) {
   return format(dt, 'yyyy. MM. dd', { locale: ko });
 }
 
-export function hoi4ResultBadgeClass(result: string | null | undefined): string {
-  if (!result?.trim()) return '';
-  const r = result.trim();
-  if (/승|win|victory/i.test(r)) {
-    return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300';
-  }
-  if (/패|loss|defeat/i.test(r)) {
-    return 'bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300';
-  }
-  return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300';
-}
-
 export function hoi4RankLabel(index: number): string | null {
   if (index === 0) return '🥇';
   if (index === 1) return '🥈';

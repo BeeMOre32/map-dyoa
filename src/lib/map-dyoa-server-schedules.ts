@@ -68,6 +68,9 @@ export function hydrateFlattenedSchedule(raw: Record<string, unknown>): Flattene
     startTime: new Date(String(raw.startTime)),
     endTime: raw.endTime != null ? new Date(String(raw.endTime)) : null,
     createdAt: new Date(String(raw.createdAt)),
+    updatedAt: new Date(
+      String(raw.updatedAt ?? raw.createdAt),
+    ),
     participants,
     formattedDate: String(raw.formattedDate ?? ''),
     formattedTime: String(raw.formattedTime ?? ''),

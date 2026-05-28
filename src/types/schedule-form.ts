@@ -5,7 +5,6 @@ import { Streamer, Game } from '@prisma/client';
 export interface ParticipantEntry {
   id: string;
   nation: string;
-  result: string;
   isGuest: boolean;
 }
 

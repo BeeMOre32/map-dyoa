@@ -524,7 +524,7 @@ export default function HelpPage() {
               봅니다.
             </Row>
             <Row icon={<Gamepad2 className="w-5 h-5" />} delay={0.06}>
-              일정 상세(HOI4 게임)에서는 참여 멤버별 <strong>담당 국가·승패</strong>를 확인합니다.
+              일정 상세(HOI4 게임)에서는 참여 멤버별 <strong>담당 국가</strong>를 확인합니다.
               로그인 후 일정 수정 화면에서 입력·수정합니다.
             </Row>
           </div>

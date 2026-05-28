@@ -11,9 +11,15 @@ import {
 } from '../types';
 import type { ZodIssue } from 'zod';
 import { scrollToFirstZodField } from '@/lib/zod-scroll';
+import {
+  isHoi4GameById,
+  resolveNaeJeonForPayload,
+  syncParticipantEntries,
+} from '@/lib/hoi4/hoi4FormUtils';
 
 type UseBatchScheduleFormArgs = {
-  games: { id: string; title: string }[];
+  games: { id: string; title: string; isHoi4?: boolean }[];
+  streamers: { id: string; isGuest?: boolean }[];
   onClose: () => void;
 };
 
@@ -44,6 +50,8 @@ function createSlot(): SlotEntry {
     selectedGameId: '',
     selectedStreamerIds: [],
     guestStreamerIds: [],
+    participants: [],
+    isNaeJeon: false,
     liveUrls: [''],
     isTimeTBD: false,
     metaLoading: false,
@@ -54,6 +62,7 @@ function createSlot(): SlotEntry {
 
 export function useBatchScheduleForm({
   games,
+  streamers,
   onClose,
 }: UseBatchScheduleFormArgs): UseBatchScheduleFormReturn {
   const router = useRouter();
@@ -196,24 +205,32 @@ export function useBatchScheduleForm({
 
     setIsSubmitting(true);
     const results = await Promise.allSettled(
-      slots.map((slot) =>
-        createScheduleAction(
+      slots.map((slot) => {
+        const isHoi4Game = isHoi4GameById(slot.selectedGameId, games);
+        const resolvedNaeJeon = resolveNaeJeonForPayload(
+          isHoi4Game,
+          slot.isNaeJeon,
+          slot.participants,
+        );
+        return createScheduleAction(
           buildScheduleActionPayload({
             title: slot.title,
             startTime: slot.isTimeTBD
               ? new Date(slot.startTime.split('T')[0] + 'T00:00')
               : new Date(slot.startTime),
-            participants: slot.selectedStreamerIds.map((id) => ({
+            participants: slot.participants.map(({ id, nation, isGuest }) => ({
               id,
-              isGuest: slot.guestStreamerIds.includes(id),
+              nation,
+              isGuest,
             })),
             gameId: slot.selectedGameId || null,
+            games,
             liveUrls: slot.liveUrls,
             isGuerrilla: slot.isTimeTBD,
-            isNaeJeon: false,
+            isNaeJeon: resolvedNaeJeon,
           }),
-        ),
-      ),
+        );
+      }),
     );
     const failCount = results.filter(
       (r) =>

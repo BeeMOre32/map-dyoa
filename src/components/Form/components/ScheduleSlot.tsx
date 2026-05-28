@@ -4,6 +4,8 @@ import { Plus, ChevronDown, ChevronRight, Trash2, X, Link as LinkIcon, Loader2, 
 import { motion, AnimatePresence } from 'framer-motion';
 import StreamerSelector from '../StreamerSelctor';
 import { SlotEntry, Game, Streamer } from '../types';
+import Hoi4ParticipantFields, { isHoi4GameSelected } from './Hoi4ParticipantFields';
+import { syncParticipantEntries } from '@/lib/hoi4/hoi4FormUtils';
 
 type ScheduleSlotProps = {
   slot: SlotEntry;
@@ -33,15 +35,23 @@ export default function ScheduleSlot({
   const handleToggleStreamer = (id: string) => {
     const has = slot.selectedStreamerIds.includes(id);
     const streamer = sortedStreamers.find((s) => s.id === id);
+    const nextStreamerIds = has
+      ? slot.selectedStreamerIds.filter((x) => x !== id)
+      : [...slot.selectedStreamerIds, id];
+    const nextGuestIds = has
+      ? slot.guestStreamerIds.filter((x) => x !== id)
+      : streamer?.isGuest
+        ? [...slot.guestStreamerIds, id]
+        : slot.guestStreamerIds;
     onUpdate({
-      selectedStreamerIds: has
-        ? slot.selectedStreamerIds.filter((x) => x !== id)
-        : [...slot.selectedStreamerIds, id],
-      guestStreamerIds: has
-        ? slot.guestStreamerIds.filter((x) => x !== id)
-        : streamer?.isGuest
-          ? [...slot.guestStreamerIds, id]
-          : slot.guestStreamerIds,
+      selectedStreamerIds: nextStreamerIds,
+      guestStreamerIds: nextGuestIds,
+      participants: syncParticipantEntries(
+        nextStreamerIds,
+        nextGuestIds,
+        slot.participants,
+        sortedStreamers,
+      ),
       errors: {
         ...slot.errors,
         streamerIds: undefined,
@@ -51,12 +61,37 @@ export default function ScheduleSlot({
 
   const handleToggleGuest = (id: string) => {
     const has = slot.guestStreamerIds.includes(id);
+    const nextGuestIds = has
+      ? slot.guestStreamerIds.filter((x) => x !== id)
+      : [...slot.guestStreamerIds, id];
     onUpdate({
-      guestStreamerIds: has
-        ? slot.guestStreamerIds.filter((x) => x !== id)
-        : [...slot.guestStreamerIds, id],
+      guestStreamerIds: nextGuestIds,
+      participants: syncParticipantEntries(
+        slot.selectedStreamerIds,
+        nextGuestIds,
+        slot.participants,
+        sortedStreamers,
+      ),
     });
   };
+
+  const handleUpdateParticipant = (
+    id: string,
+    field: 'nation',
+    value: string,
+  ) => {
+    const nextParticipants = slot.participants.map((p) =>
+      p.id === id ? { ...p, [field]: value } : p,
+    );
+    onUpdate({
+      participants: nextParticipants,
+      ...(field === 'nation' && value.trim() && isHoi4GameSelected(slot.selectedGameId, games)
+        ? { isNaeJeon: true }
+        : {}),
+    });
+  };
+
+  const isHoi4 = isHoi4GameSelected(slot.selectedGameId, games);
 
   const formatPreview = (): string => {
     const parts: string[] = [];
@@ -376,6 +411,16 @@ export default function ScheduleSlot({
                   toggleGuest={handleToggleGuest}
                 />
               </div>
+
+              <Hoi4ParticipantFields
+                compact
+                isHoi4Game={isHoi4}
+                isNaeJeon={slot.isNaeJeon}
+                onSetIsNaeJeon={(value) => onUpdate({ isNaeJeon: value })}
+                participants={slot.participants}
+                streamers={sortedStreamers}
+                onUpdateParticipant={handleUpdateParticipant}
+              />
             </div>
           </motion.div>
         )}
