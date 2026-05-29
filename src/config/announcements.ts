@@ -22,5 +22,9 @@ export const announcementToast: Announcement = {
   href: '/announcements#update-2026-10',
 };
 
-/** 중앙 팝업으로 띄울 공지. null이면 팝업 없이 토스트만 사용 */
+/**
+ * 중앙 팝업으로 띄울 공지. null이면 팝업 없이 토스트만 사용.
+ * 장애·긴급 안내 시 여기에 객체를 넣고 accent: 'rose', type: 'urgent'로 설정하면
+ * DB SiteNotice 없이도 즉시 전역 팝업이 뜬다. (팝업이 있으면 같은 스택의 정적 토스트는 생략)
+ */
 export const announcementPopup: Announcement | null = null;

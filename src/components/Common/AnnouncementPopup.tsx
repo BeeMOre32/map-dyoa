@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'motion/react';
-import { Megaphone } from 'lucide-react';
+import { AlertTriangle, Megaphone } from 'lucide-react';
 import ModalOverlayPortal from '@/components/Common/ModalOverlayPortal';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { backdropVariants, compactModalVariants } from '@/lib/modalVariants';
@@ -49,7 +49,11 @@ function PopupBody({ onClose }: { onClose: () => void }) {
   useScrollLock();
   if (!announcementPopup) return null;
 
-  const theme = ACCENT_THEMES[announcementPopup.accent ?? 'indigo'];
+  const isUrgent = announcementPopup.type === 'urgent';
+  const theme = ACCENT_THEMES[
+    announcementPopup.accent ?? (isUrgent ? 'rose' : 'indigo')
+  ];
+  const Icon = isUrgent ? AlertTriangle : Megaphone;
 
   return (
     <motion.div
@@ -66,13 +70,14 @@ function PopupBody({ onClose }: { onClose: () => void }) {
         animate="visible"
         exit="hidden"
         role="dialog"
+        aria-modal="true"
         aria-label={announcementPopup.title}
         className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl dark:shadow-black/60 border border-slate-100 dark:border-slate-800 p-6 space-y-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-col items-center gap-3 text-center">
           <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${theme.iconWrap}`}>
-            <Megaphone className={`w-6 h-6 ${theme.icon}`} />
+            <Icon className={`w-6 h-6 ${theme.icon}`} />
           </div>
           <h2 className={`text-base font-black leading-snug ${theme.title}`}>
             {announcementPopup.title}
