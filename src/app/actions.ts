@@ -1,7 +1,7 @@
 // src/app/actions.ts
 'use server';
 
-import { getPrismaForDomain } from '@/lib/prisma';
+import { getPrisma, getPrismaForDomain } from '@/lib/prisma';
 import { revalidatePath, updateTag } from 'next/cache';
 import { requireAdmin, requireAuth } from '@/lib/auth-helpers';
 import { ActionResult } from '@/types/api-response';
@@ -1282,6 +1282,137 @@ export async function rejectFeedbackAction(
   } catch (error) {
     const { message, code } = getErrorMessage(error);
     logError('rejectFeedback', error);
+    return { success: false, error: message, errorCode: code };
+  }
+}
+
+/* ── 긴급 공지 (SiteNotice) ───────────────────────────────── */
+
+type NoticeLevelInput = 'INFO' | 'WARNING' | 'URGENT';
+
+export type SiteNoticeInput = {
+  level: NoticeLevelInput;
+  title: string;
+  body?: string | null;
+  active?: boolean;
+  startsAt?: Date | null;
+  endsAt?: Date | null;
+};
+
+function normalizeNoticeInput(data: SiteNoticeInput) {
+  const level: NoticeLevelInput = ['INFO', 'WARNING', 'URGENT'].includes(data.level)
+    ? data.level
+    : 'INFO';
+  const title = data.title?.trim();
+  if (!title) throw new ValidationError('공지 제목이 필요합니다.');
+  if (title.length > 120) throw new ValidationError('제목은 120자 이내여야 합니다.');
+  const body = data.body?.trim() || null;
+  if (body && body.length > 2000) throw new ValidationError('본문은 2000자 이내여야 합니다.');
+  const startsAt = data.startsAt ?? null;
+  const endsAt = data.endsAt ?? null;
+  if (startsAt && endsAt && endsAt.getTime() <= startsAt.getTime()) {
+    throw new ValidationError('만료 시각은 게시 시작 시각보다 뒤여야 합니다.');
+  }
+  return { level, title, body, active: data.active ?? true, startsAt, endsAt };
+}
+
+async function revalidateSiteNotice() {
+  const paths = getRevalidationPaths('admin');
+  await Promise.all([
+    ...paths.map((path: string) => revalidatePath(path)),
+    revalidatePath('/admin/notices'),
+    updateTag('site-notice'),
+  ]);
+}
+
+export async function createSiteNoticeAction(
+  data: SiteNoticeInput,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    const session = await requireAdmin();
+    const v = normalizeNoticeInput(data);
+    const created = await getPrisma().siteNotice.create({ data: v });
+    await revalidateSiteNotice();
+    auditLog(session, {
+      action: 'create',
+      entity: 'siteNotice',
+      entityId: created.id,
+      summary: `긴급 공지 생성: [${v.level}] ${v.title}`,
+      changes: v,
+    });
+    return { success: true, data: { id: created.id } };
+  } catch (error) {
+    const { message, code } = getErrorMessage(error);
+    logError('createSiteNotice', error);
+    return { success: false, error: message, errorCode: code };
+  }
+}
+
+export async function updateSiteNoticeAction(
+  id: string,
+  data: SiteNoticeInput,
+): Promise<ActionResult> {
+  try {
+    const session = await requireAdmin();
+    if (!id?.trim()) throw new ValidationError('유효한 공지 ID가 필요합니다.');
+    const v = normalizeNoticeInput(data);
+    await getPrisma().siteNotice.update({ where: { id }, data: v });
+    await revalidateSiteNotice();
+    auditLog(session, {
+      action: 'update',
+      entity: 'siteNotice',
+      entityId: id,
+      summary: `긴급 공지 수정: [${v.level}] ${v.title}`,
+      changes: v,
+    });
+    return { success: true, data: null };
+  } catch (error) {
+    const { message, code } = getErrorMessage(error);
+    logError('updateSiteNotice', error);
+    return { success: false, error: message, errorCode: code };
+  }
+}
+
+export async function toggleSiteNoticeAction(
+  id: string,
+  active: boolean,
+): Promise<ActionResult> {
+  try {
+    const session = await requireAdmin();
+    if (!id?.trim()) throw new ValidationError('유효한 공지 ID가 필요합니다.');
+    await getPrisma().siteNotice.update({ where: { id }, data: { active } });
+    await revalidateSiteNotice();
+    auditLog(session, {
+      action: 'update',
+      entity: 'siteNotice',
+      entityId: id,
+      summary: `긴급 공지 ${active ? '게시' : '내림'} id=${id}`,
+      changes: { active },
+    });
+    return { success: true, data: null };
+  } catch (error) {
+    const { message, code } = getErrorMessage(error);
+    logError('toggleSiteNotice', error);
+    return { success: false, error: message, errorCode: code };
+  }
+}
+
+export async function deleteSiteNoticeAction(id: string): Promise<ActionResult> {
+  try {
+    const session = await requireAdmin();
+    if (!id?.trim()) throw new ValidationError('유효한 공지 ID가 필요합니다.');
+    await getPrisma().siteNotice.delete({ where: { id } });
+    await revalidateSiteNotice();
+    auditLog(session, {
+      action: 'delete',
+      entity: 'siteNotice',
+      entityId: id,
+      summary: `긴급 공지 삭제 id=${id}`,
+    });
+    return { success: true, data: null };
+  } catch (error) {
+    const { message, code } = getErrorMessage(error);
+    logError('deleteSiteNotice', error);
     return { success: false, error: message, errorCode: code };
   }
 }

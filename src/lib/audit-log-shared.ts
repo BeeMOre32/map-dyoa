@@ -13,7 +13,8 @@ export type MutationEntity =
   | 'streamer'
   | 'clip'
   | 'game'
-  | 'feedback';
+  | 'feedback'
+  | 'siteNotice';
 
 export type AuditDiffPayload = {
   before: Record<string, unknown>;

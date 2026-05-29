@@ -188,6 +188,27 @@ model PushReminderLog {
   @@index([scheduleId, scheduledFor])
 }
 
+/// 사이트 긴급 공지/장애 안내 배너 (항상 살아있는 Prisma DB에 저장 — 도메인 서버 장애 시에도 노출 가능)
+model SiteNotice {
+  id        String      @id @default(cuid())
+  level     NoticeLevel @default(INFO)
+  title     String
+  body      String?     @db.Text
+  active    Boolean     @default(true)
+  startsAt  DateTime? // 예약 게시 시작 (null이면 즉시)
+  endsAt    DateTime? // 자동 만료 시각 (null이면 무기한)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([active, startsAt, endsAt])
+}
+
+enum NoticeLevel {
+  INFO
+  WARNING
+  URGENT
+}
+
 /// 관리자용 변경 이력 (Next 서버 액션에서 기록)
 model AuditLog {
   id          String   @id @default(cuid())

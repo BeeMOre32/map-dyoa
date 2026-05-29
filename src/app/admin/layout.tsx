@@ -23,6 +23,12 @@ export default function AdminLayout({
           </span>
           <div className="flex gap-4">
             <a
+              href="/admin/notices"
+              className="text-xs font-bold text-red-500 hover:text-red-600"
+            >
+              긴급 공지
+            </a>
+            <a
               href="/calendar"
               className="text-xs font-bold text-slate-400 hover:text-slate-600"
             >

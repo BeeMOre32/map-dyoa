@@ -37,6 +37,7 @@ const ENTITY_LABELS: Record<MutationEntity, string> = {
   clip: '클립',
   game: '게임',
   feedback: '피드백',
+  siteNotice: '긴급 공지',
 };
 
 const FIELD_ORDER: Partial<Record<MutationEntity, string[]>> = {

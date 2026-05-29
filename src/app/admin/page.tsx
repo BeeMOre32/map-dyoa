@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import {
   MessageSquare, Users, Calendar, Clapperboard, Bell,
-  Gamepad2, Clock, Film,
+  Gamepad2, Clock, Film, Megaphone,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -112,6 +112,15 @@ export default async function AdminDashboard() {
       {/* 관리 메뉴 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[
+          {
+            href: '/admin/notices',
+            bg: 'bg-red-50 dark:bg-red-900/20',
+            iconColor: 'text-red-600 dark:text-red-400',
+            icon: Megaphone,
+            title: '긴급 공지',
+            desc: '서버 장애·점검 등 사이트 상단 배너 공지를 추가/관리합니다.',
+            badge: null,
+          },
           {
             href: '/admin/feedbacks',
             bg: 'bg-indigo-50 dark:bg-indigo-900/20',

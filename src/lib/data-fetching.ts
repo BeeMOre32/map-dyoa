@@ -725,6 +725,74 @@ export type AuditLogRow = {
   createdAt: Date;
 };
 
+export type SiteNoticeRow = {
+  id: string;
+  level: 'INFO' | 'WARNING' | 'URGENT';
+  title: string;
+  body: string | null;
+  active: boolean;
+  startsAt: Date | null;
+  endsAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+const NOTICE_LEVEL_PRIORITY: Record<SiteNoticeRow['level'], number> = {
+  URGENT: 3,
+  WARNING: 2,
+  INFO: 1,
+};
+
+/**
+ * 현재 노출할 긴급 공지 1건.
+ * 항상 살아있는 Prisma DB(getPrisma)에서 조회하므로 도메인 서버 장애 시에도 동작한다.
+ * 시간 창(startsAt/endsAt)은 30초 캐시 안에서 평가된다.
+ */
+export const getActiveSiteNotice = unstable_cache(
+  async (): Promise<SiteNoticeRow | null> => {
+    const now = new Date();
+    const rows = await getPrisma().siteNotice.findMany({
+      where: {
+        active: true,
+        AND: [
+          { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+          { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (rows.length === 0) return null;
+    return [...rows].sort(
+      (a, b) =>
+        NOTICE_LEVEL_PRIORITY[b.level as SiteNoticeRow['level']] -
+          NOTICE_LEVEL_PRIORITY[a.level as SiteNoticeRow['level']] ||
+        b.createdAt.getTime() - a.createdAt.getTime(),
+    )[0] as SiteNoticeRow;
+  },
+  ['active-site-notice'],
+  { revalidate: 30, tags: ['site-notice'] },
+);
+
+export type SiteNoticeStatus = 'live' | 'inactive' | 'expired' | 'scheduled';
+
+export type AdminSiteNoticeRow = SiteNoticeRow & { status: SiteNoticeStatus };
+
+function computeNoticeStatus(n: SiteNoticeRow, nowMs: number): SiteNoticeStatus {
+  if (!n.active) return 'inactive';
+  if (n.endsAt && new Date(n.endsAt).getTime() < nowMs) return 'expired';
+  if (n.startsAt && new Date(n.startsAt).getTime() > nowMs) return 'scheduled';
+  return 'live';
+}
+
+/** 관리자용 전체 공지 목록 (캐시 없이 최신, 서버 기준 노출 상태 포함) */
+export async function getAllSiteNotices(): Promise<AdminSiteNoticeRow[]> {
+  const nowMs = Date.now();
+  const rows = (await getPrisma().siteNotice.findMany({
+    orderBy: { createdAt: 'desc' },
+  })) as SiteNoticeRow[];
+  return rows.map((n) => ({ ...n, status: computeNoticeStatus(n, nowMs) }));
+}
+
 export async function getAuditLogs(options?: {
   entity?: string;
   entityId?: string;
