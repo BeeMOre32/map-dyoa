@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Megaphone, X, ArrowRight } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Megaphone, X } from 'lucide-react';
 import Link from 'next/link';
 import { announcementToast } from '@/config/announcements';
 import type { Announcement } from '@/config/announcements';
@@ -41,6 +41,7 @@ export default function AnnouncementToast({ stacked }: Props) {
   const outer = stacked
     ? 'relative w-full pointer-events-auto'
     : 'fixed bottom-4 right-4 z-[280] w-[min(320px,calc(100vw-2rem))] pointer-events-auto';
+  const isUrgent = target?.type === 'urgent';
 
   return (
     <AnimatePresence>
@@ -52,12 +53,36 @@ export default function AnnouncementToast({ stacked }: Props) {
           transition={{ duration: 0.2, ease: 'easeOut' }}
           className={outer}
         >
-          <div className="flex items-start gap-3 rounded-2xl border border-indigo-200/80 bg-indigo-50/95 px-4 py-3 text-sm shadow-lg backdrop-blur-sm dark:border-indigo-800/60 dark:bg-indigo-950/90">
-            <Megaphone className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+          <div
+            className={
+              isUrgent
+                ? 'flex items-start gap-3 rounded-2xl border border-rose-200/90 bg-rose-50/95 px-4 py-3 text-sm shadow-lg backdrop-blur-sm dark:border-rose-800/70 dark:bg-rose-950/90'
+                : 'flex items-start gap-3 rounded-2xl border border-indigo-200/80 bg-indigo-50/95 px-4 py-3 text-sm shadow-lg backdrop-blur-sm dark:border-indigo-800/60 dark:bg-indigo-950/90'
+            }
+          >
+            {isUrgent ? (
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
+            ) : (
+              <Megaphone className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+            )}
             <div className="min-w-0 flex-1">
-              <p className="font-black text-indigo-950 dark:text-indigo-100">{target.title}</p>
+              <p
+                className={
+                  isUrgent
+                    ? 'font-black text-rose-950 dark:text-rose-100'
+                    : 'font-black text-indigo-950 dark:text-indigo-100'
+                }
+              >
+                {target.title}
+              </p>
               {target.content && (
-                <p className="mt-0.5 text-xs font-medium leading-relaxed text-indigo-800/90 dark:text-indigo-200/90">
+                <p
+                  className={
+                    isUrgent
+                      ? 'mt-0.5 text-xs font-medium leading-relaxed text-rose-800/90 dark:text-rose-200/90'
+                      : 'mt-0.5 text-xs font-medium leading-relaxed text-indigo-800/90 dark:text-indigo-200/90'
+                  }
+                >
                   {target.content}
                 </p>
               )}
@@ -65,7 +90,11 @@ export default function AnnouncementToast({ stacked }: Props) {
                 <Link
                   href={target.href}
                   onClick={dismiss}
-                  className="mt-2 inline-flex items-center gap-1 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11px] font-black text-white shadow-sm transition-colors hover:bg-indigo-700"
+                  className={
+                    isUrgent
+                      ? 'mt-2 inline-flex items-center gap-1 rounded-xl bg-rose-600 px-3 py-1.5 text-[11px] font-black text-white shadow-sm transition-colors hover:bg-rose-700'
+                      : 'mt-2 inline-flex items-center gap-1 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11px] font-black text-white shadow-sm transition-colors hover:bg-indigo-700'
+                  }
                 >
                   공지 보기
                   <ArrowRight className="h-3 w-3" />
@@ -75,7 +104,11 @@ export default function AnnouncementToast({ stacked }: Props) {
             <button
               type="button"
               onClick={dismiss}
-              className="shrink-0 rounded-lg p-1 text-indigo-400 transition-colors hover:bg-indigo-200/50 hover:text-indigo-700 dark:hover:bg-indigo-800/50 dark:hover:text-indigo-200"
+              className={
+                isUrgent
+                  ? 'shrink-0 rounded-lg p-1 text-rose-400 transition-colors hover:bg-rose-200/50 hover:text-rose-700 dark:hover:bg-rose-800/50 dark:hover:text-rose-200'
+                  : 'shrink-0 rounded-lg p-1 text-indigo-400 transition-colors hover:bg-indigo-200/50 hover:text-indigo-700 dark:hover:bg-indigo-800/50 dark:hover:text-indigo-200'
+              }
               aria-label="닫기"
             >
               <X className="h-4 w-4" />
