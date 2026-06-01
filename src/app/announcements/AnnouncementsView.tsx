@@ -567,6 +567,85 @@ function BackendProjectPostBody({ active }: { active: boolean }) {
   );
 }
 
+function SettlementPostBody() {
+  return (
+    <div className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 pt-3">
+      <p>
+        앞서 약속드린 대로,{' '}
+        <strong className="text-slate-900 dark:text-white">
+          후원 수익금 · 서버비 납부 · 남은 금액 기부
+        </strong>
+        를 투명하게 공개하기 위해 글을 남깁니다.
+      </p>
+
+      <div className="rounded-2xl border border-teal-200 dark:border-teal-800/50 bg-teal-50/70 dark:bg-teal-900/15 p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+          <p className="font-black text-slate-900 dark:text-white text-sm">
+            5월 정산 내역
+          </p>
+        </div>
+        <div className="divide-y divide-teal-100 dark:divide-teal-900/40 overflow-hidden rounded-xl border border-teal-100 bg-white/70 dark:border-teal-900/40 dark:bg-slate-800/50">
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="font-bold text-slate-600 dark:text-slate-300">
+              후원 수익금
+            </span>
+            <span className="font-black text-emerald-600 dark:text-emerald-400">
+              + 38,000원
+            </span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="font-bold text-slate-600 dark:text-slate-300">
+              서버비{' '}
+              <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                (tax 포함 $22 · 5/1 환율)
+              </span>
+            </span>
+            <span className="font-black text-rose-500 dark:text-rose-400">
+              − 33,888원
+            </span>
+          </div>
+          <div className="flex items-center justify-between bg-teal-50/70 px-4 py-3 dark:bg-teal-900/20">
+            <span className="font-black text-slate-800 dark:text-slate-100">
+              잔여금
+            </span>
+            <span className="font-black text-slate-900 dark:text-white">
+              4,112원
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-3 bg-pink-50 dark:bg-pink-900/15 border border-pink-200 dark:border-pink-800/50 rounded-2xl p-4">
+        <Heart className="w-4 h-4 text-pink-500 shrink-0 mt-0.5" />
+        <p className="text-pink-700 dark:text-pink-300 text-sm">
+          잔여금은 <strong>4,112원</strong>이지만, 그래도 가오 없이 4,112원만
+          기부하기엔 좀 그래서{' '}
+          <strong className="text-pink-800 dark:text-pink-200">
+            10,000원을 채워 후원(기부)
+          </strong>
+          하기로 했습니다.
+        </p>
+      </div>
+
+      <a
+        href="https://naver.me/FUii09xf"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2 w-full py-3 bg-linear-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 active:scale-[0.98] text-white font-black rounded-xl transition-all text-sm shadow-md shadow-teal-500/20"
+      >
+        <Megaphone className="w-4 h-4" />
+        자세한 내역은 카페 글에서 확인하기
+      </a>
+
+      <p className="text-slate-500 dark:text-slate-400">
+        늘 사이트를 아껴주시고 후원해 주셔서 진심으로 감사합니다. 약속대로
+        앞으로도 1원 단위까지 투명하게 공개하겠습니다 💜
+      </p>
+    </div>
+  );
+}
+
 export default function AnnouncementsView() {
   const [isBackendOpen, setIsBackendOpen] = useState(false);
 
@@ -598,6 +677,44 @@ export default function AnnouncementsView() {
         </div>
 
         <div className="space-y-3">
+          <details
+            id="settlement-2026-05"
+            className="group scroll-mt-24 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm open:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:open:bg-slate-900"
+          >
+            <summary className="cursor-pointer list-none px-4 py-4 marker:content-none sm:px-5 [&::-webkit-details-marker]:hidden">
+              <span className="flex w-full items-start gap-3 text-left">
+                <span className="min-w-0 flex-1 space-y-2">
+                  <span className="flex flex-wrap items-center gap-2 gap-y-1">
+                    <span
+                      className={cn(
+                        'inline-block rounded-full px-2.5 py-1 text-xs font-black',
+                        'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
+                      )}
+                    >
+                      정산 공개
+                    </span>
+                    <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                      2026. 06. 01
+                    </span>
+                  </span>
+                  <span className="block pr-1 text-base font-black leading-snug text-slate-900 dark:text-white sm:text-lg">
+                    5월 후원 정산 · 기부 내역 공개
+                  </span>
+                  <span className="block text-sm font-medium leading-relaxed text-slate-500 group-open:hidden dark:text-slate-400">
+                    수익금 38,000원, 서버비 33,888원, 잔여금은 1만원으로 채워
+                    기부합니다.
+                  </span>
+                </span>
+                <span className="mt-1 shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180 dark:text-slate-500">
+                  <ChevronDown className="h-5 w-5" aria-hidden />
+                </span>
+              </span>
+            </summary>
+            <div className="border-t border-slate-100 px-4 pb-5 pt-1 dark:border-slate-800 sm:px-5">
+              <SettlementPostBody />
+            </div>
+          </details>
+
           <details
             id="api-ui-update-2026-05"
             className="group scroll-mt-24 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm open:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:open:bg-slate-900"
