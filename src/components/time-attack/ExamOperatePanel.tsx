@@ -15,6 +15,7 @@ import ExamTimeAdjustPanel from '@/components/time-attack/ExamTimeAdjustPanel';
 import { cn } from '@/lib/utils';
 
 type Props = {
+  examId: string;
   phase: ExamPhase;
   runtime: Hoi4ExamRuntimeState;
   onRuntimeChange: (state: Hoi4ExamRuntimeState) => void;
@@ -22,6 +23,7 @@ type Props = {
 };
 
 export default function ExamOperatePanel({
+  examId,
   phase,
   runtime,
   onRuntimeChange,
@@ -85,7 +87,7 @@ export default function ExamOperatePanel({
         <button
           type="button"
           disabled={pending || phase === 'live'}
-          onClick={() => run(startHoi4ExamAction)}
+          onClick={() => run(() => startHoi4ExamAction(examId))}
           className={cn(
             'inline-flex items-center justify-center gap-1 rounded-xl border px-2 py-2.5 text-[11px] font-black transition-colors disabled:opacity-40',
             'border-emerald-300 bg-emerald-100 text-emerald-900 hover:bg-emerald-200 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200',
@@ -97,7 +99,7 @@ export default function ExamOperatePanel({
         <button
           type="button"
           disabled={pending || phase !== 'live'}
-          onClick={() => run(endHoi4ExamAction)}
+          onClick={() => run(() => endHoi4ExamAction(examId))}
           className={cn(
             'inline-flex items-center justify-center gap-1 rounded-xl border px-2 py-2.5 text-[11px] font-black transition-colors disabled:opacity-40',
             'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200',
@@ -136,6 +138,7 @@ export default function ExamOperatePanel({
       )}
 
       <ExamTimeAdjustPanel
+        examId={examId}
         phase={phase}
         runtime={runtime}
         onRuntimeChange={onRuntimeChange}
@@ -151,7 +154,7 @@ export default function ExamOperatePanel({
             onCancel={() => setConfirmReset(false)}
             onConfirm={() => {
               run(async () => {
-                const result = await resetHoi4ExamAction();
+                const result = await resetHoi4ExamAction(examId);
                 if (result.success) setConfirmReset(false);
                 return result;
               });

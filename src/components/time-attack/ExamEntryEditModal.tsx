@@ -15,13 +15,20 @@ import StreamerAvatar from '@/components/streamer/StreamerAvatar';
 import { getStreamerImagePath } from '@/lib/utils';
 
 type Props = {
+  examId: string;
   row: ExamLeaderboardRow;
   entry: Hoi4GermanExamEntry | undefined;
   onClose: () => void;
   onSaved: (entries: Hoi4GermanExamEntry[]) => void;
 };
 
-export default function ExamEntryEditModal({ row, entry, onClose, onSaved }: Props) {
+export default function ExamEntryEditModal({
+  examId,
+  row,
+  entry,
+  onClose,
+  onSaved,
+}: Props) {
   useScrollLock();
 
   const initialParts = playTimePartsFromMs(entry?.playTimeMs);
@@ -57,7 +64,7 @@ export default function ExamEntryEditModal({ row, entry, onClose, onSaved }: Pro
   const submit = () => {
     setError(null);
     startTransition(async () => {
-      const result = await upsertHoi4ExamEntryAction({
+      const result = await upsertHoi4ExamEntryAction(examId, {
         streamerId: row.streamerId,
         clearGameDate,
         playHours: Number(playHours) || 0,
@@ -86,7 +93,7 @@ export default function ExamEntryEditModal({ row, entry, onClose, onSaved }: Pro
     }
     setError(null);
     startTransition(async () => {
-      const result = await deleteHoi4ExamEntryAction(row.streamerId);
+      const result = await deleteHoi4ExamEntryAction(examId, row.streamerId);
       if (!result.success) {
         setError(result.error);
         return;

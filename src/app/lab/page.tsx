@@ -1,6 +1,7 @@
 import { getCalendarData } from '@/lib/data-fetching';
 import { FlaskConical, LayoutGrid, ExternalLink, ChevronRight, Sword } from 'lucide-react';
 import { HOI4_GERMAN_EXAM_2026 } from '@/config/hoi4GermanExam2026';
+import { formatExamScheduleSummary, resolveHoi4GermanExamBinding } from '@/lib/hoi4GermanExam';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import Link from 'next/link';
@@ -16,6 +17,8 @@ export const metadata = buildPageMetadata({
 
 export default async function LabPage() {
   const { schedules } = await getCalendarData();
+  const examBinding = resolveHoi4GermanExamBinding(schedules, HOI4_GERMAN_EXAM_2026);
+  const examSummary = formatExamScheduleSummary(examBinding);
 
   const multiviewCandidates = schedules
     .filter((s) => s.participants.length >= 2)
@@ -62,7 +65,7 @@ export default async function LabPage() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-relaxed">
-                    6/16 호이고사 일정 연동 · 독일 고정 소련 STOP 타임어택 랭킹
+                    {examSummary} · 독일 고정 소련 STOP 랭킹
                   </p>
                 </div>
               </div>

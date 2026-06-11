@@ -2,7 +2,6 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
-import { HOI4_GERMAN_EXAM_2026 } from '@/config/hoi4GermanExam2026';
 import type { Hoi4GermanExamEntry } from '@/config/hoi4GermanExam2026';
 import {
   deleteHoi4ExamEntry,
@@ -10,6 +9,7 @@ import {
   upsertHoi4ExamEntry,
   type UpsertHoi4ExamEntryInput,
 } from '@/lib/hoi4-exam-entries';
+import { assertAllowedHoi4ExamId } from '@/lib/hoi4-exam-auth';
 import {
   adjustHoi4ExamRuntimeTimes,
   getHoi4ExamRuntimeState,
@@ -20,8 +20,6 @@ import {
 } from '@/lib/hoi4-exam-state';
 import { kstDatetimeLocalToIso } from '@/lib/hoi4-exam-time';
 import type { ActionResult } from '@/types/api-response';
-
-const EXAM_ID = HOI4_GERMAN_EXAM_2026.id;
 
 function revalidateExamPage() {
   revalidatePath('/lab/time-attack');
@@ -37,10 +35,17 @@ function okEntries(data: Hoi4GermanExamEntry[]): ActionResult<Hoi4GermanExamEntr
   return { success: true, data };
 }
 
-export async function startHoi4ExamAction(): Promise<ActionResult<Hoi4ExamRuntimeState>> {
+async function requireExamAccess(examId: string) {
+  await requireAuth();
+  await assertAllowedHoi4ExamId(examId);
+}
+
+export async function startHoi4ExamAction(
+  examId: string,
+): Promise<ActionResult<Hoi4ExamRuntimeState>> {
   try {
-    await requireAuth();
-    const state = await setHoi4ExamStarted(EXAM_ID);
+    await requireExamAccess(examId);
+    const state = await setHoi4ExamStarted(examId);
     return okState(state);
   } catch (error) {
     return {
@@ -50,10 +55,12 @@ export async function startHoi4ExamAction(): Promise<ActionResult<Hoi4ExamRuntim
   }
 }
 
-export async function endHoi4ExamAction(): Promise<ActionResult<Hoi4ExamRuntimeState>> {
+export async function endHoi4ExamAction(
+  examId: string,
+): Promise<ActionResult<Hoi4ExamRuntimeState>> {
   try {
-    await requireAuth();
-    const state = await setHoi4ExamEnded(EXAM_ID);
+    await requireExamAccess(examId);
+    const state = await setHoi4ExamEnded(examId);
     return okState(state);
   } catch (error) {
     return {
@@ -63,10 +70,12 @@ export async function endHoi4ExamAction(): Promise<ActionResult<Hoi4ExamRuntimeS
   }
 }
 
-export async function resetHoi4ExamAction(): Promise<ActionResult<Hoi4ExamRuntimeState>> {
+export async function resetHoi4ExamAction(
+  examId: string,
+): Promise<ActionResult<Hoi4ExamRuntimeState>> {
   try {
-    await requireAuth();
-    const state = await resetHoi4ExamRuntime(EXAM_ID);
+    await requireExamAccess(examId);
+    const state = await resetHoi4ExamRuntime(examId);
     return okState(state);
   } catch (error) {
     return {
@@ -90,12 +99,13 @@ function formatExamActionError(error: unknown, fallback: string): string {
 }
 
 export async function upsertHoi4ExamEntryAction(
+  examId: string,
   input: UpsertHoi4ExamEntryInput,
 ): Promise<ActionResult<Hoi4GermanExamEntry[]>> {
   try {
-    await requireAuth();
-    await upsertHoi4ExamEntry(EXAM_ID, input);
-    const entries = await getHoi4ExamEntries(EXAM_ID);
+    await requireExamAccess(examId);
+    await upsertHoi4ExamEntry(examId, input);
+    const entries = await getHoi4ExamEntries(examId);
     return okEntries(entries);
   } catch (error) {
     return {
@@ -106,12 +116,13 @@ export async function upsertHoi4ExamEntryAction(
 }
 
 export async function deleteHoi4ExamEntryAction(
+  examId: string,
   streamerId: string,
 ): Promise<ActionResult<Hoi4GermanExamEntry[]>> {
   try {
-    await requireAuth();
-    await deleteHoi4ExamEntry(EXAM_ID, streamerId);
-    const entries = await getHoi4ExamEntries(EXAM_ID);
+    await requireExamAccess(examId);
+    await deleteHoi4ExamEntry(examId, streamerId);
+    const entries = await getHoi4ExamEntries(examId);
     return okEntries(entries);
   } catch (error) {
     return {
@@ -121,8 +132,11 @@ export async function deleteHoi4ExamEntryAction(
   }
 }
 
-export async function fetchHoi4ExamRuntimeAction(): Promise<Hoi4ExamRuntimeState> {
-  return getHoi4ExamRuntimeState(EXAM_ID);
+export async function fetchHoi4ExamRuntimeAction(
+  examId: string,
+): Promise<Hoi4ExamRuntimeState> {
+  await assertAllowedHoi4ExamId(examId);
+  return getHoi4ExamRuntimeState(examId);
 }
 
 export type AdjustHoi4ExamTimeInput = {
@@ -133,10 +147,11 @@ export type AdjustHoi4ExamTimeInput = {
 };
 
 export async function adjustHoi4ExamTimeAction(
+  examId: string,
   input: AdjustHoi4ExamTimeInput,
 ): Promise<ActionResult<Hoi4ExamRuntimeState>> {
   try {
-    await requireAuth();
+    await requireExamAccess(examId);
 
     const patch: Parameters<typeof adjustHoi4ExamRuntimeTimes>[1] = {};
 
@@ -162,7 +177,7 @@ export async function adjustHoi4ExamTimeAction(
       return { success: false, error: '보정할 항목이 없습니다.' };
     }
 
-    const state = await adjustHoi4ExamRuntimeTimes(EXAM_ID, patch);
+    const state = await adjustHoi4ExamRuntimeTimes(examId, patch);
     return okState(state);
   } catch (error) {
     return {

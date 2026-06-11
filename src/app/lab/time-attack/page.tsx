@@ -2,9 +2,14 @@ import { auth } from '@/auth';
 import Hoi4GermanExamClient from '@/components/time-attack/Hoi4GermanExamClient';
 import { HOI4_GERMAN_EXAM_2026 } from '@/config/hoi4GermanExam2026';
 import { getCalendarData } from '@/lib/data-fetching';
-import { getHoi4ExamEntries } from '@/lib/hoi4-exam-entries';
-import { getHoi4ExamRuntimeState } from '@/lib/hoi4-exam-state';
-import { buildHoi4GermanExamViewModel } from '@/lib/hoi4GermanExam';
+import {
+  loadHoi4ExamEntriesForBinding,
+  loadHoi4ExamRuntimeForBinding,
+} from '@/lib/hoi4-exam-load';
+import {
+  buildHoi4GermanExamViewModel,
+  resolveHoi4GermanExamBinding,
+} from '@/lib/hoi4GermanExam';
 import { buildPageMetadata } from '@/lib/site';
 
 export const metadata = buildPageMetadata({
@@ -16,16 +21,16 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function TimeAttackPage() {
-  const examId = HOI4_GERMAN_EXAM_2026.id;
-  const [{ schedules }, runtime, entries, session] = await Promise.all([
-    getCalendarData(),
-    getHoi4ExamRuntimeState(examId),
-    getHoi4ExamEntries(examId),
+  const { schedules } = await getCalendarData();
+  const binding = resolveHoi4GermanExamBinding(schedules, HOI4_GERMAN_EXAM_2026);
+  const [runtime, entries, session] = await Promise.all([
+    loadHoi4ExamRuntimeForBinding(binding),
+    loadHoi4ExamEntriesForBinding(binding),
     auth(),
   ]);
   const model = buildHoi4GermanExamViewModel({
     config: HOI4_GERMAN_EXAM_2026,
-    schedules,
+    binding,
     runtime,
     entries,
   });

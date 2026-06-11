@@ -79,13 +79,18 @@ export default function Hoi4GermanExamClient({
     localStorage.setItem(STORAGE_SAMPLE, useSampleRecords ? '1' : '0');
   }, [hydrated, useSampleRecords]);
 
+  const examId = initialModel.examId;
+
   useEffect(() => {
-    if (testPhase !== 'auto') return;
+    if (testPhase !== 'auto' || !examId) return;
 
     const poll = async () => {
       if (document.hidden) return;
       try {
-        const res = await fetch('/api/lab/hoi4-exam/sync', { cache: 'no-store' });
+        const res = await fetch(
+          `/api/lab/hoi4-exam/sync?examId=${encodeURIComponent(examId)}`,
+          { cache: 'no-store' },
+        );
         if (!res.ok) return;
         const next = (await res.json()) as {
           runtime: Hoi4ExamRuntimeState;
@@ -114,7 +119,7 @@ export default function Hoi4GermanExamClient({
       window.clearInterval(id);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [testPhase, runtime.manualStartedAt, runtime.manualEndedAt]);
+  }, [testPhase, examId, runtime.manualStartedAt, runtime.manualEndedAt]);
 
   const model = useMemo(() => {
     const withRuntime =
@@ -141,8 +146,9 @@ export default function Hoi4GermanExamClient({
 
   const headerSlot = (
     <>
-      {canOperate ? (
+      {canOperate && examId ? (
         <ExamOperatePanel
+          examId={examId}
           variant="hero"
           phase={model.phase}
           runtime={runtime}
@@ -170,8 +176,9 @@ export default function Hoi4GermanExamClient({
         headerSlot={headerSlot}
         leaderboardSlot={
           <ExamLeaderboard
+            examId={examId}
             model={model}
-            canOperate={canOperate}
+            canOperate={canOperate && Boolean(examId)}
             entries={entries}
             onEntriesChange={setEntries}
           />

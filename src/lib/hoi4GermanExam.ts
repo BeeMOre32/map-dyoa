@@ -1,10 +1,16 @@
-import { format, parseISO, differenceInCalendarDays, startOfDay } from 'date-fns';
+import { format, differenceInCalendarDays, startOfDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import type { HOI4_GERMAN_EXAM_2026, Hoi4GermanExamEntry } from '@/config/hoi4GermanExam2026';
+import type { Hoi4GermanExamConfig, Hoi4GermanExamEntry } from '@/config/hoi4GermanExam2026';
+import type { Hoi4GermanExamBinding } from '@/lib/hoi4-exam-binding';
+import { resolveHoi4GermanExamBinding } from '@/lib/hoi4-exam-binding';
 import type { Hoi4ExamRuntimeState } from '@/lib/hoi4-exam-state';
+import { formatKstDateLabel, formatKstTimeLabel } from '@/lib/hoi4-exam-time';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import type { ParticipantFlat } from '@/lib/schedule-formatters';
 import { getStreamerImagePath } from '@/lib/utils';
+
+export type { Hoi4GermanExamBinding } from '@/lib/hoi4-exam-binding';
+export { resolveHoi4GermanExamBinding, formatExamScheduleSummary } from '@/lib/hoi4-exam-binding';
 
 function resolveProfileImg(name: string, profileImg?: string | null): string {
   const trimmed = profileImg?.trim();
@@ -28,9 +34,10 @@ export type ExamLeaderboardRow = {
 };
 
 export type Hoi4GermanExamViewModel = {
+  examId: string | null;
   phase: ExamPhase;
-  /** 일정상 출발 시각 (ISO) */
-  scheduledStartAt: string;
+  /** 일정상 출발 시각 (ISO) — DB 일정 startTime */
+  scheduledStartAt: string | null;
   /** 운영자 수동 출발 시각 */
   manualStartedAt: string | null;
   timerMode: ExamTimerMode;
@@ -49,11 +56,9 @@ export type Hoi4GermanExamViewModel = {
   multiviewHref: string | null;
 };
 
-type ExamConfig = typeof HOI4_GERMAN_EXAM_2026;
-
 function excludeCommentators(
   participants: ParticipantFlat[],
-  config: ExamConfig,
+  config: Hoi4GermanExamConfig,
 ): ParticipantFlat[] {
   const excluded = new Set<string>(config.excludedStreamerIds ?? []);
   if (excluded.size === 0) return participants;
@@ -88,18 +93,6 @@ export function formatPlayTimeMs(ms: number): string {
   }
   if (minutes > 0) return `${minutes}m${secSuffix}`;
   return `${seconds}s`;
-}
-
-function parseConfigStartAt(config: ExamConfig): Date {
-  return parseISO(config.startAtKst);
-}
-
-export function resolveEventStart(
-  config: ExamConfig,
-  schedule: FlattenedSchedule | null,
-): Date {
-  if (schedule) return new Date(schedule.startTime);
-  return parseConfigStartAt(config);
 }
 
 function eventDayEnd(start: Date): Date {
@@ -184,33 +177,6 @@ export function computeDDayLabel(
   return 'D+0';
 }
 
-export function resolveExamSchedule(
-  schedules: FlattenedSchedule[],
-  config: ExamConfig,
-): FlattenedSchedule | null {
-  if (config.scheduleId) {
-    const byId = schedules.find((s) => s.id === config.scheduleId);
-    if (byId) return byId;
-  }
-
-  const dayMatches = schedules.filter(
-    (s) => format(s.startTime, 'yyyy-MM-dd') === config.eventDate,
-  );
-  if (dayMatches.length === 0) return null;
-
-  const keywords = config.scheduleTitleIncludes ?? [];
-  if (keywords.length > 0) {
-    const byTitle = dayMatches.find((s) =>
-      keywords.some((kw) => s.title.includes(kw)),
-    );
-    if (byTitle) return byTitle;
-  }
-
-  return dayMatches.sort(
-    (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
-  )[0];
-}
-
 function entryMap(entries: readonly Hoi4GermanExamEntry[]): Map<string, Hoi4GermanExamEntry> {
   return new Map(entries.map((e) => [e.streamerId, e]));
 }
@@ -273,20 +239,43 @@ export function buildExamLeaderboard(
 }
 
 export function buildHoi4GermanExamViewModel(input: {
-  config: ExamConfig;
-  schedules: FlattenedSchedule[];
+  config: Hoi4GermanExamConfig;
+  binding: Hoi4GermanExamBinding;
   now?: Date;
   runtime?: Hoi4ExamRuntimeState;
   entries?: readonly Hoi4GermanExamEntry[];
 }): Hoi4GermanExamViewModel {
-  const { config, schedules, now = new Date(), runtime, entries } = input;
-  const schedule = resolveExamSchedule(schedules, config);
-  const participants = excludeCommentators(schedule?.participants ?? [], config);
+  const { config, binding, now = new Date(), runtime, entries } = input;
+  const { schedule, examId, scheduledStart } = binding;
+
+  if (!schedule || !scheduledStart) {
+    return {
+      examId: null,
+      phase: 'before',
+      scheduledStartAt: null,
+      manualStartedAt: null,
+      timerMode: 'hidden',
+      timerAnchorAt: null,
+      waitingForGo: false,
+      dDayLabel: '—',
+      heroBadge: '일정 없음',
+      startTimeLabel: '—',
+      eventDateLabel: '일정 미연동',
+      participantCount: 0,
+      clearedCount: 0,
+      topName: null,
+      topGameDate: null,
+      rows: [],
+      schedule: null,
+      multiviewHref: null,
+    };
+  }
+
+  const participants = excludeCommentators(schedule.participants, config);
   const members = participants.filter((p) => !p.isGuest);
   const entryList = entries ?? config.entries;
   const rows = buildExamLeaderboard(participants, entryList);
   const clearedCount = rows.filter((r) => r.hasRecord).length;
-  const scheduledStart = resolveEventStart(config, schedule);
   const manualStartedAt = runtime?.manualStartedAt
     ? new Date(runtime.manualStartedAt)
     : null;
@@ -320,6 +309,7 @@ export function buildHoi4GermanExamViewModel(input: {
       : null;
 
   return {
+    examId,
     phase,
     scheduledStartAt: scheduledStart.toISOString(),
     manualStartedAt: runtime?.manualStartedAt ?? null,
@@ -328,8 +318,8 @@ export function buildHoi4GermanExamViewModel(input: {
     waitingForGo: timerMode === 'waiting',
     dDayLabel,
     heroBadge,
-    startTimeLabel: format(scheduledStart, 'HH:mm'),
-    eventDateLabel: format(scheduledStart, 'yyyy. MM. dd (EEE)', { locale: ko }),
+    startTimeLabel: formatKstTimeLabel(scheduledStart),
+    eventDateLabel: formatKstDateLabel(scheduledStart),
     participantCount: members.length,
     clearedCount,
     topName: top?.name ?? null,
@@ -454,7 +444,9 @@ export function patchModelWithRuntimeState(
   runtime: Hoi4ExamRuntimeState,
   now = new Date(),
 ): Hoi4GermanExamViewModel {
-  const scheduledStart = new Date(model.scheduledStartAt);
+  const scheduledStart = model.scheduledStartAt
+    ? new Date(model.scheduledStartAt)
+    : new Date();
   const manualStartedAt = runtime.manualStartedAt
     ? new Date(runtime.manualStartedAt)
     : null;
@@ -501,7 +493,9 @@ export function applyExamTestOverrides(
   },
 ): Hoi4GermanExamViewModel {
   const phase = options.testPhase === 'auto' ? base.phase : options.testPhase;
-  const scheduledStart = new Date(base.scheduledStartAt);
+  const scheduledStart = base.scheduledStartAt
+    ? new Date(base.scheduledStartAt)
+    : new Date();
   const { mode: timerMode, anchorAt: timerAnchorAt } =
     options.testPhase === 'auto'
       ? { mode: base.timerMode, anchorAt: base.timerAnchorAt }

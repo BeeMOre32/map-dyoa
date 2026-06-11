@@ -12,6 +12,7 @@ import type { ExamPhase } from '@/lib/hoi4GermanExam';
 import { cn } from '@/lib/utils';
 
 type Props = {
+  examId: string;
   phase: ExamPhase;
   runtime: Hoi4ExamRuntimeState;
   onRuntimeChange: (state: Hoi4ExamRuntimeState) => void;
@@ -81,6 +82,7 @@ function OffsetButtonRow({
 }
 
 export default function ExamTimeAdjustPanel({
+  examId,
   phase,
   runtime,
   onRuntimeChange,
@@ -106,10 +108,10 @@ export default function ExamTimeAdjustPanel({
 
   if (!canAdjust) return null;
 
-  const apply = (input: Parameters<typeof adjustHoi4ExamTimeAction>[0]) => {
+  const apply = (input: Parameters<typeof adjustHoi4ExamTimeAction>[1]) => {
     setError(null);
     startTransition(async () => {
-      const result = await adjustHoi4ExamTimeAction(input);
+      const result = await adjustHoi4ExamTimeAction(examId, input);
       if (!result.success) {
         setError(result.error);
         return;

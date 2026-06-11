@@ -12,6 +12,7 @@ import ExamEntryEditModal from '@/components/time-attack/ExamEntryEditModal';
 import { cn, getStreamerImagePath } from '@/lib/utils';
 
 type Props = {
+  examId: string | null;
   model: Hoi4GermanExamViewModel;
   canOperate: boolean;
   entries: Hoi4GermanExamEntry[];
@@ -73,6 +74,7 @@ function RankCell({
 }
 
 export default function ExamLeaderboard({
+  examId,
   model,
   canOperate,
   entries,
@@ -185,8 +187,9 @@ export default function ExamLeaderboard({
         ) : null}
       </div>
 
-      {editingRow ? (
+      {editingRow && examId ? (
         <ExamEntryEditModal
+          examId={examId}
           row={editingRow}
           entry={entryMap.get(editingRow.streamerId)}
           onClose={() => setEditingRow(null)}

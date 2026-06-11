@@ -181,8 +181,9 @@ export default function Hoi4GermanExamView({
                   {config.title}
                 </h1>
                 <p className="text-xs font-medium leading-relaxed text-slate-500 dark:text-slate-400 sm:text-sm">
-                  {model.eventDateLabel} {model.startTimeLabel} 동시 출발 · {config.nation}{' '}
-                  고정
+                  {model.schedule
+                    ? `${model.eventDateLabel} ${model.startTimeLabel} 일정 출발 · ${config.nation} 고정`
+                    : `캘린더에 「${config.scheduleTitleIncludes.join('」「')}」 일정을 등록해 주세요`}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end">
