@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LayoutGrid, Check, Play, Puzzle, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@teispace/next-themes';
 import { getStreamerColor } from '@/constants/streamercolor';
 import type { Streamer } from '@prisma/client';
 import { MAX_STREAMS } from './utils';

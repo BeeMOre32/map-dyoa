@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowUpRight, ChevronDown, Sword } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@teispace/next-themes';
 import { getStreamerColor } from '@/constants/streamercolor';
 import type { Hoi4LeaderboardData } from '@/lib/data-fetching';
 import {

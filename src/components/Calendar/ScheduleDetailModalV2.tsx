@@ -23,7 +23,7 @@ import { ko } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useSession } from 'next-auth/react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@teispace/next-themes';
 import {
   deleteScheduleRequest,
   navigateToCalendarAfterDelete,

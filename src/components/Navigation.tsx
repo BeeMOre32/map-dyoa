@@ -3,14 +3,22 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, Users, Clapperboard, Sword } from 'lucide-react';
+import { Calendar, Users, Clapperboard, Sword, Timer } from 'lucide-react';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
 
 const tabs = [
   { id: 'calendar', label: '스케줄', href: '/calendar', icon: Calendar },
   { id: 'streamers', label: '멤버·라이브', href: '/streamers', icon: Users },
   { id: 'clips', label: '클립', href: '/clips', icon: Clapperboard },
-  { id: 'hoi4', label: '전적', href: '/hoi4', icon: Sword, isHoi4: true },
+  { id: 'hoi4', label: '전적', href: '/hoi4', icon: Sword, accent: 'amber' as const },
+  {
+    id: 'time-attack',
+    label: '호이고사',
+    href: '/lab/time-attack',
+    icon: Timer,
+    accent: 'amber' as const,
+    pulse: true,
+  },
 ];
 
 export default function Navigation() {
@@ -31,9 +39,10 @@ export default function Navigation() {
       <div className="rounded-xl flex bg-slate-100 dark:bg-slate-900 p-1 border-2 border-slate-200 dark:border-slate-800 relative shadow-inner">
         {tabs.map((tab) => {
           const isActive = pathname.startsWith(tab.href);
-          const isHoi4 = tab.id === 'hoi4';
+          const isAmber = tab.accent === 'amber';
           const isStreamers = tab.id === 'streamers';
           const showLiveGlow = isStreamers && liveCount > 0;
+          const showAmberPulse = isAmber && tab.pulse && !isActive;
 
           return (
             <Link
@@ -41,12 +50,12 @@ export default function Navigation() {
               href={tab.href}
               className={`relative z-10 flex items-center gap-0.5 rounded-xl px-1.5 py-1 text-xs font-black transition-all sm:gap-1 sm:rounded-2xl sm:px-4 sm:py-1.5 sm:text-sm md:px-5 ${
                 isActive
-                  ? isHoi4
+                  ? isAmber
                     ? 'text-amber-600 dark:text-amber-400'
                     : isStreamers && liveCount > 0
                       ? 'text-red-600 dark:text-red-400'
                       : 'text-indigo-600 dark:text-indigo-400'
-                  : isHoi4
+                  : isAmber
                     ? 'text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300'
                     : showLiveGlow
                       ? 'text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300'
@@ -61,14 +70,14 @@ export default function Navigation() {
                 />
               )}
 
-              {/* HOI4 탭 배경 강조 */}
-              {isHoi4 && !isActive && (
+              {/* 호이고사 등 이벤트 탭 배경 강조 */}
+              {showAmberPulse ? (
                 <motion.div
                   className="absolute inset-0 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-700/50"
                   animate={{ opacity: [0.5, 1, 0.5] }}
                   transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
                 />
-              )}
+              ) : null}
 
               {/* 멤버·라이브 탭: 라이브 중일 때 붉은 배경 강조 */}
               {showLiveGlow && !isActive && (

@@ -3,7 +3,7 @@
 import { format, isToday } from 'date-fns';
 import Link from 'next/link';
 import { Clock, Gamepad2, Zap } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@teispace/next-themes';
 import { motion } from 'framer-motion';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { getGameColor } from '@/constants/gamecolor';

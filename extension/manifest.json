@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Map-Dyoa 멀티뷰 도우미",
   "description": "map-dyoa 멀티뷰에서 치지직 방송을 시청할 수 있도록 iframe 제한을 해제합니다.",
-  "version": "1.2.2",
+  "version": "1.2.4",
   "minimum_chrome_version": "121",
   "permissions": ["declarativeNetRequestWithHostAccess", "cookies", "alarms"],
   "host_permissions": [

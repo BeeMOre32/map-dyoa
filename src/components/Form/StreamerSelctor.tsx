@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@teispace/next-themes';
 import { Streamer } from '@prisma/client';
 import StreamerAvatar from '@/components/streamer/StreamerAvatar';
 import { getStreamerImagePath, getChosung } from '@/lib/utils';

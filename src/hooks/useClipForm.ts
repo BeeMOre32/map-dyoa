@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { format, isValid } from 'date-fns';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@teispace/next-themes';
 import { createClipAction, updateClipAction } from '@/app/actions';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { isChzzkClipUrl } from '@/lib/chzzk';

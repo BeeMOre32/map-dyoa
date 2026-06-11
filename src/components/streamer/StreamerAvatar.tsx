@@ -32,11 +32,17 @@ export default function StreamerAvatar({
     medium: 'w-14 h-14',
     large: 'w-20 h-20',
   };
+  const textSizeClasses = {
+    xs: 'text-[9px] leading-none',
+    small: 'text-xs',
+    medium: 'text-base',
+    large: 'text-xl',
+  };
 
   if (shouldShowFallback) {
     return (
       <div
-        className={`${sizeClasses[size]} rounded-2xl flex items-center justify-center font-black text-xl shadow-sm transition-transform group-hover:scale-110 duration-300 shrink-0`}
+        className={`${sizeClasses[size]} rounded-2xl flex items-center justify-center font-black shadow-sm transition-transform group-hover:scale-110 duration-300 shrink-0 ${textSizeClasses[size]}`}
         style={{
           backgroundColor: `${resolvedColor}20`,
           color: resolvedColor,

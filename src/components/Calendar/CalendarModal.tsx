@@ -26,7 +26,7 @@ import { useScheduleModal } from '@/hooks/useScheduleModal';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@teispace/next-themes';
 import { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { markModalSoftNav } from '@/lib/modal-navigation';
 

@@ -5,7 +5,7 @@ import {
   ArrowLeft, ExternalLink, LayoutGrid, FlaskConical, X, Play, Plus,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@teispace/next-themes';
 import { getStreamerColor } from '@/constants/streamercolor';
 import type { Streamer } from '@prisma/client';
 import { getPanelRows } from './utils';

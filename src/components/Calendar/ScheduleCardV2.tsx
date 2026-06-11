@@ -6,7 +6,7 @@ import { isScheduleLiveOnCard } from '@/lib/schedule-live';
 import { useMinuteClock } from '@/hooks/useMinuteClock';
 import Link from 'next/link';
 import { Clock, Gamepad2, CircleAlert } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@teispace/next-themes';
 import { motion } from 'framer-motion';
 import { scheduleCardVariants, scheduleSurfaceLayoutId } from '@/lib/calendarMotion';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';

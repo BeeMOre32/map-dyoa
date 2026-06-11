@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { SlidersHorizontal, X, ChevronDown, Search, Check, Star } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@teispace/next-themes';
 import type { Streamer, Game } from '@prisma/client';
 import StreamerAvatar from '@/components/streamer/StreamerAvatar';
 import { getStreamerImagePath } from '@/lib/utils';

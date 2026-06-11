@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Settings, LogIn, LogOut, UserCheck, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signOut, useSession } from 'next-auth/react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@teispace/next-themes';
 import Navigation from '../Navigation';
 import SettingsModal from './SettingsModal';
 import { SITE_BRAND, SITE_NAME, SITE_PRIMARY_TITLE } from '@/lib/site';

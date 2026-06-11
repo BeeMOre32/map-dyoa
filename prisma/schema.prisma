@@ -209,6 +209,28 @@ enum NoticeLevel {
   URGENT
 }
 
+/// HOI4 호이고사 등 — 수동 출발·종료 (7시 자동 시작 대신 운영자 제어)
+model Hoi4ExamState {
+  examId          String    @id
+  manualStartedAt DateTime?
+  manualEndedAt   DateTime?
+  updatedAt       DateTime  @updatedAt
+}
+
+/// HOI4 호이고사 멤버별 클리어 기록
+model Hoi4ExamEntry {
+  examId        String
+  streamerId    String
+  clearGameDate String?
+  playTimeMs    Int?
+  clearedAtKst  String?
+  vodUrl        String?
+  updatedAt     DateTime @updatedAt
+
+  @@id([examId, streamerId])
+  @@index([examId])
+}
+
 /// 관리자용 변경 이력 (Next 서버 액션에서 기록)
 model AuditLog {
   id          String   @id @default(cuid())

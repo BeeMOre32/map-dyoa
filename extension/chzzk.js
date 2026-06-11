@@ -67,6 +67,69 @@
   };
   rootObserver.observe(root, { childList: true, subtree: true });
 
+  let autoFullscreen =
+    location.hash.includes('map-dyoa-auto-fs') ||
+    location.search.includes('map-dyoa-auto-fs');
+
+  const isPlayerFullscreen = () => {
+    if (document.fullscreenElement) return true;
+    const video = document.querySelector('video');
+    if (video?.closest('[class*="fullscreen"]')) return true;
+    return !!document.querySelector(
+      '[class*="fullscreen"][class*="live_"], [class*="viewer_fullscreen"], [class*="mode_fullscreen"]'
+    );
+  };
+
+  const pressPlayerKeyF = () => {
+    const targets = [
+      document.querySelector('video'),
+      document.querySelector('#live_player_layout'),
+      document.querySelector('#player_layout'),
+      document.activeElement,
+      document,
+      window,
+    ].filter(Boolean);
+    for (const type of ['keydown', 'keypress', 'keyup']) {
+      const ev = new KeyboardEvent(type, {
+        key: 'f',
+        code: 'KeyF',
+        keyCode: 70,
+        which: 70,
+        bubbles: true,
+        cancelable: true,
+      });
+      for (const target of targets) {
+        target.dispatchEvent(ev);
+      }
+    }
+    document
+      .querySelector(
+        '[class*="live_player_control"] button[class*="fullscreen"], [class*="player_fullscreen"], button[aria-label*="전체"], button[title*="전체"]'
+      )
+      ?.click();
+  };
+
+  let fullscreenRetryTimer = null;
+  const ensureFullscreen = () => {
+    if (!autoFullscreen || isPlayerFullscreen()) return true;
+    pressPlayerKeyF();
+    return isPlayerFullscreen();
+  };
+
+  const scheduleFullscreen = () => {
+    autoFullscreen = true;
+    if (fullscreenRetryTimer != null) clearInterval(fullscreenRetryTimer);
+    let tries = 0;
+    const tick = () => {
+      if (ensureFullscreen() || tries++ >= 50) {
+        clearInterval(fullscreenRetryTimer);
+        fullscreenRetryTimer = null;
+      }
+    };
+    tick();
+    fullscreenRetryTimer = setInterval(tick, 500);
+  };
+
   const initPlayerFeatures = async (node, isLive) => {
     if (node == null) return;
     const liveWide = await findReactState(
@@ -74,6 +137,7 @@
       (state) => state.length === 3 && state[2]?.toString?.() === 'atom7'
     );
     liveWide?.[1].set(liveWide[2], true);
+    if (autoFullscreen) scheduleFullscreen();
   };
 
   const initChatFeatures = async (chattingContainer) => {
@@ -167,6 +231,13 @@
     layoutBodyObserver.observe(layoutBody, { childList: true });
     await init(layoutBody.querySelector('section'));
   };
+
+  window.addEventListener('message', (ev) => {
+    if (ev.data?.source !== 'map-dyoa-director') return;
+    if (ev.data?.type === 'fullscreen') scheduleFullscreen();
+  });
+
+  if (autoFullscreen) scheduleFullscreen();
 
   (async () => {
     if (!location.pathname.endsWith('/chat')) {

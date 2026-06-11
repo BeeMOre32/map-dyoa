@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Medal } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@teispace/next-themes';
 import StreamerAvatar from '@/components/streamer/StreamerAvatar';
 import { getStreamerColor } from '@/constants/streamercolor';
 import type { Hoi4LeaderboardData } from '@/lib/data-fetching';

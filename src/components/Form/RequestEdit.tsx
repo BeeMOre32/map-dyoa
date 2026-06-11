@@ -4,7 +4,7 @@
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { X, Send, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@teispace/next-themes';
 import { createFeedbackAction } from '@/app/actions';
 import { feedbackSchema } from '@/lib/schemas';
 import { backdropVariants, defaultModalVariants } from '@/lib/modalVariants';

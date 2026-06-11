@@ -1,5 +1,6 @@
 import { getCalendarData } from '@/lib/data-fetching';
-import { FlaskConical, LayoutGrid, ExternalLink, ChevronRight } from 'lucide-react';
+import { FlaskConical, LayoutGrid, ExternalLink, ChevronRight, Sword } from 'lucide-react';
+import { HOI4_GERMAN_EXAM_2026 } from '@/config/hoi4GermanExam2026';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import Link from 'next/link';
@@ -42,6 +43,39 @@ export default async function LabPage() {
                 개발 중인 기능을 미리 체험하고 피드백을 남겨주세요
               </p>
             </div>
+          </div>
+
+          {/* HOI4 독일 호이고사 */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="p-5 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 bg-amber-50 dark:bg-amber-900/30 rounded-2xl shrink-0">
+                  <Sword className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-black text-slate-800 dark:text-white">
+                      {HOI4_GERMAN_EXAM_2026.title}
+                    </h2>
+                    <span className="text-[9px] font-black px-1.5 py-px rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400">
+                      NEW
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-relaxed">
+                    6/16 호이고사 일정 연동 · 독일 고정 소련 STOP 타임어택 랭킹
+                  </p>
+                </div>
+              </div>
+            </div>
+            <Link
+              href="/lab/time-attack"
+              className="flex items-center justify-between gap-3 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
+            >
+              <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-400">
+                현황 보기
+              </span>
+              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all" />
+            </Link>
           </div>
 
           {/* 멀티뷰 기능 카드 */}

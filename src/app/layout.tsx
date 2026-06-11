@@ -9,7 +9,9 @@ import PwaRegistrar from '@/components/Common/PwaRegistrar';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ThemeProvider } from '@/providers/ThemeProvider';
+import { APP_THEME } from '@/config/theme';
 import { getOrganizationJsonLd, getRootMetadata, getWebsiteJsonLd } from '@/lib/site';
+import { getTheme } from '@teispace/next-themes/server';
 import type { Metadata } from 'next';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -22,11 +24,15 @@ export const viewport = {
   viewportFit: 'cover',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const initialTheme = await getTheme({
+    cookieName: APP_THEME.storageKey,
+    themes: [...APP_THEME.themes, 'system'],
+  });
   return (
     <html lang="ko" suppressHydrationWarning>
       <body
@@ -41,7 +47,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(getOrganizationJsonLd()) }}
         />
-        <ThemeProvider>
+        <ThemeProvider initialTheme={initialTheme ?? undefined}>
           <AuthProvider>
             <ToastProvider>
               <PwaRegistrar />

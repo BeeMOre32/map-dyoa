@@ -5,7 +5,7 @@ import {
   ChevronLeft, ChevronRight, ExternalLink, Maximize2, MessageSquare,
   Minimize2, PlayCircle, X,
 } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@teispace/next-themes';
 import { getStreamerColor } from '@/constants/streamercolor';
 import type { Streamer } from '@prisma/client';
 import { getLiveUrl } from './utils';

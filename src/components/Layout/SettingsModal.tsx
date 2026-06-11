@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@teispace/next-themes';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
