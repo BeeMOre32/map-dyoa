@@ -12,6 +12,8 @@ import {
 } from '@/lib/hoi4GermanExam';
 import { buildPageMetadata } from '@/lib/site';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = buildPageMetadata({
   title: 'HOI4 독일 호이고사',
   description:

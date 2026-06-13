@@ -31,12 +31,9 @@ import FavoritesOnlyToggle from '@/components/Common/FavoritesOnlyToggle';
 export default function StreamerView({
   streamers,
   initialLiveIds,
-  initialLiveFetchedAt,
 }: {
   streamers: Streamer[];
   initialLiveIds?: string[];
-  /** RSC에서 라이브 목록을 가져온 시각(ms). hydration 시각 텍스트 일치용 */
-  initialLiveFetchedAt?: number;
 }) {
   const router = useRouter();
   const isDark = useIsDarkAfterMount();
@@ -49,9 +46,8 @@ export default function StreamerView({
   const [selectedOrder, setSelectedOrder] = useState<string[]>([]);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
 
-  const { liveIds, isRefreshing, lastUpdatedAt } = useLiveStatus(
+  const { liveIds, isRefreshing, lastUpdatedAt, isStale, refresh } = useLiveStatus(
     initialLiveIds,
-    initialLiveFetchedAt,
   );
 
   const generations = useMemo(
@@ -140,13 +136,18 @@ export default function StreamerView({
   const refreshStatus = useMemo(() => {
     if (isRefreshing) return { kind: 'loading' as const, text: '갱신 중' };
     if (!lastUpdatedAt) return { kind: 'loading' as const, text: '확인 중' };
+    if (isStale) {
+      return {
+        kind: 'stale' as const,
+        text: `${format(new Date(lastUpdatedAt), 'HH:mm')} · 오래됨`,
+      };
+    }
 
     return {
       kind: 'done' as const,
-      // Node·브라우저 locale 차이(PM vs 오후)로 hydration mismatch 방지 — 24시간 고정 포맷
       text: `${format(new Date(lastUpdatedAt), 'HH:mm')} 갱신`,
     };
-  }, [isRefreshing, lastUpdatedAt]);
+  }, [isRefreshing, lastUpdatedAt, isStale]);
 
   const listFilterKey = `${activeGen ?? 'all'}-${search.trim()}-${favoritesOnly}`;
 
@@ -194,11 +195,17 @@ export default function StreamerView({
                 )}
               </p>
             </div>
-            <div
-              className={`flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-black transition-all sm:gap-1.5 sm:px-2.5 sm:py-1 sm:text-xs ${
+            <button
+              type="button"
+              onClick={refresh}
+              disabled={isRefreshing}
+              title="라이브 상태 새로고침"
+              className={`flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-black transition-all sm:gap-1.5 sm:px-2.5 sm:py-1 sm:text-xs disabled:opacity-70 ${
                 refreshStatus.kind === 'done'
-                  ? 'border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400'
-                  : 'border-indigo-100 bg-indigo-50 text-indigo-600 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-400'
+                  ? 'border-emerald-100 bg-emerald-50 text-emerald-600 hover:border-emerald-200 hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:border-emerald-800 dark:hover:bg-emerald-950/60'
+                  : refreshStatus.kind === 'stale'
+                    ? 'border-amber-100 bg-amber-50 text-amber-700 hover:border-amber-200 hover:bg-amber-100 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-400 dark:hover:border-amber-800 dark:hover:bg-amber-950/60'
+                    : 'border-indigo-100 bg-indigo-50 text-indigo-600 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-400'
               }`}
               aria-live="polite"
             >
@@ -207,7 +214,7 @@ export default function StreamerView({
                 aria-hidden
               />
               <span>{refreshStatus.text}</span>
-            </div>
+            </button>
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2.5">

@@ -1,4 +1,5 @@
-import { isToday, isValid } from 'date-fns';
+import { isValid } from 'date-fns';
+import { kstDateKey } from '@/lib/hoi4-exam-time';
 
 export type ScheduleLiveContext = {
   startTime: Date | string;
@@ -6,6 +7,11 @@ export type ScheduleLiveContext = {
   isLiveEnded?: boolean;
   participants: { id: string }[];
 };
+
+function isTodayKst(date: Date, now: Date): boolean {
+  const key = kstDateKey(date);
+  return key !== '' && key === kstDateKey(now);
+}
 
 /** 등록된 시작 시각 이전이면 false (시간 미정 일정은 항상 true) */
 export function hasScheduleBroadcastStarted(
@@ -18,7 +24,7 @@ export function hasScheduleBroadcastStarted(
   return now.getTime() >= start.getTime();
 }
 
-/** 캘린더 카드 LIVE 뱃지 — 치지직 라이브 + 오늘 일정 + 시작 시각 이후 */
+/** 캘린더 카드 LIVE 뱃지 — 치지직 라이브 + 오늘(KST) 일정 + 시작 시각 이후 */
 export function isScheduleLiveOnCard(
   schedule: ScheduleLiveContext,
   liveStreamerIds: Set<string> | undefined,
@@ -28,7 +34,7 @@ export function isScheduleLiveOnCard(
   if (!hasScheduleBroadcastStarted(schedule, now)) return false;
 
   const start = new Date(schedule.startTime);
-  if (!isValid(start) || !isToday(start)) return false;
+  if (isValid(start) && !isTodayKst(start, now)) return false;
 
   return schedule.participants.some((p) => liveStreamerIds.has(p.id));
 }

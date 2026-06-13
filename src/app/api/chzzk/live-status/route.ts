@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getLiveStreamerIds } from '@/lib/chzzk-live-status';
 
-export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const liveStreamerIds = await getLiveStreamerIds();
+  const fetchedAt = Date.now();
+  const liveStreamerIds = await getLiveStreamerIds({ fresh: true });
   return NextResponse.json(
-    { liveStreamerIds },
+    { liveStreamerIds, fetchedAt },
     {
       headers: {
         'Cache-Control': 'no-store, max-age=0',

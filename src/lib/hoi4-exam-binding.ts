@@ -1,6 +1,11 @@
 import type { Hoi4GermanExamConfig } from '@/config/hoi4GermanExam2026';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
-import { formatKstDateLabel, formatKstTimeLabel, kstDateKey } from '@/lib/hoi4-exam-time';
+import {
+  formatKstDateLabel,
+  formatKstTimeLabel,
+  isValidDate,
+  kstDateKey,
+} from '@/lib/hoi4-exam-time';
 
 export type Hoi4GermanExamBinding = {
   schedule: FlattenedSchedule | null;
@@ -11,11 +16,15 @@ export type Hoi4GermanExamBinding = {
   scheduledStart: Date | null;
 };
 
+function hasValidStartTime(schedule: FlattenedSchedule): boolean {
+  return isValidDate(schedule.startTime);
+}
+
 function matchesExamScheduleTitle(
   schedule: FlattenedSchedule,
   keywords: readonly string[],
 ): boolean {
-  if (keywords.length === 0) return false;
+  if (keywords.length === 0 || !hasValidStartTime(schedule)) return false;
   return keywords.some((keyword) => schedule.title.includes(keyword));
 }
 
@@ -82,6 +91,15 @@ export function resolveHoi4GermanExamBinding(
 }
 
 function toBinding(schedule: FlattenedSchedule): Hoi4GermanExamBinding {
+  if (!hasValidStartTime(schedule)) {
+    return {
+      schedule: null,
+      examId: null,
+      legacyExamId: null,
+      scheduledStart: null,
+    };
+  }
+
   return {
     schedule,
     examId: schedule.id,

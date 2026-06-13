@@ -1,16 +1,7 @@
 import { NextResponse } from 'next/server';
+import { extractChzzkChannelId } from '@/lib/chzzk';
 import { isScheduleServerEnabled } from '@/lib/map-dyoa-server-schedules';
 import { getPrismaForDomain } from '@/lib/prisma';
-
-function extractChannelId(chzzkUrl: string): string | null {
-  try {
-    const url = new URL(chzzkUrl);
-    const segments = url.pathname.split('/').filter(Boolean);
-    return segments[segments.length - 1] ?? null;
-  } catch {
-    return null;
-  }
-}
 
 async function fetchLiveStatus(channelId: string) {
   const res = await fetch(
@@ -37,7 +28,7 @@ export async function GET() {
 
   const channelMap = new Map<string, string>();
   for (const s of streamers) {
-    const cid = extractChannelId(s.chzzkUrl!);
+    const cid = extractChzzkChannelId(s.chzzkUrl!);
     if (cid) channelMap.set(cid, s.name);
   }
 

@@ -1,6 +1,11 @@
 /** KST datetime-local ↔ ISO 변환·표시 */
 
+export function isValidDate(date: Date): boolean {
+  return date instanceof Date && Number.isFinite(date.getTime());
+}
+
 export function kstDateKey(date: Date): string {
+  if (!isValidDate(date)) return '';
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Seoul',
     year: 'numeric',
@@ -10,6 +15,7 @@ export function kstDateKey(date: Date): string {
 }
 
 export function formatKstTimeLabel(date: Date): string {
+  if (!isValidDate(date)) return '—';
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Asia/Seoul',
     hour: '2-digit',
@@ -22,6 +28,7 @@ export function formatKstTimeLabel(date: Date): string {
 }
 
 export function formatKstDateLabel(date: Date): string {
+  if (!isValidDate(date)) return '—';
   return new Intl.DateTimeFormat('ko-KR', {
     timeZone: 'Asia/Seoul',
     month: 'numeric',

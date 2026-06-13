@@ -1,16 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-const POLL_INTERVAL = 60_000;
+/** 백그라운드 폴링 간격 */
+export const LIVE_STATUS_POLL_MS = 45_000;
+/** 탭 복귀·수동 갱신 시 이 시간보다 오래됐으면 즉시 재조회 */
+export const LIVE_STATUS_STALE_MS = 30_000;
 
 let cache = new Set<string>();
 let lastFetchedAt = 0;
 let isFetching = false;
 let timer: ReturnType<typeof setInterval> | null = null;
+let staleTimer: ReturnType<typeof setInterval> | null = null;
 
-async function fetchLiveStatus() {
-  if (isFetching) return;
+type LiveStatusApiResponse = {
+  liveStreamerIds: string[];
+  fetchedAt?: number;
+};
+
+async function fetchLiveStatus(force = false) {
+  if (isFetching && !force) return;
   isFetching = true;
   notifyState({ isRefreshing: lastFetchedAt > 0 });
   try {
@@ -18,9 +27,9 @@ async function fetchLiveStatus() {
       cache: 'no-store',
     });
     if (!res.ok) return;
-    const data: { liveStreamerIds: string[] } = await res.json();
+    const data: LiveStatusApiResponse = await res.json();
     cache = new Set(data.liveStreamerIds);
-    lastFetchedAt = Date.now();
+    lastFetchedAt = data.fetchedAt ?? Date.now();
   } catch {
     // 네트워크 실패 시 기존 캐시 유지
   } finally {
@@ -29,11 +38,29 @@ async function fetchLiveStatus() {
   }
 }
 
+/** 수동 새로고침 — UI 버튼·외부 호출용 */
+export function refreshLiveStatus() {
+  return fetchLiveStatus(true);
+}
+
+function startStaleCheck() {
+  if (staleTimer !== null) return;
+  staleTimer = setInterval(() => {
+    if (stateListeners.size > 0 && lastFetchedAt > 0) notifyState();
+  }, 10_000);
+}
+
+function stopStaleCheck() {
+  if (staleTimer === null) return;
+  clearInterval(staleTimer);
+  staleTimer = null;
+}
+
 function startPolling() {
   if (timer !== null) return;
   timer = setInterval(() => {
     if (document.visibilityState === 'visible') fetchLiveStatus();
-  }, POLL_INTERVAL);
+  }, LIVE_STATUS_POLL_MS);
 }
 
 function stopPolling() {
@@ -44,81 +71,88 @@ function stopPolling() {
 
 function onVisibilityChange() {
   if (document.visibilityState === 'visible') {
-    // 숨겨진 동안 60초 이상 지났으면 즉시 갱신
-    if (Date.now() - lastFetchedAt >= POLL_INTERVAL) fetchLiveStatus();
+    if (Date.now() - lastFetchedAt >= LIVE_STATUS_STALE_MS) fetchLiveStatus();
     startPolling();
   } else {
     stopPolling();
   }
 }
 
-type LiveStatusState = {
+export type LiveStatusState = {
   liveIds: Set<string>;
   isLoading: boolean;
   isRefreshing: boolean;
   lastUpdatedAt: number | null;
+  /** 마지막 갱신 후 STALE_MS 초과 */
+  isStale: boolean;
+  refresh: () => void;
 };
 
 const stateListeners = new Set<(s: LiveStatusState) => void>();
 
-function notifyState(overrides: Partial<LiveStatusState> = {}) {
-  const state = {
+function buildState(overrides: Partial<LiveStatusState> = {}): LiveStatusState {
+  const lastUpdatedAt = lastFetchedAt || null;
+  return {
     liveIds: new Set(cache),
     isLoading: lastFetchedAt === 0,
     isRefreshing: false,
-    lastUpdatedAt: lastFetchedAt || null,
+    lastUpdatedAt,
+    isStale:
+      lastUpdatedAt !== null && Date.now() - lastUpdatedAt >= LIVE_STATUS_STALE_MS,
+    refresh: refreshLiveStatus,
     ...overrides,
   };
+}
+
+function notifyState(overrides: Partial<LiveStatusState> = {}) {
+  const state = buildState(overrides);
   stateListeners.forEach((fn) => fn(state));
 }
 
-function seedFromServer(ids: string[], fetchedAt: number) {
+function seedFromServer(ids: string[]) {
   cache = new Set(ids);
-  lastFetchedAt = fetchedAt;
+  lastFetchedAt = 0;
 }
 
-export function useLiveStatus(
-  initialLiveIds?: string[],
-  initialLiveFetchedAt?: number,
-): LiveStatusState {
+export function useLiveStatus(initialLiveIds?: string[]): LiveStatusState {
   const [state, setState] = useState<LiveStatusState>(() => {
     if (initialLiveIds !== undefined) {
-      const fetchedAt = initialLiveFetchedAt ?? 0;
       return {
         liveIds: new Set(initialLiveIds),
         isLoading: false,
-        isRefreshing: false,
-        lastUpdatedAt: fetchedAt > 0 ? fetchedAt : null,
+        isRefreshing: true,
+        lastUpdatedAt: null,
+        isStale: true,
+        refresh: refreshLiveStatus,
       };
     }
     if (lastFetchedAt > 0) {
-      return {
-        liveIds: new Set(cache),
-        isLoading: false,
-        isRefreshing: false,
-        lastUpdatedAt: lastFetchedAt,
-      };
+      return buildState();
     }
     return {
       liveIds: new Set(),
       isLoading: true,
       isRefreshing: false,
       lastUpdatedAt: null,
+      isStale: false,
+      refresh: refreshLiveStatus,
     };
   });
+
+  const refresh = useCallback(() => {
+    refreshLiveStatus();
+  }, []);
 
   useEffect(() => {
     stateListeners.add(setState);
 
     if (stateListeners.size === 1) {
-      const hasServerSeed = initialLiveIds !== undefined;
-      if (hasServerSeed) {
-        seedFromServer(initialLiveIds, initialLiveFetchedAt ?? Date.now());
+      if (initialLiveIds !== undefined) {
+        seedFromServer(initialLiveIds);
       }
-      if (lastFetchedAt === 0) {
-        fetchLiveStatus();
-      }
+      fetchLiveStatus();
       startPolling();
+      startStaleCheck();
       document.addEventListener('visibilitychange', onVisibilityChange);
     }
 
@@ -126,6 +160,7 @@ export function useLiveStatus(
       stateListeners.delete(setState);
       if (stateListeners.size === 0) {
         stopPolling();
+        stopStaleCheck();
         document.removeEventListener('visibilitychange', onVisibilityChange);
       }
     };
@@ -133,5 +168,5 @@ export function useLiveStatus(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return state;
+  return { ...state, refresh };
 }

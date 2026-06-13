@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { extractChzzkChannelId } from '@/lib/chzzk';
+import { fetchChzzkLiveDetail } from '@/lib/chzzk-api';
 import { getPrismaForDomain } from '@/lib/prisma';
 import { fetchWithBackoff } from '@/lib/map-dyoa-server-http-utils';
 import { fetchAllStreamersFromServer } from '@/lib/map-dyoa-server-streamers';
@@ -6,22 +8,6 @@ import {
   getScheduleServerBaseUrl,
   isScheduleServerEnabled,
 } from '@/lib/map-dyoa-server-schedules';
-
-const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
-
-function extractChannelId(url: string): string | null {
-  try {
-    const { hostname, pathname } = new URL(url);
-    if (!hostname.includes('chzzk.naver.com')) return null;
-    // /live/{channelId}  또는  /{channelId}
-    const segments = pathname.split('/').filter(Boolean);
-    const last = segments[segments.length - 1];
-    if (!last || last === 'live') return null;
-    return last;
-  } catch {
-    return null;
-  }
-}
 
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get('url');
@@ -42,7 +28,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const channelId = extractChannelId(url);
+  const channelId = extractChzzkChannelId(url);
   if (!channelId) {
     return NextResponse.json({ error: '유효한 치지직 URL이 아닙니다.' }, { status: 400 });
   }
@@ -58,20 +44,10 @@ export async function GET(req: NextRequest) {
           select: { id: true, name: true },
         });
 
-    const [liveRes, streamer] = await Promise.all([
-      fetch(
-        `https://api.chzzk.naver.com/service/v2/channels/${channelId}/live-detail`,
-        { headers: { 'User-Agent': UA }, cache: 'no-store' },
-      ),
+    const [content, streamer] = await Promise.all([
+      fetchChzzkLiveDetail(channelId),
       streamerPromise,
     ]);
-
-    if (!liveRes.ok) {
-      return NextResponse.json({ error: `CHZZK API 오류: ${liveRes.status}` }, { status: 502 });
-    }
-
-    const json = await liveRes.json();
-    const content = json?.content ?? null;
 
     return NextResponse.json({
       title: content?.liveTitle ?? null,
