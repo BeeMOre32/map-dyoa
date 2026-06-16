@@ -1,6 +1,10 @@
 import { format, differenceInCalendarDays, startOfDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import type { Hoi4GermanExamConfig, Hoi4GermanExamEntry } from '@/config/hoi4GermanExam2026';
+import type {
+  Hoi4ExamStaffRole,
+  Hoi4GermanExamConfig,
+  Hoi4GermanExamEntry,
+} from '@/config/hoi4GermanExam2026';
 import type { Hoi4GermanExamBinding } from '@/lib/hoi4-exam-binding';
 import type { Hoi4ExamRuntimeState } from '@/lib/hoi4-exam-state';
 import { formatKstDateLabel, formatKstTimeLabel } from '@/lib/hoi4-exam-time';
@@ -32,6 +36,12 @@ export type ExamLeaderboardRow = {
   hasRecord: boolean;
 };
 
+export type ExamStaffGroup = {
+  role: Hoi4ExamStaffRole;
+  label: string;
+  members: ExamMemberSnapshot[];
+};
+
 export type Hoi4GermanExamViewModel = {
   examId: string | null;
   phase: ExamPhase;
@@ -51,17 +61,69 @@ export type Hoi4GermanExamViewModel = {
   topName: string | null;
   topGameDate: string | null;
   rows: ExamLeaderboardRow[];
+  staffGroups: ExamStaffGroup[];
+  staffCount: number;
   schedule: FlattenedSchedule | null;
   multiviewHref: string | null;
 };
 
-function excludeCommentators(
+export type ExamMemberSnapshot = Pick<
+  ExamLeaderboardRow,
+  'streamerId' | 'name' | 'profileImg' | 'colorCode'
+>;
+
+const STAFF_ROLE_LABEL: Record<Hoi4ExamStaffRole, string> = {
+  broadcast: '중계진',
+  helper: '도우미',
+};
+
+function getEventStaffIds(config: Hoi4GermanExamConfig): Set<string> {
+  return new Set(config.eventStaff.map((staff) => staff.streamerId));
+}
+
+function excludeEventStaff(
   participants: ParticipantFlat[],
   config: Hoi4GermanExamConfig,
 ): ParticipantFlat[] {
-  const excluded = new Set<string>(config.excludedStreamerIds ?? []);
+  const excluded = getEventStaffIds(config);
+  for (const streamerId of config.excludedStreamerIds ?? []) {
+    excluded.add(streamerId);
+  }
   if (excluded.size === 0) return participants;
   return participants.filter((participant) => !excluded.has(participant.id));
+}
+
+function toMemberSnapshot(participant: ParticipantFlat): ExamMemberSnapshot {
+  return {
+    streamerId: participant.id,
+    name: participant.name,
+    profileImg: resolveProfileImg(participant.name, participant.profileImg),
+    colorCode: participant.colorCode,
+  };
+}
+
+function buildExamStaffGroups(
+  participants: ParticipantFlat[],
+  config: Hoi4GermanExamConfig,
+): ExamStaffGroup[] {
+  const participantById = new Map(
+    participants.map((participant) => [participant.id, participant]),
+  );
+  const groups = new Map<Hoi4ExamStaffRole, ExamMemberSnapshot[]>();
+
+  for (const staff of config.eventStaff) {
+    const participant = participantById.get(staff.streamerId);
+    if (!participant) continue;
+    const members = groups.get(staff.role) ?? [];
+    members.push(toMemberSnapshot(participant));
+    groups.set(staff.role, members);
+  }
+
+  return Array.from(groups.entries()).map(([role, members]) => ({
+    role,
+    label: STAFF_ROLE_LABEL[role],
+    members,
+  }));
 }
 
 /** 게임 내 날짜 문자열 → 정렬용 타임스탬프 */
@@ -265,12 +327,19 @@ export function buildHoi4GermanExamViewModel(input: {
       topName: null,
       topGameDate: null,
       rows: [],
+      staffGroups: [],
+      staffCount: 0,
       schedule: null,
       multiviewHref: null,
     };
   }
 
-  const participants = excludeCommentators(schedule.participants, config);
+  const staffGroups = buildExamStaffGroups(schedule.participants, config);
+  const staffCount = staffGroups.reduce(
+    (total, group) => total + group.members.length,
+    0,
+  );
+  const participants = excludeEventStaff(schedule.participants, config);
   const members = participants.filter((p) => !p.isGuest);
   const entryList = entries ?? config.entries;
   const rows = buildExamLeaderboard(participants, entryList);
@@ -324,15 +393,12 @@ export function buildHoi4GermanExamViewModel(input: {
     topName: top?.name ?? null,
     topGameDate: top?.clearGameDate ?? null,
     rows,
+    staffGroups,
+    staffCount,
     schedule,
     multiviewHref,
   };
 }
-
-export type ExamMemberSnapshot = Pick<
-  ExamLeaderboardRow,
-  'streamerId' | 'name' | 'profileImg' | 'colorCode'
->;
 
 export type ExamTestPhase = 'auto' | ExamPhase;
 

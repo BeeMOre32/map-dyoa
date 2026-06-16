@@ -11,7 +11,11 @@ import {
   Users,
 } from 'lucide-react';
 import { HOI4_GERMAN_EXAM_2026 } from '@/config/hoi4GermanExam2026';
-import type { ExamTestPhase, Hoi4GermanExamViewModel } from '@/lib/hoi4GermanExam';
+import type {
+  ExamStaffGroup,
+  ExamTestPhase,
+  Hoi4GermanExamViewModel,
+} from '@/lib/hoi4GermanExam';
 import ExamEventTimer from '@/components/time-attack/ExamEventTimer';
 import { cn } from '@/lib/utils';
 
@@ -33,23 +37,30 @@ function MetaChip({ children }: { children: ReactNode }) {
 
 function StatPills({ model }: { model: Hoi4GermanExamViewModel }) {
   const config = HOI4_GERMAN_EXAM_2026;
+  const staffPill =
+    model.staffCount > 0
+      ? [{ icon: Users, text: `운영 ${model.staffCount}명` }]
+      : [];
   const pills =
     model.phase === 'before'
       ? [
           { icon: Users, text: `참가 ${model.participantCount}명` },
           { icon: Timer, text: `출발 ${model.startTimeLabel}` },
           { icon: Sword, text: config.nation },
+          ...staffPill,
         ]
       : model.phase === 'live'
         ? [
             { icon: Users, text: `참가 ${model.participantCount}명` },
             { icon: Medal, text: `클리어 ${model.clearedCount}명` },
             { icon: Timer, text: `출발 ${model.startTimeLabel}` },
+            ...staffPill,
           ]
         : [
             { icon: Users, text: `참가 ${model.participantCount}명` },
             { icon: Medal, text: `1위 ${model.topName ?? '—'}` },
             { icon: Timer, text: model.topGameDate ?? '—' },
+            ...staffPill,
           ];
 
   return (
@@ -60,6 +71,36 @@ function StatPills({ model }: { model: Hoi4GermanExamViewModel }) {
           {text}
         </MetaChip>
       ))}
+    </div>
+  );
+}
+
+function StaffPanel({ groups }: { groups: ExamStaffGroup[] }) {
+  if (groups.length === 0) return null;
+
+  return (
+    <div className="mt-3 rounded-2xl border border-amber-100/80 bg-white/70 px-3 py-3 dark:border-amber-900/40 dark:bg-slate-950/35 sm:px-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        {groups.map((group) => (
+          <div key={group.role} className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="shrink-0 rounded-full bg-amber-100 px-2 py-1 text-[10px] font-black text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">
+              {group.label}
+            </span>
+            <div className="flex min-w-0 flex-wrap gap-1.5">
+              {group.members.map((member) => (
+                <Link
+                  key={member.streamerId}
+                  href={`/streamers/detail/${member.streamerId}`}
+                  className="rounded-full border border-white/80 bg-white px-2 py-1 text-[11px] font-black shadow-sm transition-colors hover:border-amber-200 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-amber-800"
+                  style={{ color: member.colorCode }}
+                >
+                  {member.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -212,6 +253,8 @@ export default function Hoi4GermanExamView({
             {headerSlot ? (
               <div className="mt-3 grid gap-2 lg:grid-cols-2 lg:items-start">{headerSlot}</div>
             ) : null}
+
+            <StaffPanel groups={model.staffGroups} />
           </div>
           <div className="flex flex-col gap-2 border-t border-amber-100/60 px-5 py-3 dark:border-amber-900/25 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <StatPills model={model} />
