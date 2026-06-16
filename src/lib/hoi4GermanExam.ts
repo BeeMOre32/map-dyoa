@@ -2,7 +2,6 @@ import { format, differenceInCalendarDays, startOfDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import type { Hoi4GermanExamConfig, Hoi4GermanExamEntry } from '@/config/hoi4GermanExam2026';
 import type { Hoi4GermanExamBinding } from '@/lib/hoi4-exam-binding';
-import { resolveHoi4GermanExamBinding } from '@/lib/hoi4-exam-binding';
 import type { Hoi4ExamRuntimeState } from '@/lib/hoi4-exam-state';
 import { formatKstDateLabel, formatKstTimeLabel } from '@/lib/hoi4-exam-time';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
@@ -444,9 +443,14 @@ export function patchModelWithRuntimeState(
   runtime: Hoi4ExamRuntimeState,
   now = new Date(),
 ): Hoi4GermanExamViewModel {
-  const scheduledStart = model.scheduledStartAt
-    ? new Date(model.scheduledStartAt)
-    : new Date();
+  if (!model.scheduledStartAt) {
+    return {
+      ...model,
+      manualStartedAt: runtime.manualStartedAt,
+    };
+  }
+
+  const scheduledStart = new Date(model.scheduledStartAt);
   const manualStartedAt = runtime.manualStartedAt
     ? new Date(runtime.manualStartedAt)
     : null;

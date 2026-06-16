@@ -5,6 +5,7 @@ import {
   formatKstTimeLabel,
   isValidDate,
   kstDateKey,
+  toValidDate,
 } from '@/lib/hoi4-exam-time';
 
 export type Hoi4GermanExamBinding = {
@@ -18,6 +19,10 @@ export type Hoi4GermanExamBinding = {
 
 function hasValidStartTime(schedule: FlattenedSchedule): boolean {
   return isValidDate(schedule.startTime);
+}
+
+function getScheduleStart(schedule: FlattenedSchedule): Date | null {
+  return toValidDate(schedule.startTime);
 }
 
 function matchesExamScheduleTitle(
@@ -44,7 +49,9 @@ function pickTodaySchedule(
   if (atSeven) return atSeven;
 
   return todayMatches.sort(
-    (a, b) => a.startTime.getTime() - b.startTime.getTime(),
+    (a, b) =>
+      (getScheduleStart(a)?.getTime() ?? Infinity) -
+      (getScheduleStart(b)?.getTime() ?? Infinity),
   )[0];
 }
 
@@ -78,20 +85,30 @@ export function resolveHoi4GermanExamBinding(
   }
 
   const upcoming = pool
-    .filter((schedule) => schedule.startTime.getTime() > now.getTime())
-    .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+    .filter((schedule) => {
+      const start = getScheduleStart(schedule);
+      return start ? start.getTime() > now.getTime() : false;
+    })
+    .sort(
+      (a, b) =>
+        (getScheduleStart(a)?.getTime() ?? Infinity) -
+        (getScheduleStart(b)?.getTime() ?? Infinity),
+    );
   if (upcoming.length > 0) {
     return toBinding(upcoming[0]);
   }
 
   const latestPast = pool.sort(
-    (a, b) => b.startTime.getTime() - a.startTime.getTime(),
+    (a, b) =>
+      (getScheduleStart(b)?.getTime() ?? -Infinity) -
+      (getScheduleStart(a)?.getTime() ?? -Infinity),
   )[0];
   return toBinding(latestPast);
 }
 
 function toBinding(schedule: FlattenedSchedule): Hoi4GermanExamBinding {
-  if (!hasValidStartTime(schedule)) {
+  const scheduledStart = getScheduleStart(schedule);
+  if (!scheduledStart) {
     return {
       schedule: null,
       examId: null,
@@ -104,7 +121,7 @@ function toBinding(schedule: FlattenedSchedule): Hoi4GermanExamBinding {
     schedule,
     examId: schedule.id,
     legacyExamId: kstDateKey(schedule.startTime),
-    scheduledStart: schedule.startTime,
+    scheduledStart,
   };
 }
 
