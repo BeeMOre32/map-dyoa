@@ -4,7 +4,12 @@ import type { Hoi4GermanExamConfig, Hoi4GermanExamEntry } from '@/config/hoi4Ger
 import type { Hoi4GermanExamBinding } from '@/lib/hoi4-exam-binding';
 import { resolveHoi4GermanExamBinding } from '@/lib/hoi4-exam-binding';
 import type { Hoi4ExamRuntimeState } from '@/lib/hoi4-exam-state';
-import { formatKstDateLabel, formatKstTimeLabel } from '@/lib/hoi4-exam-time';
+import {
+  examEventDayEnd,
+  formatKstDateLabel,
+  formatKstTimeLabel,
+  kstDateKey,
+} from '@/lib/hoi4-exam-time';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import type { ParticipantFlat } from '@/lib/schedule-formatters';
 import { getStreamerImagePath } from '@/lib/utils';
@@ -95,14 +100,8 @@ export function formatPlayTimeMs(ms: number): string {
   return `${seconds}s`;
 }
 
-function eventDayEnd(start: Date): Date {
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
-  return end;
-}
-
 export function computeExamPhase(start: Date, now = new Date()): ExamPhase {
-  const end = eventDayEnd(start);
+  const end = examEventDayEnd(start);
   if (now < start) return 'before';
   if (now < end) return 'live';
   return 'after';
@@ -116,7 +115,7 @@ export function computeExamPhaseWithManual(input: {
   manualEndedAt?: Date | null;
 }): ExamPhase {
   const now = input.now ?? new Date();
-  const dayEnd = eventDayEnd(input.scheduledStart);
+  const dayEnd = examEventDayEnd(input.scheduledStart);
   if (now >= dayEnd) return 'after';
   if (input.manualEndedAt) return 'after';
   if (input.manualStartedAt) return 'live';
@@ -159,21 +158,34 @@ function resolveExamPresentation(input: {
   if (timerMode === 'waiting') {
     return { dDayLabel: 'READY', heroBadge: '출발 대기' };
   }
+  const dDayLabel = computeDDayLabel(scheduledStart, phase, now);
+  const isTodayBeforeStart =
+    timerMode === 'countdown' &&
+    kstDateKey(scheduledStart) === kstDateKey(now) &&
+    now < scheduledStart;
   return {
-    dDayLabel: computeDDayLabel(scheduledStart, phase, now),
-    heroBadge: '예정',
+    dDayLabel,
+    heroBadge: isTodayBeforeStart ? '오늘 출발' : '예정',
   };
 }
 
+/** 출발 시각 우선 — 당일·출발 전에는 D-day 대신 출발 시각 표시 */
 export function computeDDayLabel(
   start: Date,
   phase: ExamPhase,
   now = new Date(),
 ): string {
   if (phase === 'after') return '종료';
-  const days = differenceInCalendarDays(startOfDay(start), startOfDay(now));
-  if (days > 0) return `D-${days}`;
-  if (days === 0) return 'D-day';
+  if (now >= start) return 'D-day';
+
+  const daysUntil = differenceInCalendarDays(startOfDay(start), startOfDay(now));
+  if (daysUntil > 0) return `D-${daysUntil}`;
+
+  // 같은 날·출발 전 — 자정이 아니라 출발 시각 기준
+  if (kstDateKey(start) === kstDateKey(now)) {
+    return formatKstTimeLabel(start);
+  }
+
   return 'D+0';
 }
 

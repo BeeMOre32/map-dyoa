@@ -4,6 +4,13 @@ export function isValidDate(date: Date): boolean {
   return date instanceof Date && Number.isFinite(date.getTime());
 }
 
+/** 출발 시각 기준 이벤트 종료(출발 + 24h) */
+export function examEventDayEnd(start: Date): Date {
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+  return end;
+}
+
 export function kstDateKey(date: Date): string {
   if (!isValidDate(date)) return '';
   return new Intl.DateTimeFormat('en-CA', {

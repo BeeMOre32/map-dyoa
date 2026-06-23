@@ -1,6 +1,7 @@
 import type { Hoi4GermanExamConfig } from '@/config/hoi4GermanExam2026';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import {
+  examEventDayEnd,
   formatKstDateLabel,
   formatKstTimeLabel,
   isValidDate,
@@ -28,27 +29,26 @@ function matchesExamScheduleTitle(
   return keywords.some((keyword) => schedule.title.includes(keyword));
 }
 
-function pickTodaySchedule(
+/** 출발~종료(24h) 구간에 있는 일정 — 본편(늦은 출발) 우선 */
+function pickInEventWindow(
   pool: FlattenedSchedule[],
-  todayKey: string,
+  now: Date,
 ): FlattenedSchedule | null {
-  const todayMatches = pool.filter(
-    (schedule) => kstDateKey(schedule.startTime) === todayKey,
-  );
-  if (todayMatches.length === 0) return null;
-  if (todayMatches.length === 1) return todayMatches[0];
-
-  const atSeven = todayMatches.find(
-    (schedule) => formatKstTimeLabel(schedule.startTime) === '19:00',
-  );
-  if (atSeven) return atSeven;
-
-  return todayMatches.sort(
-    (a, b) => a.startTime.getTime() - b.startTime.getTime(),
-  )[0];
+  const nowMs = now.getTime();
+  const active = pool.filter((schedule) => {
+    if (!hasValidStartTime(schedule)) return false;
+    const startMs = schedule.startTime.getTime();
+    const endMs = examEventDayEnd(schedule.startTime).getTime();
+    return nowMs >= startMs && nowMs < endMs;
+  });
+  if (active.length === 0) return null;
+  return active.sort((a, b) => b.startTime.getTime() - a.startTime.getTime())[0];
 }
 
-/** DB 캘린더에서 호이고사 일정·examId·출발 시각 결정 */
+/**
+ * DB 캘린더에서 호이고사 일정·examId·출발 시각 결정
+ * 우선순위: 진행 중(출발~24h) → 가장 가까운 미래 출발 → 최근 지난 일정
+ */
 export function resolveHoi4GermanExamBinding(
   schedules: FlattenedSchedule[],
   config: Hoi4GermanExamConfig,
@@ -70,11 +70,10 @@ export function resolveHoi4GermanExamBinding(
 
   const hoi4Linked = candidates.filter((schedule) => schedule.game?.isHoi4);
   const pool = hoi4Linked.length > 0 ? hoi4Linked : candidates;
-  const todayKey = kstDateKey(now);
 
-  const todaySchedule = pickTodaySchedule(pool, todayKey);
-  if (todaySchedule) {
-    return toBinding(todaySchedule);
+  const inWindow = pickInEventWindow(pool, now);
+  if (inWindow) {
+    return toBinding(inWindow);
   }
 
   const upcoming = pool
@@ -114,5 +113,5 @@ export function formatExamScheduleSummary(binding: Hoi4GermanExamBinding): strin
   }
   const date = formatKstDateLabel(binding.scheduledStart);
   const time = formatKstTimeLabel(binding.scheduledStart);
-  return `${date} ${time} · ${binding.schedule.title}`;
+  return `${time} 출발 · ${date} · ${binding.schedule.title}`;
 }
