@@ -1,7 +1,15 @@
 /** KST datetime-local ↔ ISO 변환·표시 */
 
-export function isValidDate(date: Date): boolean {
-  return date instanceof Date && Number.isFinite(date.getTime());
+export type DateLike = Date | string | number | null | undefined;
+
+export function toValidDate(date: DateLike): Date | null {
+  if (date == null) return null;
+  const resolved = date instanceof Date ? date : new Date(date);
+  return Number.isFinite(resolved.getTime()) ? resolved : null;
+}
+
+export function isValidDate(date: DateLike): boolean {
+  return toValidDate(date) !== null;
 }
 
 /** 출발 시각 기준 이벤트 종료(출발 + 24h) */
@@ -11,37 +19,40 @@ export function examEventDayEnd(start: Date): Date {
   return end;
 }
 
-export function kstDateKey(date: Date): string {
-  if (!isValidDate(date)) return '';
+export function kstDateKey(date: DateLike): string {
+  const resolved = toValidDate(date);
+  if (!resolved) return '';
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Seoul',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
-  }).format(date);
+  }).format(resolved);
 }
 
-export function formatKstTimeLabel(date: Date): string {
-  if (!isValidDate(date)) return '—';
+export function formatKstTimeLabel(date: DateLike): string {
+  const resolved = toValidDate(date);
+  if (!resolved) return '—';
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Asia/Seoul',
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
-  }).formatToParts(date);
+  }).formatToParts(resolved);
   const hour = parts.find((part) => part.type === 'hour')?.value ?? '00';
   const minute = parts.find((part) => part.type === 'minute')?.value ?? '00';
   return `${hour}:${minute}`;
 }
 
-export function formatKstDateLabel(date: Date): string {
-  if (!isValidDate(date)) return '—';
+export function formatKstDateLabel(date: DateLike): string {
+  const resolved = toValidDate(date);
+  if (!resolved) return '—';
   return new Intl.DateTimeFormat('ko-KR', {
     timeZone: 'Asia/Seoul',
     month: 'numeric',
     day: 'numeric',
     weekday: 'short',
-  }).format(date);
+  }).format(resolved);
 }
 
 export function formatKstDateTime(iso: string): string {
