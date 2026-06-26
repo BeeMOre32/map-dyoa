@@ -18,12 +18,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@teispace/next-themes';
 import { getStreamerColor } from '@/constants/streamercolor';
 import type { Streamer } from '@prisma/client';
-import { getPanelRows, type LayoutPreset } from './utils';
+import type { LayoutPreset } from './utils';
 import { SelectionScreen } from './SelectionScreen';
 import { StreamPanel } from './StreamPanel';
 import { ChatPanel } from './ChatPanel';
-import { ResizableGrid } from './ResizableGrid';
-import { ResizableFocusLayout } from './ResizableFocusLayout';
+import { PersistentMultiviewLayout } from './PersistentMultiviewLayout';
 import { MultiviewSelectCoach, MultiviewWatchCoach } from './MultiviewCoach';
 import { useMultiViewState } from '@/hooks/useMultiViewState';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
@@ -97,25 +96,18 @@ export default function MultiView({ participants, title, backHref, autoStart }: 
         </div>
       );
     }
-    if (mv.focusedStreamer) {
-      return (
-        <ResizableFocusLayout
-          focused={mv.focusedStreamer}
-          others={mv.otherStreamers}
-          renderPanel={renderStreamPanel}
-          initialSplit={mv.focusLayout.split}
-          initialSideH={mv.focusLayout.sideH}
-          onLayoutChange={handleFocusLayoutChange}
-        />
-      );
-    }
     return (
-      <ResizableGrid
-        rows={getPanelRows(mv.orderedVisible, mv.layoutPreset)}
-        renderPanel={(s) => renderStreamPanel(s, false)}
+      <PersistentMultiviewLayout
+        streamers={mv.orderedVisible}
+        focusedId={mv.focusedId}
+        layoutPreset={mv.layoutPreset}
+        renderPanel={renderStreamPanel}
         initialRowH={mv.gridLayout.rowH}
         initialColB={mv.gridLayout.colB}
-        onLayoutChange={handleGridLayoutChange}
+        initialSplit={mv.focusLayout.split}
+        initialSideH={mv.focusLayout.sideH}
+        onGridLayoutChange={handleGridLayoutChange}
+        onFocusLayoutChange={handleFocusLayoutChange}
       />
     );
   };
