@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { Streamer } from '@prisma/client';
 import { getLiveUrl, type LayoutPreset } from '@/components/multiview/utils';
 import {
@@ -60,9 +60,13 @@ export function useMultiViewState(
   participants: Streamer[],
   options?: { autoStart?: boolean },
 ) {
-  const defaultIds = participants.map((p) => p.id);
+  const idsKey = participants
+    .map((p) => p.id)
+    .sort()
+    .join('|');
+  const defaultIds = useMemo(() => (idsKey ? idsKey.split('|') : []), [idsKey]);
   const autoStart = options?.autoStart ?? false;
-  const storageKey = useMemo(() => multiviewStorageKey(defaultIds), [defaultIds]);
+  const storageKey = useMemo(() => multiviewStorageKey(defaultIds), [idsKey]);
 
   const [hasRestored, setHasRestored] = useState(false);
   const [phase, setPhase] = useState<'select' | 'watch'>(() => (autoStart ? 'watch' : 'select'));
@@ -85,11 +89,16 @@ export function useMultiViewState(
     sideH?: number[];
   }>({});
 
+  const restoredForKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (!autoStart) {
       setHasRestored(true);
       return;
     }
+    if (restoredForKeyRef.current === storageKey) return;
+    restoredForKeyRef.current = storageKey;
+
     const saved = loadMultiviewState(storageKey);
     if (saved) {
       const next = applyPersistedState(saved, defaultIds, autoStart);
