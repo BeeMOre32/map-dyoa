@@ -157,13 +157,28 @@ export default function LiveView({ streamers }: { streamers: Streamer[] }) {
                 <p className="text-sm font-medium">현재 라이브 중인 멤버가 없습니다</p>
               </div>
             ) : (
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+              <>
+                {liveStreamers.length >= 2 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const ids = liveStreamers.slice(0, MAX_STREAMS).map((s) => s.id).join(',');
+                      router.push(`/live/multiview?ids=${ids}`);
+                    }}
+                    className="flex items-center justify-center gap-2 w-full px-4 py-2.5 mb-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-black transition-colors shadow-lg shadow-indigo-900/20"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                    LIVE {Math.min(liveStreamers.length, MAX_STREAMS)}명 멀티뷰 바로 시작
+                  </button>
+                )}
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                 <AnimatePresence>
                   {liveStreamers.map((s) => (
                     <StreamerCard key={s.id} streamer={s} isLive selected={selected} onToggle={toggle} />
                   ))}
                 </AnimatePresence>
               </div>
+              </>
             )}
           </section>
 

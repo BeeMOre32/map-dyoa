@@ -5,6 +5,10 @@
     return;
   } catch {}
 
+  const isMultiviewEmbed =
+    location.search.includes('map-dyoa-mv=1') ||
+    location.search.includes('multichzzk');
+
   const getReactFiber = (node) => {
     if (node == null) return;
     return Object.entries(node).find(([k]) =>
@@ -38,6 +42,84 @@
       }
       fiber = fiber.return;
     }
+  };
+
+  const injectEmbedStyles = () => {
+    if (document.getElementById('map-dyoa-mv-style')) return;
+    const style = document.createElement('style');
+    style.id = 'map-dyoa-mv-style';
+    style.textContent = `
+      /* 멀티뷰 embed — transform 레이어 클릭 어긋남 완화 */
+      [class*="live_container"],
+      [class*="live_content"],
+      [class*="live_player_area"],
+      aside[class*="live_chatting"] {
+        transform: none !important;
+      }
+    `;
+    document.documentElement.appendChild(style);
+  };
+
+  const findChatFoldButton = (chattingContainer) => {
+    if (chattingContainer == null) return null;
+    return (
+      chattingContainer.querySelector(
+        '[class*="live_chatting_header_fold__"] [class*="live_chatting_header_button__"]'
+      ) ||
+      chattingContainer.querySelector('[class^="live_chatting_header_button__"]') ||
+      chattingContainer.querySelector('button[aria-label*="채팅"]')
+    );
+  };
+
+  const toggleChatFold = (chattingContainer) => {
+    findChatFoldButton(chattingContainer)?.click();
+  };
+
+  const applyWideViewMode = () => {
+    const buttons = document.querySelectorAll('.pzp-pc__viewmode-button');
+    if (buttons.length === 1) {
+      buttons[0].click();
+      return true;
+    }
+    for (const button of buttons) {
+      const label = button.getAttribute('aria-label') ?? '';
+      if (label.includes('넓은') || label.includes('wide')) {
+        button.click();
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const applyWideViewFallback = async (node) => {
+    const liveWide = await findReactState(
+      node,
+      (state) => state.length === 3 && state[2]?.toString?.() === 'atom7'
+    );
+    liveWide?.[1].set(liveWide[2], true);
+  };
+
+  let playerReadyHandled = false;
+
+  const handlePlayerReady = async (node, isLive) => {
+    if (playerReadyHandled) return;
+    playerReadyHandled = true;
+
+    if (isMultiviewEmbed) injectEmbedStyles();
+
+    if (!applyWideViewMode()) {
+      await applyWideViewFallback(node);
+    }
+
+    const video = document.querySelector('video.webplayer-internal-video, video');
+    if (video) {
+      video.muted = true;
+      try {
+        video.play?.();
+      } catch {}
+    }
+
+    if (autoFullscreen) scheduleFullscreen();
   };
 
   const root = document.getElementById('root');
@@ -132,25 +214,32 @@
 
   const initPlayerFeatures = async (node, isLive) => {
     if (node == null) return;
-    const liveWide = await findReactState(
-      node,
-      (state) => state.length === 3 && state[2]?.toString?.() === 'atom7'
-    );
-    liveWide?.[1].set(liveWide[2], true);
-    if (autoFullscreen) scheduleFullscreen();
+
+    const video = document.querySelector('video.webplayer-internal-video, video');
+    if (video) {
+      if (video.readyState >= 2) {
+        await handlePlayerReady(node, isLive);
+      } else {
+        video.addEventListener(
+          'loadedmetadata',
+          () => {
+            handlePlayerReady(node, isLive);
+          },
+          { once: true }
+        );
+      }
+      return;
+    }
+
+    await handlePlayerReady(node, isLive);
   };
 
   const initChatFeatures = async (chattingContainer) => {
-    if (chattingContainer == null) return;
-    const foldChat = () => {
-      chattingContainer
-        .querySelector(
-          '[class*="live_chatting_header_fold__"] > [class^="live_chatting_header_button__"]'
-        )
-        ?.click();
-    };
-    setTimeout(foldChat, 300);
-    setTimeout(foldChat, 2000);
+    if (chattingContainer == null || !isMultiviewEmbed) return;
+    // 넓은 화면 적용 후 채팅 접기 — 클릭 좌표 어긋남 방지
+    const foldOnce = () => toggleChatFold(chattingContainer);
+    setTimeout(foldOnce, 800);
+    setTimeout(foldOnce, 2500);
   };
 
   const attachPlayerObserver = async (node, isLive, tries = 0) => {
@@ -167,7 +256,7 @@
     const playerObserver = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         for (const n of mutation.addedNodes) {
-          if (!n.className.startsWith('pip_player_')) {
+          if (!n.className?.startsWith?.('pip_player_')) {
             initPlayerFeatures(n, isLive);
           }
         }
@@ -233,8 +322,23 @@
   };
 
   window.addEventListener('message', (ev) => {
-    if (ev.data?.source !== 'map-dyoa-director') return;
-    if (ev.data?.type === 'fullscreen') scheduleFullscreen();
+    if (ev.data?.source === 'map-dyoa-director' && ev.data?.type === 'fullscreen') {
+      scheduleFullscreen();
+      return;
+    }
+    if (ev.data?.source !== 'map-dyoa-multiview') return;
+    if (ev.data?.type === 'toggle-chat') {
+      toggleChatFold(document.querySelector('aside'));
+    }
+    if (ev.data?.type === 'toggle-mute') {
+      const video = document.querySelector('video.webplayer-internal-video, video');
+      if (video) {
+        video.muted = ev.data.muted !== undefined ? !!ev.data.muted : !video.muted;
+      }
+    }
+    if (ev.data?.type === 'fullscreen') {
+      scheduleFullscreen();
+    }
   });
 
   if (autoFullscreen) scheduleFullscreen();

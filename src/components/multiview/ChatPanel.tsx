@@ -21,7 +21,10 @@ export function ChatPanel({
   if (!chatStreamer) return null;
 
   return (
-    <div className="relative flex shrink-0" style={{ width }}>
+    <div
+      className="relative flex shrink-0 max-sm:w-full max-sm:max-h-[45vh]"
+      style={{ width: `min(${width}px, 100%)` }}
+    >
       <div
         className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize z-10 bg-slate-800 hover:bg-indigo-500/60 transition-colors"
         onMouseDown={(e) => startPixelDrag(e, (dx) => {

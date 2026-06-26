@@ -26,7 +26,8 @@ export default async function LiveMultiViewPage({
     <MultiView
       participants={ordered}
       title="라이브 멀티뷰"
-      backHref="/live"
+      backHref="/streamers"
+      autoStart
     />
   );
 }

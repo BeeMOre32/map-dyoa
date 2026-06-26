@@ -41,10 +41,20 @@ export function getChosung(str: string): string {
 export const getStreamerImagePath = (name: string): string => {
   if (!name) return '/images/default-avatar.svg';
 
-  // 한글 파일명 깨짐 방지를 위해 encodeURIComponent 사용
-  const safeName = encodeURIComponent(name.trim());
-  return `/images/streamers/${safeName}.webp`;
+  const trimmed = name.trim();
+  // UTF-8 파일명 유지, 공백·특수문자만 인코딩 (encodeURIComponent는 한글 경로 불일치 유발)
+  return encodeURI(`/images/streamers/${trimmed}.webp`);
 };
+
+/** DB profileImg → 없으면 public/streamers 로컬 webp */
+export function resolveStreamerAvatarSrc(streamer: {
+  name: string;
+  profileImg?: string | null;
+}): string {
+  const remote = streamer.profileImg?.trim();
+  if (remote) return remote;
+  return getStreamerImagePath(streamer.name);
+}
 
 export {
   normalizeExternalUrl,

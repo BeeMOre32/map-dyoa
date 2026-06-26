@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getStreamerColor } from '@/constants/streamercolor';
+import { getStreamerImagePath } from '@/lib/utils';
 import { useIsDarkAfterMount } from '@/hooks/useIsDarkAfterMount';
 
 interface StreamerAvatarProps {
@@ -19,13 +20,27 @@ export default function StreamerAvatar({
   streamerId,
   size,
 }: StreamerAvatarProps) {
-  const [failedImgSrc, setFailedImgSrc] = useState<string | null>(null);
+  const [failedSrcs, setFailedSrcs] = useState<Set<string>>(() => new Set());
   const isDark = useIsDarkAfterMount();
   const resolvedColor =
     (streamerId ? getStreamerColor(streamerId, isDark) : null) ?? colorCode;
 
-  const normalizedImgSrc = imgSrc?.trim() ?? '';
-  const shouldShowFallback = !normalizedImgSrc || failedImgSrc === normalizedImgSrc;
+  const candidates = useMemo(() => {
+    const list: string[] = [];
+    const remote = imgSrc?.trim();
+    const local = getStreamerImagePath(name);
+    if (remote) list.push(remote);
+    if (local && local !== remote) list.push(local);
+    return list;
+  }, [imgSrc, name]);
+
+  useEffect(() => {
+    setFailedSrcs(new Set());
+  }, [candidates]);
+
+  const activeSrc = candidates.find((src) => !failedSrcs.has(src));
+  const shouldShowFallback = !activeSrc;
+
   const sizeClasses = {
     xs: 'w-7 h-7',
     small: 'w-10 h-10',
@@ -58,10 +73,16 @@ export default function StreamerAvatar({
       className={`relative ${sizeClasses[size]} shrink-0 overflow-hidden rounded-2xl shadow-sm transition-transform group-hover:scale-110 duration-300`}
     >
       <img
-        src={normalizedImgSrc}
+        src={activeSrc}
         alt={name}
         className="h-full w-full object-cover"
-        onError={() => setFailedImgSrc(normalizedImgSrc)}
+        onError={() => {
+          setFailedSrcs((prev) => {
+            const next = new Set(prev);
+            next.add(activeSrc);
+            return next;
+          });
+        }}
       />
     </div>
   );

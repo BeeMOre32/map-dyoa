@@ -17,8 +17,6 @@ import {
   statsRowVariants,
   statsSectionVariants,
 } from '@/lib/statsMotion';
-import { getStreamerImagePath } from '@/lib/utils';
-
 interface Hoi4MemberGridProps {
   entries: Hoi4LeaderboardData['leaderboard'];
   maxParticipations: number;
@@ -88,7 +86,7 @@ export default function Hoi4MemberGrid({
 
                 <StreamerAvatar
                   name={entry.streamer.name}
-                  imgSrc={getStreamerImagePath(entry.streamer.name)}
+                  imgSrc={entry.streamer.profileImg}
                   colorCode={entry.streamer.colorCode}
                   streamerId={entry.streamer.id}
                   size="small"
