@@ -66,7 +66,6 @@ export function useMultiViewState(
   const [layoutPreset, setLayoutPreset] = useState<LayoutPreset>(
     () => savedOnMount?.layoutPreset ?? 'auto',
   );
-  const [toast, setToast] = useState(false);
   const [gridLayout, setGridLayout] = useState<{
     rowH?: number[];
     colB?: number[][];
@@ -81,15 +80,6 @@ export function useMultiViewState(
     split: savedOnMount?.focusSplit,
     sideH: savedOnMount?.focusSideH,
   }));
-
-  useEffect(() => {
-    const show = setTimeout(() => setToast(true), 800);
-    const hide = setTimeout(() => setToast(false), 6800);
-    return () => {
-      clearTimeout(show);
-      clearTimeout(hide);
-    };
-  }, []);
 
   useEffect(() => {
     if (phase !== 'watch') return;
@@ -253,8 +243,6 @@ export function useMultiViewState(
     setGridLayout,
     focusLayout,
     setFocusLayout,
-    toast,
-    setToast,
     chatStreamerId,
     setChatStreamerId,
     focusedId,

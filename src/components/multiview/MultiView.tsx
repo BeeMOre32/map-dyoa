@@ -6,8 +6,6 @@ import {
   ArrowLeft,
   ExternalLink,
   LayoutGrid,
-  FlaskConical,
-  X,
   Play,
   Plus,
   Pin,
@@ -26,6 +24,7 @@ import { StreamPanel } from './StreamPanel';
 import { ChatPanel } from './ChatPanel';
 import { ResizableGrid } from './ResizableGrid';
 import { ResizableFocusLayout } from './ResizableFocusLayout';
+import { MultiviewSelectCoach, MultiviewWatchCoach } from './MultiviewCoach';
 import { useMultiViewState } from '@/hooks/useMultiViewState';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
 
@@ -288,37 +287,8 @@ export default function MultiView({ participants, title, backHref, autoStart }: 
         </div>
       )}
 
-      {/* 실험 기능 토스트 */}
-      <AnimatePresence>
-        {mv.toast && (
-          <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-            className="fixed bottom-6 right-4 sm:right-6 z-200 max-w-xs w-[calc(100vw-2rem)] sm:w-80"
-          >
-            <div className="bg-slate-800 border border-slate-700 rounded-[1.75rem] shadow-2xl shadow-black/60 p-4 flex items-start gap-3.5">
-              <div className="shrink-0 p-2 bg-amber-500/15 text-amber-400 rounded-2xl">
-                <FlaskConical className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-black text-white mb-0.5">실험중인 기능입니다</p>
-                <p className="text-xs text-slate-400 font-medium leading-relaxed">
-                  단축키: 1–9 포커스 · P 컨트롤 고정 · Esc 나가기
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => mv.setToast(false)}
-                className="shrink-0 p-1.5 text-slate-600 hover:text-slate-400 hover:bg-slate-700 rounded-xl transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {mv.phase === 'select' && <MultiviewSelectCoach />}
+      {mv.phase === 'watch' && <MultiviewWatchCoach />}
 
       {/* 메인 콘텐츠 */}
       <AnimatePresence mode="wait">

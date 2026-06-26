@@ -6,6 +6,7 @@ import { ArrowUpRight, Medal } from 'lucide-react';
 import { useTheme } from '@teispace/next-themes';
 import StreamerAvatar from '@/components/streamer/StreamerAvatar';
 import { getStreamerColor } from '@/constants/streamercolor';
+import { getStreamerImagePath } from '@/lib/utils';
 import type { Hoi4LeaderboardData } from '@/lib/data-fetching';
 import {
   hoi4MemberGridClass,
@@ -86,7 +87,7 @@ export default function Hoi4MemberGrid({
 
                 <StreamerAvatar
                   name={entry.streamer.name}
-                  imgSrc={entry.streamer.profileImg}
+                  imgSrc={getStreamerImagePath(entry.streamer.name)}
                   colorCode={entry.streamer.colorCode}
                   streamerId={entry.streamer.id}
                   size="small"

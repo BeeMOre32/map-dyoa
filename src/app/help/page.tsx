@@ -24,6 +24,10 @@ import {
   Clapperboard,
   Puzzle,
   Move,
+  Pin,
+  Volume2,
+  PanelRight,
+  MessageSquare,
   Sword,
   Wifi,
   EyeOff,
@@ -468,16 +472,42 @@ export default function HelpPage() {
         >
           <div className="space-y-4">
             <Row icon={<LayoutGrid className="h-5 w-5" />}>
-              멤버 선택 후 <strong>멀티뷰 시작</strong>, 또는 일정 상세의 멀티뷰 버튼으로
-              진입합니다.
+              <strong>멤버·라이브</strong>에서 멤버를 고른 뒤 멀티뷰 시작, 또는{' '}
+              <strong>일정 상세</strong>의 멀티뷰 버튼으로 진입합니다. 처음 들어가면
+              짧은 <strong>버튼 안내</strong>가 뜹니다.
             </Row>
-            <Row icon={<Move className="h-5 w-5" />} delay={0.06}>
-              패널 사이를 드래그해 <strong>크기 조절</strong>, 상단 버튼으로 순서 변경·
-              <strong>집중 모드</strong>(한 방송 크게)를 쓸 수 있습니다.
+            <Row icon={<Radio className="h-5 w-5" />} delay={0.05}>
+              선택 화면에서 <strong>LIVE만 선택</strong>으로 지금 방송 중인 멤버만
+              빠르게 고를 수 있습니다.
             </Row>
-            <Row icon={<Puzzle className="h-5 w-5" />} delay={0.12}>
-              치지직 로그인 유지를 위해 <strong>Map-Dyoa 멀티뷰 도우미</strong> Chrome
-              확장 설치를 권장합니다.
+            <Row icon={<Move className="h-5 w-5" />} delay={0.1}>
+              패널 사이를 드래그해 <strong>크기 조절</strong>, 그립으로{' '}
+              <strong>순서 변경</strong>. 상단 <strong>레이아웃</strong>(자동·균등·1행)으로
+              배치를 바꿀 수 있습니다.
+            </Row>
+            <Row icon={<Pin className="h-5 w-5" />} delay={0.14}>
+              <strong>컨트롤 고정</strong>(단축키 P)으로 패널 버튼을 항상 표시합니다.
+              패널에 마우스를 올리면 음소거·채팅·크게 보기 버튼이 나옵니다.
+            </Row>
+            <Row icon={<Volume2 className="h-5 w-5" />} delay={0.18}>
+              <strong>음소거</strong>는 패널마다 따로, <strong>헤드폰</strong> 버튼은
+              그 패널만 소리 나게 합니다.
+            </Row>
+            <Row icon={<MessageSquare className="h-5 w-5" />} delay={0.22}>
+              <MessageSquare className="mx-0.5 inline h-3.5 w-3.5 align-text-bottom" />
+              는 치지직 <strong>내장 채팅</strong> 접기,
+              <PanelRight className="mx-0.5 inline h-3.5 w-3.5 align-text-bottom" />
+              는 화면 <strong>오른쪽 채팅 패널</strong>입니다.
+            </Row>
+            <Row icon={<Keyboard className="h-5 w-5" />} delay={0.26}>
+              <strong>1~9</strong> 포커스(크게 보기) · <strong>P</strong> 컨트롤 고정 ·{' '}
+              <strong>Esc</strong> 포커스·채팅 닫기 · 패널 <strong>더블클릭</strong>으로
+              크게 보기.
+            </Row>
+            <Row icon={<Puzzle className="h-5 w-5" />} delay={0.3}>
+              iframe 시청·채팅에 <strong>Map-Dyoa 멀티뷰 도우미</strong> Chrome 확장
+              설치가 필요합니다. 시청 화면 왼쪽 아래 <strong>버튼 안내</strong>로 다시
+              볼 수 있습니다.
             </Row>
             <motion.a
               href="https://chromewebstore.google.com/detail/jmehpmfkiciefbgoebiljadeamohkgfb"
