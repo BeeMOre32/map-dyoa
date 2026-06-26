@@ -209,6 +209,37 @@ enum NoticeLevel {
   URGENT
 }
 
+/// 백엔드 헬스 체크 원시 샘플 (Cron 5분 간격)
+model BackendHealthCheck {
+  id         String   @id @default(cuid())
+  checkedAt  DateTime @default(now())
+  ok         Boolean
+  statusCode Int?
+  latencyMs  Int?
+  error      String?
+
+  @@index([checkedAt])
+}
+
+/// KST 날짜별 집계 (YYYY-MM-DD)
+enum BackendHealthDayStatus {
+  OK
+  DEGRADED
+  DOWN
+}
+
+model BackendHealthDay {
+  dateKst      String                   @id
+  totalChecks  Int
+  okChecks     Int
+  avgLatencyMs Int?
+  maxLatencyMs Int?
+  status       BackendHealthDayStatus
+  updatedAt    DateTime                 @updatedAt
+
+  @@index([dateKst(sort: Desc)])
+}
+
 /// HOI4 호이고사 등 — 수동 출발·종료 (7시 자동 시작 대신 운영자 제어)
 model Hoi4ExamState {
   examId          String    @id

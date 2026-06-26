@@ -7,7 +7,54 @@ import {
   loadMultiviewState,
   multiviewStorageKey,
   saveMultiviewState,
+  type MultiviewPersistedState,
 } from '@/components/multiview/persistence';
+
+function mergeOrder(saved: string[] | undefined, defaultIds: string[]): string[] {
+  if (!saved?.length) return defaultIds;
+  const valid = saved.filter((id) => defaultIds.includes(id));
+  const missing = defaultIds.filter((id) => !valid.includes(id));
+  return [...valid, ...missing];
+}
+
+function idsInSet(ids: string[] | undefined, defaultIds: string[]): Set<string> {
+  if (!ids?.length) return new Set();
+  return new Set(ids.filter((id) => defaultIds.includes(id)));
+}
+
+function applyPersistedState(
+  saved: MultiviewPersistedState,
+  defaultIds: string[],
+  autoStart: boolean,
+) {
+  const order = mergeOrder(saved.order, defaultIds);
+  const visible = autoStart
+    ? idsInSet(saved.visible?.length ? saved.visible : defaultIds, defaultIds)
+    : idsInSet(saved.visible, defaultIds);
+  const loaded = idsInSet(saved.loaded, defaultIds);
+  const focusedId =
+    saved.focusedId && defaultIds.includes(saved.focusedId) ? saved.focusedId : null;
+  const chatStreamerId =
+    saved.chatStreamerId && defaultIds.includes(saved.chatStreamerId)
+      ? saved.chatStreamerId
+      : null;
+  const mutedIds = saved.mutedIds?.length
+    ? idsInSet(saved.mutedIds, defaultIds)
+    : new Set(defaultIds);
+
+  return {
+    order,
+    visible,
+    loaded,
+    focusedId,
+    chatStreamerId,
+    pinControls: saved.pinControls ?? false,
+    mutedIds,
+    layoutPreset: saved.layoutPreset ?? ('auto' as LayoutPreset),
+    gridLayout: { rowH: saved.gridRowH, colB: saved.gridColB },
+    focusLayout: { split: saved.focusSplit, sideH: saved.focusSideH },
+  };
+}
 
 export function useMultiViewState(
   participants: Streamer[],
@@ -17,72 +64,51 @@ export function useMultiViewState(
   const autoStart = options?.autoStart ?? false;
   const storageKey = useMemo(() => multiviewStorageKey(defaultIds), [defaultIds]);
 
-  const savedOnMount = useMemo(() => {
-    if (!autoStart || typeof window === 'undefined') return null;
-    return loadMultiviewState(multiviewStorageKey(defaultIds));
-  }, [autoStart, defaultIds]);
-
-  const [phase, setPhase] = useState<'select' | 'watch'>(() => {
-    if (autoStart) return 'watch';
-    return 'select';
-  });
-  const [order, setOrder] = useState<string[]>(() => {
-    const saved = savedOnMount;
-    if (saved?.order?.length) {
-      const valid = saved.order.filter((id) => defaultIds.includes(id));
-      const missing = defaultIds.filter((id) => !valid.includes(id));
-      return [...valid, ...missing];
-    }
-    return defaultIds;
-  });
-  const [visible, setVisible] = useState<Set<string>>(() => {
-    if (autoStart && savedOnMount?.visible?.length) {
-      return new Set(savedOnMount.visible.filter((id) => defaultIds.includes(id)));
-    }
-    if (autoStart) return new Set(defaultIds);
-    return new Set();
-  });
-  const [loaded, setLoaded] = useState<Set<string>>(() => {
-    if (autoStart && savedOnMount?.loaded?.length) {
-      return new Set(savedOnMount.loaded.filter((id) => defaultIds.includes(id)));
-    }
-    return new Set();
-  });
-  const [focusedId, setFocusedId] = useState<string | null>(() => {
-    const id = savedOnMount?.focusedId;
-    return id && defaultIds.includes(id) ? id : null;
-  });
-  const [chatStreamerId, setChatStreamerId] = useState<string | null>(() => {
-    const id = savedOnMount?.chatStreamerId;
-    return id && defaultIds.includes(id) ? id : null;
-  });
-  const [pinControls, setPinControls] = useState(() => savedOnMount?.pinControls ?? false);
-  const [mutedIds, setMutedIds] = useState<Set<string>>(() => {
-    if (savedOnMount?.mutedIds?.length) {
-      return new Set(savedOnMount.mutedIds.filter((id) => defaultIds.includes(id)));
-    }
-    return new Set(defaultIds);
-  });
-  const [layoutPreset, setLayoutPreset] = useState<LayoutPreset>(
-    () => savedOnMount?.layoutPreset ?? 'auto',
+  const [hasRestored, setHasRestored] = useState(false);
+  const [phase, setPhase] = useState<'select' | 'watch'>(() => (autoStart ? 'watch' : 'select'));
+  const [order, setOrder] = useState<string[]>(() => defaultIds);
+  const [visible, setVisible] = useState<Set<string>>(() =>
+    autoStart ? new Set(defaultIds) : new Set(),
   );
+  const [loaded, setLoaded] = useState<Set<string>>(() => new Set());
+  const [focusedId, setFocusedId] = useState<string | null>(null);
+  const [chatStreamerId, setChatStreamerId] = useState<string | null>(null);
+  const [pinControls, setPinControls] = useState(false);
+  const [mutedIds, setMutedIds] = useState<Set<string>>(() => new Set(defaultIds));
+  const [layoutPreset, setLayoutPreset] = useState<LayoutPreset>('auto');
   const [gridLayout, setGridLayout] = useState<{
     rowH?: number[];
     colB?: number[][];
-  }>(() => ({
-    rowH: savedOnMount?.gridRowH,
-    colB: savedOnMount?.gridColB,
-  }));
+  }>({});
   const [focusLayout, setFocusLayout] = useState<{
     split?: number;
     sideH?: number[];
-  }>(() => ({
-    split: savedOnMount?.focusSplit,
-    sideH: savedOnMount?.focusSideH,
-  }));
+  }>({});
 
   useEffect(() => {
-    if (phase !== 'watch') return;
+    if (!autoStart) {
+      setHasRestored(true);
+      return;
+    }
+    const saved = loadMultiviewState(storageKey);
+    if (saved) {
+      const next = applyPersistedState(saved, defaultIds, autoStart);
+      setOrder(next.order);
+      setVisible(next.visible);
+      setLoaded(next.loaded);
+      setFocusedId(next.focusedId);
+      setChatStreamerId(next.chatStreamerId);
+      setPinControls(next.pinControls);
+      setMutedIds(next.mutedIds);
+      setLayoutPreset(next.layoutPreset);
+      setGridLayout(next.gridLayout);
+      setFocusLayout(next.focusLayout);
+    }
+    setHasRestored(true);
+  }, [autoStart, storageKey, defaultIds]);
+
+  useEffect(() => {
+    if (!hasRestored || phase !== 'watch') return;
     saveMultiviewState(storageKey, {
       order,
       visible: [...visible],
@@ -98,6 +124,7 @@ export function useMultiViewState(
       focusSideH: focusLayout.sideH,
     });
   }, [
+    hasRestored,
     phase,
     storageKey,
     order,

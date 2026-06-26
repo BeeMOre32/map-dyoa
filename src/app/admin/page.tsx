@@ -2,12 +2,17 @@ import React from 'react';
 import Link from 'next/link';
 import {
   MessageSquare, Users, Calendar, Clapperboard, Bell,
-  Gamepad2, Clock, Film, Megaphone,
+  Gamepad2, Clock, Film, Megaphone, Server, AlertTriangle,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { auth } from '@/auth';
 import { getAdminStats, getRecentActivity } from '@/lib/data-fetching';
+import {
+  getBackendHealthUptimeSummary,
+  getRecentBackendHealthAlerts,
+  hasUnresolvedBackendHealthAlert,
+} from '@/lib/backend-health-store';
 
 export default async function AdminDashboard() {
   const session = await auth();
@@ -30,7 +35,16 @@ export default async function AdminDashboard() {
   const [
     { scheduleCount, clipCount, streamerCount, pendingFeedbackCount },
     { schedules: recentSchedules, clips: recentClips },
-  ] = await Promise.all([getAdminStats(), getRecentActivity()]);
+    backendUptime,
+    backendAlertActive,
+    backendAlerts,
+  ] = await Promise.all([
+    getAdminStats(),
+    getRecentActivity(),
+    getBackendHealthUptimeSummary().catch(() => null),
+    hasUnresolvedBackendHealthAlert().catch(() => false),
+    getRecentBackendHealthAlerts(3).catch(() => []),
+  ]);
 
   type StatColor = 'blue' | 'violet' | 'emerald' | 'amber';
   const stats: { label: string; value: number; icon: React.ElementType; color: StatColor; href?: string; urgent?: boolean }[] = [
@@ -76,6 +90,56 @@ export default async function AdminDashboard() {
           지도동 프로젝트 관리 시스템에 오신 것을 환영합니다.
         </p>
       </div>
+
+      {(backendAlertActive || backendUptime) && (
+        <div
+          className={`rounded-3xl border p-5 ${
+            backendAlertActive
+              ? 'border-rose-200 bg-rose-50 dark:border-rose-900/50 dark:bg-rose-950/40'
+              : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900'
+          }`}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              {backendAlertActive ? (
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-500" />
+              ) : (
+                <Server className="mt-0.5 h-5 w-5 shrink-0 text-sky-500" />
+              )}
+              <div>
+                <h2 className="text-base font-black text-slate-900 dark:text-white">
+                  {backendAlertActive ? '백엔드 헬스 경고' : '백엔드 가동 상태'}
+                </h2>
+                <p className="mt-1 text-sm font-medium text-slate-600 dark:text-slate-400">
+                  {backendAlertActive
+                    ? '최근 연속 실패 알림이 기록되었습니다. /health 와 SiteNotice를 확인하세요.'
+                    : backendUptime?.uptimePercent != null
+                      ? `최근 ${backendUptime.days}일 가동률 ${backendUptime.uptimePercent}%`
+                      : 'Cron 수집 데이터가 아직 없습니다.'}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/health"
+              className="rounded-xl bg-white px-3 py-2 text-xs font-black text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700"
+            >
+              상태 페이지
+            </Link>
+          </div>
+          {backendAlerts.length > 0 && (
+            <ul className="mt-4 space-y-2 border-t border-rose-200/70 pt-4 dark:border-rose-900/40">
+              {backendAlerts.map((alert) => (
+                <li
+                  key={alert.id}
+                  className="text-xs font-medium text-slate-600 dark:text-slate-400"
+                >
+                  {format(new Date(alert.createdAt), 'M/d HH:mm', { locale: ko })} · {alert.summary}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       {/* 통계 카드 */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

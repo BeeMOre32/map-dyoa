@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   ArrowLeft,
   Heart,
@@ -646,7 +646,11 @@ function SettlementPostBody() {
   );
 }
 
-export default function AnnouncementsView() {
+export default function AnnouncementsView({
+  uptimeBadge = null,
+}: {
+  uptimeBadge?: ReactNode;
+}) {
   const [isBackendOpen, setIsBackendOpen] = useState(false);
 
   return (
@@ -672,6 +676,7 @@ export default function AnnouncementsView() {
               <p className="text-sm text-slate-400 dark:text-slate-500 font-medium">
                 글 제목을 눌러 내용을 펼쳐 보세요
               </p>
+              {uptimeBadge ? <div className="mt-3">{uptimeBadge}</div> : null}
             </div>
           </div>
         </div>

@@ -1,58 +1,9 @@
 import Link from 'next/link';
-
-type HealthPayload = {
-  ok?: boolean;
-  db?: string;
-  status?: string;
-  service?: string;
-};
-
-async function getBackendHealth() {
-  const healthUrl =
-    process.env.BACKEND_HEALTH_URL ??
-    process.env.NEXT_PUBLIC_BACKEND_HEALTH_URL ??
-    'https://map-dyoa-server.fly.dev';
-
-  const start = Date.now();
-
-  try {
-    const response = await fetch(healthUrl, {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(3000),
-    });
-    const latencyMs = Date.now() - start;
-
-    let payload: HealthPayload | null = null;
-    try {
-      payload = (await response.json()) as HealthPayload;
-    } catch {
-      payload = null;
-    }
-
-    return {
-      healthUrl,
-      latencyMs,
-      statusCode: response.status,
-      ok: response.ok,
-      payload,
-      fetchedAt: new Date().toISOString(),
-      error: null as string | null,
-    };
-  } catch (error) {
-    return {
-      healthUrl,
-      latencyMs: null as number | null,
-      statusCode: null as number | null,
-      ok: false,
-      payload: null as HealthPayload | null,
-      fetchedAt: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'health check 실패',
-    };
-  }
-}
+import { probeBackendHealth } from '@/lib/backend-health';
+import BackendHealthHeatmap from '@/components/health/BackendHealthHeatmap';
 
 export default async function HealthPage() {
-  const result = await getBackendHealth();
+  const result = await probeBackendHealth();
 
   return (
     <div className="min-h-screen bg-white px-4 py-10 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
@@ -69,7 +20,7 @@ export default async function HealthPage() {
 
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-bold text-slate-600 dark:text-slate-300">서버 상태</p>
+            <p className="text-sm font-bold text-slate-600 dark:text-slate-300">서버 상태 (실시간)</p>
             <span
               className={`rounded-full px-2.5 py-1 text-xs font-black ${
                 result.ok
@@ -102,6 +53,8 @@ export default async function HealthPage() {
             </div>
           </dl>
         </div>
+
+        <BackendHealthHeatmap />
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
           <p className="mb-2 text-sm font-bold text-slate-600 dark:text-slate-300">응답 본문</p>

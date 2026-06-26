@@ -10,6 +10,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:ensure-youtube-column": "prisma db execute --schema prisma/schema.prisma --file scripts/add-streamer-youtube-url.sql",
     "db:ensure-site-notice": "prisma db execute --schema prisma/schema.prisma --file scripts/add-site-notice.sql",
+    "db:ensure-backend-health": "prisma db execute --schema prisma/schema.prisma --file scripts/add-backend-health.sql",
     "db:ensure-hoi4-exam-state": "prisma db execute --schema prisma/schema.prisma --file scripts/add-hoi4-exam-state.sql",
     "db:ensure-hoi4-exam-entry": "prisma db execute --schema prisma/schema.prisma --file scripts/add-hoi4-exam-entry.sql",
     "db:ensure-schedule-updated-at": "prisma db execute --schema prisma/schema.prisma --file scripts/add-schedule-updated-at.sql",
