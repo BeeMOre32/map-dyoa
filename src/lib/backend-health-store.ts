@@ -216,3 +216,35 @@ export async function hasUnresolvedBackendHealthAlert(): Promise<boolean> {
   if (!latest) return true;
   return !latest.ok || latest.checkedAt < alert.createdAt;
 }
+
+export type BackendHealthCollectionMeta = {
+  lastCronAt: Date | null;
+  lastCronOk: boolean | null;
+  collectionStartedAt: Date | null;
+  totalSamples: number;
+};
+
+export async function getBackendHealthCollectionMeta(): Promise<BackendHealthCollectionMeta | null> {
+  try {
+    const prisma = getPrisma();
+    const [latest, earliest, totalSamples] = await Promise.all([
+      prisma.backendHealthCheck.findFirst({
+        orderBy: { checkedAt: 'desc' },
+        select: { checkedAt: true, ok: true },
+      }),
+      prisma.backendHealthCheck.findFirst({
+        orderBy: { checkedAt: 'asc' },
+        select: { checkedAt: true },
+      }),
+      prisma.backendHealthCheck.count(),
+    ]);
+    return {
+      lastCronAt: latest?.checkedAt ?? null,
+      lastCronOk: latest?.ok ?? null,
+      collectionStartedAt: earliest?.checkedAt ?? null,
+      totalSamples,
+    };
+  } catch {
+    return null;
+  }
+}

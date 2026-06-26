@@ -22,9 +22,7 @@ import {
   MULTIVIEW_SELECT_COACH_DISMISSED_KEY,
   MULTIVIEW_WATCH_COACH_DISMISSED_KEY,
 } from '@/constants/onboarding';
-
-const EXTENSION_URL =
-  'https://chromewebstore.google.com/detail/jmehpmfkiciefbgoebiljadeamohkgfb';
+import { CHROME_EXTENSION_URL } from '@/constants/extension';
 
 function useCoachDismissed(storageKey: string) {
   const [open, setOpen] = useState(false);
@@ -177,7 +175,7 @@ export function MultiviewSelectCoach() {
             }
           />
           <Link
-            href={EXTENSION_URL}
+            href={CHROME_EXTENSION_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-black hover:bg-amber-500/20 transition-colors"

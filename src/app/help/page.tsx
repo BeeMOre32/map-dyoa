@@ -41,9 +41,14 @@ import {
   BarChart3,
   Shield,
   RefreshCw,
+  Server,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import {
+  CHROME_EXTENSION_NAME,
+  CHROME_EXTENSION_URL,
+} from '@/constants/extension';
 
 const ease = [0.25, 0.46, 0.45, 0.94] as const;
 
@@ -173,6 +178,7 @@ const TOC = [
   { href: '#hoi4', label: 'HOI4' },
   { href: '#edit', label: '편집' },
   { href: '#settings', label: '설정' },
+  { href: '#backend-health', label: '백엔드 상태' },
   { href: '#errors', label: '오류' },
 ];
 
@@ -237,23 +243,31 @@ export default function HelpPage() {
           </div>
           <ul className="list-inside list-disc space-y-2 text-sm font-bold text-indigo-700/90 dark:text-indigo-200/90">
             <li>
-              <strong>V2 캘린더·일정 모달</strong>이 기본 UI입니다. 설정에서 구버전으로
-              되돌릴 수 있습니다.
+              <Link
+                href="/health"
+                className="font-black underline underline-offset-2"
+              >
+                백엔드 상태
+              </Link>
+              — 실시간 API 응답, Cron 수집 시각, 최근 30일 가동 히트맵
             </li>
             <li>
-              <strong>HOI4 전적</strong> — 멤버·국가·기간 필터, 내전 뱃지, 게스트 국가 집계
-              (승패 기록은 사용하지 않습니다)
+              <strong>멀티뷰</strong> — LIVE만 선택, 레이아웃 프리셋·음소거·채팅 구분, 첫
+              방문 버튼 안내, 단축키(1~9·P·Esc)
             </li>
             <li>
-              <strong>동시 수정 방지</strong> — 두 관리자가 같은 일정을 동시에 저장하면 충돌
-              안내 후 새로고침을 요청합니다
+              <strong>설정</strong> — 백엔드 상태·멀티뷰 Chrome 확장 프로그램 링크 추가
             </li>
             <li>
-              일정·전적 데이터는 <strong>map-dyoa-server</strong> API로 동기화됩니다
+              공지 상단 <strong>7일 가동률 뱃지</strong>, 관리자 장애 시 긴급 공지 초안
+              바로가기
+            </li>
+            <li>
+              <strong>V2 캘린더·일정 모달</strong>이 기본 UI (설정에서 구버전 복원 가능)
             </li>
           </ul>
           <Link
-            href="/announcements"
+            href="/announcements#update-2026-06"
             className="mt-4 inline-flex items-center gap-1.5 text-sm font-black text-indigo-600 hover:underline dark:text-indigo-400"
           >
             <Megaphone className="h-4 w-4" />
@@ -504,13 +518,17 @@ export default function HelpPage() {
               <strong>Esc</strong> 포커스·채팅 닫기 · 패널 <strong>더블클릭</strong>으로
               크게 보기.
             </Row>
+            <Row icon={<History className="h-5 w-5" />} delay={0.28}>
+              시청 중 레이아웃·순서·음소거·채팅 패널 선택은 브라우저에 저장되어 같은
+              멤버 조합으로 다시 들어오면 복원됩니다.
+            </Row>
             <Row icon={<Puzzle className="h-5 w-5" />} delay={0.3}>
-              iframe 시청·채팅에 <strong>Map-Dyoa 멀티뷰 도우미</strong> Chrome 확장
+              iframe 시청·채팅에 <strong>{CHROME_EXTENSION_NAME}</strong> Chrome 확장
               설치가 필요합니다. 시청 화면 왼쪽 아래 <strong>버튼 안내</strong>로 다시
               볼 수 있습니다.
             </Row>
             <motion.a
-              href="https://chromewebstore.google.com/detail/jmehpmfkiciefbgoebiljadeamohkgfb"
+              href={CHROME_EXTENSION_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-2xl bg-cyan-600 px-4 py-2.5 text-sm font-black text-white shadow-sm transition-colors hover:bg-cyan-700"
@@ -686,7 +704,24 @@ export default function HelpPage() {
             <Row icon={<History className="h-5 w-5" />} delay={0.12}>
               <strong>구버전 UI로 보기</strong> — 이전 캘린더·일정 모달 디자인
             </Row>
-            <Row icon={<Megaphone className="h-5 w-5" />} delay={0.18}>
+            <Row icon={<Server className="h-5 w-5" />} delay={0.16}>
+              <Link href="/health" className="font-black text-indigo-600 dark:text-indigo-400">
+                백엔드 상태
+              </Link>
+              — API 서버 응답·가동 히트맵 (정보 메뉴에도 있음)
+            </Row>
+            <Row icon={<Puzzle className="h-5 w-5" />} delay={0.2}>
+              <a
+                href={CHROME_EXTENSION_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-black text-indigo-600 dark:text-indigo-400"
+              >
+                멀티뷰 확장 프로그램
+              </a>
+              — {CHROME_EXTENSION_NAME} Chrome 웹스토어
+            </Row>
+            <Row icon={<Megaphone className="h-5 w-5" />} delay={0.24}>
               <Link href="/announcements" className="font-black text-indigo-600 dark:text-indigo-400">
                 공지사항
               </Link>
@@ -699,13 +734,52 @@ export default function HelpPage() {
                 개인정보처리방침
               </Link>
             </Row>
-            <Row icon={<Keyboard className="h-5 w-5" />} delay={0.24}>
+            <Row icon={<Keyboard className="h-5 w-5" />} delay={0.28}>
               열린 <strong>모달은 Esc</strong>로 닫기. 모바일 주간 뷰는 리스트형
               레이아웃.
             </Row>
-            <Row icon={<Smartphone className="h-5 w-5" />} delay={0.3}>
+            <Row icon={<Smartphone className="h-5 w-5" />} delay={0.34}>
               <strong>홈 화면에 추가</strong> — Chrome·Safari 등에서 앱처럼 설치해
               바로 열 수 있습니다.
+            </Row>
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          id="backend-health"
+          icon={<Server className="h-6 w-6 text-sky-500 dark:text-sky-400" />}
+          iconBg="bg-sky-50 dark:bg-sky-900/20"
+          title="백엔드 상태"
+        >
+          <div className="space-y-4">
+            <Row icon={<Server className="h-5 w-5" />}>
+              일정 API 서버(map-dyoa-server)는{' '}
+              <Link href="/health" className="font-black text-indigo-600 dark:text-indigo-400">
+                백엔드 상태 페이지
+              </Link>
+              에서 확인합니다. 설정 → 정보 → 백엔드 상태로도 들어갈 수 있습니다.
+            </Row>
+            <Row icon={<Radio className="h-5 w-5" />} delay={0.06}>
+              <strong>실시간</strong> — 페이지를 열면 Fly API에 즉시 요청해 응답 코드·지연·본문을
+              보여 줍니다.
+            </Row>
+            <Row icon={<Clock className="h-5 w-5" />} delay={0.12}>
+              <strong>Cron 자동 수집</strong> — 5분 간격(플랜에 따라 다를 수 있음)으로 결과를
+              DB에 저장합니다. 마지막 실행 시각·수집 시작 시각을 같은 페이지에서 볼 수 있습니다.
+            </Row>
+            <Row icon={<BarChart3 className="h-5 w-5" />} delay={0.18}>
+              <strong>30일 히트맵</strong> — 날짜별 정상·저하·장애를 색으로 표시합니다. 데이터가
+              아직 없으면 「수집 중」으로 안내됩니다.
+            </Row>
+            <Row icon={<Megaphone className="h-5 w-5" />} delay={0.24}>
+              <Link
+                href="/announcements"
+                className="font-black text-indigo-600 dark:text-indigo-400"
+              >
+                공지사항
+              </Link>
+              상단에 최근 <strong>7일 가동률 뱃지</strong>가 표시되며, 누르면 상태 페이지로
+              이동합니다.
             </Row>
           </div>
         </SectionCard>
@@ -730,11 +804,11 @@ export default function HelpPage() {
             </p>
             <p>
               일정·전적이 방금 수정한 내용과 다르면 페이지를{' '}
-              <strong>새로고침</strong>해 보세요. 서버 상태는{' '}
+              <strong>새로고침</strong>해 보세요. API 서버 상태는{' '}
               <Link href="/health" className="font-black text-indigo-600 dark:text-indigo-400">
-                /health
+                백엔드 상태 페이지
               </Link>
-              에서 확인할 수 있습니다.
+              에서 실시간·히트맵·Cron 수집 시각을 확인할 수 있습니다.
             </p>
           </div>
         </motion.section>

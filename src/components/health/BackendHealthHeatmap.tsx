@@ -5,6 +5,7 @@ import {
   formatUptimePercent,
 } from '@/lib/backend-health';
 import { getBackendHealthHeatmap } from '@/lib/backend-health-store';
+import type { BackendHealthCollectionMeta } from '@/lib/backend-health-store';
 import type { BackendHealthDayStatus } from '@prisma/client';
 
 function formatKstLabel(dateKst: string): string {
@@ -12,7 +13,11 @@ function formatKstLabel(dateKst: string): string {
   return `${y}. ${m}. ${d}.`;
 }
 
-export default async function BackendHealthHeatmap() {
+export default async function BackendHealthHeatmap({
+  collectionMeta = null,
+}: {
+  collectionMeta?: BackendHealthCollectionMeta | null;
+}) {
   let days;
   try {
     days = await getBackendHealthHeatmap(BACKEND_HEALTH_HEATMAP_DAYS);
@@ -29,6 +34,7 @@ export default async function BackendHealthHeatmap() {
   const totalChecks = withData.reduce((s, d) => s + d.totalChecks, 0);
   const okChecks = withData.reduce((s, d) => s + d.okChecks, 0);
   const periodUptime = formatUptimePercent(okChecks, totalChecks);
+  const noDayData = withData.length === 0;
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
@@ -41,12 +47,27 @@ export default async function BackendHealthHeatmap() {
             5분 간격 자동 체크 기준 · 데이터 없는 날은 회색
           </p>
         </div>
-        {periodUptime != null && (
+        {periodUptime != null && !noDayData && (
           <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-black text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
             기간 가동률 {periodUptime}%
           </span>
         )}
+        {noDayData && (
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+            데이터 수집 중
+          </span>
+        )}
       </div>
+
+      {noDayData && collectionMeta?.collectionStartedAt && (
+        <p className="mt-3 text-xs font-medium text-slate-500 dark:text-slate-400">
+          수집은{' '}
+          <strong className="text-slate-700 dark:text-slate-300">
+            {collectionMeta.collectionStartedAt.toLocaleString('ko-KR')}
+          </strong>
+          부터 시작되었습니다. 일별 히트맵은 Cron이 하루치 이상 쌓이면 채워집니다.
+        </p>
+      )}
 
       <div className="mt-4 grid grid-cols-10 gap-1.5 sm:gap-2">
         {days.map((day) => {

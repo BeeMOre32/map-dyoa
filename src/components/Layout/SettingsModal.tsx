@@ -2,8 +2,9 @@
 
 import {
   Sun, Moon, HelpCircle, Shield, LogIn, LogOut, UserCheck, X,
-  LayoutDashboard, EyeOff, Heart, Megaphone, History, BarChart3, Server,
+  LayoutDashboard, EyeOff, Heart, Megaphone, History, BarChart3, Server, Puzzle,
 } from 'lucide-react';
+import { CHROME_EXTENSION_NAME, CHROME_EXTENSION_URL } from '@/constants/extension';
 import { motion, AnimatePresence } from 'framer-motion';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { useTheme } from '@teispace/next-themes';
@@ -132,6 +133,21 @@ function GeneralTab({
         <div>
           <p className="text-sm font-bold text-pink-600 dark:text-pink-400">후원하기</p>
           <p className="text-xs text-pink-400 dark:text-pink-500 font-medium mt-0.5">서버비 제외 전액 기부됩니다</p>
+        </div>
+      </a>
+
+      <a
+        href={CHROME_EXTENSION_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-3 px-4 py-3 mx-2 bg-cyan-50 dark:bg-cyan-900/20 hover:bg-cyan-100 dark:hover:bg-cyan-900/30 border border-cyan-200 dark:border-cyan-800/50 rounded-2xl transition-colors"
+      >
+        <Puzzle className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
+        <div>
+          <p className="text-sm font-bold text-cyan-700 dark:text-cyan-300">멀티뷰 확장 프로그램</p>
+          <p className="text-xs text-cyan-500/80 dark:text-cyan-500 font-medium mt-0.5">
+            {CHROME_EXTENSION_NAME} · Chrome 웹스토어
+          </p>
         </div>
       </a>
 

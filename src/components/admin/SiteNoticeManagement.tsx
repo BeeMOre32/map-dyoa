@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import {
   Plus, SquarePen, Trash2, Megaphone, X, Check,
   AlertTriangle, Info, Eye, EyeOff,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import {
@@ -21,6 +21,18 @@ import { useEscapeKey } from '@/hooks/useEscapeKey';
 import type { AdminSiteNoticeRow, SiteNoticeRow } from '@/lib/data-fetching';
 
 type Level = 'INFO' | 'WARNING' | 'URGENT';
+
+type NoticeDraft = {
+  level: Level;
+  title: string;
+  body: string;
+};
+
+const BACKEND_INCIDENT_DRAFT: NoticeDraft = {
+  level: 'WARNING',
+  title: '백엔드 서버 응답 지연·장애 안내',
+  body: '일정 API(map-dyoa-server) 자동 헬스 체크에서 이상이 감지되었습니다. 일시적으로 일정·캘린더 로딩이 느리거나 실패할 수 있습니다. 복구 후 이 공지를 내리겠습니다.',
+};
 
 const LEVELS: { value: Level; label: string; cls: string }[] = [
   { value: 'INFO', label: '정보', cls: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300' },
@@ -44,18 +56,22 @@ function fromLocalInput(v: string): Date | null {
 
 function NoticeFormModal({
   initial,
+  draft,
   onClose,
 }: {
   initial?: SiteNoticeRow;
+  draft?: NoticeDraft;
   onClose: () => void;
 }) {
   const router = useRouter();
   const dismiss = useModalDismiss({ mother: '/admin/notices', onClose });
   useEscapeKey(dismiss);
   const [isPending, startTransition] = useTransition();
-  const [level, setLevel] = useState<Level>((initial?.level as Level) ?? 'URGENT');
-  const [title, setTitle] = useState(initial?.title ?? '');
-  const [body, setBody] = useState(initial?.body ?? '');
+  const [level, setLevel] = useState<Level>(
+    (initial?.level as Level) ?? draft?.level ?? 'URGENT',
+  );
+  const [title, setTitle] = useState(initial?.title ?? draft?.title ?? '');
+  const [body, setBody] = useState(initial?.body ?? draft?.body ?? '');
   const [active, setActive] = useState(initial?.active ?? true);
   const [startsAt, setStartsAt] = useState(toLocalInput(initial?.startsAt ?? null));
   const [endsAt, setEndsAt] = useState(toLocalInput(initial?.endsAt ?? null));
@@ -275,8 +291,17 @@ export default function SiteNoticeManagement({
 }: {
   notices: AdminSiteNoticeRow[];
 }) {
+  const searchParams = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
+  const [createDraft, setCreateDraft] = useState<NoticeDraft | undefined>();
   const [editing, setEditing] = useState<SiteNoticeRow | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get('compose') === 'backend-incident') {
+      setCreateDraft(BACKEND_INCIDENT_DRAFT);
+      setCreateOpen(true);
+    }
+  }, [searchParams]);
 
   return (
     <div className="p-8 space-y-6 bg-white dark:bg-slate-950 transition-colors">
@@ -288,7 +313,10 @@ export default function SiteNoticeManagement({
           </p>
         </div>
         <button
-          onClick={() => setCreateOpen(true)}
+          onClick={() => {
+            setCreateDraft(undefined);
+            setCreateOpen(true);
+          }}
           className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-colors shadow-sm"
         >
           <Plus className="w-4 h-4" />
@@ -354,7 +382,12 @@ export default function SiteNoticeManagement({
         {(createOpen || editing) && (
           <NoticeFormModal
             initial={editing ?? undefined}
-            onClose={() => { setCreateOpen(false); setEditing(null); }}
+            draft={editing ? undefined : createDraft}
+            onClose={() => {
+              setCreateOpen(false);
+              setCreateDraft(undefined);
+              setEditing(null);
+            }}
           />
         )}
       </AnimatePresence>

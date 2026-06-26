@@ -10,6 +10,7 @@ import type { Streamer } from '@prisma/client';
 import StreamerAvatar from '@/components/streamer/StreamerAvatar';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
 import { MAX_STREAMS } from './utils';
+import { CHROME_EXTENSION_URL } from '@/constants/extension';
 
 export function SelectionScreen({
   title,
@@ -133,7 +134,7 @@ export function SelectionScreen({
         </div>
 
         <a
-          href="https://chromewebstore.google.com/detail/jmehpmfkiciefbgoebiljadeamohkgfb"
+          href={CHROME_EXTENSION_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 transition-colors group"

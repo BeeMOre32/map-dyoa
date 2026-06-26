@@ -119,12 +119,22 @@ export default async function AdminDashboard() {
                 </p>
               </div>
             </div>
-            <Link
-              href="/health"
-              className="rounded-xl bg-white px-3 py-2 text-xs font-black text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700"
-            >
-              상태 페이지
-            </Link>
+            <div className="flex flex-wrap gap-2 shrink-0">
+              <Link
+                href="/health"
+                className="rounded-xl bg-white px-3 py-2 text-xs font-black text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700"
+              >
+                상태 페이지
+              </Link>
+              {backendAlertActive && (
+                <Link
+                  href="/admin/notices?compose=backend-incident"
+                  className="rounded-xl bg-rose-600 px-3 py-2 text-xs font-black text-white shadow-sm hover:bg-rose-500"
+                >
+                  장애 공지 작성
+                </Link>
+              )}
+            </div>
           </div>
           {backendAlerts.length > 0 && (
             <ul className="mt-4 space-y-2 border-t border-rose-200/70 pt-4 dark:border-rose-900/40">

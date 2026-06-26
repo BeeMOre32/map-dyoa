@@ -16,8 +16,14 @@ import {
   Sparkles,
   LayoutGrid,
   Radio,
+  Activity,
+  Puzzle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  CHROME_EXTENSION_NAME,
+  CHROME_EXTENSION_URL,
+} from '@/constants/extension';
 import OpenHashDetails from './OpenHashDetails';
 
 function LoadingSpeedComparison() {
@@ -418,9 +424,9 @@ function ApiUiUpdatePostBody() {
                 href="/health"
                 className="font-black underline underline-offset-2"
               >
-                /health
+                백엔드 상태
               </Link>
-              에서 백엔드 응답·지연 시간 확인 가능
+              — 실시간 응답·Cron 수집·30일 가동 히트맵·공지 7일 가동률 뱃지
             </li>
           </ul>
         </div>
@@ -550,19 +556,114 @@ function BackendProjectPostBody({ active }: { active: boolean }) {
 
       <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-900/20 p-4">
         <p className="text-emerald-700 dark:text-emerald-300 text-sm">
-          다음 단계로 기존 API를 우선순위별로 이관하고, 실제 트래픽 기준으로
-          커넥션 풀/쿼리 최적화를 진행할 예정입니다. 현재 상태는{' '}
+          백엔드 모니터링은{' '}
           <Link
             href="/health"
             className="font-black underline underline-offset-2"
           >
-            /health
+            백엔드 상태 페이지
           </Link>
-          에서 확인할 수 있습니다.
+          에서 실시간·히트맵·Cron 기록을 확인할 수 있습니다. 자세한 6월 업데이트는{' '}
+          <Link
+            href="#update-2026-06"
+            className="font-black underline underline-offset-2"
+          >
+            6월 기능 업데이트
+          </Link>
+          공지를 참고해 주세요.
         </p>
       </div>
 
       <ServerLoadingExperience active={active} />
+    </div>
+  );
+}
+
+function UpdateJune2026PostBody() {
+  return (
+    <div className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 pt-3">
+      <p>
+        6월 중순 업데이트로 <strong className="text-slate-900 dark:text-white">백엔드 가동
+        모니터링</strong>, <strong className="text-slate-900 dark:text-white">멀티뷰 UX</strong>,
+        설정·도움말 정리를 반영했습니다.
+      </p>
+
+      <div className="flex gap-3 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800/50 rounded-2xl p-4">
+        <Activity className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
+        <div className="text-sky-700 dark:text-sky-300 text-sm space-y-2">
+          <p className="font-black text-sky-900 dark:text-sky-200">백엔드 상태 모니터링</p>
+          <ul className="list-disc pl-4 space-y-1.5">
+            <li>
+              <Link href="/health" className="font-black underline underline-offset-2">
+                백엔드 상태 페이지
+              </Link>
+              — 실시간 API 응답·지연·본문 확인
+            </li>
+            <li>Vercel Cron 5분 간격 자동 헬스 체크·DB 샘플 저장 (플랜에 따라 주기 상이)</li>
+            <li>마지막 Cron 실행·수집 시작 시각·누적 샘플 수 표시</li>
+            <li>최근 30일 KST 히트맵 (정상·저하·장애·기록 없음)</li>
+            <li>공지 상단 최근 7일 가동률 뱃지 → 상태 페이지 링크</li>
+            <li>관리자 대시보드 — 연속 실패 시 장애 공지 초안 바로 작성</li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="flex gap-3 bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800/50 rounded-2xl p-4">
+        <LayoutGrid className="w-4 h-4 text-cyan-500 shrink-0 mt-0.5" />
+        <div className="text-cyan-700 dark:text-cyan-300 text-sm space-y-2">
+          <p className="font-black text-cyan-900 dark:text-cyan-200">멀티뷰 개선</p>
+          <ul className="list-disc pl-4 space-y-1.5">
+            <li>선택 화면 LIVE 뱃지·<strong>LIVE만 선택</strong>·세션 상태 localStorage 복원</li>
+            <li>레이아웃 프리셋(자동·균등·1행), 패널 드래그 순서·크기 저장</li>
+            <li>컨트롤 고정(P), 음소거·솔로 오디오, 내장/사이드 채팅 구분</li>
+            <li>단축키 1~9 포커스 · P 고정 · Esc 닫기 · 첫 방문 버튼 안내 모달</li>
+            <li>Chrome 확장 v1.2.7 — 채팅 접기·음소거·embed 스타일 개선</li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="flex gap-3 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/50 rounded-2xl p-4">
+        <Puzzle className="w-4 h-4 text-violet-500 shrink-0 mt-0.5" />
+        <div className="text-violet-700 dark:text-violet-300 text-sm space-y-2">
+          <p className="font-black text-violet-900 dark:text-violet-200">설정·도움말</p>
+          <ul className="list-disc pl-4 space-y-1.5">
+            <li>설정 → <strong>백엔드 상태</strong>, <strong>멀티뷰 확장 프로그램</strong> 링크</li>
+            <li>
+              도움말{' '}
+              <Link href="/help#backend-health" className="font-black underline underline-offset-2">
+                백엔드 상태
+              </Link>
+              ·{' '}
+              <Link href="/help#multiview" className="font-black underline underline-offset-2">
+                멀티뷰
+              </Link>{' '}
+              섹션 최신화
+            </li>
+            <li>
+              <a
+                href={CHROME_EXTENSION_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-black underline underline-offset-2"
+              >
+                {CHROME_EXTENSION_NAME}
+              </a>{' '}
+              Chrome 웹스토어에서 설치
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <p className="text-xs text-slate-500 dark:text-slate-400">
+        <Link href="/help" className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+          도움말
+        </Link>
+        과{' '}
+        <Link href="/health" className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+          백엔드 상태
+        </Link>
+        에서 자세히 안내합니다.
+      </p>
     </div>
   );
 }
@@ -682,6 +783,44 @@ export default function AnnouncementsView({
         </div>
 
         <div className="space-y-3">
+          <details
+            id="update-2026-06"
+            className="group scroll-mt-24 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm open:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:open:bg-slate-900"
+          >
+            <summary className="cursor-pointer list-none px-4 py-4 marker:content-none sm:px-5 [&::-webkit-details-marker]:hidden">
+              <span className="flex w-full items-start gap-3 text-left">
+                <span className="min-w-0 flex-1 space-y-2">
+                  <span className="flex flex-wrap items-center gap-2 gap-y-1">
+                    <span
+                      className={cn(
+                        'inline-block rounded-full px-2.5 py-1 text-xs font-black',
+                        'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+                      )}
+                    >
+                      업데이트
+                    </span>
+                    <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                      2026. 06. 11
+                    </span>
+                  </span>
+                  <span className="block pr-1 text-base font-black leading-snug text-slate-900 dark:text-white sm:text-lg">
+                    백엔드 모니터링 · 멀티뷰 · 설정 개선
+                  </span>
+                  <span className="block text-sm font-medium leading-relaxed text-slate-500 group-open:hidden dark:text-slate-400">
+                    상태 페이지 히트맵, Cron 수집, 멀티뷰 안내·단축키, 설정 링크를
+                    추가했습니다.
+                  </span>
+                </span>
+                <span className="mt-1 shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180 dark:text-slate-500">
+                  <ChevronDown className="h-5 w-5" aria-hidden />
+                </span>
+              </span>
+            </summary>
+            <div className="border-t border-slate-100 px-4 pb-5 pt-1 dark:border-slate-800 sm:px-5">
+              <UpdateJune2026PostBody />
+            </div>
+          </details>
+
           <details
             id="settlement-2026-05"
             className="group scroll-mt-24 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm open:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:open:bg-slate-900"
