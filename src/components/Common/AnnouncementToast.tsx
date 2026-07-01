@@ -5,10 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Megaphone, X, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { announcementToast } from '@/config/announcements';
+import { announcementToast, announcementPopup } from '@/config/announcements';
 import type { Announcement, AnnouncementAccent } from '@/config/announcements';
+import { ANNOUNCEMENT_DISMISS_KEY } from './announcement-shared';
 
-const STORAGE_KEY = 'dismissedAnnouncements';
+const STORAGE_KEY = ANNOUNCEMENT_DISMISS_KEY;
 
 /** accent별 정적 클래스 묶음 (Tailwind 동적 클래스 금지 대응) */
 const ACCENT_THEMES: Record<
@@ -62,6 +63,7 @@ export default function AnnouncementToast({ stacked }: Props) {
   const [target, setTarget] = useState<Announcement | null>(null);
 
   useEffect(() => {
+    if (announcementPopup) return;
     const timer = setTimeout(() => {
       try {
         const dismissed: string[] = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');

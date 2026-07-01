@@ -12,13 +12,16 @@ export interface Announcement {
   accent?: AnnouncementAccent;
 }
 
-/** 홈·캘린더 등에 띄우는 공지 토스트 (한 건만) */
+/** 홈·캘린더 등에 띄우는 공지 (한 건만) */
 export const announcementToast: Announcement = {
-  id: 'settlement-2026-05',
+  id: 'settlement-2026-06',
   type: 'info',
   accent: 'teal',
-  title: '5월 후원 정산 · 기부 내역 공개',
+  title: '6월 후원 정산 · 잔여금 이월 안내',
   content:
-    '수익금 38,000원, 서버비 33,888원을 정산하고 잔여금은 1만원으로 채워 기부합니다. 자세한 내역은 공지에서 확인해 주세요.',
-  href: '/announcements#settlement-2026-05',
+    '수익금 136,000원, 서버비 38,280원을 정산하고 잔여금 97,720원은 다음 달로 이월합니다. 자세한 내역은 공지에서 확인해 주세요.',
+  href: '/announcements#settlement-2026-06',
 };
+
+/** 중앙 팝업으로 띄울 공지. null이면 팝업 없이 토스트만 사용 */
+export const announcementPopup: Announcement | null = announcementToast;
