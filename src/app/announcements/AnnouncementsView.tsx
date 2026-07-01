@@ -668,9 +668,6 @@ function UpdateJune2026PostBody() {
   );
 }
 
-/** 6월 정산 카페 글·영수증 링크 — URL 확정 후 교체 */
-const SETTLEMENT_2026_06_CAFE_URL = 'https://naver.me/xpjvYJ9c';
-
 function SettlementJune2026PostBody() {
   return (
     <div className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 pt-3">
@@ -750,17 +747,15 @@ function SettlementJune2026PostBody() {
         </div>
       </div>
 
-      {SETTLEMENT_2026_06_CAFE_URL !== '#' ? (
-        <a
-          href={SETTLEMENT_2026_06_CAFE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full py-3 bg-linear-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 active:scale-[0.98] text-white font-black rounded-xl transition-all text-sm shadow-md shadow-teal-500/20"
-        >
-          <Megaphone className="w-4 h-4" />
-          자세한 내역은 카페 글에서 확인하기
-        </a>
-      ) : null}
+      <a
+        href="https://naver.me/xpjvYJ9c"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2 w-full py-3 bg-linear-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 active:scale-[0.98] text-white font-black rounded-xl transition-all text-sm shadow-md shadow-teal-500/20"
+      >
+        <Megaphone className="w-4 h-4" />
+        자세한 내역은 카페 글에서 확인하기
+      </a>
 
       <p className="text-slate-500 dark:text-slate-400">
         요즘 사이트 유지보수에 신경을 많이 쓰지 못해 지표가 꽤 하락한 것도
