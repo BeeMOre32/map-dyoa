@@ -24,4 +24,4 @@ export const announcementToast: Announcement = {
 };
 
 /** 중앙 팝업으로 띄울 공지. null이면 팝업 없이 토스트만 사용 */
-export const announcementPopup: Announcement | null = announcementToast;
+export const announcementPopup: Announcement | null = null;
