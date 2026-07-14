@@ -23,6 +23,12 @@ export default function AdminLayout({
           </span>
           <div className="flex gap-4">
             <a
+              href="/admin/candidates"
+              className="text-xs font-bold text-rose-500 hover:text-rose-600"
+            >
+              일정 후보
+            </a>
+            <a
               href="/admin/notices"
               className="text-xs font-bold text-red-500 hover:text-red-600"
             >

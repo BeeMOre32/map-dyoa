@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyCronRequest } from '@/lib/cron-auth';
-import { runBackendHealthCron } from '@/lib/backend-health-store';
+import { scanLiveScheduleCandidates } from '@/lib/schedule-candidate-store';
 
 export async function GET(request: Request) {
   if (!verifyCronRequest(request)) {
@@ -8,17 +8,10 @@ export async function GET(request: Request) {
   }
 
   try {
-    const result = await runBackendHealthCron();
-    return NextResponse.json({
-      ok: true,
-      probeOk: result.probe.ok,
-      dateKst: result.dateKst,
-      status: result.rollup.status,
-      purged: result.purged,
-      alertCreated: result.alertCreated,
-    });
+    const result = await scanLiveScheduleCandidates();
+    return NextResponse.json({ ok: true, ...result });
   } catch (error) {
-    console.error('[cron/backend-health]', error);
+    console.error('[cron/schedule-candidates]', error);
     return NextResponse.json(
       {
         ok: false,

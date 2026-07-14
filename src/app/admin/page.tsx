@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import {
   MessageSquare, Users, Calendar, Clapperboard, Bell,
-  Gamepad2, Clock, Film, Megaphone, Server, AlertTriangle,
+  Gamepad2, Clock, Film, Megaphone, Server, AlertTriangle, Radio,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -13,6 +13,7 @@ import {
   getRecentBackendHealthAlerts,
   hasUnresolvedBackendHealthAlert,
 } from '@/lib/backend-health-store';
+import { countPendingScheduleCandidates } from '@/lib/schedule-candidate-store';
 
 export default async function AdminDashboard() {
   const session = await auth();
@@ -38,12 +39,14 @@ export default async function AdminDashboard() {
     backendUptime,
     backendAlertActive,
     backendAlerts,
+    pendingCandidates,
   ] = await Promise.all([
     getAdminStats(),
     getRecentActivity(),
     getBackendHealthUptimeSummary().catch(() => null),
     hasUnresolvedBackendHealthAlert().catch(() => false),
     getRecentBackendHealthAlerts(3).catch(() => []),
+    countPendingScheduleCandidates().catch(() => 0),
   ]);
 
   type StatColor = 'blue' | 'violet' | 'emerald' | 'amber';
@@ -203,6 +206,15 @@ export default async function AdminDashboard() {
             title: '수정 요청 관리',
             desc: '사용자들이 보낸 피드백과 정보 수정 요청을 확인합니다.',
             badge: pendingFeedbackCount > 0 ? `미처리 ${pendingFeedbackCount}건` : null,
+          },
+          {
+            href: '/admin/candidates',
+            bg: 'bg-rose-50 dark:bg-rose-900/20',
+            iconColor: 'text-rose-600 dark:text-rose-400',
+            icon: Radio,
+            title: '일정 후보 큐',
+            desc: 'LIVE인데 오늘 일정이 없는 멤버. 승인 시에만 게릴라 일정 등록.',
+            badge: pendingCandidates > 0 ? `대기 ${pendingCandidates}건` : null,
           },
           {
             href: '/admin/streamers',

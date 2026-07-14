@@ -22,3 +22,28 @@ export function matchChzzkCategory(category: string): string | null {
   const match = CHZZK_GAME_MAP.find((m) => m.category.toLowerCase() === lower);
   return match?.gameId ?? null;
 }
+
+/** liveCategory / 제목에서 Game 목록과 느슨히 매칭 */
+export function suggestGameIdFromText(
+  text: string | null | undefined,
+  games: { id: string; title: string }[],
+): string | null {
+  if (!text?.trim() || games.length === 0) return null;
+
+  const mapped = matchChzzkCategory(text.trim());
+  if (mapped && games.some((g) => g.id === mapped)) return mapped;
+
+  const lower = text.toLowerCase().replace(/\s+/g, '');
+  const ranked = games
+    .map((g) => {
+      const gt = g.title.toLowerCase().replace(/\s+/g, '');
+      let score = 0;
+      if (lower === gt) score = 100;
+      else if (lower.includes(gt) || gt.includes(lower)) score = Math.min(gt.length, lower.length);
+      return { id: g.id, score };
+    })
+    .filter((r) => r.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  return ranked[0]?.id ?? null;
+}

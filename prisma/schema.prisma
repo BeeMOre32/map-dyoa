@@ -277,3 +277,30 @@ model AuditLog {
   @@index([entity, createdAt(sort: Desc)])
   @@index([entityId])
 }
+
+/// LIVE인데 오늘 일정이 없을 때 쌓는 관리자 후보 큐 (캘린더에 자동 반영 안 함)
+enum ScheduleCandidateStatus {
+  PENDING
+  APPROVED
+  DISMISSED
+}
+
+model ScheduleCandidate {
+  id           String                   @id @default(cuid())
+  streamerId   String
+  streamerName String
+  dateKst      String
+  status       ScheduleCandidateStatus  @default(PENDING)
+  title        String?
+  liveUrl      String?
+  liveCategory String?
+  detectedAt   DateTime                 @default(now())
+  lastSeenAt   DateTime                 @default(now())
+  resolvedAt   DateTime?
+  scheduleId   String?
+  note         String?
+
+  @@unique([streamerId, dateKst])
+  @@index([status, detectedAt(sort: Desc)])
+  @@index([dateKst])
+}
