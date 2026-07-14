@@ -29,9 +29,11 @@ export default function ModalHeader({
           <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 sm:text-xl md:text-2xl">
             {isEdit
               ? '일정 수정'
-              : createMode === 'batch' && slotCount > 1
-                ? `일정 ${slotCount}개 등록`
-                : '새 일정 등록'}
+              : createMode === 'live'
+                ? 'LIVE 빠른 등록 β'
+                : createMode === 'batch' && slotCount > 1
+                  ? `일정 ${slotCount}개 등록`
+                  : '새 일정 등록'}
           </h3>
         </div>
       </div>

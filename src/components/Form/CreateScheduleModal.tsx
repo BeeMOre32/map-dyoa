@@ -14,6 +14,7 @@ import EditScheduleForm from './components/EditScheduleForm';
 import BatchScheduleForm from './components/BatchScheduleForm';
 import ModalFooter from './components/ModalFooter';
 import ScheduleExtractTab from './ScheduleExtractTab';
+import LiveCandidateRegisterTab from './LiveCandidateRegisterTab';
 
 export default function CreateScheduleModal({
   streamers,
@@ -26,7 +27,7 @@ export default function CreateScheduleModal({
   onOptimisticCreate,
   onScheduleUpdated,
 }: CreateScheduleModalProps) {
-  const [createMode, setCreateMode] = useState<CreateMode>('single');
+  const [createMode, setCreateMode] = useState<CreateMode>('live');
   const dismiss = useModalDismiss({ mother: '/calendar', onClose });
   const handleDismiss = embedded ? onClose : dismiss;
 
@@ -52,11 +53,16 @@ export default function CreateScheduleModal({
     a.name.localeCompare(b.name, 'ko-KR'),
   );
 
+  const showLive = !isEdit && createMode === 'live';
   const showEditOrSingle = isEdit || createMode === 'single';
   const showExtract =
     !isEdit && (createMode === 'image' || createMode === 'text');
   const showBatch = !isEdit && createMode === 'batch' && !showExtract;
-  const modalMaxWidthClass = showExtract ? 'max-w-5xl' : 'max-w-lg';
+  const modalMaxWidthClass = showExtract
+    ? 'max-w-5xl'
+    : showLive
+      ? 'max-w-2xl'
+      : 'max-w-lg';
   const handleCancel = onCancel ?? handleDismiss;
 
   const body = (
@@ -72,6 +78,12 @@ export default function CreateScheduleModal({
 
       {!isEdit && !embedded && (
         <ModeTabs createMode={createMode} setCreateMode={setCreateMode} />
+      )}
+
+      {showLive && (
+        <LiveCandidateRegisterTab
+          games={games.map((g) => ({ id: g.id, title: g.title }))}
+        />
       )}
 
       {showEditOrSingle && (

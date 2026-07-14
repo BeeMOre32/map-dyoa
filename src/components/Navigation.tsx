@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, Users, Clapperboard, Sword, Timer } from 'lucide-react';
+import { Calendar, Users, Clapperboard, Sword } from 'lucide-react';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
 
 const tabs = [
@@ -11,14 +11,6 @@ const tabs = [
   { id: 'streamers', label: '멤버·라이브', href: '/streamers', icon: Users },
   { id: 'clips', label: '클립', href: '/clips', icon: Clapperboard },
   { id: 'hoi4', label: '전적', href: '/hoi4', icon: Sword, accent: 'amber' as const },
-  {
-    id: 'time-attack',
-    label: '호이고사',
-    href: '/lab/time-attack',
-    icon: Timer,
-    accent: 'amber' as const,
-    pulse: true,
-  },
 ];
 
 export default function Navigation() {
@@ -42,7 +34,6 @@ export default function Navigation() {
           const isAmber = tab.accent === 'amber';
           const isStreamers = tab.id === 'streamers';
           const showLiveGlow = isStreamers && liveCount > 0;
-          const showAmberPulse = isAmber && tab.pulse && !isActive;
 
           return (
             <Link
@@ -70,16 +61,6 @@ export default function Navigation() {
                 />
               )}
 
-              {/* 호이고사 등 이벤트 탭 배경 강조 */}
-              {showAmberPulse ? (
-                <motion.div
-                  className="absolute inset-0 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-700/50"
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-                />
-              ) : null}
-
-              {/* 멤버·라이브 탭: 라이브 중일 때 붉은 배경 강조 */}
               {showLiveGlow && !isActive && (
                 <motion.div
                   className="absolute inset-0 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200/60 dark:border-red-700/50"
@@ -91,7 +72,6 @@ export default function Navigation() {
               <tab.icon className="z-20 h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="z-20 hidden sm:inline">{tab.label}</span>
 
-              {/* 라이브 중 카운트 배지 */}
               {isStreamers && liveCount > 0 && (
                 <span className="z-20 flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-red-500 text-white text-[9px] font-black leading-none">
                   {liveCount}

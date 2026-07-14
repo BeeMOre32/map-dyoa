@@ -68,4 +68,4 @@ export type CreateScheduleModalProps = ModalProps & {
   onScheduleUpdated?: (schedule: FlattenedSchedule) => void;
 };
 
-export type CreateMode = 'single' | 'batch' | 'image' | 'text';
+export type CreateMode = 'live' | 'single' | 'batch' | 'image' | 'text';

@@ -4,13 +4,14 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Check, ExternalLink, RefreshCw, RotateCcw, X } from 'lucide-react';
+import { Check, ExternalLink, Plus, RefreshCw, RotateCcw, X } from 'lucide-react';
 import type { ScheduleCandidateView } from '@/lib/schedule-candidate-store';
 import {
   approveScheduleCandidateAction,
   dismissScheduleCandidateAction,
   scanScheduleCandidatesAction,
 } from '@/app/admin/candidates/actions';
+import QuickAddGameModal from '@/components/Form/QuickAddGameModal';
 
 const STATUS_LABEL: Record<ScheduleCandidateView['status'], string> = {
   PENDING: '대기',
@@ -31,7 +32,7 @@ function defaultSelectedIds(c: ScheduleCandidateView): string[] {
 
 export default function ScheduleCandidateQueue({
   candidates,
-  games,
+  games: gamesProp,
 }: {
   candidates: ScheduleCandidateView[];
   games: { id: string; title: string }[];
@@ -44,6 +45,11 @@ export default function ScheduleCandidateQueue({
   const [selectedIds, setSelectedIds] = useState<Record<string, string[]>>({});
   /** 선택 게임. undefined = 아직 안 건드림 → suggestedGameId 사용, '' = 선택 안 함 */
   const [gameIds, setGameIds] = useState<Record<string, string>>({});
+  const [games, setGames] = useState(gamesProp);
+  const [addGameFor, setAddGameFor] = useState<{
+    candidateId: string;
+    title: string;
+  } | null>(null);
 
   const pendingRows = useMemo(
     () => candidates.filter((c) => c.status === 'PENDING'),
@@ -174,11 +180,11 @@ export default function ScheduleCandidateQueue({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            일정 후보 큐
+            일정 후보 큐 <span className="text-rose-500">β</span>
           </h1>
           <p className="text-slate-500 dark:text-slate-400 font-bold mt-2 text-sm max-w-xl">
-            LIVE인데 오늘(KST) 일정이 없는 멤버만 쌓입니다. 방송 제목·동시 LIVE에서 합방
-            멤버를 추정하고, 제목·인원을 다듬은 뒤 승인합니다. 시작 시각은 감지 시각입니다.
+            LIVE인데 오늘(KST) 일정이 없는 멤버만 쌓입니다. 제목·합방·게임을 다듬은 뒤
+            승인하세요. 시작 시각은 감지 시각입니다.
           </p>
         </div>
         <button
@@ -301,6 +307,23 @@ export default function ScheduleCandidateQueue({
                         치지직 카테고리: {c.liveCategory}
                       </p>
                     )}
+                    {Boolean(c.liveCategory?.trim()) &&
+                      !c.suggestedGameId &&
+                      !gameFor(c) && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setAddGameFor({
+                            candidateId: c.id,
+                            title: c.liveCategory!.trim(),
+                          })
+                        }
+                        className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-1 text-[11px] font-black text-amber-700 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-300"
+                      >
+                        <Plus className="h-3 w-3" />
+                        「{c.liveCategory}」 게임으로 등록
+                      </button>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
@@ -408,6 +431,23 @@ export default function ScheduleCandidateQueue({
             ))}
           </ul>
         </section>
+      )}
+
+      {addGameFor && (
+        <QuickAddGameModal
+          initialTitle={addGameFor.title}
+          onClose={() => setAddGameFor(null)}
+          onCreated={(game) => {
+            setGames((prev) =>
+              prev.some((g) => g.id === game.id)
+                ? prev
+                : [...prev, game].sort((a, b) => a.title.localeCompare(b.title, 'ko')),
+            );
+            setGameIds((prev) => ({ ...prev, [addGameFor.candidateId]: game.id }));
+            setMessage(`「${game.title}」 게임을 추가하고 선택함`);
+            router.refresh();
+          }}
+        />
       )}
     </div>
   );

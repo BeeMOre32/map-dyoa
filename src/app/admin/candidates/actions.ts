@@ -13,6 +13,7 @@ import {
 function revalidateCandidatePages() {
   revalidatePath('/admin/candidates');
   revalidatePath('/admin');
+  revalidatePath('/calendar');
 }
 
 export async function scanScheduleCandidatesAction(): Promise<

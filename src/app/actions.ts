@@ -48,6 +48,7 @@ import {
   getScheduleServerBaseUrl,
   fetchScheduleByIdFromServer,
 } from '@/lib/map-dyoa-server-schedules';
+import { fetchAllGamesFromServer } from '@/lib/map-dyoa-server-games-feedback';
 import {
   SCHEDULE_CONFLICT_MESSAGE,
   pickScheduleRevision,
@@ -958,33 +959,58 @@ export async function deleteClipAction(id: string): Promise<ActionResult> {
 }
 
 /**
- * 게임 생성
+ * 게임 생성 (로그인 유저). 이미 같은 제목이 있으면 기존 id 반환.
  */
 export async function createGameAction(data: {
   title: string;
   isHoi4?: boolean;
-}): Promise<ActionResult> {
+}): Promise<ActionResult<{ id: string; title: string }>> {
   try {
-    const session = await requireAdmin();
-    if (!data.title?.trim()) throw new ValidationError('게임 제목이 필요합니다.');
-    const changes = snapshotGame(data);
+    const session = await requireAuth();
+    const title = data.title?.trim();
+    if (!title) throw new ValidationError('게임 제목이 필요합니다.');
+    if (title.length > 80) throw new ValidationError('게임 제목은 80자 이내로 입력해 주세요.');
+    const isHoi4 = data.isHoi4 ?? false;
+    const changes = snapshotGame({ title, isHoi4 });
 
     const base = getScheduleServerBaseUrl();
     if (base) {
+      const existingList = await fetchAllGamesFromServer().catch(() => []);
+      const existing = existingList.find(
+        (g) => g.title.trim().toLowerCase() === title.toLowerCase(),
+      );
+      if (existing) {
+        return { success: true, data: { id: existing.id, title: existing.title } };
+      }
+
       const res = await fetchWithBackoff(`${base}/games`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: data.title.trim(),
-          isHoi4: data.isHoi4 ?? false,
-        }),
+        body: JSON.stringify({ title, isHoi4 }),
       });
-      const json = (await res.json()) as { error?: string; message?: string };
+      const json = (await res.json()) as {
+        id?: string;
+        title?: string;
+        error?: string;
+        message?: string;
+      };
       if (!res.ok) {
         return {
           success: false,
           error: json.message ?? '게임 생성에 실패했습니다.',
           errorCode: json.error ?? 'API_ERROR',
+        };
+      }
+      let id = json.id;
+      if (!id) {
+        const refreshed = await fetchAllGamesFromServer().catch(() => []);
+        id = refreshed.find((g) => g.title.trim().toLowerCase() === title.toLowerCase())?.id;
+      }
+      if (!id) {
+        return {
+          success: false,
+          error: '게임이 만들어졌지만 ID를 확인하지 못했습니다.',
+          errorCode: 'API_ERROR',
         };
       }
       const paths = getRevalidationPaths('game');
@@ -995,14 +1021,25 @@ export async function createGameAction(data: {
       auditLog(session, {
         action: 'create',
         entity: 'game',
-        summary: `게임 생성: ${data.title.trim()}`,
+        entityId: id,
+        summary: `게임 생성: ${title}`,
         changes,
       });
-      return { success: true, data: null };
+      return { success: true, data: { id, title: json.title?.trim() || title } };
     }
 
-    await getPrismaForDomain().game.create({
-      data: { title: data.title.trim(), isHoi4: data.isHoi4 ?? false },
+    const prisma = getPrismaForDomain();
+    const existing = await prisma.game.findFirst({
+      where: { title: { equals: title, mode: 'insensitive' } },
+      select: { id: true, title: true },
+    });
+    if (existing) {
+      return { success: true, data: existing };
+    }
+
+    const created = await prisma.game.create({
+      data: { title, isHoi4 },
+      select: { id: true, title: true },
     });
 
     const paths = getRevalidationPaths('game');
@@ -1014,10 +1051,11 @@ export async function createGameAction(data: {
     auditLog(session, {
       action: 'create',
       entity: 'game',
-      summary: `게임 생성: ${data.title.trim()}`,
+      entityId: created.id,
+      summary: `게임 생성: ${title}`,
       changes,
     });
-    return { success: true, data: null };
+    return { success: true, data: created };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
     logError('createGame', error);

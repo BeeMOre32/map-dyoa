@@ -334,7 +334,8 @@ export default function HelpPage() {
               <strong>전적</strong> — HOI4 내전 세션·멤버별 참전 통계·필터
             </Row>
             <Tip>
-              일정·멤버 상세·멀티뷰가 열리면 하단 탭은 잠시 숨겨져 화면을 넓게 씁니다.
+              일정·멤버 상세·멀티뷰가 열리면 하단 탭은 잠시 숨겨집니다. 호이고사·실험실은
+              설정 → 정보에서 열 수 있어요.
             </Tip>
           </motion.div>
         </SectionCard>

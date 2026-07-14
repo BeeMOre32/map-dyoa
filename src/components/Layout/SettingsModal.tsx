@@ -3,6 +3,7 @@
 import {
   Sun, Moon, HelpCircle, Shield, LogIn, LogOut, UserCheck, X,
   LayoutDashboard, EyeOff, Heart, Megaphone, History, BarChart3, Server, Puzzle,
+  Timer, FlaskConical,
 } from 'lucide-react';
 import { CHROME_EXTENSION_NAME, CHROME_EXTENSION_URL } from '@/constants/extension';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -155,12 +156,23 @@ function GeneralTab({
         <SectionLabel>정보</SectionLabel>
         <div className="space-y-1">
           {[
+            {
+              href: '/lab/time-attack',
+              icon: <Timer className="w-4 h-4 text-amber-500 dark:text-amber-400" />,
+              label: '호이고사',
+              hint: 'β',
+            },
+            {
+              href: '/lab',
+              icon: <FlaskConical className="w-4 h-4 text-slate-400 dark:text-slate-500" />,
+              label: '실험실',
+            },
             { href: '/announcements', icon: <Megaphone className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '공지사항' },
             { href: '/health', icon: <Server className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '백엔드 상태' },
             { href: '/calendar/monthly', icon: <BarChart3 className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '지도동 통계' },
             { href: '/help', icon: <HelpCircle className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '도움말' },
             { href: '/privacy', icon: <Shield className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '개인정보처리방침' },
-          ].map(({ href, icon, label }) => (
+          ].map(({ href, icon, label, hint }) => (
             <Link
               key={href}
               href={href}
@@ -169,6 +181,11 @@ function GeneralTab({
             >
               {icon}
               <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{label}</span>
+              {hint ? (
+                <span className="ml-auto text-[10px] font-black text-amber-500 dark:text-amber-400">
+                  {hint}
+                </span>
+              ) : null}
             </Link>
           ))}
         </div>
