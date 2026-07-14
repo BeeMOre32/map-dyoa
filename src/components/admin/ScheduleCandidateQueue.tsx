@@ -133,7 +133,7 @@ export default function ScheduleCandidateQueue({
       });
       const n = participantIds.length;
       setMessage(
-        `게릴라 일정 등록 (${n}명) → /calendar/schedule/${res.data!.scheduleId}`,
+        `일정 등록 (${n}명) → /calendar/schedule/${res.data!.scheduleId}`,
       );
       router.refresh();
     });

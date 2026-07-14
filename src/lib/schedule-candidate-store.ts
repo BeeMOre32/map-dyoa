@@ -256,7 +256,7 @@ export async function dismissScheduleCandidate(id: string): Promise<void> {
   });
 }
 
-/** 게릴라 일정 생성 후 후보 APPROVED. 합방 멤버·게임은 opts로 전달. */
+/** 감지 시각을 startTime으로 일정 생성 후 후보 APPROVED. 합방 멤버·게임은 opts로 전달. */
 export async function approveScheduleCandidate(
   id: string,
   opts?: { title?: string; participantIds?: string[]; gameId?: string | null },
@@ -295,7 +295,7 @@ export async function approveScheduleCandidate(
         startTime: startTime.toISOString(),
         participants: participantIds.map((pid) => ({ id: pid })),
         liveUrls,
-        isGuerrilla: true,
+        isGuerrilla: false,
         isNaeJeon: false,
         ...(gameId ? { gameId } : {}),
       }),
@@ -310,7 +310,7 @@ export async function approveScheduleCandidate(
       data: {
         title,
         startTime,
-        isGuerrilla: true,
+        isGuerrilla: false,
         liveUrls,
         ...(gameId ? { game: { connect: { id: gameId } } } : {}),
         participants: {

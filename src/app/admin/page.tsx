@@ -213,7 +213,7 @@ export default async function AdminDashboard() {
             iconColor: 'text-rose-600 dark:text-rose-400',
             icon: Radio,
             title: '일정 후보 큐',
-            desc: 'LIVE인데 오늘 일정이 없는 멤버. 승인 시에만 게릴라 일정 등록.',
+            desc: 'LIVE인데 오늘 일정이 없는 멤버. 승인 시 감지 시각으로 일정 등록.',
             badge: pendingCandidates > 0 ? `대기 ${pendingCandidates}건` : null,
           },
           {
