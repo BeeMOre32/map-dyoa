@@ -8,8 +8,16 @@ import type { ActionResult } from '@/types/api-response';
 import {
   approveScheduleCandidate,
   listScheduleCandidates,
+  scanLiveScheduleCandidates,
   type ScheduleCandidateView,
 } from '@/lib/schedule-candidate-store';
+
+export type LiveCandidatesPayload = {
+  candidates: ScheduleCandidateView[];
+  /** 후보 lastSeenAt 중 최신 (ISO). 없으면 null */
+  freshnessAt: string | null;
+  scanned?: boolean;
+};
 
 function revalidateCandidateSurfaces() {
   revalidatePath('/admin/candidates');
@@ -17,17 +25,70 @@ function revalidateCandidateSurfaces() {
   revalidatePath('/calendar');
 }
 
+function freshnessFrom(candidates: ScheduleCandidateView[]): string | null {
+  let max = 0;
+  for (const c of candidates) {
+    const t = new Date(c.lastSeenAt).getTime();
+    if (Number.isFinite(t) && t > max) max = t;
+  }
+  return max > 0 ? new Date(max).toISOString() : null;
+}
+
+async function loadPendingPayload(): Promise<LiveCandidatesPayload> {
+  const candidates = await listScheduleCandidates({
+    status: 'PENDING',
+    limit: 40,
+  });
+  return {
+    candidates,
+    freshnessAt: freshnessFrom(candidates),
+  };
+}
+
+function isAlreadyResolvedError(message: string): boolean {
+  return (
+    message.includes('이미 등록') ||
+    message.includes('이미 거절') ||
+    message.includes('이미 처리')
+  );
+}
+
 /** 로그인 유저: 오늘 LIVE 대기 후보만 */
 export async function listPendingLiveCandidatesAction(): Promise<
-  ActionResult<ScheduleCandidateView[]>
+  ActionResult<LiveCandidatesPayload>
 > {
   try {
     await requireAuth();
-    const data = await listScheduleCandidates({ status: 'PENDING', limit: 40 });
+    const data = await loadPendingPayload();
     return { success: true, data };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
     logError('listPendingLiveCandidates', error);
+    return { success: false, error: message, errorCode: code };
+  }
+}
+
+/**
+ * 목록 새로고침. scan=true면 LIVE 스캔 후 목록 (유저 轻度 갱신).
+ * 스캔은 치지직 호출이 있어 클라이언트가 간격을 두는 것을 권장.
+ */
+export async function refreshPendingLiveCandidatesAction(
+  opts?: { scan?: boolean },
+): Promise<ActionResult<LiveCandidatesPayload>> {
+  try {
+    await requireAuth();
+    let scanned = false;
+    if (opts?.scan) {
+      await scanLiveScheduleCandidates();
+      scanned = true;
+      revalidatePath('/admin/candidates');
+      revalidatePath('/admin');
+    }
+    const data = await loadPendingPayload();
+    return { success: true, data: { ...data, scanned } };
+  } catch (error) {
+    const { message, code } = getErrorMessage(error);
+    logError('refreshPendingLiveCandidates', error);
     return { success: false, error: message, errorCode: code };
   }
 }
@@ -58,6 +119,16 @@ export async function registerLiveCandidateAction(
   } catch (error) {
     const { message, code } = getErrorMessage(error);
     logError('registerLiveCandidate', error);
+    if (isAlreadyResolvedError(message)) {
+      return {
+        success: false,
+        error:
+          message.includes('거절')
+            ? '이미 거절된 후보입니다. 목록을 갱신합니다.'
+            : '이미 등록된 후보입니다. 목록을 갱신합니다.',
+        errorCode: 'ALREADY_RESOLVED',
+      };
+    }
     return { success: false, error: message, errorCode: code };
   }
 }

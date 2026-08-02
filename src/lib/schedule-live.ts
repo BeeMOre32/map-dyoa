@@ -39,6 +39,18 @@ export function isScheduleLiveOnCard(
   return schedule.participants.some((p) => liveStreamerIds.has(p.id));
 }
 
+/** 상세 모달용 — 현재 라이브 중인 참가자 (카드 LIVE 조건과 동일) */
+export function getScheduleLiveParticipants<T extends { id: string }>(
+  schedule: ScheduleLiveContext & { participants: T[] },
+  liveStreamerIds: Set<string> | undefined,
+  now: Date = new Date(),
+): T[] {
+  if (!isScheduleLiveOnCard(schedule, liveStreamerIds, now) || !liveStreamerIds) {
+    return [];
+  }
+  return schedule.participants.filter((p): p is T => liveStreamerIds.has(p.id));
+}
+
 export function isChzzkLiveUrl(url: string): boolean {
   return url.includes('chzzk.naver.com');
 }

@@ -3,10 +3,11 @@
 import { useState, useTransition } from 'react';
 import { Plus, SquarePen, Trash2, Gamepad2, X, Check } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { createGameAction, updateGameAction, deleteGameAction } from '@/app/actions';
+import { createGameAction, updateGameAction, deleteGameAction, mergeGamesAction } from '@/app/actions';
 import { useRouter } from 'next/navigation';
 import { useModalDismiss } from '@/hooks/useModalDismiss';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
+import { groupGamesBySimilarTitle } from '@/lib/game-title';
 
 type Game = {
   id: string;
@@ -152,8 +153,26 @@ function DeleteGameButton({ game }: { game: Game }) {
 }
 
 export default function GameManagement({ games }: { games: Game[] }) {
+  const router = useRouter();
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Game | null>(null);
+  const [mergePending, startMerge] = useTransition();
+  const [mergeMsg, setMergeMsg] = useState<string | null>(null);
+
+  const similarGroups = groupGamesBySimilarTitle(games);
+
+  const runMerge = (keepId: string, absorbId: string) => {
+    setMergeMsg(null);
+    startMerge(async () => {
+      const res = await mergeGamesAction(keepId, absorbId);
+      if (!res.success) {
+        setMergeMsg(res.error ?? '병합 실패');
+        return;
+      }
+      setMergeMsg(`병합 완료 · 일정 ${res.data.moved}건 이동`);
+      router.refresh();
+    });
+  };
 
   return (
     <div className="p-8 space-y-6 bg-white dark:bg-slate-950 transition-colors">
@@ -161,7 +180,7 @@ export default function GameManagement({ games }: { games: Game[] }) {
         <div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">게임 관리</h1>
           <p className="text-slate-500 dark:text-slate-400 font-bold mt-2">
-            일정에 사용되는 게임 목록을 관리합니다.
+            일정에 사용되는 게임 목록을 관리합니다. 비슷한 이름은 등록 시 자동으로 기존 게임에 붙습니다.
           </p>
         </div>
         <button
@@ -172,6 +191,63 @@ export default function GameManagement({ games }: { games: Game[] }) {
           게임 추가
         </button>
       </div>
+
+      {mergeMsg && (
+        <p className="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+          {mergeMsg}
+        </p>
+      )}
+
+      {similarGroups.length > 0 && (
+        <section className="space-y-3 rounded-3xl border border-amber-200/80 bg-amber-50/50 p-5 dark:border-amber-800/50 dark:bg-amber-950/20">
+          <h2 className="text-sm font-black text-amber-800 dark:text-amber-300">
+            유사 이름 묶음 ({similarGroups.length})
+          </h2>
+          <p className="text-xs font-bold text-amber-700/80 dark:text-amber-400/80">
+            공백·기호만 다른 중복 후보입니다. 남길 게임을 기준으로 나머지를 합치세요.
+          </p>
+          <ul className="space-y-3">
+            {similarGroups.map((group) => {
+              const keep = [...group.items].sort(
+                (a, b) => b._count.schedules - a._count.schedules,
+              )[0];
+              return (
+                <li
+                  key={group.key}
+                  className="rounded-2xl border border-amber-200/60 bg-white/80 p-4 dark:border-amber-900/40 dark:bg-slate-900/60"
+                >
+                  <p className="mb-2 text-[11px] font-bold text-slate-400">
+                    권장 유지: {keep.title} (일정 {keep._count.schedules})
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {group.items.map((g) => (
+                      <div
+                        key={g.id}
+                        className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <span>
+                          {g.title}
+                          <span className="ml-1 text-slate-400">·{g._count.schedules}</span>
+                        </span>
+                        {g.id !== keep.id && (
+                          <button
+                            type="button"
+                            disabled={mergePending}
+                            onClick={() => runMerge(keep.id, g.id)}
+                            className="rounded-lg bg-amber-600 px-2 py-0.5 text-[10px] font-black text-white hover:bg-amber-500 disabled:opacity-50"
+                          >
+                            → {keep.title}에 합치기
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 overflow-hidden">
         {games.length === 0 ? (

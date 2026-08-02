@@ -52,6 +52,18 @@ const init = async () => {
 chrome.runtime.onInstalled.addListener(init);
 chrome.runtime.onStartup.addListener(init);
 
+/** map-dyoa 페이지에서 설치 여부 선확인 (iframe 로드 전) */
+chrome.runtime.onMessageExternal.addListener((message, _sender, sendResponse) => {
+  if (message?.type === 'ping' && message?.source === 'map-dyoa') {
+    sendResponse({
+      ok: true,
+      version: chrome.runtime.getManifest().version,
+    });
+    return true;
+  }
+  return false;
+});
+
 // 30분마다 재동기화 (세션 만료 방지)
 chrome.alarms.create('sync-cookies', { periodInMinutes: 30 });
 chrome.alarms.onAlarm.addListener((alarm) => {

@@ -120,6 +120,7 @@ export default function ScheduleCandidateQueue({
       setBusyId(null);
       if (!res.success) {
         setMessage(res.error ?? '승인 실패');
+        router.refresh();
         return;
       }
       setDraftTitles((prev) => {

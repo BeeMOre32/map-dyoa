@@ -1,6 +1,7 @@
 'use client';
 
-import { MoreHorizontal, LayoutGrid } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Eye, LayoutGrid, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Streamer } from '@prisma/client';
@@ -10,8 +11,14 @@ import { getStreamerColor } from '@/constants/streamercolor';
 import { getChannelUrl } from '@/components/multiview/utils';
 import { streamerAvatarLayoutId, streamerCardVariants } from '@/lib/streamerMotion';
 import StreamerAvatar from './StreamerAvatar';
+import StreamerLivePreview from './StreamerLivePreview';
 import { track } from '@vercel/analytics';
 import { markModalSoftNav } from '@/lib/modal-navigation';
+import {
+  claimLiveEmbed,
+  isLiveEmbedHeld,
+  releaseLiveEmbed,
+} from '@/lib/streamer-live-preview';
 
 interface StreamerCardProps {
   streamer: Streamer;
@@ -23,6 +30,15 @@ interface StreamerCardProps {
   selectionIndex?: number;
   /** 그리드 stagger 오프셋 */
   index?: number;
+}
+
+/** chzzk-plus: 사이드바 mouseover 즉시 표시에 가깝게, 닫기는 ~100ms */
+const HOVER_OPEN_MS = 280;
+const HOVER_CLOSE_MS = 100;
+
+function canHoverPreview() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 }
 
 export default function StreamerCard({
@@ -40,6 +56,101 @@ export default function StreamerCard({
   const streamerColor = getStreamerColor(streamer.id, isDark) ?? streamer.colorCode;
   const channelUrl = getChannelUrl(streamer);
   const canSelect = isSelected || !isMaxReached;
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previewHovered = useRef(false);
+  const previewPinned = useRef(false);
+
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [anchor, setAnchor] = useState<{
+    top: number;
+    left: number;
+    right: number;
+    bottom: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+  const clearTimers = useCallback(() => {
+    if (openTimer.current) {
+      clearTimeout(openTimer.current);
+      openTimer.current = null;
+    }
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  }, []);
+
+  const measureAnchor = useCallback(() => {
+    const el = cardRef.current;
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return {
+      top: r.top,
+      left: r.left,
+      right: r.right,
+      bottom: r.bottom,
+      width: r.width,
+      height: r.height,
+    };
+  }, []);
+
+  const closePreview = useCallback(() => {
+    clearTimers();
+    previewHovered.current = false;
+    previewPinned.current = false;
+    setPreviewOpen(false);
+    setAnchor(null);
+    releaseLiveEmbed(streamer.id, 'hover');
+  }, [clearTimers, streamer.id]);
+
+  const openPreview = useCallback(() => {
+    if (!isLive) return;
+    // 상세 사이드패널에서 같은 스트림을 이미 재생 중이면 호버 iframe 중복 방지
+    if (isLiveEmbedHeld(streamer.id, 'detail')) return;
+    const next = measureAnchor();
+    if (!next) return;
+    const claimed = claimLiveEmbed(streamer.id, 'hover', () => {
+      clearTimers();
+      previewHovered.current = false;
+      previewPinned.current = false;
+      setPreviewOpen(false);
+      setAnchor(null);
+      releaseLiveEmbed(streamer.id, 'hover');
+    });
+    if (!claimed) return;
+    setAnchor(next);
+    setPreviewOpen(true);
+    track('streamer_live_preview_open', {
+      streamer_id: streamer.id,
+      streamer_name: streamer.name,
+    });
+  }, [clearTimers, isLive, measureAnchor, streamer.id, streamer.name]);
+
+  const scheduleOpen = useCallback(() => {
+    if (!isLive || !canHoverPreview()) return;
+    if (isLiveEmbedHeld(streamer.id, 'detail')) return;
+    clearTimers();
+    openTimer.current = setTimeout(() => openPreview(), HOVER_OPEN_MS);
+  }, [clearTimers, isLive, openPreview, streamer.id]);
+
+  const scheduleClose = useCallback(() => {
+    if (previewPinned.current) return;
+    clearTimers();
+    closeTimer.current = setTimeout(() => {
+      if (previewHovered.current || previewPinned.current) return;
+      closePreview();
+    }, HOVER_CLOSE_MS);
+  }, [clearTimers, closePreview]);
+
+  useEffect(() => () => clearTimers(), [clearTimers]);
+
+  useEffect(() => {
+    if (!isLive && previewOpen) closePreview();
+  }, [isLive, previewOpen, closePreview]);
 
   const borderCls = isSelected
     ? 'border-indigo-500 shadow-lg shadow-indigo-100 dark:shadow-indigo-900/30'
@@ -61,13 +172,16 @@ export default function StreamerCard({
 
   return (
     <motion.div
+      ref={cardRef}
       custom={index}
       initial="hidden"
       animate="visible"
       variants={streamerCardVariants}
       whileHover={{ y: -2, transition: { type: 'spring', stiffness: 420, damping: 28 } }}
       whileTap={{ scale: 0.99, transition: { type: 'spring', stiffness: 500, damping: 32 } }}
-      className="min-w-0 h-full"
+      className="relative min-w-0 h-full"
+      onMouseEnter={scheduleOpen}
+      onMouseLeave={scheduleClose}
     >
       <Link
         href={`/streamers/detail/${streamer.id}`}
@@ -151,6 +265,30 @@ export default function StreamerCard({
             className="ml-auto flex items-center gap-1 sm:gap-1.5"
             style={{ display: 'flex' }}
           >
+            {isLive && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (previewOpen) {
+                    closePreview();
+                    return;
+                  }
+                  openPreview();
+                }}
+                title="라이브 미리보기"
+                className={`flex h-7 items-center gap-1 rounded-lg px-2 text-[9px] font-black transition-all sm:h-8 sm:rounded-xl sm:px-2.5 sm:text-[10px] ${
+                  previewOpen
+                    ? 'bg-red-500 text-white'
+                    : 'bg-red-50 text-red-600 opacity-100 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100'
+                }`}
+              >
+                <Eye className="h-3.5 w-3.5" />
+                <span className="[@media(hover:hover)]:hidden">미리보기</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={(e) => {
@@ -194,6 +332,24 @@ export default function StreamerCard({
           </motion.div>
         </div>
       </Link>
+
+      {previewOpen && anchor && (
+        <StreamerLivePreview
+          streamer={streamer}
+          anchor={anchor}
+          anchorEl={cardRef.current}
+          onClose={closePreview}
+          onPinnedChange={(pinned) => {
+            previewPinned.current = pinned;
+            if (pinned) clearTimers();
+          }}
+          onHoverChange={(hovering) => {
+            previewHovered.current = hovering;
+            if (hovering) clearTimers();
+            else scheduleClose();
+          }}
+        />
+      )}
     </motion.div>
   );
 }

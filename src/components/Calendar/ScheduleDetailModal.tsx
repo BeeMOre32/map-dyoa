@@ -52,9 +52,11 @@ import {
 } from './ScheduleSidePanel';
 import {
   filterScheduleLiveUrls,
+  getScheduleLiveParticipants,
   hasScheduleBroadcastStarted,
 } from '@/lib/schedule-live';
 import { useMinuteClock } from '@/hooks/useMinuteClock';
+import { useLiveStatus } from '@/hooks/useLiveStatus';
 import ScheduleShareButton from '@/components/Calendar/ScheduleShareButton';
 
 interface ScheduleDetailViewProps {
@@ -150,6 +152,7 @@ export default function ScheduleDetailView({
     participants: schedule.participants,
     isHoi4,
     isDark,
+    schedule,
   };
 
   return (
@@ -210,7 +213,7 @@ export default function ScheduleDetailView({
               initial="hidden"
               animate="visible"
               exit="hidden"
-              className="pointer-events-auto hidden max-h-[90dvh] w-72 flex-col overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-900/50 sm:flex"
+              className="pointer-events-auto hidden max-h-[90dvh] w-80 flex-col overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-900/50 sm:flex"
               onClick={(e) => e.stopPropagation()}
             >
               <SidePanel {...sidePanelProps} />
@@ -340,6 +343,9 @@ function DetailView({
   onOpenSheet: (tab: SideTab) => void;
 }) {
   useMinuteClock();
+  const { liveIds } = useLiveStatus();
+  const hasLivePreview =
+    getScheduleLiveParticipants(schedule, liveIds).length > 0;
   const broadcastStarted = hasScheduleBroadcastStarted(schedule);
   const liveUrls = filterScheduleLiveUrls(schedule.liveUrls ?? [], schedule);
 
@@ -529,7 +535,20 @@ function DetailView({
 
       {/* 모바일 하단 버튼 바 */}
       <div className="sm:hidden shrink-0 px-5 pt-3 pb-safe border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex gap-2">
+        {hasLivePreview && (
+          <button
+            type="button"
+            onClick={() => onOpenSheet('live')}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-red-100 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 transition-all"
+          >
+            <span className="text-sm font-bold text-red-600 dark:text-red-400">
+              LIVE
+            </span>
+            <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+          </button>
+        )}
         <button
+          type="button"
           onClick={() => onOpenSheet('clips')}
           className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 hover:border-indigo-200 dark:hover:border-indigo-700 transition-all"
         >
@@ -545,6 +564,7 @@ function DetailView({
         </button>
         {isHoi4 && (
           <button
+            type="button"
             onClick={() => onOpenSheet('hoi4')}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-amber-100 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-900/10 hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-all"
           >

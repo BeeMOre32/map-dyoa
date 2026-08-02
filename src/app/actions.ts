@@ -49,6 +49,7 @@ import {
   fetchScheduleByIdFromServer,
 } from '@/lib/map-dyoa-server-schedules';
 import { fetchAllGamesFromServer } from '@/lib/map-dyoa-server-games-feedback';
+import { findSimilarGame } from '@/lib/game-title';
 import {
   SCHEDULE_CONFLICT_MESSAGE,
   pickScheduleRevision,
@@ -976,11 +977,9 @@ export async function createGameAction(data: {
     const base = getScheduleServerBaseUrl();
     if (base) {
       const existingList = await fetchAllGamesFromServer().catch(() => []);
-      const existing = existingList.find(
-        (g) => g.title.trim().toLowerCase() === title.toLowerCase(),
-      );
-      if (existing) {
-        return { success: true, data: { id: existing.id, title: existing.title } };
+      const similar = findSimilarGame(title, existingList);
+      if (similar) {
+        return { success: true, data: { id: similar.id, title: similar.title } };
       }
 
       const res = await fetchWithBackoff(`${base}/games`, {
@@ -1029,12 +1028,12 @@ export async function createGameAction(data: {
     }
 
     const prisma = getPrismaForDomain();
-    const existing = await prisma.game.findFirst({
-      where: { title: { equals: title, mode: 'insensitive' } },
+    const allGames = await prisma.game.findMany({
       select: { id: true, title: true },
     });
-    if (existing) {
-      return { success: true, data: existing };
+    const similarLocal = findSimilarGame(title, allGames);
+    if (similarLocal) {
+      return { success: true, data: similarLocal };
     }
 
     const created = await prisma.game.create({
@@ -1196,6 +1195,68 @@ export async function deleteGameAction(id: string): Promise<ActionResult> {
   } catch (error) {
     const { message, code } = getErrorMessage(error);
     logError('deleteGame', error);
+    return { success: false, error: message, errorCode: code };
+  }
+}
+
+/**
+ * 관리자: 중복 게임을 keepId로 합친 뒤 absorbId 삭제.
+ * 연결된 일정(gameId)을 keep 쪽으로 옮깁니다.
+ */
+export async function mergeGamesAction(
+  keepId: string,
+  absorbId: string,
+): Promise<ActionResult<{ moved: number }>> {
+  try {
+    const session = await requireAdmin();
+    if (!keepId?.trim() || !absorbId?.trim()) {
+      throw new ValidationError('합칠 게임 id가 필요합니다.');
+    }
+    if (keepId === absorbId) {
+      throw new ValidationError('같은 게임끼리는 합칠 수 없습니다.');
+    }
+
+    const prisma = getPrismaForDomain();
+    const [keep, absorb] = await Promise.all([
+      prisma.game.findUnique({ where: { id: keepId }, select: { id: true, title: true } }),
+      prisma.game.findUnique({
+        where: { id: absorbId },
+        select: { id: true, title: true, _count: { select: { schedules: true } } },
+      }),
+    ]);
+    if (!keep || !absorb) {
+      return { success: false, error: '게임을 찾을 수 없습니다.', errorCode: 'NOT_FOUND' };
+    }
+
+    const moved = await prisma.schedule.updateMany({
+      where: { gameId: absorbId },
+      data: { gameId: keepId },
+    });
+
+    await prisma.game.delete({ where: { id: absorbId } });
+
+    const paths = getRevalidationPaths('game');
+    await Promise.all([
+      ...paths.map((path: string) => revalidatePath(path)),
+      updateTag('calendar'),
+    ]);
+
+    auditLog(session, {
+      action: 'update',
+      entity: 'game',
+      entityId: keepId,
+      summary: `게임 병합: 「${absorb.title}」→「${keep.title}」 (${moved.count}건)`,
+      changes: {
+        absorbedId: absorbId,
+        absorbedTitle: absorb.title,
+        schedulesMoved: moved.count,
+      },
+    });
+
+    return { success: true, data: { moved: moved.count } };
+  } catch (error) {
+    const { message, code } = getErrorMessage(error);
+    logError('mergeGames', error);
     return { success: false, error: message, errorCode: code };
   }
 }

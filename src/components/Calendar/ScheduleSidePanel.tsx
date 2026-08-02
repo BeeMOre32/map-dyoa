@@ -1,15 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Calendar, ChevronLeft, ChevronRight, ExternalLink,
-  Clapperboard, ArrowUpRight, Plus, Sword,
+  Clapperboard, ArrowUpRight, Plus, Sword, Radio,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { getStreamerColor } from '@/constants/streamercolor';
-import type { ParticipantFlat } from '@/lib/schedule-formatters';
+import type { FlattenedSchedule, ParticipantFlat } from '@/lib/schedule-formatters';
+import { getScheduleLiveParticipants } from '@/lib/schedule-live';
+import { useLiveStatus } from '@/hooks/useLiveStatus';
+import { useMinuteClock } from '@/hooks/useMinuteClock';
+import ScheduleDetailLiveSection from './ScheduleDetailLiveSection';
 
 export type ClipForSchedule = {
   id: string;
@@ -20,7 +24,7 @@ export type ClipForSchedule = {
   participants: { streamer: { id: string; name: string; colorCode: string } }[];
 };
 
-export type SideTab = 'clips' | 'hoi4';
+export type SideTab = 'live' | 'clips' | 'hoi4';
 
 function Hoi4Panel({ participants, isDark }: { participants: ParticipantFlat[]; isDark: boolean }) {
   const hasData = participants.some((p) => p.nation);
@@ -220,6 +224,7 @@ export function SidePanel({
   isDark,
   onClose,
   defaultTab,
+  schedule,
 }: {
   clips: ClipForSchedule[];
   participants: ParticipantFlat[];
@@ -227,9 +232,33 @@ export function SidePanel({
   isDark: boolean;
   onClose?: () => void;
   defaultTab?: SideTab;
+  schedule: FlattenedSchedule;
 }) {
+  useMinuteClock();
+  const { liveIds } = useLiveStatus();
+  const hasLive = useMemo(
+    () => getScheduleLiveParticipants(schedule, liveIds).length > 0,
+    [schedule, liveIds],
+  );
+
   const [tab, setTab] = useState<SideTab>(defaultTab ?? 'clips');
   const [selectedClip, setSelectedClip] = useState<ClipForSchedule | null>(null);
+  const [autoLivePicked, setAutoLivePicked] = useState(false);
+
+  useEffect(() => {
+    if (defaultTab) {
+      setTab(defaultTab);
+      return;
+    }
+    if (!autoLivePicked && hasLive) {
+      setTab('live');
+      setAutoLivePicked(true);
+    }
+  }, [defaultTab, hasLive, autoLivePicked]);
+
+  useEffect(() => {
+    if (tab === 'live' && !hasLive) setTab('clips');
+  }, [tab, hasLive]);
 
   const tabClass = (active: boolean, accent: string) =>
     `flex items-center gap-1.5 px-3 py-2 rounded-t-xl text-xs font-black transition-colors ${
@@ -242,7 +271,23 @@ export function SidePanel({
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="shrink-0 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/30">
         <div className="flex items-center px-2 pt-2 gap-1">
+          {hasLive && (
+            <button
+              type="button"
+              onClick={() => { setTab('live'); setSelectedClip(null); }}
+              className={tabClass(tab === 'live', 'text-red-600 dark:text-red-400')}
+            >
+              <Radio className="w-3.5 h-3.5" />
+              LIVE
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  tab === 'live' ? 'bg-red-500 animate-pulse' : 'bg-red-400'
+                }`}
+              />
+            </button>
+          )}
           <button
+            type="button"
             onClick={() => { setTab('clips'); setSelectedClip(null); }}
             className={tabClass(tab === 'clips', 'text-indigo-600 dark:text-indigo-400')}
           >
@@ -256,6 +301,7 @@ export function SidePanel({
           </button>
           {isHoi4 && (
             <button
+              type="button"
               onClick={() => { setTab('hoi4'); setSelectedClip(null); }}
               className={tabClass(tab === 'hoi4', 'text-amber-600 dark:text-amber-400')}
             >
@@ -266,6 +312,7 @@ export function SidePanel({
           <div className="flex-1" />
           {onClose && (
             <button
+              type="button"
               onClick={onClose}
               className="p-1.5 mb-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-slate-400 dark:text-slate-500"
             >
@@ -285,7 +332,9 @@ export function SidePanel({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.12 }}
           >
-            {tab === 'clips' ? (
+            {tab === 'live' ? (
+              <ScheduleDetailLiveSection schedule={schedule} isDark={isDark} />
+            ) : tab === 'clips' ? (
               <ClipPanel clips={clips} selectedClip={selectedClip} onSelect={setSelectedClip} isDark={isDark} />
             ) : (
               <Hoi4Panel participants={participants} isDark={isDark} />

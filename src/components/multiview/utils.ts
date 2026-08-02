@@ -5,19 +5,32 @@ export const MAX_STREAMS = 9;
 export const HANDLE_CLS = 'absolute z-20 bg-slate-900 hover:bg-indigo-500/60 transition-colors';
 
 const MV_EMBED_FLAG = 'map-dyoa-mv=1';
+const PREVIEW_EMBED_FLAG = 'map-dyoa-preview=1';
+
+function withQueryFlag(url: string, flag: string): string {
+  if (url.includes(flag)) return url;
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}${flag}`;
+}
 
 function withMultiviewEmbedParam(url: string): string {
-  if (url.includes(MV_EMBED_FLAG)) return url;
-  const sep = url.includes('?') ? '&' : '?';
-  return `${url}${sep}${MV_EMBED_FLAG}`;
+  return withQueryFlag(url, MV_EMBED_FLAG);
 }
 
 export type LayoutPreset = 'auto' | 'single-row' | 'balanced';
 
+export type ChzzkIframeMessageType =
+  | 'toggle-chat'
+  | 'toggle-mute'
+  | 'fullscreen'
+  | 'fill-player'
+  | 'set-volume'
+  | 'ping';
+
 /** 멀티뷰 iframe → 치지직 확장 스크립트용 postMessage */
 export function postToChzzkIframe(
   iframe: HTMLIFrameElement | null,
-  type: 'toggle-chat' | 'toggle-mute' | 'fullscreen',
+  type: ChzzkIframeMessageType,
   payload: Record<string, unknown> = {},
 ) {
   iframe?.contentWindow?.postMessage(
@@ -38,6 +51,11 @@ export function getLiveUrl(streamer: Streamer): string {
   if (channelId) return withMultiviewEmbedParam(`https://chzzk.naver.com/live/${channelId}`);
   const base = streamer.chzzkUrl ?? `https://chzzk.naver.com/${streamer.handle}`;
   return withMultiviewEmbedParam(base);
+}
+
+/** 카드/상세 미리보기 — auto-fs 없이 (소형 iframe에서 F키 전체화면이 재생을 깨뜨림) */
+export function getPreviewLiveUrl(streamer: Streamer): string {
+  return withQueryFlag(getLiveUrl(streamer), PREVIEW_EMBED_FLAG);
 }
 
 export function getChatUrl(streamer: Streamer): string {

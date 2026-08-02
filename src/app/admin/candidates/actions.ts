@@ -56,6 +56,19 @@ export async function approveScheduleCandidateAction(
   } catch (error) {
     const { message, code } = getErrorMessage(error);
     logError('approveScheduleCandidate', error);
+    if (
+      message.includes('이미 등록') ||
+      message.includes('이미 거절') ||
+      message.includes('이미 처리')
+    ) {
+      return {
+        success: false,
+        error: message.includes('거절')
+          ? '이미 거절된 후보입니다. 목록을 갱신합니다.'
+          : '이미 등록된 후보입니다. 목록을 갱신합니다.',
+        errorCode: 'ALREADY_RESOLVED',
+      };
+    }
     return { success: false, error: message, errorCode: code };
   }
 }

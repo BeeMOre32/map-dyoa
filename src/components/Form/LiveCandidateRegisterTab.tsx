@@ -15,14 +15,19 @@ import {
   Loader2,
   Plus,
   Radio,
+  RefreshCw,
   RotateCcw,
 } from 'lucide-react';
 import type { ScheduleCandidateView } from '@/lib/schedule-candidate-store';
 import {
   listPendingLiveCandidatesAction,
+  refreshPendingLiveCandidatesAction,
   registerLiveCandidateAction,
 } from '@/app/candidates/actions';
 import QuickAddGameModal from './QuickAddGameModal';
+
+const SCAN_COOLDOWN_KEY = 'live-candidates:last-scan';
+const SCAN_COOLDOWN_MS = 60_000;
 
 function liveTitleOf(c: ScheduleCandidateView) {
   return c.title?.trim() || `${c.streamerName} 라이브`;
@@ -33,6 +38,37 @@ function defaultSelectedIds(c: ScheduleCandidateView): string[] {
     c.streamerId,
     ...c.suggestedParticipants.map((p) => p.id),
   ].filter((id, i, arr) => arr.indexOf(id) === i);
+}
+
+function formatFreshnessLabel(iso: string | null): string {
+  if (!iso) return '갱신 기록 없음';
+  const mins = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(iso).getTime()) / 60_000),
+  );
+  if (mins < 1) return '방금 갱신';
+  if (mins < 60) return `${mins}분 전 갱신`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}시간 전 갱신`;
+  return format(new Date(iso), 'M/d HH:mm', { locale: ko });
+}
+
+function canScanNow(): boolean {
+  try {
+    const raw = localStorage.getItem(SCAN_COOLDOWN_KEY);
+    if (!raw) return true;
+    return Date.now() - Number(raw) >= SCAN_COOLDOWN_MS;
+  } catch {
+    return true;
+  }
+}
+
+function markScanned() {
+  try {
+    localStorage.setItem(SCAN_COOLDOWN_KEY, String(Date.now()));
+  } catch {
+    /* ignore */
+  }
 }
 
 const fieldClass =
@@ -76,7 +112,11 @@ export default function LiveCandidateRegisterTab({
   const [candidates, setCandidates] = useState<ScheduleCandidateView[]>([]);
   const [games, setGames] = useState(gamesProp);
   const [message, setMessage] = useState<string | null>(null);
+  const [messageTone, setMessageTone] = useState<'ok' | 'err'>('ok');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [freshnessAt, setFreshnessAt] = useState<string | null>(null);
+  const [freshnessTick, setFreshnessTick] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   const [draftTitles, setDraftTitles] = useState<Record<string, string>>({});
   const [selectedIds, setSelectedIds] = useState<Record<string, string[]>>({});
   const [gameIds, setGameIds] = useState<Record<string, string>>({});
@@ -89,21 +129,66 @@ export default function LiveCandidateRegisterTab({
     setGames(gamesProp);
   }, [gamesProp]);
 
+  useEffect(() => {
+    const id = window.setInterval(() => setFreshnessTick((n) => n + 1), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const applyPayload = useCallback(
+    (data: {
+      candidates: ScheduleCandidateView[];
+      freshnessAt: string | null;
+    }) => {
+      setCandidates(data.candidates);
+      setFreshnessAt(data.freshnessAt);
+    },
+    [],
+  );
+
   const load = useCallback(async () => {
     setLoading(true);
     const res = await listPendingLiveCandidatesAction();
     setLoading(false);
     if (!res.success) {
+      setMessageTone('err');
       setMessage(res.error ?? '후보를 불러오지 못함');
       setCandidates([]);
+      setFreshnessAt(null);
       return;
     }
-    setCandidates(res.data ?? []);
-  }, []);
+    applyPayload(res.data);
+  }, [applyPayload]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  const refresh = (withScan: boolean) => {
+    setRefreshing(true);
+    setMessage(null);
+    startTransition(async () => {
+      const shouldScan = withScan && canScanNow();
+      const res = await refreshPendingLiveCandidatesAction({
+        scan: shouldScan,
+      });
+      setRefreshing(false);
+      if (!res.success) {
+        setMessageTone('err');
+        setMessage(res.error ?? '새로고침 실패');
+        return;
+      }
+      if (res.data.scanned) markScanned();
+      applyPayload(res.data);
+      setMessageTone('ok');
+      setMessage(
+        res.data.scanned
+          ? 'LIVE 스캔 후 목록을 갱신함'
+          : withScan && !shouldScan
+            ? '목록 갱신 (스캔은 1분 뒤에 다시 가능)'
+            : '목록 갱신',
+      );
+    });
+  };
 
   const pendingRows = useMemo(
     () => candidates.filter((c) => c.status === 'PENDING'),
@@ -159,6 +244,7 @@ export default function LiveCandidateRegisterTab({
   const register = (id: string, c: ScheduleCandidateView) => {
     const title = titleFor(c).trim();
     if (!title) {
+      setMessageTone('err');
       setMessage('일정 제목을 입력해 주세요.');
       return;
     }
@@ -170,12 +256,14 @@ export default function LiveCandidateRegisterTab({
       const res = await registerLiveCandidateAction(id, title, participantIds, gameId);
       setBusyId(null);
       if (!res.success) {
+        setMessageTone('err');
         setMessage(res.error ?? '등록 실패');
         await load();
         return;
       }
       clearLocal(id);
       setCandidates((prev) => prev.filter((row) => row.id !== id));
+      setMessageTone('ok');
       setMessage('등록 완료');
       await load();
       router.refresh();
@@ -195,30 +283,49 @@ export default function LiveCandidateRegisterTab({
           />
         )}
         <div className="relative flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="relative flex h-2 w-2 shrink-0">
-              {!reduceMotion && (
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-60" />
-              )}
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
-            </span>
-            <p className="truncate text-xs font-bold text-slate-500 dark:text-slate-400">
-              일정 없는 LIVE · 감지 시각으로 등록
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2 shrink-0">
+                {!reduceMotion && (
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-60" />
+                )}
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
+              </span>
+              <p className="truncate text-xs font-bold text-slate-500 dark:text-slate-400">
+                일정 없는 LIVE · 감지 시각으로 등록
+              </p>
+            </div>
+            <p className="pl-4 text-[10px] font-semibold text-slate-400" key={freshnessTick}>
+              {formatFreshnessLabel(freshnessAt)}
             </p>
           </div>
-          <AnimatePresence mode="popLayout">
-            {!loading && (
-              <motion.span
-                key={pendingRows.length}
-                initial={reduceMotion ? false : { scale: 0.7, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                className="shrink-0 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-black text-rose-600 dark:bg-rose-950/50 dark:text-rose-300"
-              >
-                {pendingRows.length}
-              </motion.span>
-            )}
-          </AnimatePresence>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button
+              type="button"
+              disabled={refreshing || pending}
+              onClick={() => refresh(true)}
+              title="목록 새로고침 (1분에 한 번 LIVE 스캔)"
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-black text-slate-500 hover:bg-slate-100 disabled:opacity-40 dark:hover:bg-slate-800"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${refreshing || pending ? 'animate-spin' : ''}`}
+              />
+              새로고침
+            </button>
+            <AnimatePresence mode="popLayout">
+              {!loading && (
+                <motion.span
+                  key={pendingRows.length}
+                  initial={reduceMotion ? false : { scale: 0.7, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  className="rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-black text-rose-600 dark:bg-rose-950/50 dark:text-rose-300"
+                >
+                  {pendingRows.length}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
@@ -231,7 +338,13 @@ export default function LiveCandidateRegisterTab({
             exit={{ opacity: 0, y: -4, height: 0 }}
             className="shrink-0 overflow-hidden px-6 pt-3 md:px-8"
           >
-            <p className="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+            <p
+              className={`rounded-xl px-3 py-2 text-xs font-bold ${
+                messageTone === 'err'
+                  ? 'bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300'
+                  : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+              }`}
+            >
               {message}
             </p>
           </motion.div>
@@ -496,7 +609,8 @@ export default function LiveCandidateRegisterTab({
                     : row,
                 ),
               );
-              setMessage(`「${game.title}」 추가됨`);
+              setMessageTone('ok');
+            setMessage(`「${game.title}」 추가됨`);
             }}
           />
         )}

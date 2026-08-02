@@ -264,7 +264,15 @@ export async function approveScheduleCandidate(
   const prisma = getPrisma();
   const row = await prisma.scheduleCandidate.findUnique({ where: { id } });
   if (!row) throw new Error('후보를 찾을 수 없습니다.');
-  if (row.status !== 'PENDING') throw new Error('이미 처리된 후보입니다.');
+  if (row.status === 'APPROVED') {
+    throw new Error('이미 등록된 후보입니다.');
+  }
+  if (row.status === 'DISMISSED') {
+    throw new Error('이미 거절된 후보입니다.');
+  }
+  if (row.status !== 'PENDING') {
+    throw new Error('이미 처리된 후보입니다.');
+  }
 
   const members = await loadMemberStreamers();
   const memberIds = new Set(members.map((m) => m.id));

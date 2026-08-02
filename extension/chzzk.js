@@ -8,6 +8,18 @@
   const isMultiviewEmbed =
     location.search.includes('map-dyoa-mv=1') ||
     location.search.includes('multichzzk');
+  const isPreviewEmbed = location.search.includes('map-dyoa-preview=1');
+
+  const notifyParent = (type, extra = {}) => {
+    try {
+      window.parent.postMessage({ source: 'map-dyoa-chzzk', type, ...extra }, '*');
+    } catch {}
+  };
+
+  // 부모(map-dyoa)가 확장 설치 여부를 빨리 알 수 있게
+  if (isMultiviewEmbed || isPreviewEmbed) {
+    notifyParent('extension-present');
+  }
 
   const getReactFiber = (node) => {
     if (node == null) return;
@@ -60,6 +72,210 @@
     document.documentElement.appendChild(style);
   };
 
+  /** 호버 미리보기용 — 플레이어 조상 display:none 금지 (재생 깨짐 방지) */
+  const injectPreviewStyles = () => {
+    // preview-early.js와 동일 ID — 내용 갱신만
+    let style = document.getElementById('map-dyoa-preview-style');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'map-dyoa-preview-style';
+      document.documentElement.appendChild(style);
+    }
+    style.textContent = `
+      html, body { overflow: hidden !important; margin: 0 !important; background: #000 !important; }
+      #root { min-height: 100% !important; background: #000 !important; }
+      #layout-header, header, #lnb, [id*="lnb"],
+      [class*="navigator"], [class*="lnb_"], [class*="sidebar"],
+      aside:not([class*="live_chatting"]), aside[class*="live_chatting"],
+      [class*="live_chatting_container"], [class*="top_banner"] {
+        display: none !important;
+        width: 0 !important; visibility: hidden !important; pointer-events: none !important;
+      }
+      #layout-body, [class^="live_wrapper__"], [class*="live_container"],
+      [class^="live_information_player__"], [class^="live_information_video_container__"],
+      #live_player_layout, #player_layout {
+        position: fixed !important; inset: 0 !important;
+        width: 100vw !important; height: 100vh !important;
+        max-width: none !important; max-height: none !important;
+        margin: 0 !important; padding: 0 !important;
+        z-index: 2147483000 !important; background: #000 !important; transform: none !important;
+      }
+      .webplayer-internal-video, video.webplayer-internal-video,
+      #live_player_layout video, #player_layout video {
+        width: 100% !important; height: 100% !important;
+        object-fit: contain !important; background: #000 !important;
+      }
+    `;
+  };
+
+  if (isPreviewEmbed) injectPreviewStyles();
+
+  /** 부모가 소리 켠 뒤에는 ensurePlayback이 다시 음소거하지 않음 */
+  let previewAudioUnlocked = false;
+
+  const ensurePreviewPlayback = () => {
+    if (!isPreviewEmbed) return;
+    const video = document.querySelector(
+      'video.webplayer-internal-video, #live_player_layout video, video',
+    );
+    if (!video) return;
+    video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    if (!previewAudioUnlocked) video.muted = true;
+    const play = () => {
+      if (!previewAudioUnlocked) video.muted = true;
+      const p = video.play?.();
+      if (p?.catch) p.catch(() => {});
+    };
+    play();
+    if (video.readyState < 2) {
+      video.addEventListener('loadeddata', play, { once: true });
+      video.addEventListener('canplay', play, { once: true });
+    }
+  };
+
+  /** 넓은 화면 + 플레이어 영역 강제 채움 (미리보기 전용) */
+  const fillPreviewPlayer = () => {
+    if (!isPreviewEmbed) return;
+    injectPreviewStyles();
+    applyWideViewMode();
+    const layout = document.querySelector(
+      '#live_player_layout, #player_layout, [class^="live_information_video_container__"]',
+    );
+    if (layout) {
+      layout.style.setProperty('position', 'fixed', 'important');
+      layout.style.setProperty('inset', '0', 'important');
+      layout.style.setProperty('width', '100vw', 'important');
+      layout.style.setProperty('height', '100vh', 'important');
+      layout.style.setProperty('z-index', '2147483000', 'important');
+    }
+    ensurePreviewPlayback();
+  };
+
+  const nudgeVideoPlay = () => {
+    const video = document.querySelector(
+      'video.webplayer-internal-video, #live_player_layout video, video',
+    );
+    if (!video) return;
+    // 사용자가 이미 소리를 켠 뒤에는 절대 다시 음소거하지 않음
+    if (!previewAudioUnlocked) video.muted = true;
+    try {
+      video.play?.()?.catch?.(() => {});
+    } catch {}
+    if (isPreviewEmbed) ensurePreviewPlayback();
+  };
+
+  /** 미리보기는 항상 작은 음량 (슬라이더 없음) */
+  const PREVIEW_QUIET_VOLUME = 0.15;
+
+  /** 부모 요청으로 소리 켜기 — video 요소만 (치지직 UI 클릭은 불안정해서 제외) */
+  const applyUnmute = (volume) => {
+    previewAudioUnlocked = true;
+    const videos = document.querySelectorAll(
+      'video.webplayer-internal-video, #live_player_layout video, video',
+    );
+    let vol =
+      typeof volume === 'number' && !Number.isNaN(volume)
+        ? Math.min(1, Math.max(0, volume))
+        : PREVIEW_QUIET_VOLUME;
+    if (isPreviewEmbed) {
+      // 미리보기: 요청값과 무관하게 작게만
+      vol = PREVIEW_QUIET_VOLUME;
+    }
+    if (vol <= 0) vol = PREVIEW_QUIET_VOLUME;
+    videos.forEach((video) => {
+      video.volume = vol;
+      video.muted = false;
+      video.play?.()?.catch?.(() => {});
+    });
+  };
+
+  const applyMute = () => {
+    const videos = document.querySelectorAll(
+      'video.webplayer-internal-video, #live_player_layout video, video',
+    );
+    videos.forEach((video) => {
+      video.muted = true;
+    });
+  };
+
+  /**
+   * iframe 임베드 시 CSP 헤더 제거 등으로 치지직이 띄우는
+   * "광고 차단 프로그램을 사용 중이신가요?" 모달 자동 닫기
+   */
+  let adblockDismissed = false;
+  const dismissAdblockGate = () => {
+    if (adblockDismissed) return true;
+    const isAdblockCopy = (text) =>
+      typeof text === 'string' &&
+      text.includes('광고 차단') &&
+      (text.includes('사용 중') || text.includes('사용중'));
+
+    const roots = [
+      ...document.querySelectorAll(
+        '[role="dialog"], [class*="modal"], [class*="popup"], [class*="dimmed"], [class*="overlay"]',
+      ),
+      document.body,
+    ].filter(Boolean);
+
+    for (const root of roots) {
+      if (!isAdblockCopy(root.textContent || '')) continue;
+
+      const confirmBtn = [...root.querySelectorAll('button, [role="button"]')].find(
+        (b) => (b.textContent || '').replace(/\s+/g, ' ').trim() === '확인',
+      );
+      if (confirmBtn) {
+        confirmBtn.click();
+        adblockDismissed = true;
+        nudgeVideoPlay();
+        return true;
+      }
+
+      if (root !== document.body) {
+        root.remove();
+        adblockDismissed = true;
+        nudgeVideoPlay();
+        return true;
+      }
+    }
+    return false;
+  };
+
+  if (isMultiviewEmbed || isPreviewEmbed) {
+    let dismissTimer = null;
+    const dismissObs = new MutationObserver(() => {
+      if (dismissAdblockGate()) {
+        if (dismissTimer) clearInterval(dismissTimer);
+        dismissObs.disconnect();
+      }
+    });
+    const runDismiss = () => {
+      if (dismissAdblockGate()) {
+        if (dismissTimer) clearInterval(dismissTimer);
+        dismissObs.disconnect();
+      }
+    };
+    runDismiss();
+    dismissTimer = setInterval(runDismiss, 700);
+    setTimeout(() => {
+      if (dismissTimer) clearInterval(dismissTimer);
+      dismissObs.disconnect();
+    }, 25000);
+    const startObs = () => {
+      if (document.documentElement) {
+        dismissObs.observe(document.documentElement, {
+          childList: true,
+          subtree: true,
+        });
+      }
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startObs, { once: true });
+    } else {
+      startObs();
+    }
+  }
+
   const findChatFoldButton = (chattingContainer) => {
     if (chattingContainer == null) return null;
     return (
@@ -106,6 +322,7 @@
     playerReadyHandled = true;
 
     if (isMultiviewEmbed) injectEmbedStyles();
+    if (isPreviewEmbed) injectPreviewStyles();
 
     if (!applyWideViewMode()) {
       await applyWideViewFallback(node);
@@ -113,13 +330,24 @@
 
     const video = document.querySelector('video.webplayer-internal-video, video');
     if (video) {
-      video.muted = true;
+      if (!previewAudioUnlocked) video.muted = true;
+      video.playsInline = true;
       try {
-        video.play?.();
+        video.play?.()?.catch?.(() => {});
       } catch {}
     }
 
-    if (autoFullscreen) scheduleFullscreen();
+    if (isPreviewEmbed) {
+      toggleChatFold(document.querySelector('aside'));
+      setTimeout(() => toggleChatFold(document.querySelector('aside')), 400);
+      fillPreviewPlayer();
+      setTimeout(fillPreviewPlayer, 600);
+      setTimeout(fillPreviewPlayer, 1600);
+      setTimeout(() => notifyParent('preview-ready'), 500);
+      setTimeout(() => notifyParent('preview-ready'), 1200);
+    } else if (autoFullscreen) {
+      scheduleFullscreen();
+    }
   };
 
   const root = document.getElementById('root');
@@ -331,13 +559,30 @@
       toggleChatFold(document.querySelector('aside'));
     }
     if (ev.data?.type === 'toggle-mute') {
-      const video = document.querySelector('video.webplayer-internal-video, video');
-      if (video) {
-        video.muted = ev.data.muted !== undefined ? !!ev.data.muted : !video.muted;
+      const wantMuted =
+        ev.data.muted !== undefined
+          ? !!ev.data.muted
+          : !document.querySelector('video')?.muted;
+      if (wantMuted) applyMute();
+      else applyUnmute(PREVIEW_QUIET_VOLUME);
+    }
+    if (ev.data?.type === 'set-volume') {
+      const v = Number(ev.data.volume);
+      if (!Number.isNaN(v)) {
+        if (v <= 0) applyMute();
+        else applyUnmute(v);
       }
     }
+    if (ev.data?.type === 'ping') {
+      notifyParent('pong');
+      if (isPreviewEmbed || isMultiviewEmbed) notifyParent('extension-present');
+    }
+    if (ev.data?.type === 'fill-player') {
+      fillPreviewPlayer();
+    }
     if (ev.data?.type === 'fullscreen') {
-      scheduleFullscreen();
+      if (isPreviewEmbed) fillPreviewPlayer();
+      else scheduleFullscreen();
     }
   });
 
