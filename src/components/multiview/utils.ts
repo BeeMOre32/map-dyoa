@@ -25,6 +25,7 @@ export type ChzzkIframeMessageType =
   | 'fullscreen'
   | 'fill-player'
   | 'set-volume'
+  | 'request-unmute'
   | 'ping';
 
 /** 멀티뷰 iframe → 치지직 확장 스크립트용 postMessage */

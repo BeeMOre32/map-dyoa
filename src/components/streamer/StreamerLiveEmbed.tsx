@@ -95,7 +95,10 @@ export default function StreamerLiveEmbed({
   const extensionPresentRef = useRef(false);
   const readyRef = useRef(false);
   const veilLiftedRef = useRef(false);
-  const [muted, setMuted] = useState(true);
+  /** locked=음소거 | awaiting=화면 클릭 대기 | open=소리 켜짐 */
+  const [audioGate, setAudioGate] = useState<'locked' | 'awaiting' | 'open'>(
+    'locked',
+  );
   const [category, setCategory] = useState<string | null>(null);
 
   const liveUrl = getPreviewLiveUrl(streamer);
@@ -103,6 +106,8 @@ export default function StreamerLiveEmbed({
   const posterSrc = streamer.profileImg ?? getStreamerImagePath(streamer.name);
   const onMetaRef = useRef(onMeta);
   onMetaRef.current = onMeta;
+  const muted = audioGate !== 'open';
+  const awaitingAudioClick = audioGate === 'awaiting';
 
   const canMountIframe = phase === 'loading' || phase === 'ready';
 
@@ -163,7 +168,7 @@ export default function StreamerLiveEmbed({
 
     setIframeLoaded(false);
     setVeil(true);
-    setMuted(true);
+    setAudioGate('locked');
     readyRef.current = false;
     veilLiftedRef.current = false;
     veilOpenedAt.current = Date.now();
@@ -223,24 +228,37 @@ export default function StreamerLiveEmbed({
     };
   }, [liveUrl, phase]);
 
-  const toggleMute = () => {
-    const nextMuted = !muted;
-    setMuted(nextMuted);
-    if (nextMuted) {
-      postToChzzkIframe(iframeRef.current, 'toggle-mute', { muted: true });
-    } else {
-      // 슬라이더 없이 항상 작은 음량으로만 켬
-      postToChzzkIframe(iframeRef.current, 'set-volume', {
-        volume: PREVIEW_QUIET_VOLUME,
-      });
-      postToChzzkIframe(iframeRef.current, 'toggle-mute', { muted: false });
-      window.setTimeout(() => {
-        postToChzzkIframe(iframeRef.current, 'set-volume', {
-          volume: PREVIEW_QUIET_VOLUME,
-        });
-      }, 150);
-    }
+  const beginUnmute = () => {
+    setAudioGate('awaiting');
+    postToChzzkIframe(iframeRef.current, 'request-unmute');
+    postToChzzkIframe(iframeRef.current, 'set-volume', {
+      volume: PREVIEW_QUIET_VOLUME,
+    });
+    postToChzzkIframe(iframeRef.current, 'toggle-mute', { muted: false });
   };
+
+  const muteNow = () => {
+    setAudioGate('locked');
+    postToChzzkIframe(iframeRef.current, 'toggle-mute', { muted: true });
+  };
+
+  // awaiting 너무 길면 자동 취소
+  useEffect(() => {
+    if (audioGate !== 'awaiting') return;
+    const t = window.setTimeout(() => setAudioGate('locked'), 10000);
+    return () => window.clearTimeout(t);
+  }, [audioGate]);
+
+  useEffect(() => {
+    const onMsg = (ev: MessageEvent) => {
+      if (ev.data?.source !== 'map-dyoa-chzzk') return;
+      if (ev.data?.type === 'audio-unlocked') {
+        setAudioGate('open');
+      }
+    };
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
 
   if (phase === 'probing') {
     return (
@@ -274,9 +292,9 @@ export default function StreamerLiveEmbed({
         ref={iframeRef}
         src={liveUrl}
         title={`${streamer.name} 라이브`}
-        className={`pointer-events-none absolute left-0 top-0 max-w-none border-0 transition-opacity duration-500 ${
-          veil ? 'opacity-0' : 'opacity-100'
-        }`}
+        className={`absolute left-0 top-0 max-w-none border-0 transition-opacity duration-500 ${
+          awaitingAudioClick ? 'pointer-events-auto z-[35]' : 'pointer-events-none z-0'
+        } ${veil ? 'opacity-0' : 'opacity-100'}`}
         style={{
           width: EMBED_VW,
           height: EMBED_VH,
@@ -294,6 +312,14 @@ export default function StreamerLiveEmbed({
           postToChzzkIframe(iframeRef.current, 'ping');
         }}
       />
+
+      {awaitingAudioClick && !veil ? (
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-40 flex justify-center px-2 pt-2">
+          <p className="rounded-lg bg-amber-500/95 px-3 py-1.5 text-center text-[11px] font-black text-white shadow-lg">
+            소리가 나려면 화면을 한 번 클릭하세요
+          </p>
+        </div>
+      ) : null}
 
       <div
         className={`absolute inset-0 z-30 flex flex-col items-center justify-center gap-2 bg-[#0e0e10] transition-opacity duration-300 ${
@@ -314,29 +340,43 @@ export default function StreamerLiveEmbed({
         </p>
       </div>
 
-      {/* 음소거 토글만 — 켤 때 고정 작은 음량 */}
+      {/* 소리: 클릭 → 화면 클릭(브라우저 정책) · 음소거는 바로 됨 */}
       <div
         className={`absolute inset-x-0 bottom-0 z-40 flex items-center gap-2 bg-gradient-to-t from-black/80 to-transparent px-3 py-2.5 transition-opacity duration-150 ${
-          veil ? 'pointer-events-none opacity-0' : 'opacity-100'
+          veil || awaitingAudioClick ? 'pointer-events-none opacity-0' : 'opacity-100'
         }`}
       >
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleMute();
-          }}
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/10 text-white hover:bg-white/20"
-          aria-label={muted ? '소리 켜기 (작게)' : '음소거'}
-          title={muted ? '소리 켜기 (작게)' : '음소거'}
-        >
-          {muted ? (
-            <VolumeX className="h-4 w-4" />
-          ) : (
-            <Volume2 className="h-4 w-4" />
-          )}
-        </button>
+        {muted ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              beginUnmute();
+            }}
+            className="inline-flex h-8 max-w-full items-center gap-1.5 rounded-md bg-white/10 px-2.5 text-[11px] font-bold text-white hover:bg-white/20"
+            aria-label="소리 켜기"
+            title="소리 켜기"
+          >
+            <VolumeX className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">음소거 중 · 소리 켜기</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              muteNow();
+            }}
+            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-emerald-500/90 px-2.5 text-[11px] font-bold text-white hover:bg-emerald-500"
+            aria-label="음소거"
+            title="음소거"
+          >
+            <Volume2 className="h-3.5 w-3.5 shrink-0" />
+            <span>소리 켜짐</span>
+          </button>
+        )}
         {showMeta ? (
           <span className="min-w-0 flex-1 truncate text-[11px] font-bold text-white/80">
             {streamer.name}

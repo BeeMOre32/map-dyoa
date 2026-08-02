@@ -1,9 +1,9 @@
 'use client';
 
-import { ExternalLink, Trash2, Play, Tv, Pencil, ArrowUpRight } from 'lucide-react';
+import { ExternalLink, Trash2, Play, Tv, Pencil, ArrowUpRight, Loader2, VolumeX, Volume2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { clipCardVariants } from '@/lib/clipMotion';
 import { useRouter } from 'next/navigation';
@@ -14,7 +14,22 @@ import { extractChzzkClipId } from '@/lib/chzzk';
 import { useToast } from '@/components/Common/Toaster';
 import ConfirmModal from '@/components/Common/ConfirmModal';
 import { track } from '@vercel/analytics';
+import {
+  claimClipHoverPreview,
+  releaseClipHoverPreview,
+} from '@/lib/clip-hover-preview';
+import { postToChzzkIframe } from '@/components/multiview/utils';
 import { ClipPlayerModal } from './ClipPlayerModal';
+
+/** 호버 후 미리보기 iframe 마운트까지 */
+const HOVER_PLAY_MS = 1000;
+const HOVER_CLOSE_MS = 120;
+const CLIP_QUIET_VOLUME = 0.15;
+
+function canHoverPreview() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+}
 
 interface ClipCardProps {
   clip: ClipWithParticipants;
@@ -29,11 +44,135 @@ export default function ClipCard({ clip, onEdit, index = 0 }: ClipCardProps) {
   const [deleting, setDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
+  const [hoverPreview, setHoverPreview] = useState(false);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
+  /** 실제 재생 시작 후에만 썸네일 숨김 (onLoad만으로는 검은 화면) */
+  const [previewPlaying, setPreviewPlaying] = useState(false);
+  /** locked | awaiting(화면 클릭 대기) | open */
+  const [audioGate, setAudioGate] = useState<'locked' | 'awaiting' | 'open'>(
+    'locked',
+  );
+
+  const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const audioGateRef = useRef(audioGate);
+  audioGateRef.current = audioGate;
 
   const chzzkClipId = extractChzzkClipId(clip.url);
   const canPlayInline = chzzkClipId !== null;
+  const awaitingAudioClick = audioGate === 'awaiting';
+  const soundOn = audioGate === 'open';
+
+  const clearTimers = useCallback(() => {
+    if (openTimer.current) {
+      clearTimeout(openTimer.current);
+      openTimer.current = null;
+    }
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  }, []);
+
+  const requestClipUnmute = useCallback(() => {
+    // iframe 클릭 시 부모 mouseleave로 미리보기가 닫히지 않게 타이머 제거
+    clearTimers();
+    setAudioGate('awaiting');
+    const iframe = iframeRef.current;
+    postToChzzkIframe(iframe, 'request-unmute');
+    postToChzzkIframe(iframe, 'set-volume', { volume: CLIP_QUIET_VOLUME });
+    postToChzzkIframe(iframe, 'toggle-mute', { muted: false });
+  }, [clearTimers]);
+
+  const muteClip = useCallback(() => {
+    setAudioGate('locked');
+    postToChzzkIframe(iframeRef.current, 'toggle-mute', { muted: true });
+  }, []);
+
+  const stopHoverPreview = useCallback(() => {
+    clearTimers();
+    setAudioGate('locked');
+    postToChzzkIframe(iframeRef.current, 'toggle-mute', { muted: true });
+    setHoverPreview(false);
+    setIframeLoaded(false);
+    setPreviewPlaying(false);
+    releaseClipHoverPreview(clip.id);
+  }, [clearTimers, clip.id]);
+
+  const startHoverPreview = useCallback(() => {
+    if (!canPlayInline || showPlayer) return;
+    claimClipHoverPreview(clip.id, () => {
+      clearTimers();
+      setAudioGate('locked');
+      setHoverPreview(false);
+      setIframeLoaded(false);
+      setPreviewPlaying(false);
+    });
+    setIframeLoaded(false);
+    setPreviewPlaying(false);
+    setAudioGate('locked');
+    setHoverPreview(true);
+  }, [canPlayInline, clearTimers, clip.id, showPlayer]);
+
+  const onMediaEnter = () => {
+    if (!canPlayInline || showPlayer || !canHoverPreview()) return;
+    clearTimers();
+    // 소리 켜는 중이면 미리보기 유지 (iframe 클릭 후 복귀)
+    if (audioGateRef.current === 'awaiting' || audioGateRef.current === 'open') {
+      return;
+    }
+    if (!hoverPreview) {
+      openTimer.current = setTimeout(() => startHoverPreview(), HOVER_PLAY_MS);
+    }
+  };
+
+  const onMediaLeave = () => {
+    // iframe은 별도 문서라 포인터가 들어가면 부모에 mouseleave가 발생함.
+    // 소리 켜기 위해 화면 클릭하는 동안에는 미리보기를 닫지 않음.
+    if (audioGateRef.current === 'awaiting') return;
+    clearTimers();
+    closeTimer.current = setTimeout(() => stopHoverPreview(), HOVER_CLOSE_MS);
+  };
+
+  useEffect(() => () => stopHoverPreview(), [stopHoverPreview]);
+
+  useEffect(() => {
+    if (showPlayer) stopHoverPreview();
+  }, [showPlayer, stopHoverPreview]);
+
+  // 확장에서 재생 시작·소리 해제 신호
+  useEffect(() => {
+    if (!hoverPreview) return;
+    const onMsg = (ev: MessageEvent) => {
+      if (ev.data?.source !== 'map-dyoa-chzzk') return;
+      if (ev.data?.type === 'clip-preview-playing') {
+        setPreviewPlaying(true);
+      }
+      if (ev.data?.type === 'audio-unlocked') {
+        clearTimers();
+        setAudioGate('open');
+      }
+    };
+    window.addEventListener('message', onMsg);
+    const fallback = window.setTimeout(() => {
+      setIframeLoaded((loaded) => loaded);
+    }, 5000);
+    return () => {
+      window.removeEventListener('message', onMsg);
+      window.clearTimeout(fallback);
+    };
+  }, [hoverPreview, clearTimers]);
+
+  // 화면 클릭 대기 타임아웃
+  useEffect(() => {
+    if (audioGate !== 'awaiting') return;
+    const t = window.setTimeout(() => setAudioGate('locked'), 12000);
+    return () => window.clearTimeout(t);
+  }, [audioGate]);
 
   const openPlayer = () => {
+    stopHoverPreview();
     track('clip_viewed', {
       clip_id: clip.id,
       clip_title: clip.title,
@@ -91,64 +230,192 @@ export default function ClipCard({ clip, onEdit, index = 0 }: ClipCardProps) {
         className="group flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white transition-colors hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-700 dark:hover:shadow-indigo-950/50 sm:rounded-3xl"
       >
 
-        {/* 미디어 영역 */}
-        <div className="relative aspect-video bg-black overflow-hidden">
+        {/* 미디어 영역 — 치지직 클립은 호버 1초 후 인라인 미리보기 */}
+        <div
+          className="relative aspect-video overflow-hidden bg-black"
+          onMouseEnter={onMediaEnter}
+          onMouseLeave={onMediaLeave}
+        >
           {clip.thumbnailUrl ? (
-            /* 썸네일 있음 */
             canPlayInline ? (
-              <button
-                onClick={openPlayer}
-                className="absolute inset-0 w-full h-full group/thumb"
-                aria-label={`${clip.title} 재생`}
+              <>
+                <Image
+                  src={clip.thumbnailUrl}
+                  alt={clip.title}
+                  fill
+                  className={`object-cover transition-all duration-300 ${
+                    previewPlaying
+                      ? 'opacity-0'
+                      : 'opacity-100 group-hover:scale-105'
+                  }`}
+                />
+                {hoverPreview && chzzkClipId ? (
+                  <iframe
+                    ref={iframeRef}
+                    src={`https://chzzk.naver.com/embed/clip/${chzzkClipId}?map-dyoa-clip-preview=1`}
+                    title={`${clip.title} 미리보기`}
+                    className={`absolute inset-0 border-0 ${
+                      awaitingAudioClick
+                        ? 'pointer-events-auto z-[4] opacity-100'
+                        : `pointer-events-none z-[1] ${previewPlaying ? 'opacity-100' : 'opacity-0'}`
+                    }`}
+                    allow="autoplay; clipboard-write; encrypted-media"
+                    tabIndex={-1}
+                    onLoad={() => setIframeLoaded(true)}
+                  />
+                ) : null}
+                {hoverPreview && iframeLoaded && !previewPlaying ? (
+                  <div className="absolute inset-0 z-[2] flex items-center justify-center bg-black/25">
+                    <Loader2 className="h-6 w-6 animate-spin text-white/80" />
+                  </div>
+                ) : null}
+                {awaitingAudioClick ? (
+                  <div className="pointer-events-none absolute inset-x-0 top-0 z-[6] flex justify-center px-2 pt-2">
+                    <p className="rounded-lg bg-amber-500/95 px-2.5 py-1 text-center text-[10px] font-black text-white shadow-lg">
+                      소리가 나려면 화면을 한 번 클릭하세요
+                    </p>
+                  </div>
+                ) : null}
+                {previewPlaying && !awaitingAudioClick ? (
+                  <button
+                    type="button"
+                    className={`absolute bottom-2 left-2 z-[5] flex max-w-[calc(100%-1rem)] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold shadow-lg transition-colors ${
+                      soundOn
+                        ? 'bg-emerald-500/90 text-white hover:bg-emerald-500'
+                        : 'bg-black/75 text-white/90 hover:bg-black/90'
+                    }`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (soundOn) muteClip();
+                      else requestClipUnmute();
+                    }}
+                  >
+                    {soundOn ? (
+                      <Volume2 className="h-3.5 w-3.5 shrink-0 opacity-90" />
+                    ) : (
+                      <VolumeX className="h-3.5 w-3.5 shrink-0 opacity-90" />
+                    )}
+                    <span className="truncate">
+                      {soundOn ? '소리 켜짐 · 눌러 음소거' : '음소거 중 · 소리 켜기'}
+                    </span>
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={openPlayer}
+                  className={`absolute inset-0 z-[3] h-full w-full group/thumb ${
+                    awaitingAudioClick ? 'pointer-events-none' : ''
+                  }`}
+                  aria-label={`${clip.title} 재생`}
+                >
+                  {!previewPlaying ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover/thumb:bg-black/25">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 opacity-0 backdrop-blur-sm transition-opacity group-hover/thumb:opacity-100">
+                        <Play className="ml-0.5 h-6 w-6 fill-white text-white" />
+                      </div>
+                    </div>
+                  ) : null}
+                </button>
+              </>
+            ) : (
+              <a
+                href={clip.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={trackExternal}
+                className="absolute inset-0"
               >
                 <Image
                   src={clip.thumbnailUrl}
                   alt={clip.title}
                   fill
-                  className="object-cover transition-transform duration-300 group-hover/thumb:scale-105"
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
-                <motion.div
-                  className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover/thumb:bg-black/25"
-                  initial={false}
-                >
-                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
-                    <Play className="w-6 h-6 text-white fill-white ml-0.5" />
-                  </div>
-                </motion.div>
-              </button>
-            ) : (
-              <a href={clip.url} target="_blank" rel="noopener noreferrer" onClick={trackExternal} className="absolute inset-0">
-                <Image
-                  src={clip.thumbnailUrl}
-                  alt={clip.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Play className="w-6 h-6 text-white fill-white ml-0.5" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+                    <Play className="ml-0.5 h-6 w-6 fill-white text-white" />
                   </div>
                 </div>
               </a>
             )
           ) : canPlayInline ? (
-            /* 썸네일 없음 + 치지직 */
-            <button
-              onClick={openPlayer}
-              className="absolute inset-0 w-full h-full flex flex-col items-center justify-center gap-2 bg-[#0B0E13] group/play"
-              aria-label={`${clip.title} 재생`}
-            >
-              <div className="absolute inset-0 bg-linear-to-br from-[#00FFA3]/10 to-transparent" />
-              <div className="relative w-14 h-14 rounded-full bg-white/10 group-hover/play:bg-[#00FFA3]/20 border border-white/20 group-hover/play:border-[#00FFA3]/50 flex items-center justify-center transition-all duration-300">
-                <Play className="w-7 h-7 text-white fill-white ml-1 group-hover/play:text-[#00FFA3] group-hover/play:fill-[#00FFA3] transition-colors" />
+            <>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#0B0E13]">
+                <div className="absolute inset-0 bg-linear-to-br from-[#00FFA3]/10 to-transparent" />
+                {!previewPlaying ? (
+                  <>
+                    <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-white/10">
+                      <Play className="ml-1 h-7 w-7 fill-white text-white" />
+                    </div>
+                    <span className="relative text-[11px] font-black uppercase tracking-wider text-white/60">
+                      호버해서 미리보기
+                    </span>
+                  </>
+                ) : null}
               </div>
-              <span className="relative text-[11px] font-black text-white/60 group-hover/play:text-[#00FFA3] tracking-wider uppercase transition-colors">
-                클릭해서 재생
-              </span>
-            </button>
+              {hoverPreview && chzzkClipId ? (
+                <iframe
+                  ref={iframeRef}
+                  src={`https://chzzk.naver.com/embed/clip/${chzzkClipId}?map-dyoa-clip-preview=1`}
+                  title={`${clip.title} 미리보기`}
+                  className={`absolute inset-0 border-0 ${
+                    awaitingAudioClick
+                      ? 'pointer-events-auto z-[4] opacity-100'
+                      : `pointer-events-none z-[1] ${previewPlaying ? 'opacity-100' : 'opacity-0'}`
+                  }`}
+                  allow="autoplay; clipboard-write; encrypted-media"
+                  tabIndex={-1}
+                  onLoad={() => setIframeLoaded(true)}
+                />
+              ) : null}
+              {hoverPreview && iframeLoaded && !previewPlaying ? (
+                <div className="absolute inset-0 z-[2] flex items-center justify-center bg-black/25">
+                  <Loader2 className="h-6 w-6 animate-spin text-white/80" />
+                </div>
+              ) : null}
+              {awaitingAudioClick ? (
+                <div className="pointer-events-none absolute inset-x-0 top-0 z-[6] flex justify-center px-2 pt-2">
+                  <p className="rounded-lg bg-amber-500/95 px-2.5 py-1 text-center text-[10px] font-black text-white shadow-lg">
+                    소리가 나려면 화면을 한 번 클릭하세요
+                  </p>
+                </div>
+              ) : null}
+              {previewPlaying && !awaitingAudioClick ? (
+                <button
+                  type="button"
+                  className={`absolute bottom-2 left-2 z-[5] flex max-w-[calc(100%-1rem)] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold shadow-lg transition-colors ${
+                    soundOn
+                      ? 'bg-emerald-500/90 text-white hover:bg-emerald-500'
+                      : 'bg-black/75 text-white/90 hover:bg-black/90'
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (soundOn) muteClip();
+                    else requestClipUnmute();
+                  }}
+                >
+                  {soundOn ? (
+                    <Volume2 className="h-3.5 w-3.5 shrink-0 opacity-90" />
+                  ) : (
+                    <VolumeX className="h-3.5 w-3.5 shrink-0 opacity-90" />
+                  )}
+                  <span className="truncate">
+                    {soundOn ? '소리 켜짐 · 눌러 음소거' : '음소거 중 · 소리 켜기'}
+                  </span>
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={openPlayer}
+                className={`absolute inset-0 z-[3] h-full w-full ${
+                  awaitingAudioClick ? 'pointer-events-none' : ''
+                }`}
+                aria-label={`${clip.title} 재생`}
+              />
+            </>
           ) : (
-            /* 썸네일 없음 + 외부 링크 */
             <a
               href={clip.url}
               target="_blank"
@@ -156,7 +423,7 @@ export default function ClipCard({ clip, onEdit, index = 0 }: ClipCardProps) {
               onClick={trackExternal}
               className="absolute inset-0 flex items-center justify-center bg-slate-100 dark:bg-slate-800"
             >
-              <Play className="w-12 h-12 text-slate-300 dark:text-slate-600" />
+              <Play className="h-12 w-12 text-slate-300 dark:text-slate-600" />
             </a>
           )}
         </div>

@@ -579,6 +579,123 @@ function BackendProjectPostBody({ active }: { active: boolean }) {
   );
 }
 
+function UpdateAugust2026PostBody() {
+  return (
+    <div className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 pt-3">
+      <p>
+        8월 업데이트로{' '}
+        <strong className="text-slate-900 dark:text-white">LIVE 미리보기</strong>,{' '}
+        <strong className="text-slate-900 dark:text-white">일정 상세 LIVE</strong>,{' '}
+        <strong className="text-slate-900 dark:text-white">클립 호버 재생</strong>을
+        추가했습니다. 치지직 iframe 재생에는{' '}
+        <a
+          href={CHROME_EXTENSION_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-black text-indigo-600 underline underline-offset-2 dark:text-indigo-400"
+        >
+          {CHROME_EXTENSION_NAME}
+        </a>{' '}
+        <strong className="text-slate-900 dark:text-white">1.3.0</strong>이 필요합니다.
+      </p>
+
+      <div className="flex gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-800/50 dark:bg-rose-900/20">
+        <Radio className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
+        <div className="space-y-2 text-sm text-rose-700 dark:text-rose-300">
+          <p className="font-black text-rose-900 dark:text-rose-200">
+            스트리머 LIVE 호버 미리보기
+          </p>
+          <ul className="list-disc space-y-1.5 pl-4">
+            <li>
+              <Link href="/streamers" className="font-black underline underline-offset-2">
+                스트리머
+              </Link>
+              목록에서 LIVE 카드에 마우스를 올리면 미리보기 창이 열립니다
+            </li>
+            <li>
+              기본은 음소거 ·{' '}
+              <strong className="text-rose-900 dark:text-rose-200">「소리 켜기」</strong>
+              를 누른 뒤 <strong className="text-rose-900 dark:text-rose-200">화면을 한 번 클릭</strong>
+              하면 작은 소리로 재생됩니다 (브라우저 정책)
+            </li>
+            <li>「소리 켜짐」을 누르면 다시 음소거됩니다</li>
+            <li>핀·드래그로 미리보기 위치를 고정하거나 옮길 수 있습니다</li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="flex gap-3 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-800/50 dark:bg-indigo-900/20">
+        <LayoutGrid className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500" />
+        <div className="space-y-2 text-sm text-indigo-700 dark:text-indigo-300">
+          <p className="font-black text-indigo-900 dark:text-indigo-200">
+            일정 상세 LIVE 탭
+          </p>
+          <ul className="list-disc space-y-1.5 pl-4">
+            <li>일정 상세 사이드 패널에서 LIVE 탭으로 참가 스트리머 방송을 볼 수 있습니다</li>
+            <li>합동 방송은 칩으로 스트리머를 바꿔 가며 시청 (한 번에 하나)</li>
+            <li>모바일은 LIVE 버튼 → 하단 시트로 재생합니다</li>
+            <li>호버 미리보기와 상세 LIVE는 같은 방송이면 중복 iframe을 만들지 않습니다</li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="flex gap-3 rounded-2xl border border-violet-200 bg-violet-50 p-4 dark:border-violet-800/50 dark:bg-violet-900/20">
+        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
+        <div className="space-y-2 text-sm text-violet-700 dark:text-violet-300">
+          <p className="font-black text-violet-900 dark:text-violet-200">
+            클립 호버 미리보기
+          </p>
+          <ul className="list-disc space-y-1.5 pl-4">
+            <li>
+              <Link href="/clips" className="font-black underline underline-offset-2">
+                클립
+              </Link>
+              카드에 약 1초 올려두면 미리보기가 로드·재생됩니다 (데스크톱)
+            </li>
+            <li>
+              기본 음소거 ·{' '}
+              <strong className="text-violet-900 dark:text-violet-200">「소리 켜기」</strong>
+              후 화면을 한 번 클릭하면 작은 소리로 들립니다
+            </li>
+            <li>카드 클릭 시 전체 화면 플레이어로 이어집니다</li>
+            <li>동시에 하나의 클립만 미리보기됩니다</li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-900/20">
+        <Puzzle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+        <div className="space-y-2 text-sm text-amber-800 dark:text-amber-300">
+          <p className="font-black text-amber-900 dark:text-amber-200">
+            Chrome 확장 {CHROME_EXTENSION_NAME} · 1.3.0
+          </p>
+          <ul className="list-disc space-y-1.5 pl-4">
+            <li>LIVE·클립 미리보기 재생 · 소리 켜기(화면 클릭) 지원</li>
+            <li>미리보기 소리는 항상 작은 음량으로만 재생</li>
+            <li>클립 미리보기에서 검은 화면·재생 버튼 이슈 완화</li>
+            <li>
+              <a
+                href={CHROME_EXTENSION_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-black underline underline-offset-2"
+              >
+                Chrome 웹 스토어
+              </a>
+              에서 설치·업데이트해 주세요
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <p className="text-slate-500 dark:text-slate-400">
+        확장이 없으면 미리보기 대신 치지직으로 이어지는 안내가 표시됩니다. 멀티뷰·일정
+        멀티뷰도 같은 확장을 사용합니다.
+      </p>
+    </div>
+  );
+}
+
 function UpdateJune2026PostBody() {
   return (
     <div className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 pt-3">
@@ -881,6 +998,44 @@ export default function AnnouncementsView({
         </div>
 
         <div className="space-y-3">
+          <details
+            id="update-2026-08"
+            className="group scroll-mt-24 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm open:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:open:bg-slate-900"
+          >
+            <summary className="cursor-pointer list-none px-4 py-4 marker:content-none sm:px-5 [&::-webkit-details-marker]:hidden">
+              <span className="flex w-full items-start gap-3 text-left">
+                <span className="min-w-0 flex-1 space-y-2">
+                  <span className="flex flex-wrap items-center gap-2 gap-y-1">
+                    <span
+                      className={cn(
+                        'inline-block rounded-full px-2.5 py-1 text-xs font-black',
+                        'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+                      )}
+                    >
+                      업데이트
+                    </span>
+                    <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                      2026. 08. 02
+                    </span>
+                  </span>
+                  <span className="block pr-1 text-base font-black leading-snug text-slate-900 dark:text-white sm:text-lg">
+                    LIVE 미리보기 · 일정 LIVE · 클립 호버 재생
+                  </span>
+                  <span className="block text-sm font-medium leading-relaxed text-slate-500 group-open:hidden dark:text-slate-400">
+                    스트리머·일정 LIVE 미리보기, 클립 호버 재생, 소리 켜기(화면 클릭).
+                    Chrome 확장 1.3.0이 필요합니다.
+                  </span>
+                </span>
+                <span className="mt-1 shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180 dark:text-slate-500">
+                  <ChevronDown className="h-5 w-5" aria-hidden />
+                </span>
+              </span>
+            </summary>
+            <div className="border-t border-slate-100 px-4 pb-5 pt-1 dark:border-slate-800 sm:px-5">
+              <UpdateAugust2026PostBody />
+            </div>
+          </details>
+
           <details
             id="settlement-2026-06"
             className="group scroll-mt-24 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm open:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:open:bg-slate-900"

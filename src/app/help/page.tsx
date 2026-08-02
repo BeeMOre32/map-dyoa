@@ -243,31 +243,27 @@ export default function HelpPage() {
           </div>
           <ul className="list-inside list-disc space-y-2 text-sm font-bold text-indigo-700/90 dark:text-indigo-200/90">
             <li>
+              <strong>LIVE 미리보기</strong> — 스트리머 LIVE 호버 · 일정 LIVE 탭 · 소리
+              켜기 후 화면 클릭
+            </li>
+            <li>
+              <strong>클립 호버 재생</strong> — 약 1초 후 미리보기, 소리 켜기 후 화면 클릭
+            </li>
+            <li>
+              <strong>확장 1.3.0</strong> — 미리보기 재생·소리 켜기 지원
+            </li>
+            <li>
               <Link
                 href="/health"
                 className="font-black underline underline-offset-2"
               >
                 백엔드 상태
               </Link>
-              — 실시간 API 응답, Cron 수집 시각, 최근 30일 가동 히트맵
-            </li>
-            <li>
-              <strong>멀티뷰</strong> — LIVE만 선택, 레이아웃 프리셋·음소거·채팅 구분, 첫
-              방문 버튼 안내, 단축키(1~9·P·Esc)
-            </li>
-            <li>
-              <strong>설정</strong> — 백엔드 상태·멀티뷰 Chrome 확장 프로그램 링크 추가
-            </li>
-            <li>
-              공지 상단 <strong>7일 가동률 뱃지</strong>, 관리자 장애 시 긴급 공지 초안
-              바로가기
-            </li>
-            <li>
-              <strong>V2 캘린더·일정 모달</strong>이 기본 UI (설정에서 구버전 복원 가능)
+              — 실시간 API 응답, Cron 수집, 가동 히트맵
             </li>
           </ul>
           <Link
-            href="/announcements#update-2026-06"
+            href="/announcements#update-2026-08"
             className="mt-4 inline-flex items-center gap-1.5 text-sm font-black text-indigo-600 hover:underline dark:text-indigo-400"
           >
             <Megaphone className="h-4 w-4" />

@@ -9,6 +9,9 @@
     location.search.includes('map-dyoa-mv=1') ||
     location.search.includes('multichzzk');
   const isPreviewEmbed = location.search.includes('map-dyoa-preview=1');
+  const isClipPreviewEmbed =
+    location.pathname.includes('/embed/clip/') &&
+    location.search.includes('map-dyoa-clip-preview=1');
 
   const notifyParent = (type, extra = {}) => {
     try {
@@ -17,7 +20,7 @@
   };
 
   // 부모(map-dyoa)가 확장 설치 여부를 빨리 알 수 있게
-  if (isMultiviewEmbed || isPreviewEmbed) {
+  if (isMultiviewEmbed || isPreviewEmbed || isClipPreviewEmbed) {
     notifyParent('extension-present');
   }
 
@@ -167,8 +170,10 @@
 
   /** 미리보기는 항상 작은 음량 (슬라이더 없음) */
   const PREVIEW_QUIET_VOLUME = 0.15;
+  /** 부모에서 소리 켜기 요청 후, iframe 안 실제 클릭을 기다림 */
+  let awaitingGestureUnmute = false;
+  let unmuteHoldTimer = null;
 
-  /** 부모 요청으로 소리 켜기 — video 요소만 (치지직 UI 클릭은 불안정해서 제외) */
   const applyUnmute = (volume) => {
     previewAudioUnlocked = true;
     const videos = document.querySelectorAll(
@@ -178,19 +183,50 @@
       typeof volume === 'number' && !Number.isNaN(volume)
         ? Math.min(1, Math.max(0, volume))
         : PREVIEW_QUIET_VOLUME;
-    if (isPreviewEmbed) {
-      // 미리보기: 요청값과 무관하게 작게만
+    if (isPreviewEmbed || isClipPreviewEmbed) {
       vol = PREVIEW_QUIET_VOLUME;
     }
     if (vol <= 0) vol = PREVIEW_QUIET_VOLUME;
     videos.forEach((video) => {
-      video.volume = vol;
-      video.muted = false;
-      video.play?.()?.catch?.(() => {});
+      try {
+        video.muted = false;
+        video.volume = vol;
+        video.play?.()?.catch?.(() => {});
+      } catch {}
     });
+
+    // 치지직 볼륨/음소거 토글이 있으면 음소거 해제 쪽으로 클릭
+    const volBtns = document.querySelectorAll(
+      'button[aria-label*="음소거"], button[aria-label*="소리"], button[class*="volume"], .pzp-pc__volume-button',
+    );
+    for (const btn of volBtns) {
+      const label = `${btn.getAttribute('aria-label') || ''} ${btn.className || ''}`;
+      if (/음소거 해제|소리 켜|unmute/i.test(label)) {
+        try {
+          btn.click();
+        } catch {}
+        break;
+      }
+      // "음소거" 상태(켜진 음소거)면 한 번 눌러 해제
+      if (/음소거$|mute/i.test(label) && !/해제|unmute/i.test(label)) {
+        const pressed = btn.getAttribute('aria-pressed');
+        if (pressed === 'true' || /muted|off|음소거/i.test(btn.className || '')) {
+          try {
+            btn.click();
+          } catch {}
+          break;
+        }
+      }
+    }
   };
 
   const applyMute = () => {
+    previewAudioUnlocked = false;
+    awaitingGestureUnmute = false;
+    if (unmuteHoldTimer) {
+      clearInterval(unmuteHoldTimer);
+      unmuteHoldTimer = null;
+    }
     const videos = document.querySelectorAll(
       'video.webplayer-internal-video, #live_player_layout video, video',
     );
@@ -198,6 +234,42 @@
       video.muted = true;
     });
   };
+
+  const requestUnmuteWithGesture = () => {
+    awaitingGestureUnmute = true;
+    applyUnmute(PREVIEW_QUIET_VOLUME);
+    if (unmuteHoldTimer) clearInterval(unmuteHoldTimer);
+    // 제스처 전에도 반복 시도 (일부 환경에서는 postMessage만으로 됨)
+    unmuteHoldTimer = setInterval(() => {
+      if (!awaitingGestureUnmute && previewAudioUnlocked) {
+        clearInterval(unmuteHoldTimer);
+        unmuteHoldTimer = null;
+        return;
+      }
+      applyUnmute(PREVIEW_QUIET_VOLUME);
+    }, 300);
+    setTimeout(() => {
+      if (unmuteHoldTimer) {
+        clearInterval(unmuteHoldTimer);
+        unmuteHoldTimer = null;
+      }
+    }, 8000);
+  };
+
+  // iframe 안 실제 사용자 클릭 → 브라우저 정책상 이때 소리가 열림
+  const onTrustedUnlock = (ev) => {
+    if (!ev.isTrusted) return;
+    if (!awaitingGestureUnmute) return;
+    applyUnmute(PREVIEW_QUIET_VOLUME);
+    awaitingGestureUnmute = false;
+    if (unmuteHoldTimer) {
+      clearInterval(unmuteHoldTimer);
+      unmuteHoldTimer = null;
+    }
+    notifyParent('audio-unlocked');
+  };
+  window.addEventListener('pointerdown', onTrustedUnlock, true);
+  window.addEventListener('click', onTrustedUnlock, true);
 
   /**
    * iframe 임베드 시 CSP 헤더 제거 등으로 치지직이 띄우는
@@ -375,7 +447,7 @@
       new Promise((resolve) => setTimeout(resolve, 10000)),
     ]);
   };
-  rootObserver.observe(root, { childList: true, subtree: true });
+  if (root) rootObserver.observe(root, { childList: true, subtree: true });
 
   let autoFullscreen =
     location.hash.includes('map-dyoa-auto-fs') ||
@@ -564,18 +636,23 @@
           ? !!ev.data.muted
           : !document.querySelector('video')?.muted;
       if (wantMuted) applyMute();
-      else applyUnmute(PREVIEW_QUIET_VOLUME);
+      else requestUnmuteWithGesture();
     }
     if (ev.data?.type === 'set-volume') {
       const v = Number(ev.data.volume);
       if (!Number.isNaN(v)) {
         if (v <= 0) applyMute();
-        else applyUnmute(v);
+        else requestUnmuteWithGesture();
       }
+    }
+    if (ev.data?.type === 'request-unmute') {
+      requestUnmuteWithGesture();
     }
     if (ev.data?.type === 'ping') {
       notifyParent('pong');
-      if (isPreviewEmbed || isMultiviewEmbed) notifyParent('extension-present');
+      if (isPreviewEmbed || isMultiviewEmbed || isClipPreviewEmbed) {
+        notifyParent('extension-present');
+      }
     }
     if (ev.data?.type === 'fill-player') {
       fillPreviewPlayer();
@@ -587,6 +664,91 @@
   });
 
   if (autoFullscreen) scheduleFullscreen();
+
+  /** 클립 호버 미리보기 — 재생 1회 유도 + 음소거 (라이브 쪽 로직 건드리지 않음) */
+  if (isClipPreviewEmbed) {
+    let playClicked = false;
+    let playingNotified = false;
+
+    const clickOnce = (el) => {
+      if (!el || playClicked) return false;
+      try {
+        el.click();
+        playClicked = true;
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    const nudgeClipPreview = () => {
+      const video = document.querySelector('video');
+      if (video) {
+        if (!previewAudioUnlocked) video.muted = true;
+        video.playsInline = true;
+        video.setAttribute('playsinline', '');
+        if (video.paused) {
+          video.play?.()?.catch?.(() => {});
+        }
+        if (!video.paused && video.readyState >= 2) {
+          if (!playingNotified) {
+            playingNotified = true;
+            notifyParent('clip-preview-playing');
+          }
+          return;
+        }
+      }
+
+      if (playClicked) return;
+
+      const playBtn =
+        document.querySelector('button[aria-label="재생"]') ||
+        document.querySelector('button[aria-label*="재생"]') ||
+        document.querySelector('.pzp-pc__playback-switch[aria-label*="재생"]') ||
+        document.querySelector('button.pzp-pc__playback-switch');
+
+      // aria가 "일시정지"면 이미 재생 중 — 클릭하지 않음
+      if (playBtn) {
+        const label = playBtn.getAttribute('aria-label') || '';
+        if (/일시|pause/i.test(label)) {
+          playClicked = true;
+          return;
+        }
+        if (/재생|play/i.test(label)) {
+          clickOnce(playBtn);
+          return;
+        }
+      }
+
+      // 중앙 큰 재생 아이콘 버튼 (라벨 없는 경우)
+      const bigPlay = [...document.querySelectorAll('button')].find((b) => {
+        const cls = b.className?.toString?.() || '';
+        const al = b.getAttribute('aria-label') || '';
+        return (
+          (/play/i.test(cls) || /재생/.test(al)) &&
+          !/pause|일시|mute|음소거|volume|설정|quality/i.test(`${cls} ${al}`)
+        );
+      });
+      if (bigPlay) clickOnce(bigPlay);
+    };
+
+    nudgeClipPreview();
+    const clipTimer = setInterval(nudgeClipPreview, 600);
+    setTimeout(() => clearInterval(clipTimer), 10000);
+    const clipObs = new MutationObserver(() => {
+      if (!playingNotified) nudgeClipPreview();
+    });
+    if (document.documentElement) {
+      clipObs.observe(document.documentElement, { childList: true, subtree: true });
+      setTimeout(() => clipObs.disconnect(), 10000);
+    }
+
+    // 라이브 멀티뷰/미리보기용 attachBodyObserver 는 클립에서 실행하지 않음
+    try {
+      rootObserver.disconnect();
+    } catch {}
+    return;
+  }
 
   (async () => {
     if (!location.pathname.endsWith('/chat')) {
