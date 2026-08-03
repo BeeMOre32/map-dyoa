@@ -785,6 +785,127 @@ function UpdateJune2026PostBody() {
   );
 }
 
+function SettlementJuly2026PostBody() {
+  return (
+    <div className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 pt-3">
+      <p>
+        앞서 약속드린 대로,{' '}
+        <strong className="text-slate-900 dark:text-white">
+          후원 수익금 · 서버비 납부 · 잔여금 처리
+        </strong>
+        를 투명하게 공개하기 위해 글을 남깁니다.
+      </p>
+
+      <div className="flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800/50 dark:bg-emerald-900/20">
+        <Heart className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+        <p className="text-sm text-emerald-700 dark:text-emerald-300">
+          지난달(7월) 후원 수익금은 총{' '}
+          <strong className="text-emerald-800 dark:text-emerald-200">
+            15,000원
+          </strong>
+          입니다. 후원해 주신 분들께 진심으로 감사드립니다.
+        </p>
+      </div>
+
+      <div className="space-y-3 rounded-2xl border border-teal-200 bg-teal-50/70 p-4 dark:border-teal-800/50 dark:bg-teal-900/15">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+          <p className="text-sm font-black text-slate-900 dark:text-white">
+            7월 정산 내역
+          </p>
+        </div>
+        <div className="divide-y divide-teal-100 overflow-hidden rounded-xl border border-teal-100 bg-white/70 dark:divide-teal-900/40 dark:border-teal-900/40 dark:bg-slate-800/50">
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="font-bold text-slate-600 dark:text-slate-300">
+              6월 이월 잔여금
+            </span>
+            <span className="font-black text-slate-700 dark:text-slate-200">
+              97,720원
+            </span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="font-bold text-slate-600 dark:text-slate-300">
+              7월 후원 수익금
+            </span>
+            <span className="font-black text-emerald-600 dark:text-emerald-400">
+              + 15,000원
+            </span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="font-bold text-slate-600 dark:text-slate-300">
+              서버비{' '}
+              <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                (tax 포함 $22 · 7/2 환율)
+              </span>
+            </span>
+            <span className="font-black text-rose-500 dark:text-rose-400">
+              − 35,601원
+            </span>
+          </div>
+          <div className="flex items-center justify-between bg-teal-50/70 px-4 py-3 dark:bg-teal-900/20">
+            <span className="font-black text-slate-800 dark:text-slate-100">
+              잔여금 (이월)
+            </span>
+            <span className="font-black text-slate-900 dark:text-white">
+              77,119원
+            </span>
+          </div>
+        </div>
+        <p className="text-xs font-medium text-teal-700/80 dark:text-teal-300/80">
+          계산: 97,720 + 15,000 − 35,601 = 77,119원
+        </p>
+      </div>
+
+      <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-900/20">
+        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+        <div className="space-y-2 text-sm text-amber-700 dark:text-amber-300">
+          <p>
+            지난달과 같이 잔여금{' '}
+            <strong className="text-amber-800 dark:text-amber-200">
+              77,119원은 다음 달로 이월
+            </strong>
+            합니다.
+          </p>
+          <p>
+            기능 업데이트는 꾸준히 이어가고 있고, 이번 주~다음 주에는 실험 중인
+            기능을 안정화하는 작업을 할 예정입니다. 자세한 패치 노트는 담주에
+            한꺼번에 정리해 올릴 예정입니다.
+          </p>
+          <p>
+            제가 만든 서비스다 보니 문제를 스스로 잘 못 느끼는 경우가 있습니다.
+            불편하거나 개선이 필요한 점이 있으면{' '}
+            <strong className="text-amber-800 dark:text-amber-200">
+              카페 댓글
+            </strong>
+            이나{' '}
+            <a
+              href="mailto:windowssart01@gmail.com"
+              className="font-black underline underline-offset-2"
+            >
+              이메일
+            </a>
+            로 편하게 피드백 남겨 주세요.
+          </p>
+        </div>
+      </div>
+
+      <a
+        href="https://naver.me/Gahqc9RY"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-teal-500 to-emerald-500 py-3 text-sm font-black text-white shadow-md shadow-teal-500/20 transition-all hover:from-teal-600 hover:to-emerald-600 active:scale-[0.98]"
+      >
+        <Megaphone className="h-4 w-4" />
+        자세한 내역은 카페 글에서 확인하기
+      </a>
+
+      <p className="text-slate-500 dark:text-slate-400">
+        늘 사이트를 아껴 주시고 후원해 주셔서 진심으로 감사합니다 💜
+      </p>
+    </div>
+  );
+}
+
 function SettlementJune2026PostBody() {
   return (
     <div className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 pt-3">
@@ -998,6 +1119,44 @@ export default function AnnouncementsView({
         </div>
 
         <div className="space-y-3">
+          <details
+            id="settlement-2026-07"
+            className="group scroll-mt-24 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm open:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:open:bg-slate-900"
+          >
+            <summary className="cursor-pointer list-none px-4 py-4 marker:content-none sm:px-5 [&::-webkit-details-marker]:hidden">
+              <span className="flex w-full items-start gap-3 text-left">
+                <span className="min-w-0 flex-1 space-y-2">
+                  <span className="flex flex-wrap items-center gap-2 gap-y-1">
+                    <span
+                      className={cn(
+                        'inline-block rounded-full px-2.5 py-1 text-xs font-black',
+                        'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
+                      )}
+                    >
+                      정산 공개
+                    </span>
+                    <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                      2026. 08. 03
+                    </span>
+                  </span>
+                  <span className="block pr-1 text-base font-black leading-snug text-slate-900 dark:text-white sm:text-lg">
+                    7월 후원 정산 · 잔여금 이월 안내
+                  </span>
+                  <span className="block text-sm font-medium leading-relaxed text-slate-500 group-open:hidden dark:text-slate-400">
+                    수익금 15,000원, 서버비 35,601원, 잔여금 77,119원은 다음
+                    달로 이월합니다.
+                  </span>
+                </span>
+                <span className="mt-1 shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180 dark:text-slate-500">
+                  <ChevronDown className="h-5 w-5" aria-hidden />
+                </span>
+              </span>
+            </summary>
+            <div className="border-t border-slate-100 px-4 pb-5 pt-1 dark:border-slate-800 sm:px-5">
+              <SettlementJuly2026PostBody />
+            </div>
+          </details>
+
           <details
             id="update-2026-08"
             className="group scroll-mt-24 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm open:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:open:bg-slate-900"

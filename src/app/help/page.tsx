@@ -243,6 +243,10 @@ export default function HelpPage() {
           </div>
           <ul className="list-inside list-disc space-y-2 text-sm font-bold text-indigo-700/90 dark:text-indigo-200/90">
             <li>
+              <strong>7월 후원 정산</strong> — 수익금 15,000원 · 서버비 35,601원 ·
+              잔여 77,119원 이월
+            </li>
+            <li>
               <strong>LIVE 미리보기</strong> — 스트리머 LIVE 호버 · 일정 LIVE 탭 · 소리
               켜기 후 화면 클릭
             </li>
@@ -252,18 +256,9 @@ export default function HelpPage() {
             <li>
               <strong>확장 1.3.0</strong> — 미리보기 재생·소리 켜기 지원
             </li>
-            <li>
-              <Link
-                href="/health"
-                className="font-black underline underline-offset-2"
-              >
-                백엔드 상태
-              </Link>
-              — 실시간 API 응답, Cron 수집, 가동 히트맵
-            </li>
           </ul>
           <Link
-            href="/announcements#update-2026-08"
+            href="/announcements#settlement-2026-07"
             className="mt-4 inline-flex items-center gap-1.5 text-sm font-black text-indigo-600 hover:underline dark:text-indigo-400"
           >
             <Megaphone className="h-4 w-4" />
