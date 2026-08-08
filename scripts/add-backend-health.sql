@@ -1,4 +1,4 @@
--- 백엔드 헬스: feature 컬럼 · Day 복합키
+-- 백엔드 헬스: feature 컬럼 · Day 복합키 (idempotent)
 
 DO $$
 BEGIN
@@ -31,6 +31,7 @@ CREATE INDEX IF NOT EXISTS "BackendHealthCheck_feature_checkedAt_idx"
   ON "BackendHealthCheck" ("feature", "checkedAt");
 
 -- Day: 구 PK(dateKst만) → 복합키로 이관
+-- (PK 제약 이름은 스키마 전역 유일이라 mig 테이블에는 임시 이름 사용)
 DO $$
 BEGIN
   IF EXISTS (
@@ -53,7 +54,7 @@ BEGIN
       "maxLatencyMs" INTEGER,
       "status"       "BackendHealthDayStatus" NOT NULL,
       "updatedAt"    TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT "BackendHealthDay_pkey" PRIMARY KEY ("dateKst", "feature")
+      CONSTRAINT "BackendHealthDay_mig_pkey" PRIMARY KEY ("dateKst", "feature")
     );
 
     INSERT INTO "BackendHealthDay_mig" (
@@ -67,6 +68,7 @@ BEGIN
 
     DROP TABLE "BackendHealthDay";
     ALTER TABLE "BackendHealthDay_mig" RENAME TO "BackendHealthDay";
+    ALTER TABLE "BackendHealthDay" RENAME CONSTRAINT "BackendHealthDay_mig_pkey" TO "BackendHealthDay_pkey";
   END IF;
 END
 $$;
