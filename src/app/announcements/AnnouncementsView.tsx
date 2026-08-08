@@ -696,6 +696,88 @@ function UpdateAugust2026PostBody() {
   );
 }
 
+function UpdateAugustHealth2026PostBody() {
+  return (
+    <div className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 pt-3">
+      <p>
+        백엔드 안정성과 상태 확인을 보강했습니다.{' '}
+        <strong className="text-slate-900 dark:text-white">라이브 메타 조회 오류</strong>를
+        줄이고,{' '}
+        <strong className="text-slate-900 dark:text-white">큰 줄기별 헬스 모니터링</strong>을
+        새로 정리했습니다.
+      </p>
+
+      <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-900/20">
+        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+        <div className="space-y-2 text-sm text-amber-800 dark:text-amber-200">
+          <p className="font-black text-amber-900 dark:text-amber-100">
+            치지직 라이브 메타 (`/api/chzzk/live-meta`)
+          </p>
+          <ul className="list-disc space-y-1.5 pl-4">
+            <li>
+              Fly 서버에서 치지직 API가 일시적으로 실패해도 <strong>502로 올리지 않고</strong>{' '}
+              빈 메타로 soft-fail 처리합니다.
+            </li>
+            <li>
+              Next 쪽은 Fly가 실패하면 치지직을 <strong>직접 조회하는 폴백</strong>으로
+              이어집니다.
+            </li>
+            <li>
+              멤버·일정 LIVE 미리보기 제목이 간헐적으로 비던 현상이 줄어듭니다.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="flex gap-3 rounded-2xl border border-sky-200 bg-sky-50 p-4 dark:border-sky-800/50 dark:bg-sky-900/20">
+        <Activity className="mt-0.5 h-4 w-4 shrink-0 text-sky-500" />
+        <div className="space-y-2 text-sm text-sky-800 dark:text-sky-200">
+          <p className="font-black text-sky-900 dark:text-sky-100">큰 줄기 헬스 모니터링</p>
+          <ul className="list-disc space-y-1.5 pl-4">
+            <li>
+              <Link href="/health" className="font-black underline underline-offset-2">
+                백엔드 상태
+              </Link>
+              에서 서버 · DB · 일정 · 멤버 · 클립을 각각 확인합니다.
+            </li>
+            <li>Cron 주기를 <strong>30분</strong>으로 바꿔 DB 부담을 줄였습니다.</li>
+            <li>샘플·히트맵 보관은 <strong>14일</strong>입니다.</li>
+            <li>
+              히트맵은 달력형이 아니라 <strong>행=기능 · 열=날짜</strong> 타임라인입니다.
+            </li>
+            <li>도메인 프로브는 각 테이블 1행만 읽어 가볍게 유지합니다.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="flex gap-3 rounded-2xl border border-violet-200 bg-violet-50 p-4 dark:border-violet-800/50 dark:bg-violet-900/20">
+        <Server className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
+        <div className="space-y-2 text-sm text-violet-800 dark:text-violet-200">
+          <p className="font-black text-violet-900 dark:text-violet-100">확인 방법</p>
+          <ul className="list-disc space-y-1.5 pl-4">
+            <li>
+              <Link href="/health" className="font-black underline underline-offset-2">
+                /health
+              </Link>{' '}
+              — 실시간 5개 줄기 상태 + 14일 기능별 히트맵
+            </li>
+            <li>
+              <Link href="/help#backend-health" className="font-black underline underline-offset-2">
+                도움말 · 백엔드 상태
+              </Link>
+            </li>
+            <li>설정 → 백엔드 상태</li>
+          </ul>
+        </div>
+      </div>
+
+      <p className="text-xs text-slate-500 dark:text-slate-400">
+        이상 징후나 미리보기/메타 오류가 보이면 피드백으로 알려 주세요.
+      </p>
+    </div>
+  );
+}
+
 function UpdateJune2026PostBody() {
   return (
     <div className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 pt-3">
@@ -716,9 +798,9 @@ function UpdateJune2026PostBody() {
               </Link>
               — 실시간 API 응답·지연·본문 확인
             </li>
-            <li>Vercel Cron 30분 간격 큰 줄기(서버·DB·일정·멤버·클립) 헬스 체크·14일 보관</li>
+            <li>Vercel Cron 5분 간격 자동 헬스 체크·DB 샘플 저장 (플랜에 따라 주기 상이)</li>
             <li>마지막 Cron 실행·수집 시작 시각·누적 샘플 수 표시</li>
-            <li>기능별 14일 KST 히트맵 (행=기능 · 열=날짜 · 정상·저하·장애)</li>
+            <li>최근 30일 KST 히트맵 (정상·저하·장애·기록 없음)</li>
             <li>공지 상단 최근 7일 가동률 뱃지 → 상태 페이지 링크</li>
             <li>관리자 대시보드 — 연속 실패 시 장애 공지 초안 바로 작성</li>
           </ul>
@@ -1119,6 +1201,44 @@ export default function AnnouncementsView({
         </div>
 
         <div className="space-y-3">
+          <details
+            id="update-2026-08-08"
+            className="group scroll-mt-24 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm open:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:open:bg-slate-900"
+          >
+            <summary className="cursor-pointer list-none px-4 py-4 marker:content-none sm:px-5 [&::-webkit-details-marker]:hidden">
+              <span className="flex w-full items-start gap-3 text-left">
+                <span className="min-w-0 flex-1 space-y-2">
+                  <span className="flex flex-wrap items-center gap-2 gap-y-1">
+                    <span
+                      className={cn(
+                        'inline-block rounded-full px-2.5 py-1 text-xs font-black',
+                        'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+                      )}
+                    >
+                      업데이트
+                    </span>
+                    <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                      2026. 08. 08
+                    </span>
+                  </span>
+                  <span className="block pr-1 text-base font-black leading-snug text-slate-900 dark:text-white sm:text-lg">
+                    라이브 메타 안정화 · 기능별 백엔드 헬스
+                  </span>
+                  <span className="block text-sm font-medium leading-relaxed text-slate-500 group-open:hidden dark:text-slate-400">
+                    live-meta 502 완화, 서버·DB·일정·멤버·클립 30분 헬스, 14일 기능별
+                    히트맵.
+                  </span>
+                </span>
+                <span className="mt-1 shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180 dark:text-slate-500">
+                  <ChevronDown className="h-5 w-5" aria-hidden />
+                </span>
+              </span>
+            </summary>
+            <div className="border-t border-slate-100 px-4 pb-5 pt-1 dark:border-slate-800 sm:px-5">
+              <UpdateAugustHealth2026PostBody />
+            </div>
+          </details>
+
           <details
             id="settlement-2026-07"
             className="group scroll-mt-24 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm open:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:open:bg-slate-900"

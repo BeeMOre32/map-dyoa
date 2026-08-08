@@ -14,13 +14,13 @@ export interface Announcement {
 
 /** 홈·캘린더 등에 띄우는 공지 (한 건만) */
 export const announcementToast: Announcement = {
-  id: 'settlement-2026-07',
+  id: 'update-2026-08-08',
   type: 'info',
-  accent: 'teal',
-  title: '7월 후원 정산 · 잔여금 이월 안내',
+  accent: 'indigo',
+  title: '라이브 메타 안정화 · 기능별 백엔드 헬스',
   content:
-    '수익금 15,000원, 서버비 35,601원. 잔여금 77,119원은 다음 달로 이월합니다. 자세한 내역은 공지에서 확인해 주세요.',
-  href: '/announcements#settlement-2026-07',
+    'live-meta 오류 완화, 서버·DB·일정·멤버·클립 30분 헬스 체크와 14일 기능별 히트맵을 반영했습니다.',
+  href: '/announcements#update-2026-08-08',
 };
 
 /** 중앙 팝업으로 띄울 공지. null이면 팝업 없이 토스트만 사용 */
