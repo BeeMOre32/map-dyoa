@@ -3,21 +3,25 @@ import type { BackendHealthDayStatus } from '@prisma/client';
 import {
   BACKEND_HEALTH_ALERT_COOLDOWN_MS,
   BACKEND_HEALTH_ALERT_STREAK,
+  BACKEND_HEALTH_FEATURES,
+  BACKEND_HEALTH_FEATURE_LABEL,
   BACKEND_HEALTH_HEATMAP_DAYS,
   BACKEND_HEALTH_SAMPLE_RETENTION_DAYS,
   BACKEND_HEALTH_UPTIME_DAYS,
   computeDayStatus,
   kstDayBounds,
   listKstDateKeysEndingToday,
-  probeBackendHealth,
+  probeAllBackendHealthFeatures,
   summarizeUptime,
   toKstDateKey,
+  type BackendHealthFeature,
   type BackendHealthProbeResult,
   type BackendHealthUptimeSummary,
 } from '@/lib/backend-health';
 
 export type BackendHealthDayRow = {
   dateKst: string;
+  feature: string;
   totalChecks: number;
   okChecks: number;
   avgLatencyMs: number | null;
@@ -25,8 +29,21 @@ export type BackendHealthDayRow = {
   status: BackendHealthDayStatus;
 };
 
-export type BackendHealthHeatmapDay = BackendHealthDayRow & {
+export type BackendHealthHeatmapDay = {
+  dateKst: string;
+  totalChecks: number;
+  okChecks: number;
+  avgLatencyMs: number | null;
+  maxLatencyMs: number | null;
+  status: BackendHealthDayStatus;
   hasData: boolean;
+};
+
+export type BackendHealthFeatureHeatmapRow = {
+  feature: BackendHealthFeature;
+  label: string;
+  days: BackendHealthHeatmapDay[];
+  latestStatus: BackendHealthDayStatus | null;
 };
 
 export async function recordBackendHealthProbe(
@@ -35,6 +52,7 @@ export async function recordBackendHealthProbe(
   const prisma = getPrisma();
   await prisma.backendHealthCheck.create({
     data: {
+      feature: probe.feature,
       checkedAt: new Date(probe.fetchedAt),
       ok: probe.ok,
       statusCode: probe.statusCode,
@@ -44,12 +62,18 @@ export async function recordBackendHealthProbe(
   });
 }
 
-export async function rollupBackendHealthDay(dateKey: string): Promise<BackendHealthDayRow> {
+export async function rollupBackendHealthDay(
+  dateKey: string,
+  feature: BackendHealthFeature,
+): Promise<BackendHealthDayRow> {
   const prisma = getPrisma();
   const { start, end } = kstDayBounds(dateKey);
 
   const samples = await prisma.backendHealthCheck.findMany({
-    where: { checkedAt: { gte: start, lt: end } },
+    where: {
+      feature,
+      checkedAt: { gte: start, lt: end },
+    },
     select: { ok: true, latencyMs: true },
   });
 
@@ -66,9 +90,12 @@ export async function rollupBackendHealthDay(dateKey: string): Promise<BackendHe
   const status = computeDayStatus(totalChecks, okChecks, avgLatencyMs);
 
   const row = await prisma.backendHealthDay.upsert({
-    where: { dateKst: dateKey },
+    where: {
+      dateKst_feature: { dateKst: dateKey, feature },
+    },
     create: {
       dateKst: dateKey,
+      feature,
       totalChecks,
       okChecks,
       avgLatencyMs,
@@ -91,15 +118,23 @@ export async function purgeOldBackendHealthSamples(): Promise<number> {
   const prisma = getPrisma();
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - BACKEND_HEALTH_SAMPLE_RETENTION_DAYS);
-  const result = await prisma.backendHealthCheck.deleteMany({
-    where: { checkedAt: { lt: cutoff } },
-  });
-  return result.count;
+  const [samples, days] = await Promise.all([
+    prisma.backendHealthCheck.deleteMany({
+      where: { checkedAt: { lt: cutoff } },
+    }),
+    prisma.backendHealthDay.deleteMany({
+      where: { dateKst: { lt: toKstDateKey(cutoff) } },
+    }),
+  ]);
+  return samples.count + days.count;
 }
 
-export async function maybeCreateBackendHealthAlert(): Promise<boolean> {
+export async function maybeCreateBackendHealthAlert(
+  feature: BackendHealthFeature,
+): Promise<boolean> {
   const prisma = getPrisma();
   const recent = await prisma.backendHealthCheck.findMany({
+    where: { feature },
     orderBy: { checkedAt: 'desc' },
     take: BACKEND_HEALTH_ALERT_STREAK,
     select: { ok: true, checkedAt: true, error: true, statusCode: true },
@@ -112,6 +147,7 @@ export async function maybeCreateBackendHealthAlert(): Promise<boolean> {
   const existing = await prisma.auditLog.findFirst({
     where: {
       action: 'backend_health_alert',
+      entity: `backend_health:${feature}`,
       createdAt: { gte: since },
     },
     select: { id: true },
@@ -121,9 +157,9 @@ export async function maybeCreateBackendHealthAlert(): Promise<boolean> {
   await prisma.auditLog.create({
     data: {
       action: 'backend_health_alert',
-      entity: 'backend_health',
-      summary: '백엔드 헬스 체크 3회 연속 실패',
-      changes: { samples: recent },
+      entity: `backend_health:${feature}`,
+      summary: `${BACKEND_HEALTH_FEATURE_LABEL[feature]} 헬스 체크 ${BACKEND_HEALTH_ALERT_STREAK}회 연속 실패`,
+      changes: { feature, samples: recent },
       actorRole: 'system',
     },
   });
@@ -132,48 +168,89 @@ export async function maybeCreateBackendHealthAlert(): Promise<boolean> {
 }
 
 export async function runBackendHealthCron(): Promise<{
-  probe: BackendHealthProbeResult;
+  probes: BackendHealthProbeResult[];
   dateKst: string;
-  rollup: BackendHealthDayRow;
+  rollups: BackendHealthDayRow[];
   purged: number;
   alertCreated: boolean;
 }> {
-  const probe = await probeBackendHealth();
-  await recordBackendHealthProbe(probe);
+  const probes = await probeAllBackendHealthFeatures();
+  await Promise.all(probes.map((p) => recordBackendHealthProbe(p)));
 
-  const dateKst = toKstDateKey(new Date(probe.fetchedAt));
-  const rollup = await rollupBackendHealthDay(dateKst);
+  const dateKst = toKstDateKey(new Date(probes[0]?.fetchedAt ?? Date.now()));
+  const rollups = await Promise.all(
+    BACKEND_HEALTH_FEATURES.map((feature) => rollupBackendHealthDay(dateKst, feature)),
+  );
   const purged = await purgeOldBackendHealthSamples();
-  const alertCreated = probe.ok ? false : await maybeCreateBackendHealthAlert();
 
-  return { probe, dateKst, rollup, purged, alertCreated };
+  let alertCreated = false;
+  for (const probe of probes) {
+    if (probe.ok) continue;
+    if (await maybeCreateBackendHealthAlert(probe.feature)) {
+      alertCreated = true;
+    }
+  }
+
+  return { probes, dateKst, rollups, purged, alertCreated };
 }
 
-export async function getBackendHealthHeatmap(
+export async function getBackendHealthFeatureHeatmap(
   days = BACKEND_HEALTH_HEATMAP_DAYS,
-): Promise<BackendHealthHeatmapDay[]> {
+): Promise<BackendHealthFeatureHeatmapRow[]> {
   const prisma = getPrisma();
   const keys = listKstDateKeysEndingToday(days);
   const rows = await prisma.backendHealthDay.findMany({
-    where: { dateKst: { in: keys } },
+    where: {
+      dateKst: { in: keys },
+      feature: { in: [...BACKEND_HEALTH_FEATURES] },
+    },
   });
-  const byKey = new Map(rows.map((r) => [r.dateKst, r]));
 
-  return keys.map((dateKst) => {
-    const row = byKey.get(dateKst);
-    if (!row) {
+  return BACKEND_HEALTH_FEATURES.map((feature) => {
+    const byKey = new Map(
+      rows.filter((r) => r.feature === feature).map((r) => [r.dateKst, r]),
+    );
+    const dayRows: BackendHealthHeatmapDay[] = keys.map((dateKst) => {
+      const row = byKey.get(dateKst);
+      if (!row) {
+        return {
+          dateKst,
+          totalChecks: 0,
+          okChecks: 0,
+          avgLatencyMs: null,
+          maxLatencyMs: null,
+          status: 'OK' as BackendHealthDayStatus,
+          hasData: false,
+        };
+      }
       return {
-        dateKst,
-        totalChecks: 0,
-        okChecks: 0,
-        avgLatencyMs: null,
-        maxLatencyMs: null,
-        status: 'OK' as BackendHealthDayStatus,
-        hasData: false,
+        dateKst: row.dateKst,
+        totalChecks: row.totalChecks,
+        okChecks: row.okChecks,
+        avgLatencyMs: row.avgLatencyMs,
+        maxLatencyMs: row.maxLatencyMs,
+        status: row.status,
+        hasData: true,
       };
-    }
-    return { ...row, hasData: true };
+    });
+
+    const withData = [...dayRows].reverse().find((d) => d.hasData);
+    return {
+      feature,
+      label: BACKEND_HEALTH_FEATURE_LABEL[feature],
+      days: dayRows,
+      latestStatus: withData?.status ?? null,
+    };
   });
+}
+
+/** @deprecated feature 히트맵 사용 */
+export async function getBackendHealthHeatmap(
+  days = BACKEND_HEALTH_HEATMAP_DAYS,
+): Promise<BackendHealthHeatmapDay[]> {
+  const rows = await getBackendHealthFeatureHeatmap(days);
+  const live = rows.find((r) => r.feature === 'live');
+  return live?.days ?? [];
 }
 
 export async function getBackendHealthUptimeSummary(
@@ -182,7 +259,10 @@ export async function getBackendHealthUptimeSummary(
   const prisma = getPrisma();
   const keys = listKstDateKeysEndingToday(days);
   const rows = await prisma.backendHealthDay.findMany({
-    where: { dateKst: { in: keys } },
+    where: {
+      dateKst: { in: keys },
+      feature: { in: [...BACKEND_HEALTH_FEATURES] },
+    },
     select: { totalChecks: true, okChecks: true, status: true },
   });
   return summarizeUptime(rows, days);
@@ -209,7 +289,13 @@ export async function hasUnresolvedBackendHealthAlert(): Promise<boolean> {
   });
   if (!alert) return false;
 
+  const feature =
+    typeof alert.entity === 'string' && alert.entity.startsWith('backend_health:')
+      ? alert.entity.slice('backend_health:'.length)
+      : 'live';
+
   const latest = await prisma.backendHealthCheck.findFirst({
+    where: { feature },
     orderBy: { checkedAt: 'desc' },
     select: { ok: true, checkedAt: true },
   });

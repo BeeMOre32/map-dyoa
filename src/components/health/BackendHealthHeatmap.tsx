@@ -4,47 +4,60 @@ import {
   DAY_STATUS_LABEL,
   formatUptimePercent,
 } from '@/lib/backend-health';
-import { getBackendHealthHeatmap } from '@/lib/backend-health-store';
+import { getBackendHealthFeatureHeatmap } from '@/lib/backend-health-store';
 import type { BackendHealthCollectionMeta } from '@/lib/backend-health-store';
 import type { BackendHealthDayStatus } from '@prisma/client';
+
+function formatKstShort(dateKst: string): string {
+  const [, m, d] = dateKst.split('-');
+  return `${Number(m)}/${Number(d)}`;
+}
 
 function formatKstLabel(dateKst: string): string {
   const [y, m, d] = dateKst.split('-');
   return `${y}. ${m}. ${d}.`;
 }
 
+const LATEST_BADGE: Record<BackendHealthDayStatus, string> = {
+  OK: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+  DEGRADED: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+  DOWN: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+};
+
 export default async function BackendHealthHeatmap({
   collectionMeta = null,
 }: {
   collectionMeta?: BackendHealthCollectionMeta | null;
 }) {
-  let days;
+  let rows;
   try {
-    days = await getBackendHealthHeatmap(BACKEND_HEALTH_HEATMAP_DAYS);
+    rows = await getBackendHealthFeatureHeatmap(BACKEND_HEALTH_HEATMAP_DAYS);
   } catch {
     return (
       <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-        일별 상태 기록 테이블이 아직 없습니다.{' '}
+        기능별 상태 기록 테이블이 아직 없습니다.{' '}
         <code className="text-xs">npm run db:ensure-backend-health</code> 실행 후 Cron이
         돌아가면 데이터가 쌓입니다.
       </div>
     );
   }
-  const withData = days.filter((d) => d.hasData);
-  const totalChecks = withData.reduce((s, d) => s + d.totalChecks, 0);
-  const okChecks = withData.reduce((s, d) => s + d.okChecks, 0);
+
+  const allDays = rows.flatMap((r) => r.days.filter((d) => d.hasData));
+  const totalChecks = allDays.reduce((s, d) => s + d.totalChecks, 0);
+  const okChecks = allDays.reduce((s, d) => s + d.okChecks, 0);
   const periodUptime = formatUptimePercent(okChecks, totalChecks);
-  const noDayData = withData.length === 0;
+  const noDayData = allDays.length === 0;
+  const dateKeys = rows[0]?.days.map((d) => d.dateKst) ?? [];
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
-            최근 {BACKEND_HEALTH_HEATMAP_DAYS}일 상태 (KST)
+            기능별 상태 · 최근 {BACKEND_HEALTH_HEATMAP_DAYS}일 (KST)
           </p>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            5분 간격 자동 체크 기준 · 데이터 없는 날은 회색
+            30분 간격 Cron · 행=기능 · 열=날짜
           </p>
         </div>
         {periodUptime != null && !noDayData && (
@@ -65,34 +78,80 @@ export default async function BackendHealthHeatmap({
           <strong className="text-slate-700 dark:text-slate-300">
             {collectionMeta.collectionStartedAt.toLocaleString('ko-KR')}
           </strong>
-          부터 시작되었습니다. 일별 히트맵은 Cron이 하루치 이상 쌓이면 채워집니다.
+          부터 시작되었습니다.
         </p>
       )}
 
-      <div className="mt-4 grid grid-cols-10 gap-1.5 sm:gap-2">
-        {days.map((day) => {
-          const status = day.hasData ? day.status : null;
-          const uptime =
-            day.hasData && day.totalChecks > 0
-              ? formatUptimePercent(day.okChecks, day.totalChecks)
-              : null;
+      <div className="mt-4 overflow-x-auto">
+        <div className="min-w-[28rem] space-y-2">
+          <div
+            className="grid items-center gap-1.5"
+            style={{
+              gridTemplateColumns: `5.5rem repeat(${dateKeys.length}, minmax(0, 1fr)) 3.25rem`,
+            }}
+          >
+            <div />
+            {dateKeys.map((key, i) => (
+              <div
+                key={key}
+                className="text-center text-[9px] font-bold tabular-nums text-slate-400 dark:text-slate-500"
+                title={formatKstLabel(key)}
+              >
+                {i === 0 || i === dateKeys.length - 1 || i % 3 === 0
+                  ? formatKstShort(key)
+                  : ''}
+              </div>
+            ))}
+            <div />
+          </div>
 
-          return (
+          {rows.map((row) => (
             <div
-              key={day.dateKst}
-              title={
-                day.hasData
-                  ? `${formatKstLabel(day.dateKst)} · ${DAY_STATUS_LABEL[status as BackendHealthDayStatus]} · 성공 ${day.okChecks}/${day.totalChecks}${uptime != null ? ` (${uptime}%)` : ''}${day.avgLatencyMs != null ? ` · 평균 ${day.avgLatencyMs}ms` : ''}`
-                  : `${formatKstLabel(day.dateKst)} · 기록 없음`
-              }
-              className={`aspect-square rounded-md transition-colors ${
-                status
-                  ? DAY_STATUS_CLASS[status]
-                  : 'bg-slate-200 dark:bg-slate-800'
-              }`}
-            />
-          );
-        })}
+              key={row.feature}
+              className="grid items-center gap-1.5"
+              style={{
+                gridTemplateColumns: `5.5rem repeat(${row.days.length}, minmax(0, 1fr)) 3.25rem`,
+              }}
+            >
+              <div className="truncate text-xs font-black text-slate-700 dark:text-slate-200">
+                {row.label}
+              </div>
+              {row.days.map((day) => {
+                const status = day.hasData ? day.status : null;
+                const uptime =
+                  day.hasData && day.totalChecks > 0
+                    ? formatUptimePercent(day.okChecks, day.totalChecks)
+                    : null;
+                return (
+                  <div
+                    key={`${row.feature}-${day.dateKst}`}
+                    title={
+                      day.hasData
+                        ? `${row.label} · ${formatKstLabel(day.dateKst)} · ${DAY_STATUS_LABEL[status as BackendHealthDayStatus]} · ${day.okChecks}/${day.totalChecks}${uptime != null ? ` (${uptime}%)` : ''}`
+                        : `${row.label} · ${formatKstLabel(day.dateKst)} · 기록 없음`
+                    }
+                    className={`h-5 rounded-sm transition-colors sm:h-6 ${
+                      status
+                        ? DAY_STATUS_CLASS[status]
+                        : 'bg-slate-200 dark:bg-slate-800'
+                    }`}
+                  />
+                );
+              })}
+              <div className="flex justify-end">
+                {row.latestStatus ? (
+                  <span
+                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-black ${LATEST_BADGE[row.latestStatus]}`}
+                  >
+                    {DAY_STATUS_LABEL[row.latestStatus]}
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold text-slate-400">—</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3 text-[11px] font-bold text-slate-500 dark:text-slate-400">

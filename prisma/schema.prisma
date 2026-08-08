@@ -209,9 +209,10 @@ enum NoticeLevel {
   URGENT
 }
 
-/// 백엔드 헬스 체크 원시 샘플 (Cron 5분 간격)
+/// 백엔드 헬스 체크 원시 샘플 (Cron 30분 간격 · feature별)
 model BackendHealthCheck {
   id         String   @id @default(cuid())
+  feature    String
   checkedAt  DateTime @default(now())
   ok         Boolean
   statusCode Int?
@@ -219,9 +220,10 @@ model BackendHealthCheck {
   error      String?
 
   @@index([checkedAt])
+  @@index([feature, checkedAt])
 }
 
-/// KST 날짜별 집계 (YYYY-MM-DD)
+/// KST 날짜×feature 집계 (YYYY-MM-DD)
 enum BackendHealthDayStatus {
   OK
   DEGRADED
@@ -229,14 +231,16 @@ enum BackendHealthDayStatus {
 }
 
 model BackendHealthDay {
-  dateKst      String                   @id
+  dateKst      String
+  feature      String
   totalChecks  Int
   okChecks     Int
   avgLatencyMs Int?
   maxLatencyMs Int?
   status       BackendHealthDayStatus
-  updatedAt    DateTime                 @updatedAt
+  updatedAt    DateTime               @updatedAt
 
+  @@id([dateKst, feature])
   @@index([dateKst(sort: Desc)])
 }
 

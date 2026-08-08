@@ -9,11 +9,18 @@ export async function GET(request: Request) {
 
   try {
     const result = await runBackendHealthCron();
+    const failed = result.probes.filter((p) => !p.ok).map((p) => p.feature);
     return NextResponse.json({
       ok: true,
-      probeOk: result.probe.ok,
+      probeOk: failed.length === 0,
+      failedFeatures: failed,
       dateKst: result.dateKst,
-      status: result.rollup.status,
+      features: result.rollups.map((r) => ({
+        feature: r.feature,
+        status: r.status,
+        totalChecks: r.totalChecks,
+        okChecks: r.okChecks,
+      })),
       purged: result.purged,
       alertCreated: result.alertCreated,
     });

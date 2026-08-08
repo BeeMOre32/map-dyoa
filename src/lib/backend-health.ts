@@ -1,13 +1,33 @@
-/** map-dyoa-server 헬스 프로브·KST 날짜·일별 상태 판정 */
+/** map-dyoa-server 큰 줄기 헬스 프로브·KST 날짜·일별 상태 판정 */
 
 export type HealthPayload = {
   ok?: boolean;
   db?: string;
   status?: string;
   service?: string;
+  error?: string;
+};
+
+export const BACKEND_HEALTH_FEATURES = [
+  'live',
+  'db',
+  'schedules',
+  'streamers',
+  'clips',
+] as const;
+
+export type BackendHealthFeature = (typeof BACKEND_HEALTH_FEATURES)[number];
+
+export const BACKEND_HEALTH_FEATURE_LABEL: Record<BackendHealthFeature, string> = {
+  live: '서버',
+  db: 'DB',
+  schedules: '일정',
+  streamers: '멤버',
+  clips: '클립',
 };
 
 export type BackendHealthProbeResult = {
+  feature: BackendHealthFeature;
   healthUrl: string;
   latencyMs: number | null;
   statusCode: number | null;
@@ -19,30 +39,42 @@ export type BackendHealthProbeResult = {
 
 export type BackendHealthDayStatus = 'OK' | 'DEGRADED' | 'DOWN';
 
-export const BACKEND_HEALTH_SAMPLE_RETENTION_DAYS = 90;
-export const BACKEND_HEALTH_HEATMAP_DAYS = 30;
+/** 샘플·일별 집계·히트맵 보관 일수 */
+export const BACKEND_HEALTH_SAMPLE_RETENTION_DAYS = 14;
+export const BACKEND_HEALTH_HEATMAP_DAYS = 14;
 export const BACKEND_HEALTH_UPTIME_DAYS = 7;
 export const BACKEND_HEALTH_ALERT_STREAK = 3;
 export const BACKEND_HEALTH_ALERT_COOLDOWN_MS = 60 * 60 * 1000;
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
-export function getBackendHealthUrl(): string {
+export function getBackendHealthBaseUrl(): string {
   return (
     process.env.BACKEND_HEALTH_URL ??
     process.env.NEXT_PUBLIC_BACKEND_HEALTH_URL ??
     'https://map-dyoa-server.fly.dev'
-  );
+  ).replace(/\/$/, '');
 }
 
-export async function probeBackendHealth(): Promise<BackendHealthProbeResult> {
-  const healthUrl = getBackendHealthUrl();
+/** @deprecated getBackendHealthBaseUrl 사용 */
+export function getBackendHealthUrl(): string {
+  return getBackendHealthBaseUrl();
+}
+
+export function healthUrlForFeature(feature: BackendHealthFeature): string {
+  return `${getBackendHealthBaseUrl()}/health/${feature}`;
+}
+
+export async function probeBackendHealthFeature(
+  feature: BackendHealthFeature,
+): Promise<BackendHealthProbeResult> {
+  const healthUrl = healthUrlForFeature(feature);
   const start = Date.now();
 
   try {
     const response = await fetch(healthUrl, {
       cache: 'no-store',
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(5000),
     });
     const latencyMs = Date.now() - start;
 
@@ -57,16 +89,18 @@ export async function probeBackendHealth(): Promise<BackendHealthProbeResult> {
     const ok = response.ok && bodyOk;
 
     return {
+      feature,
       healthUrl,
       latencyMs,
       statusCode: response.status,
       ok,
       payload,
       fetchedAt: new Date().toISOString(),
-      error: null,
+      error: ok ? null : (payload?.error ?? null),
     };
   } catch (error) {
     return {
+      feature,
       healthUrl,
       latencyMs: null,
       statusCode: null,
@@ -76,6 +110,17 @@ export async function probeBackendHealth(): Promise<BackendHealthProbeResult> {
       error: error instanceof Error ? error.message : 'health check 실패',
     };
   }
+}
+
+/** 전체 feature 병렬 프로브 (실시간 UI용 · 기본은 live만 쓰던 자리 대체) */
+export async function probeBackendHealth(): Promise<BackendHealthProbeResult> {
+  return probeBackendHealthFeature('live');
+}
+
+export async function probeAllBackendHealthFeatures(): Promise<
+  BackendHealthProbeResult[]
+> {
+  return Promise.all(BACKEND_HEALTH_FEATURES.map((f) => probeBackendHealthFeature(f)));
 }
 
 /** UTC 시각 → KST 달력 날짜 (YYYY-MM-DD) */

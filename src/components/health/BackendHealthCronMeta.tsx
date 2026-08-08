@@ -14,7 +14,7 @@ export default function BackendHealthCronMeta({
       <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
         자동 수집 기록 테이블이 아직 없습니다.{' '}
         <code className="text-xs">npm run db:ensure-backend-health</code> 실행 후 Vercel Cron이
-        동작하면 5분 간격으로 쌓입니다.
+        동작하면 30분 간격으로 쌓입니다.
       </div>
     );
   }
@@ -55,7 +55,7 @@ export default function BackendHealthCronMeta({
       </dl>
       {collecting && (
         <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-medium leading-relaxed text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
-          데이터 수집 중입니다. Vercel Cron이 켜져 있으면 배포 후 <strong>최대 5분</strong> 안에
+          데이터 수집 중입니다. Vercel Cron이 켜져 있으면 배포 후 <strong>최대 30분</strong> 안에
           첫 기록이 생깁니다. Hobby 플랜은 하루 1회만 실행될 수 있습니다.
         </p>
       )}

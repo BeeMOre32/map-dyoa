@@ -756,11 +756,11 @@ export default function HelpPage() {
               보여 줍니다.
             </Row>
             <Row icon={<Clock className="h-5 w-5" />} delay={0.12}>
-              <strong>Cron 자동 수집</strong> — 5분 간격(플랜에 따라 다를 수 있음)으로 결과를
-              DB에 저장합니다. 마지막 실행 시각·수집 시작 시각을 같은 페이지에서 볼 수 있습니다.
+              <strong>Cron 자동 수집</strong> — 30분 간격으로 큰 줄기(서버·DB·일정·멤버·클립)
+              상태를 DB에 저장합니다. 샘플·히트맵은 14일만 보관합니다.
             </Row>
             <Row icon={<BarChart3 className="h-5 w-5" />} delay={0.18}>
-              <strong>30일 히트맵</strong> — 날짜별 정상·저하·장애를 색으로 표시합니다. 데이터가
+              <strong>기능별 히트맵</strong> — 행이 기능·열이 날짜인 타임라인입니다. 데이터가
               아직 없으면 「수집 중」으로 안내됩니다.
             </Row>
             <Row icon={<Megaphone className="h-5 w-5" />} delay={0.24}>
