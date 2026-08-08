@@ -18,11 +18,16 @@ export async function GET(req: NextRequest) {
   const base = getScheduleServerBaseUrl();
   if (base) {
     try {
-      const res = await fetchWithBackoff(`${base}/chzzk/live-meta?url=${encodeURIComponent(url)}`, {
-        cache: 'no-store',
-      });
-      const json = await res.json();
-      return NextResponse.json(json, { status: res.status });
+      // Fly가 치지직 500을 502로 올릴 수 있음 → 짧게 시도 후 로컬 폴백
+      const res = await fetchWithBackoff(
+        `${base}/chzzk/live-meta?url=${encodeURIComponent(url)}`,
+        { cache: 'no-store' },
+        { maxRetries: 1, baseDelayMs: 200 },
+      );
+      if (res.ok) {
+        const json = await res.json();
+        return NextResponse.json(json);
+      }
     } catch {
       // 서버 호출 실패 시 로컬 폴백
     }
