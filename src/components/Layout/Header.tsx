@@ -33,7 +33,12 @@ export default function Header() {
             aria-label={`${SITE_BRAND} ${SITE_PRIMARY_TITLE}`}
             className="flex items-center gap-2 sm:gap-2.5 group min-w-0 max-w-[52%] sm:max-w-none"
           >
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl overflow-hidden shadow-lg shadow-indigo-200 dark:shadow-none group-hover:rotate-6 transition-all duration-300">
+            <motion.div
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl overflow-hidden shadow-lg shadow-indigo-200 dark:shadow-none"
+              whileHover={{ rotate: 8, scale: 1.06 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: 'spring', visualDuration: 0.28, bounce: 0.22 }}
+            >
               <Image
                 src="/brand/map-dyoa-logo.svg"
                 alt={`${SITE_BRAND} 로고`}
@@ -42,7 +47,7 @@ export default function Header() {
                 className="w-full h-full object-cover"
                 priority
               />
-            </div>
+            </motion.div>
             <div className="flex min-w-0 flex-col">
               <p className="truncate text-sm font-black leading-none tracking-tight text-slate-900 dark:text-white sm:text-xl">
                 {SITE_BRAND}
@@ -64,27 +69,37 @@ export default function Header() {
                 <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-100 dark:border-emerald-800 text-[10px] font-black uppercase">
                   <UserCheck className="w-3 h-3" /> Admin
                 </div>
-                <button
+                <motion.button
                   onClick={() => signOut()}
-                  className="hidden sm:inline-flex p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm"
+                  whileHover={{ scale: 1.06, transition: { type: 'spring', visualDuration: 0.22, bounce: 0.2 } }}
+                  whileTap={{ scale: 0.94, transition: { type: 'spring', visualDuration: 0.16, bounce: 0.12 } }}
+                  className="hidden sm:inline-flex p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm"
                   title="로그아웃"
                 >
                   <LogOut className="w-4 h-4" />
-                </button>
+                </motion.button>
               </>
             ) : (
+              <motion.div
+                className="hidden sm:inline-flex"
+                whileHover={{ scale: 1.06, transition: { type: 'spring', visualDuration: 0.22, bounce: 0.2 } }}
+                whileTap={{ scale: 0.94, transition: { type: 'spring', visualDuration: 0.16, bounce: 0.12 } }}
+              >
               <Link
                 href="/login"
-                className="hidden sm:inline-flex p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm"
+                className="p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm"
                 title="관리자 로그인"
               >
                 <LogIn className="w-4 h-4" />
               </Link>
+              </motion.div>
             )}
 
-            <button
+            <motion.button
               onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-              className="hidden sm:inline-flex relative p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-all shadow-sm overflow-hidden"
+              whileHover={{ scale: 1.06, transition: { type: 'spring', visualDuration: 0.22, bounce: 0.2 } }}
+              whileTap={{ scale: 0.94, transition: { type: 'spring', visualDuration: 0.16, bounce: 0.12 } }}
+              className="hidden sm:inline-flex relative p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden"
               title={resolvedTheme === 'dark' ? '라이트 모드' : '다크 모드'}
             >
               <AnimatePresence mode="wait" initial={false}>
@@ -105,7 +120,7 @@ export default function Header() {
                     : <Moon className="w-4 h-4 text-indigo-500" />}
                 </motion.div>
               </AnimatePresence>
-            </button>
+            </motion.button>
 
             <motion.button
               onClick={() => setSettingsOpen(true)}

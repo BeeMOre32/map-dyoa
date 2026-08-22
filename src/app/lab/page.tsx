@@ -1,10 +1,11 @@
+import Link from 'next/link';
 import { getCalendarData } from '@/lib/data-fetching';
 import { FlaskConical, LayoutGrid, ExternalLink, ChevronRight, Sword } from 'lucide-react';
 import { HOI4_GERMAN_EXAM_2026 } from '@/config/hoi4GermanExam2026';
 import { formatExamScheduleSummary, resolveHoi4GermanExamBinding } from '@/lib/hoi4GermanExam';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import Link from 'next/link';
+import PageMotion from '@/components/Common/PageMotion';
 
 import { buildPageMetadata } from '@/lib/site';
 
@@ -31,7 +32,10 @@ export default async function LabPage() {
         <div className="max-w-xl mx-auto space-y-6 pb-6">
 
           {/* 헤더 */}
-          <div className="flex items-center gap-4 pt-2">
+          <PageMotion
+            preset="header"
+            className="flex items-center gap-4 pt-2"
+          >
             <div className="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-3xl flex items-center justify-center shadow-sm">
               <FlaskConical className="w-7 h-7 text-amber-500" />
             </div>
@@ -46,10 +50,15 @@ export default async function LabPage() {
                 개발 중인 기능을 미리 체험하고 피드백을 남겨주세요
               </p>
             </div>
-          </div>
+          </PageMotion>
 
           {/* HOI4 독일 호이고사 */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+          <PageMotion
+            preset="section"
+            index={0}
+            hover
+            className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden"
+          >
             <div className="p-5 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
               <div className="flex items-start gap-3">
                 <div className="p-2.5 bg-amber-50 dark:bg-amber-900/30 rounded-2xl shrink-0">
@@ -79,10 +88,14 @@ export default async function LabPage() {
               </span>
               <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all" />
             </Link>
-          </div>
+          </PageMotion>
 
           {/* 멀티뷰 기능 카드 */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+          <PageMotion
+            preset="section"
+            index={1}
+            className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden"
+          >
             {/* 카드 헤더 */}
             <div className="p-5 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
               <div className="flex items-start gap-3">
@@ -115,9 +128,9 @@ export default async function LabPage() {
                   </p>
                 </div>
               ) : (
-                multiviewCandidates.map((schedule) => (
+                multiviewCandidates.map((schedule, i) => (
+                  <PageMotion key={schedule.id} preset="section" index={i}>
                   <Link
-                    key={schedule.id}
                     href={`/calendar/schedule/${schedule.id}/multiview`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -148,6 +161,7 @@ export default async function LabPage() {
                       <span className="hidden sm:inline">체험하기</span>
                     </div>
                   </Link>
+                  </PageMotion>
                 ))
               )}
             </div>
@@ -162,16 +176,20 @@ export default async function LabPage() {
                 <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </div>
-          </div>
+          </PageMotion>
 
           {/* 피드백 안내 */}
-          <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 rounded-2xl">
+          <PageMotion
+            preset="section"
+            index={2}
+            className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 rounded-2xl"
+          >
             <FlaskConical className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
             <p className="text-xs text-amber-700 dark:text-amber-400 font-medium leading-relaxed">
               실험실의 기능은 아직 개발 중이며 불안정할 수 있습니다.
               오류나 개선 아이디어는 언제든지 환영합니다 :)
             </p>
-          </div>
+          </PageMotion>
 
         </div>
       </div>

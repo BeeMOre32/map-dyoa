@@ -168,7 +168,7 @@ export const statsBusyDayVariants: Variants = {
 
 export const statsInteractiveHover = {
   whileHover: { y: -2, scale: 1.015, transition: statsSpring(0, 420, 28) },
-  whileTap: { scale: 0.985, transition: { duration: 0.12 } },
+  whileTap: { scale: 0.985, transition: { type: 'spring' as const, visualDuration: 0.16, bounce: 0.1 } },
 };
 
 /** 섹션 제목 등장 */

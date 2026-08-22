@@ -14,6 +14,7 @@ import {
   hasUnresolvedBackendHealthAlert,
 } from '@/lib/backend-health-store';
 import { countPendingScheduleCandidates } from '@/lib/schedule-candidate-store';
+import PageMotion from '@/components/Common/PageMotion';
 
 export default async function AdminDashboard() {
   const session = await auth();
@@ -85,17 +86,19 @@ export default async function AdminDashboard() {
 
   return (
     <div className="p-8 space-y-8 bg-white dark:bg-slate-950 transition-colors">
-      <div>
+      <PageMotion preset="header">
         <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
           Admin Dashboard
         </h1>
         <p className="text-slate-500 dark:text-slate-400 font-bold mt-2">
           지도동 프로젝트 관리 시스템에 오신 것을 환영합니다.
         </p>
-      </div>
+      </PageMotion>
 
       {(backendAlertActive || backendUptime) && (
-        <div
+        <PageMotion
+          preset="section"
+          index={0}
           className={`rounded-3xl border p-5 ${
             backendAlertActive
               ? 'border-rose-200 bg-rose-50 dark:border-rose-900/50 dark:bg-rose-950/40'
@@ -151,20 +154,23 @@ export default async function AdminDashboard() {
               ))}
             </ul>
           )}
-        </div>
+        </PageMotion>
       )}
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <PageMotion
+        preset="grid"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+      >
         {stats.map(({ label, value, icon: Icon, color, href, urgent }) => {
           const c = colorMap[color];
           const inner = (
             <div
-              className={`bg-white dark:bg-slate-800 p-6 rounded-3xl border shadow-sm transition-all ${
+              className={`bg-white dark:bg-slate-800 p-6 rounded-3xl border shadow-sm ${
                 urgent
                   ? 'border-amber-200 dark:border-amber-800/50 ring-1 ring-amber-200 dark:ring-amber-800/50'
                   : 'border-slate-100 dark:border-slate-700'
-              } ${href ? 'hover:shadow-md hover:-translate-y-0.5' : ''}`}
+              }`}
             >
               <div className={`w-10 h-10 ${c.bg} rounded-xl flex items-center justify-center mb-4`}>
                 <Icon className={`w-5 h-5 ${c.text}`} />
@@ -178,16 +184,19 @@ export default async function AdminDashboard() {
               )}
             </div>
           );
-          return href ? (
-            <Link key={label} href={href}>{inner}</Link>
-          ) : (
-            <div key={label}>{inner}</div>
+          return (
+            <PageMotion key={label} preset="tile" hover>
+              {href ? <Link href={href} className="block">{inner}</Link> : inner}
+            </PageMotion>
           );
         })}
-      </div>
+      </PageMotion>
 
       {/* 관리 메뉴 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <PageMotion
+        preset="grid"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
         {[
           {
             href: '/admin/notices',
@@ -262,8 +271,9 @@ export default async function AdminDashboard() {
             badge: null,
           },
         ].map(({ href, bg, iconColor, icon: Icon, title, desc, badge }) => (
-          <Link key={href} href={href}>
-            <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-xl dark:hover:shadow-slate-900/50 hover:-translate-y-1 transition-all group">
+          <PageMotion key={href} preset="tile" hover>
+          <Link href={href} className="block">
+            <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm group">
               <div className={`w-14 h-14 ${bg} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
                 <Icon className={`w-7 h-7 ${iconColor}`} />
               </div>
@@ -276,11 +286,12 @@ export default async function AdminDashboard() {
               )}
             </div>
           </Link>
+          </PageMotion>
         ))}
-      </div>
+      </PageMotion>
 
       {/* 최근 활동 피드 */}
-      <div>
+      <PageMotion preset="section" index={3}>
         <h2 className="text-lg font-black text-slate-800 dark:text-white mb-4">최근 추가된 항목</h2>
         <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700 overflow-hidden">
           {recentItems.length === 0 ? (
@@ -313,7 +324,7 @@ export default async function AdminDashboard() {
             ))
           )}
         </div>
-      </div>
+      </PageMotion>
     </div>
   );
 }

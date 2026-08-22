@@ -7,6 +7,7 @@ import {
 import BackendHealthHeatmap from '@/components/health/BackendHealthHeatmap';
 import BackendHealthCronMeta from '@/components/health/BackendHealthCronMeta';
 import { getBackendHealthCollectionMeta } from '@/lib/backend-health-store';
+import PageMotion from '@/components/Common/PageMotion';
 
 export default async function HealthPage() {
   const [probes, collectionMeta] = await Promise.all([
@@ -17,7 +18,10 @@ export default async function HealthPage() {
   return (
     <div className="custom-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-10 pb-16">
-        <div className="flex items-center justify-between gap-3">
+        <PageMotion
+          preset="header"
+          className="flex items-center justify-between gap-3"
+        >
           <h1 className="text-2xl font-black">백엔드 Health 체크</h1>
           <Link
             href="/help#backend-health"
@@ -25,15 +29,26 @@ export default async function HealthPage() {
           >
             도움말
           </Link>
-        </div>
+        </PageMotion>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+        <PageMotion
+          preset="section"
+          index={0}
+          className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900"
+        >
           <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
             큰 줄기 실시간 상태
           </p>
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+          <PageMotion
+            as="ul"
+            preset="grid"
+            className="mt-3 grid gap-2 sm:grid-cols-2"
+          >
             {probes.map((probe: BackendHealthProbeResult) => (
-              <li
+              <PageMotion
+                as="li"
+                preset="tile"
+                hover
                 key={probe.feature}
                 className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-950"
               >
@@ -59,16 +74,24 @@ export default async function HealthPage() {
                     {typeof probe.latencyMs === 'number' ? `${probe.latencyMs}ms` : '—'}
                   </p>
                 </div>
-              </li>
+              </PageMotion>
             ))}
-          </ul>
-        </div>
+          </PageMotion>
+        </PageMotion>
 
-        <BackendHealthCronMeta meta={collectionMeta} />
+        <PageMotion preset="section" index={1}>
+          <BackendHealthCronMeta meta={collectionMeta} />
+        </PageMotion>
 
-        <BackendHealthHeatmap collectionMeta={collectionMeta} />
+        <PageMotion preset="section" index={2}>
+          <BackendHealthHeatmap collectionMeta={collectionMeta} />
+        </PageMotion>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+        <PageMotion
+          preset="section"
+          index={3}
+          className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+        >
           <p className="mb-2 text-sm font-bold text-slate-600 dark:text-slate-300">
             실시간 프로브 요약
           </p>
@@ -85,7 +108,7 @@ export default async function HealthPage() {
               2,
             )}
           </pre>
-        </div>
+        </PageMotion>
       </div>
     </div>
   );
