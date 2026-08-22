@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import { Clock3, X } from 'lucide-react';
 import type { CalendarViewMode } from '@/lib/calendar/calendarViewUtils';
 

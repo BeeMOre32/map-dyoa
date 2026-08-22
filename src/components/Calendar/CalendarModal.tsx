@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   X, Trash2, Edit2, Gamepad2, Clock, Users, ArrowRight,
   ChevronLeft, AlertCircle,

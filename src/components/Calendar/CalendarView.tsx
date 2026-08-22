@@ -1,7 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'motion/react';
 import { calendarGridSlide } from '@/lib/calendarMotion';
 import { useCalendarViewState } from '@/hooks/useCalendarViewState';
 import ScheduleFormModal from '@/components/Form/CreateScheduleModal';

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { Gamepad2, X } from 'lucide-react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'motion/react';
 import { createGameAction } from '@/app/actions';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import {

@@ -1,11 +1,10 @@
-import type { Transition, Variants } from 'framer-motion';
+import type { Transition, Variants } from 'motion/react';
 
-/** Motion 권장: visualDuration 느낌의 부드러운 스프링 */
+/** Motion 권장: visualDuration + bounce. stiffness/damping은 체감 길이·탄성으로 매핑 */
 export const statsSpring = (delay = 0, stiffness = 280, damping = 32): Transition => ({
   type: 'spring',
-  stiffness,
-  damping,
-  mass: 0.85,
+  visualDuration: stiffness >= 360 ? 0.22 : stiffness >= 300 ? 0.28 : stiffness >= 260 ? 0.34 : 0.4,
+  bounce: damping <= 28 ? 0.18 : damping <= 32 ? 0.12 : 0.08,
   delay,
 });
 
@@ -19,28 +18,31 @@ export type StatsSlideDirection = 'left' | 'right';
 export const STATS_MONTH_ROW_LAYOUT_ID = 'stats-month-row-active';
 
 export const statsPageHeaderVariants: Variants = {
-  hidden: { opacity: 0, y: -14, filter: 'blur(6px)' },
+  hidden: { opacity: 0, y: -10 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
-    transition: statsSpring(0, 300, 34),
+    transition: {
+      default: statsSpring(0, 300, 34),
+      opacity: { duration: 0.22, ease: 'easeOut' },
+    },
   },
 };
 
 export const statsSectionVariants: Variants = {
   hidden: {
     opacity: 0,
-    y: 22,
+    y: 16,
     scale: 0.985,
-    filter: 'blur(8px)',
   },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
     scale: 1,
-    filter: 'blur(0px)',
-    transition: statsSpring(Math.min(i * 0.055, 0.35), 260, 34),
+    transition: {
+      default: statsSpring(Math.min(i * 0.055, 0.35), 260, 34),
+      opacity: { duration: 0.22, ease: 'easeOut', delay: Math.min(i * 0.055, 0.35) },
+    },
   }),
 };
 
@@ -76,12 +78,14 @@ export const statsListVariants: Variants = {
 };
 
 export const statsRowVariants: Variants = {
-  hidden: { opacity: 0, x: -14, filter: 'blur(4px)' },
+  hidden: { opacity: 0, x: -10 },
   visible: {
     opacity: 1,
     x: 0,
-    filter: 'blur(0px)',
-    transition: statsSpring(0, 300, 32),
+    transition: {
+      default: statsSpring(0, 300, 32),
+      opacity: { duration: 0.2, ease: 'easeOut' },
+    },
   },
 };
 
@@ -106,22 +110,22 @@ export const statsColumnVariants: Variants = {
 export const statsMonthPresenceVariants: Variants = {
   enter: (direction: StatsSlideDirection) => ({
     opacity: 0,
-    x: direction === 'left' ? 36 : -36,
+    x: direction === 'left' ? 28 : -28,
     scale: 0.98,
-    filter: 'blur(6px)',
   }),
   center: {
     opacity: 1,
     x: 0,
     scale: 1,
-    filter: 'blur(0px)',
-    transition: statsSpring(0, 260, 32),
+    transition: {
+      default: statsSpring(0, 260, 32),
+      opacity: { duration: 0.22, ease: 'easeOut' },
+    },
   },
   exit: (direction: StatsSlideDirection) => ({
     opacity: 0,
-    x: direction === 'left' ? -28 : 28,
+    x: direction === 'left' ? -22 : 22,
     scale: 0.98,
-    filter: 'blur(4px)',
     transition: statsEaseOut,
   }),
 };
@@ -169,24 +173,28 @@ export const statsInteractiveHover = {
 
 /** 섹션 제목 등장 */
 export const statsHeadingVariants: Variants = {
-  hidden: { opacity: 0, x: -10, filter: 'blur(4px)' },
+  hidden: { opacity: 0, x: -8 },
   visible: {
     opacity: 1,
     x: 0,
-    filter: 'blur(0px)',
-    transition: statsSpring(0.05, 320, 34),
+    transition: {
+      default: statsSpring(0.05, 320, 34),
+      opacity: { duration: 0.2, ease: 'easeOut', delay: 0.05 },
+    },
   },
 };
 
 /** 배너·토스트 등 상단 UI */
 export const statsBannerVariants: Variants = {
-  hidden: { opacity: 0, y: -12, scale: 0.98, filter: 'blur(6px)' },
+  hidden: { opacity: 0, y: -10, scale: 0.98 },
   visible: {
     opacity: 1,
     y: 0,
     scale: 1,
-    filter: 'blur(0px)',
-    transition: statsSpring(0, 280, 32),
+    transition: {
+      default: statsSpring(0, 280, 32),
+      opacity: { duration: 0.2, ease: 'easeOut' },
+    },
   },
   exit: {
     opacity: 0,
@@ -198,13 +206,15 @@ export const statsBannerVariants: Variants = {
 
 /** Wrapped 히어로 — statsSection과 동일 톤, 살짝 더 큼 */
 export const statsWrappedHeroPresence: Variants = {
-  hidden: { opacity: 0, y: 22, scale: 0.985, filter: 'blur(8px)' },
+  hidden: { opacity: 0, y: 16, scale: 0.985 },
   visible: {
     opacity: 1,
     y: 0,
     scale: 1,
-    filter: 'blur(0px)',
-    transition: statsSpring(0.06, 260, 32),
+    transition: {
+      default: statsSpring(0.06, 260, 32),
+      opacity: { duration: 0.24, ease: 'easeOut', delay: 0.06 },
+    },
   },
 };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { AlertTriangle, Info, X } from 'lucide-react';
 import { SITE_NOTICE_DISMISS_KEY, type SiteNoticeView } from './site-notice-shared';
 

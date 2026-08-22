@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { X, LayoutGrid, SlidersHorizontal, ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { drawerBackdropVariants, drawerPanelVariants } from '@/lib/modalVariants';
 import type { Streamer } from '@prisma/client';
 import StreamerAvatar from '@/components/streamer/StreamerAvatar';

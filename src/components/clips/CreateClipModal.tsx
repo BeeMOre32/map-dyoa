@@ -1,7 +1,7 @@
 'use client';
 
 import { X, Link as LinkIcon, Clapperboard, Tv, Search, Users, Loader2, Check } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { twMerge } from 'tailwind-merge';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { useModalDismiss } from '@/hooks/useModalDismiss';

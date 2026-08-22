@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { SlidersHorizontal, X, ChevronDown, Search, Check, Star } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import { useTheme } from '@teispace/next-themes';
 import type { Streamer, Game } from '@prisma/client';
 import StreamerAvatar from '@/components/streamer/StreamerAvatar';
@@ -88,6 +88,7 @@ function FilterPanel({
                 <motion.div
                   layoutId="filter-tab-bar"
                   className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-full"
+                  transition={{ type: 'spring', visualDuration: 0.28, bounce: 0.12 }}
                 />
               )}
             </button>

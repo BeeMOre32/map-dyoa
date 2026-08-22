@@ -1,9 +1,9 @@
-import type { Transition, Variants } from 'framer-motion';
+import type { Transition, Variants } from 'motion/react';
 
 const springIn = (delay = 0): Transition => ({
   type: 'spring',
-  damping: 26,
-  stiffness: 380,
+  visualDuration: 0.28,
+  bounce: 0.12,
   delay,
 });
 
@@ -22,7 +22,7 @@ export const streamerListPresenceVariants: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', damping: 28, stiffness: 340 },
+    transition: { type: 'spring', visualDuration: 0.3, bounce: 0.1 },
   },
   exit: {
     opacity: 0,
@@ -36,7 +36,7 @@ export const streamerMultiviewBarVariants: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', damping: 30, stiffness: 400 },
+    transition: { type: 'spring', visualDuration: 0.28, bounce: 0.1 },
   },
   exit: {
     opacity: 0,

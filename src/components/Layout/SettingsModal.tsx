@@ -6,7 +6,7 @@ import {
   Timer, FlaskConical,
 } from 'lucide-react';
 import { CHROME_EXTENSION_NAME, CHROME_EXTENSION_URL } from '@/constants/extension';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { useTheme } from '@teispace/next-themes';
 import { useSession, signOut } from 'next-auth/react';
@@ -74,10 +74,15 @@ function GeneralTab({
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={isDark ? 'dark' : 'light'}
-                initial={{ rotate: -45, opacity: 0 }}
+                initial={{ rotate: -40, opacity: 0 }}
                 animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: 45, opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                exit={{ rotate: 40, opacity: 0 }}
+                transition={{
+                  type: 'spring',
+                  visualDuration: 0.22,
+                  bounce: 0.12,
+                  opacity: { duration: 0.14 },
+                }}
               >
                 {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
               </motion.div>

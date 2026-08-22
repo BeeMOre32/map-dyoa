@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 
 /** Motion skeleton-shimmer 스타일 — CSS 그라데이션 + opacity 펄스 */
 export default function CalendarShimmerBar({ className }: { className?: string }) {

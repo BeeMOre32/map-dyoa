@@ -1,7 +1,7 @@
 'use client';
 
 import { Plus, ChevronDown, ChevronRight, Trash2, X, Link as LinkIcon, Loader2, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import StreamerSelector from '../StreamerSelctor';
 import { SlotEntry, Game, Streamer } from '../types';
 import Hoi4ParticipantFields, { isHoi4GameSelected } from './Hoi4ParticipantFields';

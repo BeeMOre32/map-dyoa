@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { X, Send, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
 import { useTheme } from '@teispace/next-themes';
 import { createFeedbackAction } from '@/app/actions';

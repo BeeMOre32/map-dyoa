@@ -5,7 +5,7 @@ import {
   Plus, SquarePen, Trash2, Megaphone, X, Check,
   AlertTriangle, Info, Eye, EyeOff,
 } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';

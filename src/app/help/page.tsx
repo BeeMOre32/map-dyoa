@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import {
   BookOpen,
   CalendarDays,
@@ -50,13 +50,16 @@ import {
   CHROME_EXTENSION_URL,
 } from '@/constants/extension';
 
-const ease = [0.25, 0.46, 0.45, 0.94] as const;
-
 const fadeUp = {
-  initial: { opacity: 0, y: 40 },
+  initial: { opacity: 0, y: 18 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: '-80px' },
-  transition: { duration: 0.55, ease },
+  transition: {
+    type: 'spring' as const,
+    visualDuration: 0.4,
+    bounce: 0.08,
+    opacity: { duration: 0.28, ease: 'easeOut' as const },
+  },
 };
 
 function SectionCard({
@@ -76,7 +79,7 @@ function SectionCard({
     <motion.section
       id={id}
       {...fadeUp}
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      whileHover={{ y: -3, transition: { type: 'spring', visualDuration: 0.22, bounce: 0.15 } }}
       className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-xl hover:shadow-slate-200/60 dark:border-slate-700 dark:bg-slate-800 dark:hover:shadow-black/30 sm:rounded-[2.5rem] sm:p-6 md:p-8"
     >
       <div className="mb-4 flex items-center gap-3 sm:mb-6 sm:gap-4">
@@ -102,10 +105,16 @@ function Row({
   return (
     <motion.p
       className="flex items-start gap-3"
-      initial={{ opacity: 0, x: -14 }}
+      initial={{ opacity: 0, x: -10 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true, margin: '-40px' }}
-      transition={{ duration: 0.38, ease, delay }}
+      transition={{
+        type: 'spring',
+        visualDuration: 0.32,
+        bounce: 0.1,
+        delay,
+        opacity: { duration: 0.22, ease: 'easeOut', delay },
+      }}
     >
       <span className="mt-0.5 shrink-0 text-slate-400 dark:text-slate-500">{icon}</span>
       <span className="font-medium leading-relaxed text-slate-600 dark:text-slate-300">
@@ -147,11 +156,17 @@ function MiniCardGrid({
         <motion.div
           key={label}
           className="rounded-3xl border border-slate-100 bg-slate-50 p-5 dark:border-slate-600 dark:bg-slate-700"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 14 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.4, ease, delay: i * 0.07 }}
-          whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
+          transition={{
+            type: 'spring',
+            visualDuration: 0.32,
+            bounce: 0.1,
+            delay: i * 0.06,
+            opacity: { duration: 0.22, ease: 'easeOut', delay: i * 0.06 },
+          }}
+          whileHover={{ scale: 1.02, transition: { type: 'spring', visualDuration: 0.2, bounce: 0.16 } }}
         >
           <div className="mb-2 flex items-center gap-2 text-sm font-black text-slate-800 dark:text-white">
             {icon}
@@ -199,7 +214,12 @@ export default function HelpPage() {
             className="text-4xl font-black tracking-tight text-slate-900 dark:text-white sm:text-5xl"
             initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.6, ease }}
+            transition={{
+              type: 'spring',
+              visualDuration: 0.4,
+              bounce: 0.08,
+              opacity: { duration: 0.28, ease: 'easeOut' },
+            }}
           >
             이용 가이드
           </motion.h1>
@@ -207,7 +227,13 @@ export default function HelpPage() {
             className="text-lg font-bold text-slate-500 dark:text-slate-400"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease, delay: 0.15 }}
+            transition={{
+              type: 'spring',
+              visualDuration: 0.36,
+              bounce: 0.08,
+              delay: 0.12,
+              opacity: { duration: 0.24, ease: 'easeOut', delay: 0.12 },
+            }}
           >
             지금 Map-Dyoa에 있는 기능만 정리했습니다
           </motion.p>
@@ -808,10 +834,12 @@ export default function HelpPage() {
         {/* 하단 */}
         <motion.div
           {...fadeUp}
-          transition={{ duration: 0.5, ease }}
           className="flex flex-col items-center gap-8 pt-8"
         >
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
+          <motion.div
+            whileHover={{ scale: 1.04, transition: { type: 'spring', visualDuration: 0.22, bounce: 0.18 } }}
+            whileTap={{ scale: 0.97, transition: { type: 'spring', visualDuration: 0.16, bounce: 0.12 } }}
+          >
             <Link
               href="/calendar"
               className="inline-flex items-center gap-2 rounded-3xl bg-slate-900 px-8 py-4 font-black text-white shadow-xl shadow-slate-200 transition-colors hover:bg-slate-800 dark:bg-indigo-600 dark:shadow-indigo-900/30 dark:hover:bg-indigo-700"

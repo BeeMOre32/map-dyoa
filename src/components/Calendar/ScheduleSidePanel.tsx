@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   X, Calendar, ChevronLeft, ChevronRight, ExternalLink,
   Clapperboard, ArrowUpRight, Plus, Sword, Radio,

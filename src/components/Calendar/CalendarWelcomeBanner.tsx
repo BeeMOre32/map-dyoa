@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import {
   BookOpen, Sparkles, X, ArrowRight, LayoutGrid, Filter, MonitorPlay, BarChart3,
 } from 'lucide-react';

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { LayoutGroup, motion } from 'motion/react';
 import { Calendar, Users, Clapperboard, Sword } from 'lucide-react';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
 
@@ -28,6 +28,7 @@ export default function Navigation() {
 
   return (
     <nav className="flex justify-center py-0 shrink-0 transition-colors z-30 w-max mx-auto" aria-label="지도동 메뉴">
+      <LayoutGroup>
       <div className="rounded-xl flex bg-slate-100 dark:bg-slate-900 p-1 border-2 border-slate-200 dark:border-slate-800 relative shadow-inner">
         {tabs.map((tab) => {
           const isActive = pathname.startsWith(tab.href);
@@ -57,7 +58,7 @@ export default function Navigation() {
                 <motion.div
                   layoutId="activeTab"
                   className="absolute inset-0 bg-white dark:bg-slate-800 rounded-2xl shadow-md border border-slate-200/50 dark:border-slate-700"
-                  transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                  transition={{ type: 'spring', visualDuration: 0.32, bounce: 0.14 }}
                 />
               )}
 
@@ -81,6 +82,7 @@ export default function Navigation() {
           );
         })}
       </div>
+      </LayoutGroup>
     </nav>
   );
 }

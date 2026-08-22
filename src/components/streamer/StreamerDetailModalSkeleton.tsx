@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import CalendarShimmerBar from '@/components/Calendar/CalendarShimmerBar';
 import ModalOverlayPortal from '@/components/Common/ModalOverlayPortal';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';

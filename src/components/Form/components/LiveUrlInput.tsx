@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 import { Link as LinkIcon, Loader2, Sparkles, CheckCircle2, Plus, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 
 type LiveUrlInputProps = {
   liveUrls: string[];

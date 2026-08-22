@@ -8,7 +8,7 @@ import {
   AnimatePresence,
   motion,
   useReducedMotion,
-} from 'framer-motion';
+} from 'motion/react';
 import {
   Check,
   ExternalLink,
@@ -87,14 +87,13 @@ const cardVariants = {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { type: 'spring' as const, stiffness: 380, damping: 28 },
+    transition: { type: 'spring' as const, visualDuration: 0.28, bounce: 0.12 },
   },
   exit: {
     opacity: 0,
-    scale: 0.94,
-    y: -8,
-    filter: 'blur(4px)',
-    transition: { duration: 0.22, ease: [0.4, 0, 1, 1] as const },
+    scale: 0.97,
+    y: -6,
+    transition: { duration: 0.16, ease: [0.4, 0, 1, 1] as const },
   },
 };
 

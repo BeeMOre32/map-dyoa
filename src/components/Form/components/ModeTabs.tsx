@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'motion/react';
 import { CreateMode } from '../types';
 
 type ModeTabsProps = {
@@ -63,7 +63,7 @@ export default function ModeTabs({ createMode, setCreateMode }: ModeTabsProps) {
             transition={
               reduceMotion
                 ? { duration: 0 }
-                : { type: 'spring', stiffness: 520, damping: 38, mass: 0.7 }
+                : { type: 'spring', visualDuration: 0.28, bounce: 0.12 }
             }
           />
         )}

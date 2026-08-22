@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   STREAMER_GEN_TAB_LAYOUT_ID,
   streamerListPresenceVariants,

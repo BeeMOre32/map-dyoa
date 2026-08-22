@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { useModalDismiss } from '@/hooks/useModalDismiss';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { CreateScheduleModalProps, CreateMode } from './types';
 import { useEditScheduleForm } from './hooks/useEditScheduleForm';

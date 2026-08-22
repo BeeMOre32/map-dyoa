@@ -4,7 +4,7 @@ import { ExternalLink, Trash2, Play, Tv, Pencil, ArrowUpRight, Loader2, VolumeX,
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import { clipCardVariants } from '@/lib/clipMotion';
 import { useRouter } from 'next/navigation';
 import type { ClipWithParticipants } from '@/types/entities';
@@ -225,7 +225,7 @@ export default function ClipCard({ clip, onEdit, index = 0 }: ClipCardProps) {
         initial="hidden"
         animate="visible"
         variants={clipCardVariants}
-        whileHover={{ y: -3, transition: { type: 'spring', stiffness: 420, damping: 28 } }}
+        whileHover={{ y: -3, transition: { type: 'spring', visualDuration: 0.22, bounce: 0.16 } }}
         whileTap={{ scale: 0.99 }}
         className="group flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white transition-colors hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-700 dark:hover:shadow-indigo-950/50 sm:rounded-3xl"
       >

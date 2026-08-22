@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { AlertTriangle } from 'lucide-react';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { backdropVariants, compactModalVariants } from '@/lib/modalVariants';

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import { Megaphone } from 'lucide-react';
 import ModalOverlayPortal from '@/components/Common/ModalOverlayPortal';
 import { useScrollLock } from '@/hooks/useScrollLock';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'motion/react';
 import { Flag, Play, RotateCcw, Square } from 'lucide-react';
 import ConfirmModal from '@/components/Common/ConfirmModal';
 import {

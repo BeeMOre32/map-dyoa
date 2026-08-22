@@ -2,16 +2,21 @@
 'use client';
 
 import { signIn } from 'next-auth/react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { LogIn, Map, ShieldCheck } from 'lucide-react';
 
 export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 transition-colors">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: 0, y: 16, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{
+          type: 'spring',
+          visualDuration: 0.4,
+          bounce: 0.08,
+          opacity: { duration: 0.28, ease: 'easeOut' },
+        }}
         className="w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 text-center shadow-2xl shadow-slate-200/50 dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-900/50 sm:rounded-[2rem] sm:p-8 md:rounded-[3rem] md:p-12"
       >
         {/* 로고 영역 */}
@@ -36,13 +41,15 @@ export default function LoginPage() {
         </div>
 
         {/* 로그인 버튼 */}
-        <button
+        <motion.button
           onClick={() => signIn('google', { callbackUrl: '/calendar' })}
-          className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl font-black hover:bg-slate-800 dark:hover:bg-indigo-700 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-slate-200 dark:shadow-indigo-900/30"
+          whileHover={{ scale: 1.02, transition: { type: 'spring', visualDuration: 0.22, bounce: 0.18 } }}
+          whileTap={{ scale: 0.98, transition: { type: 'spring', visualDuration: 0.16, bounce: 0.1 } }}
+          className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl font-black hover:bg-slate-800 dark:hover:bg-indigo-700 shadow-xl shadow-slate-200 dark:shadow-indigo-900/30"
         >
           <LogIn className="w-5 h-5" />
           구글 계정으로 시작하기
-        </button>
+        </motion.button>
 
         {/* 하단 푸터 */}
         <div className="mt-10 pt-8 border-t border-slate-50 dark:border-slate-700">

@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { ExternalLink, GripVertical, Pin, PinOff, X } from 'lucide-react';
 import type { Streamer } from '@prisma/client';
 import { getChannelUrl } from '@/components/multiview/utils';

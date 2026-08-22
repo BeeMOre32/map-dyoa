@@ -9,6 +9,7 @@ import PwaRegistrar from '@/components/Common/PwaRegistrar';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ThemeProvider } from '@/providers/ThemeProvider';
+import MotionProvider from '@/providers/MotionProvider';
 import { APP_THEME } from '@/config/theme';
 import { getOrganizationJsonLd, getRootMetadata, getWebsiteJsonLd } from '@/lib/site';
 import { getTheme } from '@teispace/next-themes/server';
@@ -48,18 +49,20 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(getOrganizationJsonLd()) }}
         />
         <ThemeProvider initialTheme={initialTheme ?? undefined}>
-          <AuthProvider>
-            <ToastProvider>
-              <PwaRegistrar />
-              <main className="h-dvh w-full bg-slate-50/50 dark:bg-slate-950 flex flex-col overflow-hidden transition-colors duration-300">
-                <Header />
-                <div className="flex min-h-0 flex-1 flex-col overflow-y-auto sm:overflow-hidden">
-                  {children}
-                </div>
-                <PromotionToastStack />
-              </main>
-            </ToastProvider>
-          </AuthProvider>
+          <MotionProvider>
+            <AuthProvider>
+              <ToastProvider>
+                <PwaRegistrar />
+                <main className="h-dvh w-full bg-slate-50/50 dark:bg-slate-950 flex flex-col overflow-hidden transition-colors duration-300">
+                  <Header />
+                  <div className="flex min-h-0 flex-1 flex-col overflow-y-auto sm:overflow-hidden">
+                    {children}
+                  </div>
+                  <PromotionToastStack />
+                </main>
+              </ToastProvider>
+            </AuthProvider>
+          </MotionProvider>
         </ThemeProvider>
         <Analytics />
         <SpeedInsights />

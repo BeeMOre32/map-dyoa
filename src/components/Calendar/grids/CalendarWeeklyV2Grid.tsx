@@ -1,7 +1,7 @@
 'use client';
 
 import { format, isToday } from 'date-fns';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import ScheduleCardV2 from '@/components/Calendar/ScheduleCardV2';
 import CalendarEmptyDay from '@/components/Calendar/CalendarEmptyDay';
 import CalendarLiveColumnBadge from '@/components/Calendar/atoms/CalendarLiveColumnBadge';

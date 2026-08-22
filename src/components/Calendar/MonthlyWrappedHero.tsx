@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'motion/react';
 import { Sparkles } from 'lucide-react';
 import StatsCountUp from '@/components/Calendar/StatsCountUp';
 import type { MonthlyWrappedStats } from '@/lib/monthlyWrappedStats';

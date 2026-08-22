@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Clock, Globe2, Sword, Users } from 'lucide-react';
 import StatsCountUp from '@/components/Calendar/StatsCountUp';
 import {

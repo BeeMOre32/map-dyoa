@@ -1,4 +1,4 @@
-import type { Transition, Variants } from 'framer-motion';
+import type { Transition, Variants } from 'motion/react';
 import { statsMonthPresenceVariants, statsSpring, statsTileVariants } from '@/lib/statsMotion';
 
 const calendarSpring = (delay = 0, stiffness = 280, damping = 32): Transition =>
@@ -7,33 +7,39 @@ const calendarSpring = (delay = 0, stiffness = 280, damping = 32): Transition =>
 export const scheduleCardVariants = {
   weekly: statsTileVariants,
   monthly: {
-    hidden: { opacity: 0, x: -12, filter: 'blur(4px)' },
+    hidden: { opacity: 0, x: -10 },
     visible: (i: number) => ({
       opacity: 1,
       x: 0,
-      filter: 'blur(0px)',
-      transition: calendarSpring(Math.min(i * 0.04, 0.2), 300, 32),
+      transition: {
+        default: calendarSpring(Math.min(i * 0.04, 0.2), 300, 32),
+        opacity: { duration: 0.18, ease: 'easeOut', delay: Math.min(i * 0.04, 0.2) },
+      },
     }),
   },
   mobile: {
-    hidden: { opacity: 0, x: -14, filter: 'blur(4px)' },
+    hidden: { opacity: 0, x: -12 },
     visible: (i: number) => ({
       opacity: 1,
       x: 0,
-      filter: 'blur(0px)',
-      transition: calendarSpring(Math.min(i * 0.045, 0.24), 300, 32),
+      transition: {
+        default: calendarSpring(Math.min(i * 0.045, 0.24), 300, 32),
+        opacity: { duration: 0.18, ease: 'easeOut', delay: Math.min(i * 0.045, 0.24) },
+      },
     }),
   },
 } satisfies Record<string, Variants>;
 
 export const calendarColumnVariants: Variants = {
-  hidden: { opacity: 0, y: 18, scale: 0.98, filter: 'blur(6px)' },
+  hidden: { opacity: 0, y: 14, scale: 0.98 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
     scale: 1,
-    filter: 'blur(0px)',
-    transition: calendarSpring(Math.min(i * 0.05, 0.28), 260, 34),
+    transition: {
+      default: calendarSpring(Math.min(i * 0.05, 0.28), 260, 34),
+      opacity: { duration: 0.2, ease: 'easeOut', delay: Math.min(i * 0.05, 0.28) },
+    },
   }),
 };
 
@@ -48,7 +54,7 @@ export function calendarGridSlide(direction: 'left' | 'right') {
       x: direction === 'left' ? -22 : 22,
       transition: { duration: 0.18, ease: [0.4, 0, 1, 1] as const },
     },
-    transition: { type: 'spring' as const, damping: 28, stiffness: 320 },
+    transition: { type: 'spring' as const, visualDuration: 0.3, bounce: 0.1 },
   };
 }
 

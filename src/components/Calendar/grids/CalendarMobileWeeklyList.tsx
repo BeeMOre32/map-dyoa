@@ -2,7 +2,7 @@
 
 import type { RefObject } from 'react';
 import { format, isToday } from 'date-fns';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import ScheduleCard from '@/components/Calendar/ScheduleCard';
 import ScheduleCardV2 from '@/components/Calendar/ScheduleCardV2';
 import CalendarEmptyDay from '@/components/Calendar/CalendarEmptyDay';

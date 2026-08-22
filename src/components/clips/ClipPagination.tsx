@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import { buildPageItems } from '@/hooks/useClipNavigation';
 import { CLIP_PAGE_TAB_LAYOUT_ID, clipPaginationBarVariants } from '@/lib/clipMotion';
 

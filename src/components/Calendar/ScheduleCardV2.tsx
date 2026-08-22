@@ -7,7 +7,7 @@ import { useMinuteClock } from '@/hooks/useMinuteClock';
 import Link from 'next/link';
 import { Clock, Gamepad2, CircleAlert } from 'lucide-react';
 import { useTheme } from '@teispace/next-themes';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { scheduleCardVariants, scheduleSurfaceLayoutId } from '@/lib/calendarMotion';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { getGameColor } from '@/constants/gamecolor';
@@ -120,7 +120,7 @@ export default function ScheduleCardV2({
         initial="hidden"
         animate="visible"
         variants={scheduleCardVariants.mobile}
-        whileTap={{ scale: 0.98, transition: { type: 'spring', stiffness: 500, damping: 30 } }}
+        whileTap={{ scale: 0.98, transition: { type: 'spring', visualDuration: 0.18, bounce: 0.12 } }}
         className="min-w-0"
       >
         <Link
@@ -204,8 +204,8 @@ export default function ScheduleCardV2({
       initial="hidden"
       animate="visible"
       variants={scheduleCardVariants.weekly}
-      whileHover={{ y: -2, transition: { type: 'spring', stiffness: 420, damping: 28 } }}
-      whileTap={{ scale: 0.99, transition: { type: 'spring', stiffness: 500, damping: 32 } }}
+      whileHover={{ y: -2, transition: { type: 'spring', visualDuration: 0.22, bounce: 0.16 } }}
+      whileTap={{ scale: 0.99, transition: { type: 'spring', visualDuration: 0.16, bounce: 0.12 } }}
       className="min-w-0"
     >
       <Link href={href} scroll={false} className="block min-w-0" onClick={onScheduleLinkClick}>

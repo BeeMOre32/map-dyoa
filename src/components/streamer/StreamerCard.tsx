@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Eye, LayoutGrid, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Streamer } from '@prisma/client';
 import { getStreamerImagePath } from '@/lib/utils';
 import { useIsDarkAfterMount } from '@/hooks/useIsDarkAfterMount';
@@ -177,8 +177,8 @@ export default function StreamerCard({
       initial="hidden"
       animate="visible"
       variants={streamerCardVariants}
-      whileHover={{ y: -2, transition: { type: 'spring', stiffness: 420, damping: 28 } }}
-      whileTap={{ scale: 0.99, transition: { type: 'spring', stiffness: 500, damping: 32 } }}
+      whileHover={{ y: -2, transition: { type: 'spring', visualDuration: 0.22, bounce: 0.16 } }}
+      whileTap={{ scale: 0.99, transition: { type: 'spring', visualDuration: 0.16, bounce: 0.12 } }}
       className="relative min-w-0 h-full"
       onMouseEnter={scheduleOpen}
       onMouseLeave={scheduleClose}

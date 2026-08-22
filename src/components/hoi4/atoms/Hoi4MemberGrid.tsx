@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { ArrowUpRight, Medal } from 'lucide-react';
 import { useTheme } from '@teispace/next-themes';
 import StreamerAvatar from '@/components/streamer/StreamerAvatar';

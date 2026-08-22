@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutGroup } from 'framer-motion';
+import { LayoutGroup } from 'motion/react';
 
 /** 멤버 목록·상세 모달 shared layout (아바타 layoutId) */
 export default function StreamersLayoutShell({

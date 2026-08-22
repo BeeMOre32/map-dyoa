@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Settings, LogIn, LogOut, UserCheck, Sun, Moon } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { signOut, useSession } from 'next-auth/react';
 import { useTheme } from '@teispace/next-themes';
 import Navigation from '../Navigation';
@@ -90,10 +90,15 @@ export default function Header() {
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={resolvedTheme}
-                  initial={{ y: 12, opacity: 0 }}
+                  initial={{ y: 8, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -12, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+                  exit={{ y: -8, opacity: 0 }}
+                  transition={{
+                    type: 'spring',
+                    visualDuration: 0.22,
+                    bounce: 0.1,
+                    opacity: { duration: 0.15 },
+                  }}
                 >
                   {resolvedTheme === 'dark'
                     ? <Sun className="w-4 h-4 text-amber-400" />
@@ -104,8 +109,8 @@ export default function Header() {
 
             <motion.button
               onClick={() => setSettingsOpen(true)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.06, transition: { type: 'spring', visualDuration: 0.22, bounce: 0.2 } }}
+              whileTap={{ scale: 0.94, transition: { type: 'spring', visualDuration: 0.18, bounce: 0.15 } }}
               className="p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-colors shadow-sm"
               title="설정"
             >

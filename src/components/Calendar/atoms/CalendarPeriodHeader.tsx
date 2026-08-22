@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import { statsMonthLabelVariants } from '@/lib/statsMotion';
 import type {
   CalendarSlideDirection,

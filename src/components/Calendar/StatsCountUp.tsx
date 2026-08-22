@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion, useMotionValueEvent, useReducedMotion, useSpring, useTransform } from 'framer-motion';
+import { motion, useMotionValueEvent, useReducedMotion, useSpring, useTransform } from 'motion/react';
 
 interface StatsCountUpProps {
   value: number;

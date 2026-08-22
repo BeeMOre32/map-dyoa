@@ -1,4 +1,4 @@
-import { Variants } from 'framer-motion';
+import type { Variants } from 'motion/react';
 
 /** 모달·시트 닫힐 때 — 짧고 선형에 가깝게 */
 const MODAL_EXIT_EASE = [0.4, 0, 1, 1] as const;
@@ -51,9 +51,8 @@ export const createModalVariants = (config?: {
       scale: 1,
       y: 0,
       transition: {
-        type: 'spring',
-        damping: 28,
-        stiffness: 420,
+        default: { type: 'spring', visualDuration: 0.32, bounce: 0.1 },
+        opacity: { duration: 0.2, ease: 'easeOut' },
       },
     },
   };
@@ -87,7 +86,10 @@ export const companionPanelVariants: Variants = {
     opacity: 1,
     x: 0,
     scale: 1,
-    transition: { type: 'spring', damping: 30, stiffness: 380 },
+    transition: {
+      default: { type: 'spring', visualDuration: 0.3, bounce: 0.08 },
+      opacity: { duration: 0.18, ease: 'easeOut' },
+    },
   },
 };
 
@@ -99,7 +101,7 @@ export const bottomSheetVariants: Variants = {
   },
   visible: {
     y: 0,
-    transition: { type: 'spring', damping: 32, stiffness: 420 },
+    transition: { type: 'spring', visualDuration: 0.34, bounce: 0.08 },
   },
 };
 
@@ -111,7 +113,7 @@ export const drawerPanelVariants: Variants = {
   },
   visible: {
     x: 0,
-    transition: { type: 'spring', damping: 32, stiffness: 330 },
+    transition: { type: 'spring', visualDuration: 0.32, bounce: 0.06 },
   },
 };
 

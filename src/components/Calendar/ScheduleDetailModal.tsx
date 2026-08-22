@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
   Edit2,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { LayoutGroup } from 'framer-motion';
+import { LayoutGroup } from 'motion/react';
 import ScheduleDetailModal from './ScheduleDetailModal';
 import ScheduleDetailModalV2 from './ScheduleDetailModalV2';
 import { useLegacyCalendarUi } from '@/hooks/useLegacyCalendarUi';

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { Plus, SquarePen, Trash2, Gamepad2, X, Check } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import { createGameAction, updateGameAction, deleteGameAction, mergeGamesAction } from '@/app/actions';
 import { useRouter } from 'next/navigation';
 import { useModalDismiss } from '@/hooks/useModalDismiss';
