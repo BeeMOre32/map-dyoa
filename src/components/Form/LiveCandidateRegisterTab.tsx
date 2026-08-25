@@ -291,7 +291,7 @@ export default function LiveCandidateRegisterTab({
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
               </span>
               <p className="truncate text-xs font-bold text-slate-500 dark:text-slate-400">
-                일정 없는 LIVE · 감지 시각으로 등록
+                일정 없는 LIVE · 방송 시작 시각으로 등록
               </p>
             </div>
             <p className="pl-4 text-[10px] font-semibold text-slate-400" key={freshnessTick}>
@@ -440,7 +440,7 @@ export default function LiveCandidateRegisterTab({
                             )}
                           </div>
                           <p className="mt-0.5 text-[11px] font-semibold text-slate-400">
-                            {format(new Date(c.detectedAt), 'M/d HH:mm', { locale: ko })}
+                            시작 {format(new Date(c.detectedAt), 'M/d HH:mm', { locale: ko })}
                             {c.liveCategory ? ` · ${c.liveCategory}` : ''}
                           </p>
                         </div>

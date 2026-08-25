@@ -1,6 +1,10 @@
 import { getPrisma, getPrismaForDomain } from '@/lib/prisma';
 import { extractChzzkChannelId } from '@/lib/chzzk';
-import { fetchChzzkLiveDetail, mapWithConcurrency } from '@/lib/chzzk-api';
+import {
+  fetchChzzkLiveDetail,
+  mapWithConcurrency,
+  parseChzzkOpenDate,
+} from '@/lib/chzzk-api';
 import { getLiveStreamerIds } from '@/lib/chzzk-live-status';
 import { toKstDateKey, kstDayBounds } from '@/lib/backend-health';
 import {
@@ -74,6 +78,29 @@ async function streamerIdsWithScheduleToday(dateKst: string): Promise<Set<string
   return covered;
 }
 
+function toValidInstant(value: Date | string | number | null | undefined): Date | null {
+  if (value == null) return null;
+  const d = value instanceof Date ? value : new Date(value);
+  return Number.isFinite(d.getTime()) ? d : null;
+}
+
+/**
+ * 일정 시작 시각: 같은 KST 날의 치지직 방송 시작(openDate) 우선.
+ * 전날부터 이어진 방송은 오늘 날짜에 넣기 위해 fallback(스캔·감지 시각)을 쓴다.
+ */
+function resolveCandidateStartTime(
+  openDate: Date | null,
+  detectedAt: Date | string | null | undefined,
+  dateKst: string,
+  fallback: Date,
+): Date {
+  if (openDate && toKstDateKey(openDate) === dateKst) return openDate;
+  const detected = toValidInstant(detectedAt);
+  if (detected && toKstDateKey(detected) === dateKst) return detected;
+  if (toKstDateKey(fallback) === dateKst) return fallback;
+  return kstDayBounds(dateKst).start;
+}
+
 function liveUrlFor(chzzkUrl: string | null): string | null {
   if (!chzzkUrl) return null;
   const channelId = extractChzzkChannelId(chzzkUrl);
@@ -128,12 +155,14 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
   const details = await mapWithConcurrency(candidates, DETAIL_CONCURRENCY, async (m) => {
     const channelId = m.chzzkUrl ? extractChzzkChannelId(m.chzzkUrl) : null;
     const content = channelId ? await fetchChzzkLiveDetail(channelId) : null;
+    const liveStart = parseChzzkOpenDate(content?.openDate);
     return {
       streamerId: m.id,
       streamerName: m.name,
       title: content?.liveTitle?.trim() || `${m.name} 라이브`,
       liveCategory: content?.liveCategory ?? null,
       liveUrl: liveUrlFor(m.chzzkUrl),
+      liveStart,
     };
   });
 
@@ -150,6 +179,12 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
     }
 
     if (existing) {
+      const detectedAt = resolveCandidateStartTime(
+        d.liveStart,
+        existing.detectedAt,
+        dateKst,
+        now,
+      );
       await prisma.scheduleCandidate.update({
         where: { id: existing.id },
         data: {
@@ -158,6 +193,7 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
           liveUrl: d.liveUrl,
           streamerName: d.streamerName,
           lastSeenAt: now,
+          detectedAt,
         },
       });
       refreshed += 1;
@@ -170,7 +206,7 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
           title: d.title,
           liveCategory: d.liveCategory,
           liveUrl: d.liveUrl,
-          detectedAt: now,
+          detectedAt: resolveCandidateStartTime(d.liveStart, null, dateKst, now),
           lastSeenAt: now,
         },
       });
@@ -256,7 +292,7 @@ export async function dismissScheduleCandidate(id: string): Promise<void> {
   });
 }
 
-/** 감지 시각을 startTime으로 일정 생성 후 후보 APPROVED. 합방 멤버·게임은 opts로 전달. */
+/** 치지직 방송 시작(openDate) 또는 감지 시각을 startTime으로 일정 생성 후 APPROVED. */
 export async function approveScheduleCandidate(
   id: string,
   opts?: { title?: string; participantIds?: string[]; gameId?: string | null },
@@ -284,7 +320,14 @@ export async function approveScheduleCandidate(
     ]),
   ];
 
-  const startTime = new Date(row.detectedAt);
+  const channelId = row.liveUrl ? extractChzzkChannelId(row.liveUrl) : null;
+  const liveContent = channelId ? await fetchChzzkLiveDetail(channelId) : null;
+  const startTime = resolveCandidateStartTime(
+    parseChzzkOpenDate(liveContent?.openDate),
+    row.detectedAt,
+    row.dateKst,
+    new Date(),
+  );
   const title =
     opts?.title?.trim() || row.title?.trim() || `${row.streamerName} 라이브`;
   if (!title) throw new Error('일정 제목을 입력해 주세요.');
@@ -337,6 +380,7 @@ export async function approveScheduleCandidate(
     data: {
       status: 'APPROVED',
       title,
+      detectedAt: startTime,
       resolvedAt: now,
       scheduleId,
     },

@@ -185,7 +185,7 @@ export default function ScheduleCandidateQueue({
           </h1>
           <p className="text-slate-500 dark:text-slate-400 font-bold mt-2 text-sm max-w-xl">
             LIVE인데 오늘(KST) 일정이 없는 멤버만 쌓입니다. 제목·합방·게임을 다듬은 뒤
-            승인하세요. 시작 시각은 감지 시각입니다.
+            승인하세요. 시작 시각은 치지직 방송 시작(오늘 켠 방송)입니다.
           </p>
         </div>
         <button
@@ -366,7 +366,7 @@ export default function ScheduleCandidateQueue({
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <p className="text-xs font-bold text-slate-400">
                       {c.liveCategory ? `${c.liveCategory} · ` : ''}
-                      감지 {format(new Date(c.detectedAt), 'M/d HH:mm', { locale: ko })}
+                      시작 {format(new Date(c.detectedAt), 'M/d HH:mm', { locale: ko })}
                       {' · '}
                       최근 {format(new Date(c.lastSeenAt), 'HH:mm', { locale: ko })}
                     </p>

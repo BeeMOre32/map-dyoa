@@ -22,6 +22,27 @@ export function isChzzkChannelLive(content: ChzzkLiveDetailContent | null | unde
   return content?.status === 'OPEN';
 }
 
+/**
+ * 치지직 openDate → Date.
+ * 타임존 없는 `"YYYY-MM-DD HH:mm:ss"` 는 KST로 본다.
+ */
+export function parseChzzkOpenDate(raw: string | null | undefined): Date | null {
+  if (!raw?.trim()) return null;
+  const s = raw.trim();
+  if (/[zZ]$/.test(s) || /[+-]\d{2}:\d{2}$/.test(s)) {
+    const d = new Date(s);
+    return Number.isFinite(d.getTime()) ? d : null;
+  }
+  const m = s.match(
+    /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/,
+  );
+  if (!m) return null;
+  const d = new Date(
+    `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6] ?? '00'}+09:00`,
+  );
+  return Number.isFinite(d.getTime()) ? d : null;
+}
+
 /** 치지직 live-detail — content null·HTTP 오류는 null 반환 */
 export async function fetchChzzkLiveDetail(
   channelId: string,
