@@ -186,6 +186,7 @@ export default function ScheduleCandidateQueue({
           <p className="text-slate-500 dark:text-slate-400 font-bold mt-2 text-sm max-w-xl">
             LIVE인데 오늘(KST) 일정이 없는 멤버만 쌓입니다. 제목·합방·게임을 다듬은 뒤
             승인하세요. 시작 시각은 치지직 방송 시작(오늘 켠 방송)입니다.
+            후보는 최근 14일만 보관합니다.
           </p>
         </div>
         <button

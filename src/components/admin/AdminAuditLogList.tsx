@@ -165,7 +165,7 @@ export default function AdminAuditLogList({
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white">변경 이력</h1>
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">
-            {filterDescription}
+            {filterDescription} · 최근 14일만 보관
           </p>
         </div>
         <Link

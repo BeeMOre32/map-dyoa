@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/schedule-candidates",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/db-retention",
+      "schedule": "0 19 * * *"
     }
   ]
 }

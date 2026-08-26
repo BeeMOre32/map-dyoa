@@ -4,6 +4,7 @@
  */
 
 import { getPrisma, getPrismaForDomain } from '@/lib/prisma';
+import { appDataRetentionCutoff } from '@/lib/app-data-retention';
 import { unstable_cache } from 'next/cache';
 import { flattenScheduleParticipants, flattenSchedules } from './schedule-formatters';
 import type { Streamer, Prisma } from '@prisma/client';
@@ -802,6 +803,7 @@ export async function getAuditLogs(options?: {
   const limit = Math.min(200, Math.max(1, options?.limit ?? 80));
   return getPrisma().auditLog.findMany({
     where: {
+      createdAt: { gte: appDataRetentionCutoff() },
       ...(options?.entity ? { entity: options.entity } : {}),
       ...(options?.entityId ? { entityId: options.entityId } : {}),
       ...(options?.action ? { action: options.action } : {}),

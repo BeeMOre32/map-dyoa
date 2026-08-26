@@ -7,6 +7,7 @@ import {
 } from '@/lib/chzzk-api';
 import { getLiveStreamerIds } from '@/lib/chzzk-live-status';
 import { toKstDateKey, kstDayBounds } from '@/lib/backend-health';
+import { appDataRetentionCutoff } from '@/lib/app-data-retention';
 import {
   fetchSchedulesFromServer,
   getScheduleServerBaseUrl,
@@ -234,6 +235,15 @@ async function loadGames(): Promise<{ id: string; title: string }[]> {
   });
 }
 
+function expiredCandidateWhere() {
+  const cutoff = appDataRetentionCutoff();
+  return {
+    detectedAt: { gte: cutoff },
+    lastSeenAt: { gte: cutoff },
+    dateKst: { gte: toKstDateKey(cutoff) },
+  };
+}
+
 export async function listScheduleCandidates(opts?: {
   status?: ScheduleCandidateStatus;
   limit?: number;
@@ -241,7 +251,10 @@ export async function listScheduleCandidates(opts?: {
   const prisma = getPrisma();
   const [rows, members, games] = await Promise.all([
     prisma.scheduleCandidate.findMany({
-      where: opts?.status ? { status: opts.status } : undefined,
+      where: {
+        ...expiredCandidateWhere(),
+        ...(opts?.status ? { status: opts.status } : {}),
+      },
       orderBy: [{ status: 'asc' }, { lastSeenAt: 'desc' }],
       take: opts?.limit ?? 100,
     }),
@@ -282,7 +295,9 @@ export async function listScheduleCandidates(opts?: {
 }
 
 export async function countPendingScheduleCandidates(): Promise<number> {
-  return getPrisma().scheduleCandidate.count({ where: { status: 'PENDING' } });
+  return getPrisma().scheduleCandidate.count({
+    where: { status: 'PENDING', ...expiredCandidateWhere() },
+  });
 }
 
 export async function dismissScheduleCandidate(id: string): Promise<void> {
