@@ -269,6 +269,10 @@ export default function HelpPage() {
           </div>
           <ul className="list-inside list-disc space-y-2 text-sm font-bold text-indigo-700/90 dark:text-indigo-200/90">
             <li>
+              <strong>8월 후원 정산</strong> — 수익금 30,000원 · 서버비 33,136원 ·
+              잔여 73,983원 이월
+            </li>
+            <li>
               <strong>기능별 백엔드 헬스</strong> — 서버·DB·일정·멤버·클립 30분 체크 ·
               14일 히트맵
             </li>
@@ -276,15 +280,11 @@ export default function HelpPage() {
               <strong>라이브 메타 안정화</strong> — live-meta 502 soft-fail · 로컬 폴백
             </li>
             <li>
-              <strong>7월 후원 정산</strong> — 수익금 15,000원 · 서버비 35,601원 ·
-              잔여 77,119원 이월
-            </li>
-            <li>
               <strong>LIVE·클립 미리보기</strong> — 호버 재생 · 소리 켜기 · 확장 1.3.0
             </li>
           </ul>
           <Link
-            href="/announcements#update-2026-08-08"
+            href="/announcements#settlement-2026-08"
             className="mt-4 inline-flex items-center gap-1.5 text-sm font-black text-indigo-600 hover:underline dark:text-indigo-400"
           >
             <Megaphone className="h-4 w-4" />
