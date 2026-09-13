@@ -20,6 +20,7 @@ import {
 } from '@/lib/clip-hover-preview';
 import { postToChzzkIframe } from '@/components/multiview/utils';
 import { ClipPlayerModal } from './ClipPlayerModal';
+import { isBongnudoClip } from '@/lib/bongnudo';
 
 /** 호버 후 미리보기 iframe 마운트까지 */
 const HOVER_PLAY_MS = 1000;
@@ -236,6 +237,11 @@ export default function ClipCard({ clip, onEdit, index = 0 }: ClipCardProps) {
           onMouseEnter={onMediaEnter}
           onMouseLeave={onMediaLeave}
         >
+          {isBongnudoClip(clip) ? (
+            <span className="absolute left-2 top-2 z-[5] rounded-lg bg-indigo-600 px-1.5 py-0.5 text-[10px] font-black text-white">
+              봉누도
+            </span>
+          ) : null}
           {clip.thumbnailUrl ? (
             canPlayInline ? (
               <>

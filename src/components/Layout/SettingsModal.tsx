@@ -3,7 +3,7 @@
 import {
   Sun, Moon, HelpCircle, Shield, LogIn, LogOut, UserCheck, X,
   LayoutDashboard, EyeOff, Heart, Megaphone, History, BarChart3, Server, Puzzle,
-  Timer, FlaskConical,
+  Timer, FlaskConical, Car,
 } from 'lucide-react';
 import { CHROME_EXTENSION_NAME, CHROME_EXTENSION_URL } from '@/constants/extension';
 import { motion, AnimatePresence } from 'motion/react';
@@ -161,6 +161,11 @@ function GeneralTab({
         <SectionLabel>정보</SectionLabel>
         <div className="space-y-1">
           {[
+            {
+              href: '/bongnudo',
+              icon: <Car className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />,
+              label: '봉누도 2',
+            },
             {
               href: '/lab/time-attack',
               icon: <Timer className="w-4 h-4 text-amber-500 dark:text-amber-400" />,

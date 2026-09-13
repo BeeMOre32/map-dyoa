@@ -12,6 +12,12 @@ import { track } from '@vercel/analytics';
 import { isScheduleLiveOnCard } from '@/lib/schedule-live';
 import { useMinuteClock } from '@/hooks/useMinuteClock';
 import { markModalSoftNav } from '@/lib/modal-navigation';
+import BongnudoScheduleChip from '@/components/Calendar/BongnudoScheduleChip';
+import {
+  isBongnudoHubSchedule,
+  scheduleCardHref,
+  type BongnudoBandRole,
+} from '@/lib/bongnudo';
 
 function LiveBadge() {
   return (
@@ -43,6 +49,7 @@ interface ScheduleCardProps {
   variant: 'weekly' | 'monthly' | 'mobile';
   liveStreamerIds?: Set<string>;
   index?: number;
+  bandRole?: BongnudoBandRole | null;
 }
 
 export default function ScheduleCard({
@@ -50,8 +57,19 @@ export default function ScheduleCard({
   variant,
   liveStreamerIds,
   index = 0,
+  bandRole,
 }: ScheduleCardProps) {
-  const href = `/calendar/schedule/${schedule.id}`;
+  const href = scheduleCardHref(schedule);
+  if (isBongnudoHubSchedule(schedule)) {
+    return (
+      <BongnudoScheduleChip
+        schedule={schedule}
+        variant={variant}
+        bandRole={bandRole}
+        liveStreamerIds={liveStreamerIds}
+      />
+    );
+  }
   const stopProp = (e: React.MouseEvent) => e.stopPropagation();
   const { resolvedTheme } = useTheme();
 

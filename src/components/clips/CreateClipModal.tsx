@@ -21,6 +21,8 @@ interface CreateClipModalProps {
   schedules: FlattenedSchedule[];
   onClose: () => void;
   initialData?: ClipWithParticipants;
+  bongnudoPreset?: boolean;
+  mother?: string;
 }
 
 const inputClass =
@@ -40,9 +42,11 @@ export default function CreateClipModal({
   schedules,
   onClose,
   initialData,
+  bongnudoPreset = false,
+  mother = '/clips',
 }: CreateClipModalProps) {
-  const dismiss = useModalDismiss({ mother: '/clips', onClose });
-  const form = useClipForm(streamers, schedules, dismiss, initialData);
+  const dismiss = useModalDismiss({ mother, onClose });
+  const form = useClipForm(streamers, schedules, dismiss, initialData, { bongnudoPreset });
   useEscapeKey(dismiss);
   useScrollLock();
 
@@ -65,15 +69,15 @@ export default function CreateClipModal({
         {/* 헤더 */}
         <div className="flex shrink-0 items-center justify-between border-b border-slate-100 p-4 dark:border-slate-800 sm:p-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/40 rounded-2xl flex items-center justify-center">
-              <Clapperboard className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-100 dark:bg-indigo-900/40">
+              <Clapperboard className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div>
-              <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                {form.isEdit ? 'Edit Clip' : 'New Clip'}
+              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                {form.asBongnudo ? '봉누도 2' : form.isEdit ? 'Edit Clip' : 'New Clip'}
               </p>
               <h2 className="text-lg font-black text-slate-800 dark:text-white">
-                {form.isEdit ? '클립 수정' : '클립 추가'}
+                {form.isEdit ? '클립 수정' : form.asBongnudo ? '봉누도 클립 추가' : '클립 추가'}
               </h2>
             </div>
           </div>
@@ -93,6 +97,34 @@ export default function CreateClipModal({
           animate="visible"
           className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 sm:p-6"
         >
+          <motion.section variants={clipModalRevealItem}>
+            <button
+              type="button"
+              onClick={() => form.setAsBongnudo((on) => !on)}
+              className={`flex w-full items-center justify-between rounded-2xl border px-3.5 py-2.5 text-left text-[13px] font-bold ${
+                form.asBongnudo
+                  ? 'border-indigo-200 bg-indigo-50 text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-100'
+                  : 'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
+              }`}
+            >
+              <span>봉누도 전용 클립</span>
+              <span
+                className={`rounded-full px-2 py-0.5 text-[11px] font-black ${
+                  form.asBongnudo
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
+                }`}
+              >
+                {form.asBongnudo ? '켜짐' : '꺼짐'}
+              </span>
+            </button>
+            {form.asBongnudo ? (
+              <p className="mt-1.5 px-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
+                제목에 봉누도가 들어가고, 스트리머는 봉누도 참가 인원만 고릅니다.
+              </p>
+            ) : null}
+          </motion.section>
+
           {/* 클립 URL */}
           <motion.section variants={clipModalRevealItem} className="space-y-1.5" data-zod-field="url">
             <label className={labelClass}>클립 URL *</label>
@@ -355,7 +387,11 @@ export default function CreateClipModal({
             >
               {form.submitting
                 ? form.isEdit ? '수정 중...' : '추가 중...'
-                : form.isEdit ? '수정 완료' : '클립 추가'}
+                : form.isEdit
+                  ? '수정 완료'
+                  : form.asBongnudo
+                    ? '봉누도 클립 추가'
+                    : '클립 추가'}
             </motion.button>
           </motion.div>
         </motion.form>

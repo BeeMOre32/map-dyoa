@@ -7,6 +7,7 @@ import { useCalendarViewState } from '@/hooks/useCalendarViewState';
 import ScheduleFormModal from '@/components/Form/CreateScheduleModal';
 import FilterBar from '@/components/Calendar/FilterBar';
 import CalendarWelcomeBanner from '@/components/Calendar/CalendarWelcomeBanner';
+import BongnudoPromoBanner from '@/components/bongnudo/BongnudoPromoBanner';
 import CalendarFilterEmptyBanner from '@/components/Calendar/CalendarFilterEmptyBanner';
 import CalendarMobileDaySheet from '@/components/Calendar/CalendarMobileDaySheet';
 import CalendarMobileFab from '@/components/Calendar/CalendarMobileFab';
@@ -47,6 +48,7 @@ export default function CalendarView(props: CalendarViewProps) {
       }`}
     >
       <CalendarWelcomeBanner />
+      <BongnudoPromoBanner />
 
       <div className="mb-4 flex shrink-0 flex-col items-start justify-between gap-3 md:flex-row md:items-center">
         <div className="flex w-full min-w-0 items-center gap-3 md:w-auto">

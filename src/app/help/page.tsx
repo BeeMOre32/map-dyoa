@@ -42,6 +42,7 @@ import {
   Shield,
   RefreshCw,
   Server,
+  Car,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -303,7 +304,7 @@ export default function HelpPage() {
             <p className="font-medium leading-relaxed text-slate-600 dark:text-slate-300">
               <strong>Map-Dyoa</strong>는 지도동 멤버의{' '}
               <strong>합방 일정</strong>, <strong>라이브 상태</strong>,{' '}
-              <strong>클립</strong>, <strong>HOI4 내전 전적</strong>을 한곳에서 보는 팬
+              <strong>클립</strong>, <strong>봉누도 2</strong>, <strong>HOI4 내전 전적</strong>을 한곳에서 보는 팬
               서비스입니다. 대부분은 로그인 없이 이용할 수 있고, 일정·클립 기여는 구글
               로그인 후 가능합니다.
             </p>
@@ -312,6 +313,7 @@ export default function HelpPage() {
                 { href: '/calendar', label: '스케줄', desc: '주간·월간 캘린더' },
                 { href: '/streamers', label: '멤버·라이브', desc: '프로필·방송 중 목록' },
                 { href: '/clips', label: '클립', desc: '치지직 클립 모음' },
+                { href: '/bongnudo', label: '봉누도', desc: 'GTA5 RP 일정·멤버·멀티뷰' },
                 { href: '/hoi4', label: '전적', desc: 'HOI4 내전·국가 통계' },
               ].map(({ href, label, desc }) => (
                 <Link
@@ -346,6 +348,9 @@ export default function HelpPage() {
             </Row>
             <Row icon={<Clapperboard className="h-5 w-5" />} delay={0.12}>
               <strong>클립</strong> — 멤버·월별·검색·관심 멤버 필터
+            </Row>
+            <Row icon={<Car className="h-5 w-5" />} delay={0.15}>
+              <strong>봉누도</strong> — GTA5 RP 운영 일정·지도동 멤버·게스트·전용 멀티뷰
             </Row>
             <Row icon={<Sword className="h-5 w-5" />} delay={0.18}>
               <strong>전적</strong> — HOI4 내전 세션·멤버별 참전 통계·필터
@@ -595,6 +600,36 @@ export default function HelpPage() {
                 },
               ]}
             />
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          id="bongnudo"
+          icon={<Car className="h-6 w-6 text-emerald-500 dark:text-emerald-400" />}
+          iconBg="bg-emerald-50 dark:bg-emerald-900/20"
+          title="봉누도 2"
+        >
+          <div className="space-y-4">
+            <Row icon={<Car className="h-5 w-5" />}>
+              <Link
+                href="/bongnudo"
+                className="font-black text-indigo-600 hover:underline dark:text-indigo-400"
+              >
+                봉누도
+              </Link>{' '}
+              탭에서 GTA5 RP 서버 <strong>운영 일정</strong>, 지도동{' '}
+              <strong>참가 멤버</strong>, <strong>게스트</strong>, 관련{' '}
+              <strong>클립</strong>을 한 화면에 모읍니다.
+            </Row>
+            <Row icon={<LayoutGrid className="h-5 w-5" />} delay={0.06}>
+              <strong>방송 중 멀티뷰</strong>는 지금 라이브인 참가자만,{' '}
+              <strong>지도동 전체 멀티뷰</strong>는 멤버만 엽니다. 게스트는 카드에서
+              따로 고를 수 있습니다.
+            </Row>
+            <Row icon={<Sparkles className="h-5 w-5" />} delay={0.12}>
+              멤버 카드를 누르면 <strong>RP 이름·직업·컨셉</strong> 모달이 열립니다.
+              로그인 유저는 바로 수정할 수 있고, 멀티뷰는 카드 왼쪽 체크로 고릅니다.
+            </Row>
           </div>
         </SectionCard>
 

@@ -14,6 +14,12 @@ import { getGameColor } from '@/constants/gamecolor';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { markModalSoftNav } from '@/lib/modal-navigation';
 import NaeJeonBadge from '@/components/Calendar/atoms/NaeJeonBadge';
+import BongnudoScheduleChip from '@/components/Calendar/BongnudoScheduleChip';
+import {
+  isBongnudoHubSchedule,
+  scheduleCardHref,
+  type BongnudoBandRole,
+} from '@/lib/bongnudo';
 
 function formatScheduleHHmm(schedule: FlattenedSchedule): string {
   if (schedule.isGuerrilla) return '미정';
@@ -86,6 +92,7 @@ interface Props {
   variant: 'weekly' | 'monthly' | 'mobile';
   liveStreamerIds?: Set<string>;
   index?: number;
+  bandRole?: BongnudoBandRole | null;
 }
 
 export default function ScheduleCardV2({
@@ -93,8 +100,19 @@ export default function ScheduleCardV2({
   variant,
   liveStreamerIds,
   index = 0,
+  bandRole,
 }: Props) {
-  const href = `/calendar/schedule/${schedule.id}`;
+  const href = scheduleCardHref(schedule);
+  if (isBongnudoHubSchedule(schedule)) {
+    return (
+      <BongnudoScheduleChip
+        schedule={schedule}
+        variant={variant}
+        bandRole={bandRole}
+        liveStreamerIds={liveStreamerIds}
+      />
+    );
+  }
   const onScheduleLinkClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     markModalSoftNav();

@@ -3,13 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutGroup, motion } from 'motion/react';
-import { Calendar, Users, Clapperboard, Sword } from 'lucide-react';
+import { Calendar, Users, Clapperboard, Sword, Radio } from 'lucide-react';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
 
 const tabs = [
   { id: 'calendar', label: '스케줄', href: '/calendar', icon: Calendar },
   { id: 'streamers', label: '멤버·라이브', href: '/streamers', icon: Users },
   { id: 'clips', label: '클립', href: '/clips', icon: Clapperboard },
+  { id: 'bongnudo', label: '봉누도', href: '/bongnudo', icon: Radio },
   { id: 'hoi4', label: '전적', href: '/hoi4', icon: Sword, accent: 'amber' as const },
 ];
 

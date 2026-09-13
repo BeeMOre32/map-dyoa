@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isBongnudoFactionId } from '@/config/bongnudo2';
 import {
   nullishStringToUndefined,
   optionalString,
@@ -96,4 +97,17 @@ export const clipClientSchema = z.object({
   title: requiredString('제목을 입력해주세요.'),
   url: requiredString('클립 URL을 입력해주세요.'),
   streamerIds: stringIdArray('연관된 스트리머를 최소 1명 선택해주세요.'),
+});
+
+export const bongnudoProfileSchema = z.object({
+  streamerId: requiredString('방송인 ID가 올바르지 않습니다.'),
+  rpName: z.string().trim().max(40, 'RP 이름은 40자 이내로 입력해주세요.'),
+  occupation: z.string().trim().max(40, '직업은 40자 이내로 입력해주세요.'),
+  factionId: z
+    .string()
+    .trim()
+    .max(40)
+    .refine((id) => id === '' || isBongnudoFactionId(id), '소속을 확인해주세요.'),
+  concept: z.string().trim().max(200, '컨셉은 200자 이내로 입력해주세요.'),
+  notes: z.string().trim().max(2000, '메모는 2000자 이내로 입력해주세요.'),
 });

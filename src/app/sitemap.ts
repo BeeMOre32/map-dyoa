@@ -7,6 +7,7 @@ const STATIC_ROUTES: MetadataRoute.Sitemap = [
   { url: absoluteUrl('/calendar/monthly'), changeFrequency: 'daily', priority: 0.85 },
   { url: absoluteUrl('/streamers'), changeFrequency: 'daily', priority: 0.9 },
   { url: absoluteUrl('/clips'), changeFrequency: 'daily', priority: 0.85 },
+  { url: absoluteUrl('/bongnudo'), changeFrequency: 'hourly', priority: 0.8 },
   { url: absoluteUrl('/hoi4'), changeFrequency: 'weekly', priority: 0.7 },
   { url: absoluteUrl('/announcements'), changeFrequency: 'weekly', priority: 0.6 },
   { url: absoluteUrl('/help'), changeFrequency: 'monthly', priority: 0.5 },

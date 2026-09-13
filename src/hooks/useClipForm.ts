@@ -14,6 +14,12 @@ import { scrollToFirstZodField } from '@/lib/zod-scroll';
 import type { Streamer } from '@prisma/client';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import type { ClipWithParticipants } from '@/types/entities';
+import {
+  isBongnudoClip,
+  isBongnudoRelatedSchedule,
+  isBongnudoRosterName,
+  stampBongnudoClipTitle,
+} from '@/lib/bongnudo';
 
 type MetaStatus = 'idle' | 'ok' | 'fail';
 
@@ -22,6 +28,7 @@ export function useClipForm(
   schedules: FlattenedSchedule[],
   onClose: () => void,
   initialData?: ClipWithParticipants,
+  options?: { bongnudoPreset?: boolean },
 ) {
   const isEdit = initialData !== undefined;
   const { resolvedTheme } = useTheme();
@@ -46,6 +53,9 @@ export function useClipForm(
   const [fetchingMeta, setFetchingMeta] = useState(false);
   const [metaStatus, setMetaStatus] = useState<MetaStatus>(
     initialData?.thumbnailUrl ? 'ok' : 'idle',
+  );
+  const [asBongnudo, setAsBongnudo] = useState(
+    () => options?.bongnudoPreset === true || (initialData ? isBongnudoClip(initialData) : false),
   );
 
   const fetchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -89,19 +99,32 @@ export function useClipForm(
     [fetchMeta],
   );
 
+  const rosterIds = useMemo(
+    () => new Set(streamers.filter((s) => isBongnudoRosterName(s.name)).map((s) => s.id)),
+    [streamers],
+  );
+
   const filteredStreamers = useMemo(() => {
     const q = streamerSearch.trim();
-    const base = q ? streamers.filter((s) => matchesChosung(s.name, q)) : streamers;
+    const pool = asBongnudo
+      ? streamers.filter((s) => isBongnudoRosterName(s.name))
+      : streamers;
+    const base = q ? pool.filter((s) => matchesChosung(s.name, q)) : pool;
     return [...base].sort((a, b) => {
       const aSelected = selectedIds.includes(a.id) ? 0 : 1;
       const bSelected = selectedIds.includes(b.id) ? 0 : 1;
       return aSelected - bSelected;
     });
-  }, [streamers, streamerSearch, selectedIds]);
+  }, [streamers, streamerSearch, selectedIds, asBongnudo]);
 
   const filteredSchedules = useMemo(() => {
-    if (selectedIds.length === 0) return schedules;
-    const filtered = schedules.filter((s) =>
+    let pool = schedules;
+    if (asBongnudo) {
+      const related = schedules.filter((s) => isBongnudoRelatedSchedule(s, rosterIds));
+      if (related.length > 0) pool = related;
+    }
+    if (selectedIds.length === 0) return pool;
+    const filtered = pool.filter((s) =>
       s.participants.some((p) => selectedIds.includes(p.id)),
     );
     if (scheduleId && !filtered.some((s) => s.id === scheduleId)) {
@@ -109,11 +132,22 @@ export function useClipForm(
       if (current) return [current, ...filtered];
     }
     return filtered;
-  }, [selectedIds, schedules, scheduleId]);
+  }, [selectedIds, schedules, scheduleId, asBongnudo, rosterIds]);
 
   const toggleStreamer = (id: string) => {
+    if (asBongnudo && !rosterIds.has(id)) return;
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
     setScheduleId('');
+  };
+
+  const setAsBongnudoSafe = (next: boolean | ((on: boolean) => boolean)) => {
+    setAsBongnudo((prev) => {
+      const value = typeof next === 'function' ? next(prev) : next;
+      if (value) {
+        setSelectedIds((ids) => ids.filter((id) => rosterIds.has(id)));
+      }
+      return value;
+    });
   };
 
   const getStreamerChipColor = (streamerId: string, colorCode: string) =>
@@ -137,9 +171,11 @@ export function useClipForm(
     }
 
     const payload = buildClipActionPayload({
-      title,
+      title: asBongnudo ? stampBongnudoClipTitle(title) : title,
       url,
-      streamerIds: selectedIds,
+      streamerIds: asBongnudo
+        ? selectedIds.filter((id) => rosterIds.has(id))
+        : selectedIds,
       scheduleId,
       thumbnailUrl,
       description,
@@ -175,6 +211,8 @@ export function useClipForm(
     metaStatus,
     filteredStreamers,
     filteredSchedules,
+    asBongnudo,
+    setAsBongnudo: setAsBongnudoSafe,
     handleUrlChange,
     toggleStreamer,
     getStreamerChipColor,

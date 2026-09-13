@@ -14,7 +14,8 @@ export type MutationEntity =
   | 'clip'
   | 'game'
   | 'feedback'
-  | 'siteNotice';
+  | 'siteNotice'
+  | 'bongnudoProfile';
 
 export type AuditDiffPayload = {
   before: Record<string, unknown>;

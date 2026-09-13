@@ -32,6 +32,12 @@ import {
 } from '@/lib/calendar/calendarViewUtils';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { markModalSoftNav } from '@/lib/modal-navigation';
+import {
+  applyBongnudoLiveOverlay,
+  pickBongnudoGame,
+  projectBongnudoSchedules,
+  splitBongnudoStreamers,
+} from '@/lib/bongnudo';
 
 interface UseCalendarViewStateOptions {
   initialSchedules: FlattenedSchedule[];
@@ -172,10 +178,22 @@ export function useCalendarViewState({
     [currentDate, viewMode],
   );
 
+  const calendarSchedules = useMemo(() => {
+    const roster = splitBongnudoStreamers(streamers);
+    const people = [...roster.members, ...roster.guests];
+    const projected = projectBongnudoSchedules(
+      optimisticSchedules,
+      people,
+      pickBongnudoGame(games),
+      { fill: 'operating' },
+    );
+    return applyBongnudoLiveOverlay(projected, people, liveStreamerIds);
+  }, [optimisticSchedules, streamers, games, liveStreamerIds]);
+
   const schedulesByDate = useMemo(
     () =>
       buildSchedulesByDate({
-        schedules: optimisticSchedules,
+        schedules: calendarSchedules,
         hideEnded,
         favoritesOnly,
         favoriteIds,
@@ -183,7 +201,7 @@ export function useCalendarViewState({
         selectedGames,
       }),
     [
-      optimisticSchedules,
+      calendarSchedules,
       selectedStreamers,
       selectedGames,
       hideEnded,
@@ -198,8 +216,8 @@ export function useCalendarViewState({
   );
 
   const unfilteredScheduleCountInPeriod = useMemo(
-    () => countSchedulesInPeriod(optimisticSchedules, days, hideEnded),
-    [optimisticSchedules, days, hideEnded],
+    () => countSchedulesInPeriod(calendarSchedules, days, hideEnded),
+    [calendarSchedules, days, hideEnded],
   );
 
   const hasActiveFilters =

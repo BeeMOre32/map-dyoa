@@ -303,7 +303,12 @@ export default function ClipView({
 
       <AnimatePresence>
         {showModal && (
-          <CreateClipModal streamers={streamers} schedules={schedules} onClose={handleClose} />
+          <CreateClipModal
+            streamers={streamers}
+            schedules={schedules}
+            onClose={handleClose}
+            bongnudoPreset={currentFilters.q.includes('봉누도')}
+          />
         )}
       </AnimatePresence>
 

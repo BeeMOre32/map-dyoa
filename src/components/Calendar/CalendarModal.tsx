@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { motion, AnimatePresence } from 'motion/react';
@@ -29,6 +29,17 @@ import { getStreamerColor } from '@/constants/streamercolor';
 import { useTheme } from '@teispace/next-themes';
 import { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { markModalSoftNav } from '@/lib/modal-navigation';
+import { useLiveStatus } from '@/hooks/useLiveStatus';
+import { kstDateKey } from '@/lib/hoi4-exam-time';
+import {
+  applyBongnudoLiveOverlay,
+  isBongnudoHubSchedule,
+  isBongnudoOperatingDay,
+  pickBongnudoGame,
+  projectBongnudoSchedules,
+  scheduleCardHref,
+  splitBongnudoStreamers,
+} from '@/lib/bongnudo';
 
 function ScheduleListItem({
   schedule,
@@ -44,10 +55,11 @@ function ScheduleListItem({
   onDelete: (e: React.MouseEvent, id: string) => void;
 }) {
   const isDark = resolvedTheme === 'dark';
+  const isHub = isBongnudoHubSchedule(schedule);
 
   return (
     <Link
-      href={`/calendar/schedule/${schedule.id}`}
+      href={scheduleCardHref(schedule)}
       scroll={false}
       className="group block"
       onClick={() => markModalSoftNav()}
@@ -70,7 +82,7 @@ function ScheduleListItem({
             </div>
           )}
 
-          {isAdmin && (
+          {isAdmin && !isHub && (
             <div className="flex gap-1 shrink-0">
               <button
                 onClick={(e) => onEdit(e, schedule)}
@@ -97,12 +109,14 @@ function ScheduleListItem({
           </div>
 
           <div className="flex flex-wrap gap-3 items-center text-sm">
+            {isHub ? null : (
             <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-bold bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700">
               <Clock className="w-4 h-4 text-indigo-400" />
               {schedule.isGuerrilla
                 ? '시간 미정'
                 : format(new Date(schedule.startTime), 'a h:mm', { locale: ko })}
             </div>
+            )}
             <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-bold bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700">
               <Users className="w-4 h-4 text-emerald-400" />
               {schedule.participants.length}명 참여
@@ -143,15 +157,28 @@ export default function ScheduleModal({
   const { data: session } = useSession();
   const { editingSchedule, toggleEditMode, exitEditMode } = useScheduleModal();
   const { resolvedTheme } = useTheme();
+  const { liveIds } = useLiveStatus();
   const toast = useToast();
   const [permissionError, setPermissionError] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [daySchedules, setDaySchedules] = useState(schedules);
+  const projectedSchedules = useMemo(() => {
+    const roster = splitBongnudoStreamers(streamers);
+    const people = [...roster.members, ...roster.guests];
+    const dateKey = kstDateKey(selectedDate);
+    const projected = projectBongnudoSchedules(
+      schedules,
+      people,
+      pickBongnudoGame(games),
+      { fill: isBongnudoOperatingDay(dateKey) ? [dateKey] : 'none' },
+    );
+    return applyBongnudoLiveOverlay(projected, people, liveIds);
+  }, [schedules, streamers, games, selectedDate, liveIds]);
+  const [daySchedules, setDaySchedules] = useState(projectedSchedules);
 
   useEffect(() => {
-    setDaySchedules(schedules);
-  }, [schedules]);
+    setDaySchedules(projectedSchedules);
+  }, [projectedSchedules]);
 
   const isAdmin = !!session;
 

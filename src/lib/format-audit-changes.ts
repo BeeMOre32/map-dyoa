@@ -29,6 +29,11 @@ const FIELD_LABELS: Record<string, string> = {
   streamerName: '스트리머 이름',
   contentLength: '내용 길이',
   status: '상태',
+  rpName: 'RP 이름',
+  occupation: '직업',
+  factionId: '소속',
+  concept: '컨셉',
+  notes: '메모',
 };
 
 const ENTITY_LABELS: Record<MutationEntity, string> = {
@@ -38,6 +43,7 @@ const ENTITY_LABELS: Record<MutationEntity, string> = {
   game: '게임',
   feedback: '피드백',
   siteNotice: '긴급 공지',
+  bongnudoProfile: '봉누도 RP',
 };
 
 const FIELD_ORDER: Partial<Record<MutationEntity, string[]>> = {

@@ -16,6 +16,13 @@ import {
 } from '@/lib/calendarMotion';
 import { isScheduleLiveOnCard } from '@/lib/schedule-live';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
+import {
+  bandRoleForCalendarDay,
+  bongnudoBandBridgeClass,
+  isBongnudoHubSchedule,
+  sortSchedulesForCalendarDay,
+} from '@/lib/bongnudo';
+import BongnudoScheduleChip from '@/components/Calendar/BongnudoScheduleChip';
 
 interface CalendarWeeklyV2GridProps {
   days: Date[];
@@ -54,7 +61,14 @@ export default function CalendarWeeklyV2Grid({
           {days.map((day, colIndex) => {
             const today = isToday(day);
             const dateKey = format(day, 'yyyy-MM-dd');
-            const daySchedules = schedulesByDate.get(dateKey) ?? [];
+            const daySchedules = sortSchedulesForCalendarDay(
+              schedulesByDate.get(dateKey) ?? [],
+            );
+            const hub = daySchedules.find(isBongnudoHubSchedule);
+            const otherSchedules = daySchedules.filter(
+              (schedule) => !isBongnudoHubSchedule(schedule),
+            );
+            const bandRole = bandRoleForCalendarDay(day, days, schedulesByDate);
             const dayIdx = day.getDay();
             const liveCount = daySchedules.filter((s) =>
               isScheduleLiveOnCard(s, liveStreamerIds),
@@ -68,7 +82,7 @@ export default function CalendarWeeklyV2Grid({
                 animate="visible"
                 variants={calendarColumnVariants}
                 onClick={() => onDayClick(day)}
-                className={`group flex h-full min-h-0 cursor-pointer flex-col overflow-hidden rounded-2xl border transition-[box-shadow,border-color] duration-200 ${
+                className={`group flex h-full min-h-0 cursor-pointer flex-col overflow-visible rounded-2xl border transition-[box-shadow,border-color] duration-200 ${
                   today
                     ? 'border-indigo-300/70 bg-linear-to-b from-indigo-50/90 via-white to-white shadow-md shadow-indigo-500/10 ring-2 ring-indigo-400/30 dark:border-indigo-700/60 dark:from-indigo-950/50 dark:via-slate-900 dark:to-slate-900 dark:shadow-indigo-900/20 dark:ring-indigo-500/25'
                     : 'border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-600'
@@ -119,9 +133,21 @@ export default function CalendarWeeklyV2Grid({
                     ) : null}
                   </div>
                 </div>
+                {hub && bandRole ? (
+                  <div
+                    className={`relative z-10 shrink-0 ${bongnudoBandBridgeClass(bandRole)}`}
+                  >
+                    <BongnudoScheduleChip
+                      schedule={hub}
+                      variant="weekly"
+                      bandRole={bandRole}
+                      liveStreamerIds={liveStreamerIds}
+                    />
+                  </div>
+                ) : null}
                 <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-1.5 custom-scrollbar sm:gap-2 sm:p-2">
-                  {daySchedules.length > 0 ? (
-                    daySchedules.map((schedule, i) => (
+                  {otherSchedules.length > 0 ? (
+                    otherSchedules.map((schedule, i) => (
                       <ScheduleCardV2
                         key={schedule.id}
                         schedule={schedule}
@@ -130,13 +156,13 @@ export default function CalendarWeeklyV2Grid({
                         index={i}
                       />
                     ))
-                  ) : (
+                  ) : !hub ? (
                     <CalendarEmptyDay
                       compact
                       isLoggedIn={isLoggedIn}
                       onAdd={onOpenCreateModal}
                     />
-                  )}
+                  ) : null}
                 </div>
               </motion.div>
             );

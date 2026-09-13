@@ -8,6 +8,7 @@ export function getMotherPath(pathname: string): string {
   if (pathname.startsWith('/clips')) return '/clips';
   if (pathname.startsWith('/streamers')) return '/streamers';
   if (pathname.startsWith('/live')) return '/live';
+  if (pathname.startsWith('/bongnudo')) return '/bongnudo';
   if (pathname.startsWith('/hoi4')) return '/hoi4';
   if (pathname.startsWith('/announcements')) return '/announcements';
   if (pathname.startsWith('/admin/streamers')) return '/admin/streamers';

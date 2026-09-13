@@ -15,6 +15,7 @@ export default function robots(): MetadataRoute.Robots {
           '/dev-throw',
           '/lab',
           '/live/multiview',
+          '/bongnudo/multiview',
         ],
       },
     ],

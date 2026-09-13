@@ -11,6 +11,10 @@ import {
 } from '@/lib/calendar/calendarViewUtils';
 import { calendarGridPresenceVariants } from '@/lib/calendarMotion';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
+import {
+  bandRoleForCalendarDay,
+  sortSchedulesForCalendarDay,
+} from '@/lib/bongnudo';
 
 interface CalendarMonthLegacyGridProps {
   days: Date[];
@@ -75,7 +79,15 @@ export default function CalendarMonthLegacyGrid({
               const isSelectedMonth = isSameMonth(day, currentDate);
               const today = isToday(day);
               const dateKey = format(day, 'yyyy-MM-dd');
-              const daySchedules = schedulesByDate.get(dateKey) ?? [];
+              const daySchedules = sortSchedulesForCalendarDay(
+                schedulesByDate.get(dateKey) ?? [],
+              );
+              const weekStart = Math.floor(idx / 7) * 7;
+              const bandRole = bandRoleForCalendarDay(
+                day,
+                days.slice(weekStart, weekStart + 7),
+                schedulesByDate,
+              );
 
               return (
                 <div
@@ -121,6 +133,7 @@ export default function CalendarMonthLegacyGrid({
                           variant={viewMode}
                           liveStreamerIds={liveStreamerIds}
                           index={i}
+                          bandRole={bandRole}
                         />
                       ) : (
                         <ScheduleCardV2
@@ -129,6 +142,7 @@ export default function CalendarMonthLegacyGrid({
                           variant="monthly"
                           liveStreamerIds={liveStreamerIds}
                           index={i}
+                          bandRole={bandRole}
                         />
                       ),
                     )}

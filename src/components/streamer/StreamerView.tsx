@@ -27,6 +27,7 @@ import { format } from 'date-fns';
 import { track } from '@vercel/analytics';
 import { useFavoriteStreamers } from '@/hooks/useFavoriteStreamers';
 import FavoritesOnlyToggle from '@/components/Common/FavoritesOnlyToggle';
+import BongnudoPromoBanner from '@/components/bongnudo/BongnudoPromoBanner';
 
 export default function StreamerView({
   streamers,
@@ -174,6 +175,7 @@ export default function StreamerView({
 
   return (
     <>
+      <BongnudoPromoBanner />
       {/* sticky는 근처 스크롤 조상(layout overflow-y-auto) 안에서 동작하도록 카드에는 overflow:hidden 미사용 */}
       <div className="flex flex-col rounded-2xl border border-slate-100 bg-white shadow-lg shadow-slate-200/40 sm:rounded-3xl sm:shadow-xl sm:shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-slate-900/50">
         <header className="sticky top-0 z-30 shrink-0 border-b border-slate-100 bg-white/95 px-3 py-2.5 backdrop-blur-sm shadow-[0_4px_12px_-8px_rgba(15,23,42,0.15)] dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-[0_6px_16px_-10px_rgba(0,0,0,0.4)] sm:px-5 sm:py-4">

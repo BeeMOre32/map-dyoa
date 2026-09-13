@@ -42,7 +42,12 @@ export default function LoginPage() {
 
         {/* 로그인 버튼 */}
         <motion.button
-          onClick={() => signIn('google', { callbackUrl: '/calendar' })}
+          onClick={() => {
+            const next =
+              new URLSearchParams(window.location.search).get('callbackUrl') ||
+              '/calendar';
+            void signIn('google', { callbackUrl: next.startsWith('/') ? next : '/calendar' });
+          }}
           whileHover={{ scale: 1.02, transition: { type: 'spring', visualDuration: 0.22, bounce: 0.18 } }}
           whileTap={{ scale: 0.98, transition: { type: 'spring', visualDuration: 0.16, bounce: 0.1 } }}
           className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl font-black hover:bg-slate-800 dark:hover:bg-indigo-700 shadow-xl shadow-slate-200 dark:shadow-indigo-900/30"

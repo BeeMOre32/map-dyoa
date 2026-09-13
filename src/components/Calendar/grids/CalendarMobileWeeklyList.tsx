@@ -13,6 +13,7 @@ import {
 } from '@/lib/calendar/calendarViewUtils';
 import { calendarGridPresenceVariants } from '@/lib/calendarMotion';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
+import { sortSchedulesForCalendarDay } from '@/lib/bongnudo';
 
 interface CalendarMobileWeeklyListProps {
   days: Date[];
@@ -53,7 +54,9 @@ export default function CalendarMobileWeeklyList({
         {days.map((day) => {
           const today = isToday(day);
           const dateKey = format(day, 'yyyy-MM-dd');
-          const daySchedules = schedulesByDate.get(dateKey) ?? [];
+          const daySchedules = sortSchedulesForCalendarDay(
+            schedulesByDate.get(dateKey) ?? [],
+          );
           const dayIdx = day.getDay();
 
           return (
