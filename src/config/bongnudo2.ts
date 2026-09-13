@@ -33,6 +33,7 @@ export const BONGNUDO2_ROSTER_NAMES = [
   '시바스',
   '위구리',
   '쵸쵸우',
+  '콩콩',
   '쾅준',
   '하쁘',
 ] as const;
@@ -106,6 +107,7 @@ export const BONGNUDO2_ROSTER_RP: readonly BongnudoRosterRp[] = [
   { name: '시바스', rpName: '김건실', occupation: '🚶 시민', factionId: 'civilian' },
   { name: '위구리', rpName: '나익수', occupation: '📰 기자', factionId: 'press' },
   { name: '쵸쵸우', rpName: '의심해', occupation: '🚶 시민', factionId: 'civilian' },
+  { name: '콩콩', rpName: '', occupation: '🚶 시민', factionId: 'civilian' },
   { name: '쾅준', rpName: '친게남', occupation: '🚶 시민', factionId: 'civilian' },
   { name: '하쁘', rpName: '하얼빈', occupation: '🚶 시민', factionId: 'civilian' },
 ];
