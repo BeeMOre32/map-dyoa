@@ -154,6 +154,24 @@ export default function BongnudoView({
               <Clapperboard className="h-3.5 w-3.5" />
               클립
             </Link>
+            {session ? (
+              <button
+                type="button"
+                onClick={() => setShowClipModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-2xl bg-slate-900 px-3.5 py-2 text-xs font-black text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              >
+                <Clapperboard className="h-3.5 w-3.5" />
+                클립 올리기
+              </button>
+            ) : (
+              <Link
+                href={`/login?callbackUrl=${encodeURIComponent(BONGNUDO2_PATH)}`}
+                className="inline-flex items-center gap-1.5 rounded-2xl bg-slate-900 px-3.5 py-2 text-xs font-black text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+              >
+                <Clapperboard className="h-3.5 w-3.5" />
+                로그인하고 클립 올리기
+              </Link>
+            )}
             <a
               href={BONGNUDO2_NAMU_URL}
               target="_blank"
@@ -231,23 +249,7 @@ export default function BongnudoView({
           </section>
         ) : (
           <section className="space-y-2">
-            <div className="flex items-center justify-end gap-2">
-              {session ? (
-                <button
-                  type="button"
-                  onClick={() => setShowClipModal(true)}
-                  className="rounded-2xl bg-indigo-600 px-3 py-1.5 text-[11px] font-black text-white hover:bg-indigo-500"
-                >
-                  클립 올리기
-                </button>
-              ) : (
-                <Link
-                  href={`/login?callbackUrl=${encodeURIComponent(BONGNUDO2_PATH)}`}
-                  className="text-[11px] font-black text-slate-600 hover:underline dark:text-slate-300"
-                >
-                  로그인하고 올리기
-                </Link>
-              )}
+            <div className="flex items-center justify-end">
               <Link
                 href={`/clips?q=${encodeURIComponent(BONGNUDO2_CLIP_QUERY)}`}
                 className="text-[11px] font-black text-indigo-600 hover:underline dark:text-indigo-400"
@@ -266,16 +268,6 @@ export default function BongnudoView({
             )}
           </section>
         )}
-
-        <p className="text-center text-[11px] font-bold text-slate-400">
-          <a href={BONGNUDO2_NAMU_URL} target="_blank" rel="noopener noreferrer" className="underline">
-            나무위키 봉누도 2
-          </a>
-          {' · '}
-          <Link href={BONGNUDO2_PATH} className="underline">
-            이 페이지
-          </Link>
-        </p>
       </div>
 
       {showClipModal ? (
