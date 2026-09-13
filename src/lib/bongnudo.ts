@@ -521,6 +521,33 @@ export function getBongnudoBandRole(
   return 'only';
 }
 
+export type BongnudoHubRun = {
+  start: number;
+  end: number;
+};
+
+export function listBongnudoHubRuns(
+  days: Date[],
+  schedulesByDate: Map<string, FlattenedSchedule[]>,
+): BongnudoHubRun[] {
+  const flags = days.map((day) =>
+    (schedulesByDate.get(format(day, 'yyyy-MM-dd')) ?? []).some(isBongnudoHubSchedule),
+  );
+  const runs: BongnudoHubRun[] = [];
+  let index = 0;
+  while (index < flags.length) {
+    if (!flags[index]) {
+      index += 1;
+      continue;
+    }
+    let end = index;
+    while (end + 1 < flags.length && flags[end + 1]) end += 1;
+    runs.push({ start: index, end });
+    index = end + 1;
+  }
+  return runs;
+}
+
 export function bandRoleForCalendarDay(
   day: Date,
   weekDays: Date[],
