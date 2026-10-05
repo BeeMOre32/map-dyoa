@@ -26,6 +26,7 @@ export const BONGNUDO2_PRE_EVENTS = [
  * 나무위키 최초 입주 명단과 지도동 멤버 이름이 일치하는 인원.
  */
 export const BONGNUDO2_ROSTER_NAMES = [
+  '델로략국',
   '루시',
   '만득',
   '먼닉',
@@ -100,6 +101,7 @@ export type BongnudoRosterRp = {
  * 위구리만 공무직(기자), 나머지는 시민 명단.
  */
 export const BONGNUDO2_ROSTER_RP: readonly BongnudoRosterRp[] = [
+  { name: '델로략국', rpName: '', occupation: '🚶 시민', factionId: 'civilian' },
   { name: '루시', rpName: '', occupation: '🚶 시민', factionId: 'civilian' },
   { name: '만득', rpName: '', occupation: '🚶 시민', factionId: 'civilian' },
   { name: '먼닉', rpName: '먼정학', occupation: '🚶 시민', factionId: 'civilian' },
