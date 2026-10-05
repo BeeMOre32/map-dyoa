@@ -424,7 +424,7 @@ function resolveFillDateKeys(
   return fill.filter(isBongnudoOperatingDay);
 }
 
-/** 키워드 일정은 숨기고, 운영일 허브만 지정한 만큼 깔아 둠 */
+/** 허브를 까는 운영일에만 키워드 일정을 허브로 접고, 나머지 날은 그대로 보여 줌 */
 export function projectBongnudoSchedules(
   schedules: FlattenedSchedule[],
   roster: Streamer[],
@@ -432,6 +432,9 @@ export function projectBongnudoSchedules(
   options?: { fill?: 'one' | 'operating' | 'none' | string[]; now?: Date },
 ): FlattenedSchedule[] {
   const now = options?.now ?? new Date();
+  const daysToShow = new Set(
+    resolveFillDateKeys(options?.fill ?? 'one', now),
+  );
   const rest: FlattenedSchedule[] = [];
   const relatedByDay = new Map<string, FlattenedSchedule[]>();
 
@@ -439,7 +442,7 @@ export function projectBongnudoSchedules(
     if (isBongnudoHubSchedule(schedule)) continue;
     if (isBongnudoKeywordSchedule(schedule)) {
       const dateKey = kstDateKey(schedule.startTime);
-      if (!dateKey) {
+      if (!dateKey || !daysToShow.has(dateKey)) {
         rest.push(schedule);
         continue;
       }
@@ -450,10 +453,6 @@ export function projectBongnudoSchedules(
     }
     rest.push(schedule);
   }
-
-  const daysToShow = new Set(
-    resolveFillDateKeys(options?.fill ?? 'one', now),
-  );
 
   const hubs = [...daysToShow]
     .sort()
