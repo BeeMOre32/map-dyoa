@@ -270,8 +270,8 @@ export default function HelpPage() {
           </div>
           <ul className="list-inside list-disc space-y-2 text-sm font-bold text-indigo-700/90 dark:text-indigo-200/90">
             <li>
-              <strong>8월 후원 정산</strong> — 수익금 30,000원 · 서버비 33,136원 ·
-              잔여 73,983원 이월
+              <strong>9월 후원 정산</strong> — 수익금 79,000원 · 서버비 31,553원 ·
+              잔여 121,430원 이월
             </li>
             <li>
               <strong>기능별 백엔드 헬스</strong> — 서버·DB·일정·멤버·클립 30분 체크 ·
@@ -285,7 +285,7 @@ export default function HelpPage() {
             </li>
           </ul>
           <Link
-            href="/announcements#settlement-2026-08"
+            href="/announcements#settlement-2026-09"
             className="mt-4 inline-flex items-center gap-1.5 text-sm font-black text-indigo-600 hover:underline dark:text-indigo-400"
           >
             <Megaphone className="h-4 w-4" />
@@ -304,7 +304,7 @@ export default function HelpPage() {
             <p className="font-medium leading-relaxed text-slate-600 dark:text-slate-300">
               <strong>Map-Dyoa</strong>는 지도동 멤버의{' '}
               <strong>합방 일정</strong>, <strong>라이브 상태</strong>,{' '}
-              <strong>클립</strong>, <strong>봉누도 2</strong>, <strong>HOI4 내전 전적</strong>을 한곳에서 보는 팬
+              <strong>클립</strong>, <strong>HOI4 내전 전적</strong>을 한곳에서 보는 팬
               서비스입니다. 대부분은 로그인 없이 이용할 수 있고, 일정·클립 기여는 구글
               로그인 후 가능합니다.
             </p>
@@ -313,7 +313,7 @@ export default function HelpPage() {
                 { href: '/calendar', label: '스케줄', desc: '주간·월간 캘린더' },
                 { href: '/streamers', label: '멤버·라이브', desc: '프로필·방송 중 목록' },
                 { href: '/clips', label: '클립', desc: '치지직 클립 모음' },
-                { href: '/bongnudo', label: '봉누도', desc: 'GTA5 RP 일정·멤버·멀티뷰' },
+                { href: '/bongnudo', label: '봉누도 2', desc: '시즌 종료 · 멤버·클립 아카이브' },
                 { href: '/hoi4', label: '전적', desc: 'HOI4 내전·국가 통계' },
               ].map(({ href, label, desc }) => (
                 <Link
@@ -349,14 +349,11 @@ export default function HelpPage() {
             <Row icon={<Clapperboard className="h-5 w-5" />} delay={0.12}>
               <strong>클립</strong> — 멤버·월별·검색·관심 멤버 필터
             </Row>
-            <Row icon={<Car className="h-5 w-5" />} delay={0.15}>
-              <strong>봉누도</strong> — GTA5 RP 운영 일정·지도동 멤버·게스트·전용 멀티뷰
-            </Row>
-            <Row icon={<Sword className="h-5 w-5" />} delay={0.18}>
+            <Row icon={<Sword className="h-5 w-5" />} delay={0.15}>
               <strong>전적</strong> — HOI4 내전 세션·멤버별 참전 통계·필터
             </Row>
             <Tip>
-              일정·멤버 상세·멀티뷰가 열리면 하단 탭은 잠시 숨겨집니다. 호이고사·실험실은
+              일정·멤버 상세·멀티뷰가 열리면 하단 탭은 잠시 숨겨집니다. 종료된 봉누도 2·호이고사·실험실은
               설정 → 정보에서 열 수 있어요.
             </Tip>
           </motion.div>
@@ -617,18 +614,18 @@ export default function HelpPage() {
               >
                 봉누도
               </Link>{' '}
-              탭에서 GTA5 RP 서버 <strong>운영 일정</strong>, 지도동{' '}
-              <strong>참가 멤버</strong>, <strong>게스트</strong>, 관련{' '}
-              <strong>클립</strong>을 한 화면에 모읍니다.
+              페이지에서 끝난 GTA5 RP 시즌의 지도동{' '}
+              <strong>참가 멤버</strong>와 관련{' '}
+              <strong>클립</strong>을 모아 둡니다. 하단 탭에는 더 이상 없습니다.
             </Row>
             <Row icon={<LayoutGrid className="h-5 w-5" />} delay={0.06}>
-              <strong>방송 중 멀티뷰</strong>는 지금 라이브인 참가자만,{' '}
-              <strong>지도동 전체 멀티뷰</strong>는 멤버만 엽니다. 게스트는 카드에서
-              따로 고를 수 있습니다.
+              시즌 중에는 <strong>방송 중 멀티뷰</strong>와{' '}
+              <strong>지도동 전체 멀티뷰</strong>가 있었습니다. 지금은 클립·멤버 아카이브만
+              남겼습니다.
             </Row>
             <Row icon={<Sparkles className="h-5 w-5" />} delay={0.12}>
               멤버 카드를 누르면 <strong>RP 이름·직업·컨셉</strong> 모달이 열립니다.
-              로그인 유저는 바로 수정할 수 있고, 멀티뷰는 카드 왼쪽 체크로 고릅니다.
+              로그인 유저는 바로 수정할 수 있습니다.
             </Row>
           </div>
         </SectionCard>

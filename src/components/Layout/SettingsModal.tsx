@@ -165,6 +165,7 @@ function GeneralTab({
               href: '/bongnudo',
               icon: <Car className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />,
               label: '봉누도 2',
+              hint: '종료',
             },
             {
               href: '/lab/time-attack',
@@ -192,7 +193,13 @@ function GeneralTab({
               {icon}
               <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{label}</span>
               {hint ? (
-                <span className="ml-auto text-[10px] font-black text-amber-500 dark:text-amber-400">
+                <span
+                  className={`ml-auto text-[10px] font-black ${
+                    hint === '종료'
+                      ? 'text-slate-400 dark:text-slate-500'
+                      : 'text-amber-500 dark:text-amber-400'
+                  }`}
+                >
                   {hint}
                 </span>
               ) : null}

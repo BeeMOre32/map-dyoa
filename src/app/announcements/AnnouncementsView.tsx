@@ -867,6 +867,151 @@ function UpdateJune2026PostBody() {
   );
 }
 
+const SEPTEMBER_2026_DONATIONS = [
+  '24b0d121e09c28a8699fe8b115ef046f5e4b9e9a',
+  '24b0d121e09c28a8699fe8b115ef0464d48be1cd',
+  '24b0d121e09c28a8699fe8b115ef046ec84fc8f325',
+] as const;
+
+function SettlementSeptember2026PostBody() {
+  return (
+    <div className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 pt-3">
+      <p>
+        앞서 약속드린 대로,{' '}
+        <strong className="text-slate-900 dark:text-white">
+          후원 수익금 · 서버비 납부 · 잔여금 처리
+        </strong>
+        를 투명하게 공개하기 위해 글을 남깁니다.
+      </p>
+
+      <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-900/20">
+        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+        <p className="text-sm text-amber-700 dark:text-amber-300">
+          최근 작업이 겹치면서 글이 늦었습니다. 이 부분은 정말 죄송합니다.
+        </p>
+      </div>
+
+      <div className="flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800/50 dark:bg-emerald-900/20">
+        <Heart className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+        <p className="text-sm text-emerald-700 dark:text-emerald-300">
+          지난달(9월) 후원 수익금은 총{' '}
+          <strong className="text-emerald-800 dark:text-emerald-200">
+            79,000원
+          </strong>
+          입니다. 후원해 주신 분들께 진심으로 감사드립니다.
+        </p>
+      </div>
+
+      <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-800/40">
+        <p className="text-xs font-black text-slate-500 dark:text-slate-400">
+          9월 후원 내역
+        </p>
+        <ul className="space-y-1.5">
+          {SEPTEMBER_2026_DONATIONS.map((id) => (
+            <li
+              key={id}
+              className="break-all font-mono text-[11px] leading-relaxed text-slate-600 dark:text-slate-300"
+            >
+              {id}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="space-y-3 rounded-2xl border border-teal-200 bg-teal-50/70 p-4 dark:border-teal-800/50 dark:bg-teal-900/15">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+          <p className="text-sm font-black text-slate-900 dark:text-white">
+            9월 정산 내역
+          </p>
+        </div>
+        <div className="divide-y divide-teal-100 overflow-hidden rounded-xl border border-teal-100 bg-white/70 dark:divide-teal-900/40 dark:border-teal-900/40 dark:bg-slate-800/50">
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="font-bold text-slate-600 dark:text-slate-300">
+              8월 이월 잔여금
+            </span>
+            <span className="font-black text-slate-700 dark:text-slate-200">
+              73,983원
+            </span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="font-bold text-slate-600 dark:text-slate-300">
+              9월 후원 수익금
+            </span>
+            <span className="font-black text-emerald-600 dark:text-emerald-400">
+              + 79,000원
+            </span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="font-bold text-slate-600 dark:text-slate-300">
+              서버비{' '}
+              <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                (tax 포함 $22 · 9/2 환율)
+              </span>
+            </span>
+            <span className="font-black text-rose-500 dark:text-rose-400">
+              − 31,553원
+            </span>
+          </div>
+          <div className="flex items-center justify-between bg-teal-50/70 px-4 py-3 dark:bg-teal-900/20">
+            <span className="font-black text-slate-800 dark:text-slate-100">
+              잔여금 (이월)
+            </span>
+            <span className="font-black text-slate-900 dark:text-white">
+              121,430원
+            </span>
+          </div>
+        </div>
+        <p className="text-xs font-medium text-teal-700/80 dark:text-teal-300/80">
+          계산: 73,983 + 79,000 − 31,553 = 121,430원
+        </p>
+      </div>
+
+      <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-900/20">
+        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+        <div className="space-y-2 text-sm text-amber-700 dark:text-amber-300">
+          <p>
+            잔여금{' '}
+            <strong className="text-amber-800 dark:text-amber-200">
+              121,430원은 다음 달로 이월
+            </strong>
+            합니다.
+          </p>
+          <p>
+            9월에는 봉누도 2 기능 개발과 클립 자동 등록을 이것저것 실험해
+            봤습니다. 다른 사이트 작업도 겹쳐, 업데이트가 조금 늦었습니다.
+          </p>
+          <p>
+            이르면 내일(10월 11일)쯤{' '}
+            <strong className="text-amber-800 dark:text-amber-200">
+              클립 자동 등록
+            </strong>
+            과{' '}
+            <strong className="text-amber-800 dark:text-amber-200">
+              일정 자동 등록
+            </strong>{' '}
+            기능이 추가될 예정입니다.
+          </p>
+          <p>
+            피드백은 언제나 환영입니다. 카페 댓글이나{' '}
+            <a
+              href="mailto:windowssart01@gmail.com"
+              className="font-black underline underline-offset-2"
+            >
+              이메일
+            </a>
+            로 편하게 남겨 주세요. 늘 건강하시고 행복하세요.
+          </p>
+        </div>
+      </div>
+
+      <p className="text-slate-500 dark:text-slate-400">
+        늘 사이트를 아껴 주시고 후원해 주셔서 진심으로 감사합니다 💜
+      </p>
+    </div>
+  );
+}
+
 function SettlementAugust2026PostBody() {
   return (
     <div className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 pt-3">
@@ -1327,6 +1472,44 @@ export default function AnnouncementsView({
         </div>
 
         <div className="space-y-3">
+          <details
+            id="settlement-2026-09"
+            className="group scroll-mt-24 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm open:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:open:bg-slate-900"
+          >
+            <summary className="cursor-pointer list-none px-4 py-4 marker:content-none sm:px-5 [&::-webkit-details-marker]:hidden">
+              <span className="flex w-full items-start gap-3 text-left">
+                <span className="min-w-0 flex-1 space-y-2">
+                  <span className="flex flex-wrap items-center gap-2 gap-y-1">
+                    <span
+                      className={cn(
+                        'inline-block rounded-full px-2.5 py-1 text-xs font-black',
+                        'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
+                      )}
+                    >
+                      정산 공개
+                    </span>
+                    <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                      2026. 10. 10
+                    </span>
+                  </span>
+                  <span className="block pr-1 text-base font-black leading-snug text-slate-900 dark:text-white sm:text-lg">
+                    9월 후원 정산 · 잔여금 이월 안내
+                  </span>
+                  <span className="block text-sm font-medium leading-relaxed text-slate-500 group-open:hidden dark:text-slate-400">
+                    수익금 79,000원, 서버비 31,553원, 잔여금 121,430원은 다음
+                    달로 이월합니다.
+                  </span>
+                </span>
+                <span className="mt-1 shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180 dark:text-slate-500">
+                  <ChevronDown className="h-5 w-5" aria-hidden />
+                </span>
+              </span>
+            </summary>
+            <div className="border-t border-slate-100 px-4 pb-5 pt-1 dark:border-slate-800 sm:px-5">
+              <SettlementSeptember2026PostBody />
+            </div>
+          </details>
+
           <details
             id="settlement-2026-08"
             className="group scroll-mt-24 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm open:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:open:bg-slate-900"

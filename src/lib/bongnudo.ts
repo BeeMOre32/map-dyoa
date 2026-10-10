@@ -257,8 +257,12 @@ export function getBongnudoStatus(now = new Date()): BongnudoStatus {
   };
 }
 
-export function isBongnudoPromoActive(now = new Date()): boolean {
+export function isBongnudoSeasonActive(now = new Date()): boolean {
   return getBongnudoStatus(now).phase !== 'ended';
+}
+
+export function isBongnudoPromoActive(now = new Date()): boolean {
+  return isBongnudoSeasonActive(now);
 }
 
 export function matchBongnudoStreamers(streamers: Streamer[]): Streamer[] {

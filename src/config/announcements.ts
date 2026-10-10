@@ -14,13 +14,13 @@ export interface Announcement {
 
 /** 홈·캘린더 등에 띄우는 공지 (한 건만) */
 export const announcementToast: Announcement = {
-  id: 'settlement-2026-08',
+  id: 'settlement-2026-09',
   type: 'info',
   accent: 'teal',
-  title: '8월 후원 정산 · 잔여금 이월 안내',
+  title: '9월 후원 정산 · 잔여금 이월 안내',
   content:
-    '수익금 30,000원, 서버비 33,136원, 잔여금 73,983원은 다음 달로 이월합니다.',
-  href: '/announcements#settlement-2026-08',
+    '수익금 79,000원, 서버비 31,553원, 잔여금 121,430원은 다음 달로 이월합니다.',
+  href: '/announcements#settlement-2026-09',
 };
 
 /** 중앙 팝업으로 띄울 공지. null이면 팝업 없이 토스트만 사용 */

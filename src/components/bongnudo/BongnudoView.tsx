@@ -119,7 +119,9 @@ export default function BongnudoView({
                 봉누도 2
               </h1>
               <p className="mt-1 text-xs font-bold text-slate-400 dark:text-slate-500">
-                GTA5 RP · 지도동 멤버 · 달력 · 클립 · 멀티뷰
+                {status.phase === 'ended'
+                  ? 'GTA5 RP · 시즌 종료 · 멤버 · 클립'
+                  : 'GTA5 RP · 지도동 멤버 · 달력 · 클립 · 멀티뷰'}
               </p>
             </div>
             <span className={`rounded-full px-2.5 py-1 text-[11px] font-black ${PHASE_TONE[status.phase]}`}>
@@ -132,21 +134,25 @@ export default function BongnudoView({
             {liveOnAir.length > 0 ? ` · LIVE ${liveOnAir.length}` : ''}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Link
-              href={`${BONGNUDO2_MULTIVIEW_PATH}?live=1`}
-              className="inline-flex items-center gap-1.5 rounded-2xl bg-indigo-600 px-3.5 py-2 text-xs font-black text-white hover:bg-indigo-500"
-            >
-              <Radio className="h-3.5 w-3.5" />
-              방송 중 멀티뷰
-              {liveOnAir.length > 0 ? ` ${liveOnAir.length}` : ''}
-            </Link>
-            <Link
-              href={BONGNUDO2_MULTIVIEW_PATH}
-              className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              지도동 전체
-            </Link>
+            {status.phase !== 'ended' ? (
+              <>
+                <Link
+                  href={`${BONGNUDO2_MULTIVIEW_PATH}?live=1`}
+                  className="inline-flex items-center gap-1.5 rounded-2xl bg-indigo-600 px-3.5 py-2 text-xs font-black text-white hover:bg-indigo-500"
+                >
+                  <Radio className="h-3.5 w-3.5" />
+                  방송 중 멀티뷰
+                  {liveOnAir.length > 0 ? ` ${liveOnAir.length}` : ''}
+                </Link>
+                <Link
+                  href={BONGNUDO2_MULTIVIEW_PATH}
+                  className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                >
+                  <LayoutGrid className="h-3.5 w-3.5" />
+                  지도동 전체
+                </Link>
+              </>
+            ) : null}
             <Link
               href={`/clips?q=${encodeURIComponent(BONGNUDO2_CLIP_QUERY)}`}
               className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
@@ -220,7 +226,9 @@ export default function BongnudoView({
 
         {hubTab === 'members' ? (
           <section className="space-y-2">
-            <p className="text-[10px] font-bold text-slate-400">카드=RP · 체크=멀티뷰</p>
+            <p className="text-[10px] font-bold text-slate-400">
+              {status.phase === 'ended' ? '카드=RP' : '카드=RP · 체크=멀티뷰'}
+            </p>
             {members.length > 0 ? (
               <PersonGrid
                 people={members}
@@ -229,6 +237,7 @@ export default function BongnudoView({
                 selected={selected}
                 onToggle={toggleSelect}
                 onOpen={(streamer) => setRpTarget({ streamer, guest: false })}
+                selectable={status.phase !== 'ended'}
               />
             ) : (
               <EmptyNote>등록된 멤버와 아직 연결되지 않았습니다.</EmptyNote>
@@ -237,7 +246,7 @@ export default function BongnudoView({
               <p className="text-[11px] font-bold text-slate-400">미등록: {unmatchedNames.join(', ')}</p>
             ) : null}
 
-            {selected.length > 0 ? (
+            {status.phase !== 'ended' && selected.length > 0 ? (
               <button
                 type="button"
                 onClick={openSelectedMultiview}
@@ -374,9 +383,11 @@ function SeriesScheduleCard({
           </div>
         ) : (
           <p className="text-[11px] font-bold text-slate-400">
-            {status.phase === 'live'
-              ? '라이브 중인 멤버가 아직 없습니다'
-              : `참가 인원은 라이브에 맞춰 표시 · 로스터 ${rosterCount}명`}
+            {status.phase === 'ended'
+              ? `시즌이 끝났습니다 · 로스터 ${rosterCount}명`
+              : status.phase === 'live'
+                ? '라이브 중인 멤버가 아직 없습니다'
+                : `참가 인원은 라이브에 맞춰 표시 · 로스터 ${rosterCount}명`}
           </p>
         )}
       </div>
@@ -502,6 +513,7 @@ function PersonGrid({
   onToggle,
   onOpen,
   guest = false,
+  selectable = true,
 }: {
   people: Streamer[];
   profiles: Record<string, BongnudoProfileView>;
@@ -510,6 +522,7 @@ function PersonGrid({
   onToggle: (id: string) => void;
   onOpen: (streamer: Streamer) => void;
   guest?: boolean;
+  selectable?: boolean;
 }) {
   return (
     <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
@@ -521,23 +534,25 @@ function PersonGrid({
           <li
             key={person.id}
             className={`relative rounded-2xl border px-1.5 py-2.5 text-center ${
-              picked
+              selectable && picked
                 ? 'border-indigo-300 bg-indigo-50 dark:border-indigo-600 dark:bg-indigo-950/40'
                 : 'border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-900'
             }`}
           >
-            <button
-              type="button"
-              onClick={() => onToggle(person.id)}
-              className={`absolute left-2 top-2 flex h-5 w-5 items-center justify-center rounded-md border ${
-                picked
-                  ? 'border-indigo-500 bg-indigo-500 text-white'
-                  : 'border-slate-300 bg-white text-transparent dark:border-slate-600 dark:bg-slate-800'
-              }`}
-              aria-label={`${person.name} 멀티뷰 선택`}
-            >
-              <Check className="h-3 w-3" />
-            </button>
+            {selectable ? (
+              <button
+                type="button"
+                onClick={() => onToggle(person.id)}
+                className={`absolute left-2 top-2 flex h-5 w-5 items-center justify-center rounded-md border ${
+                  picked
+                    ? 'border-indigo-500 bg-indigo-500 text-white'
+                    : 'border-slate-300 bg-white text-transparent dark:border-slate-600 dark:bg-slate-800'
+                }`}
+                aria-label={`${person.name} 멀티뷰 선택`}
+              >
+                <Check className="h-3 w-3" />
+              </button>
+            ) : null}
             <button type="button" onClick={() => onOpen(person)} className="flex w-full flex-col items-center gap-1.5 pt-1">
               <div className="relative">
                 <StreamerAvatar

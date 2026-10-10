@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { LayoutGroup, motion } from 'motion/react';
 import { Calendar, Users, Clapperboard, Sword, Radio } from 'lucide-react';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
+import { isBongnudoSeasonActive } from '@/lib/bongnudo';
 
 const tabs = [
   { id: 'calendar', label: '스케줄', href: '/calendar', icon: Calendar },
@@ -31,7 +32,9 @@ export default function Navigation() {
     <nav className="flex justify-center py-0 shrink-0 transition-colors z-30 w-max mx-auto" aria-label="지도동 메뉴">
       <LayoutGroup>
       <div className="rounded-xl flex bg-slate-100 dark:bg-slate-900 p-1 border-2 border-slate-200 dark:border-slate-800 relative shadow-inner">
-        {tabs.map((tab) => {
+        {tabs
+          .filter((tab) => tab.id !== 'bongnudo' || isBongnudoSeasonActive())
+          .map((tab) => {
           const isActive = pathname.startsWith(tab.href);
           const isAmber = tab.accent === 'amber';
           const isStreamers = tab.id === 'streamers';
