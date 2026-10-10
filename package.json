@@ -15,6 +15,7 @@
     "db:ensure-hoi4-exam-entry": "prisma db execute --schema prisma/schema.prisma --file scripts/add-hoi4-exam-entry.sql",
     "db:ensure-schedule-updated-at": "prisma db execute --schema prisma/schema.prisma --file scripts/add-schedule-updated-at.sql",
     "db:ensure-schedule-candidate": "prisma db execute --schema prisma/schema.prisma --file scripts/add-schedule-candidate.sql",
+    "db:ensure-clip-candidate": "prisma db execute --schema prisma/schema.prisma --file scripts/add-clip-candidate.sql",
     "db:backup-account": "prisma db execute --schema prisma/schema.prisma --file scripts/backup-account.sql",
     "db:restore-account": "prisma db execute --schema prisma/schema.prisma --file scripts/restore-account-from-backup.sql",
     "db:export-account": "node scripts/export-account-backup.mjs",

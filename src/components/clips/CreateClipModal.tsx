@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { X, Link as LinkIcon, Clapperboard, Tv, Search, Users, Loader2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { twMerge } from 'tailwind-merge';
@@ -15,6 +16,7 @@ import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import type { ClipWithParticipants } from '@/types/entities';
 import ScheduleSearchSelect from './ScheduleSearchSelect';
 import StreamerAvatar from '../streamer/StreamerAvatar';
+import ClipCandidateRegisterTab from './ClipCandidateRegisterTab';
 
 interface CreateClipModalProps {
   streamers: Streamer[];
@@ -47,6 +49,8 @@ export default function CreateClipModal({
 }: CreateClipModalProps) {
   const dismiss = useModalDismiss({ mother, onClose });
   const form = useClipForm(streamers, schedules, dismiss, initialData, { bongnudoPreset });
+  const [mode, setMode] = useState<'form' | 'candidates'>('form');
+  const showCandidates = !form.isEdit && mode === 'candidates';
   useEscapeKey(dismiss);
   useScrollLock();
 
@@ -60,7 +64,9 @@ export default function CreateClipModal({
     >
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={dismiss} />
       <motion.div
-        className="relative flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-900 sm:rounded-3xl"
+        className={`relative flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-900 sm:rounded-3xl ${
+          showCandidates ? 'max-w-xl' : 'max-w-lg'
+        }`}
         variants={smoothModalVariants}
         initial="hidden"
         animate="visible"
@@ -77,7 +83,13 @@ export default function CreateClipModal({
                 {form.asBongnudo ? '봉누도 2' : form.isEdit ? 'Edit Clip' : 'New Clip'}
               </p>
               <h2 className="text-lg font-black text-slate-800 dark:text-white">
-                {form.isEdit ? '클립 수정' : form.asBongnudo ? '봉누도 클립 추가' : '클립 추가'}
+                {form.isEdit
+                  ? '클립 수정'
+                  : showCandidates
+                    ? '인기 클립 후보'
+                    : form.asBongnudo
+                      ? '봉누도 클립 추가'
+                      : '클립 추가'}
               </h2>
             </div>
           </div>
@@ -89,6 +101,33 @@ export default function CreateClipModal({
           </button>
         </div>
 
+        {!form.isEdit && (
+          <div className="flex shrink-0 gap-2 px-4 pt-4 sm:px-6">
+            {(
+              [
+                ['form', '직접 입력'],
+                ['candidates', '인기 후보'],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setMode(key)}
+                className={`rounded-full px-3 py-1.5 text-xs font-black ${
+                  mode === key
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {showCandidates ? (
+          <ClipCandidateRegisterTab />
+        ) : (
         <motion.form
           id="clip-form"
           onSubmit={form.handleSubmit}
@@ -395,6 +434,7 @@ export default function CreateClipModal({
             </motion.button>
           </motion.div>
         </motion.form>
+        )}
       </motion.div>
     </motion.div>
   );

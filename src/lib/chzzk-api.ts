@@ -83,6 +83,84 @@ export async function fetchChzzkLiveDetail(
   return null;
 }
 
+export type ChzzkClipListItem = {
+  clipUID: string;
+  clipTitle?: string;
+  thumbnailImageUrl?: string | null;
+  readCount?: number;
+  createdDate?: string;
+  adult?: boolean;
+  blindType?: string | null;
+};
+
+export type ChzzkClipListPage = {
+  items: ChzzkClipListItem[];
+  nextClipUID: string | null;
+};
+
+/**
+ * 채널 클립 목록.
+ * 최근 반응은 `orderType=RECENT` 로 받은 뒤 날짜·조회수로 거른다.
+ * `orderType=POPULAR` 는 전체 기간 인기라 최근 클립이 빠지기 쉽다.
+ */
+export async function fetchChzzkChannelClips(
+  channelId: string,
+  opts?: {
+    size?: number;
+    orderType?: 'RECENT' | 'POPULAR';
+    clipUID?: string | null;
+    timeoutMs?: number;
+    retries?: number;
+  },
+): Promise<ChzzkClipListPage | null> {
+  const size = opts?.size ?? 20;
+  const orderType = opts?.orderType ?? 'RECENT';
+  const timeoutMs = opts?.timeoutMs ?? 8000;
+  const retries = opts?.retries ?? 1;
+  const qs = new URLSearchParams({
+    size: String(size),
+    orderType,
+  });
+  if (opts?.clipUID) qs.set('clipUID', opts.clipUID);
+  const url = `https://api.chzzk.naver.com/service/v1/channels/${channelId}/clips?${qs.toString()}`;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      const res = await fetch(url, {
+        headers: CHZZK_API_HEADERS,
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+
+      if (!res.ok) {
+        if (attempt < retries) continue;
+        return null;
+      }
+
+      const json = (await res.json()) as {
+        content?: {
+          data?: ChzzkClipListItem[];
+          page?: { next?: { clipUID?: string } | null };
+        } | null;
+      };
+      const data = json.content?.data ?? [];
+      const next = json.content?.page?.next?.clipUID?.trim() || null;
+      return {
+        items: data.filter((item) => item.clipUID?.trim()),
+        nextClipUID: next,
+      };
+    } catch {
+      if (attempt < retries) continue;
+      return null;
+    }
+  }
+
+  return null;
+}
+
 /** 동시 요청 수 제한 — 치지직 rate limit·타임아웃 완화 */
 export async function mapWithConcurrency<T, R>(
   items: readonly T[],

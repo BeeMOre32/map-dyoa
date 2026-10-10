@@ -308,3 +308,30 @@ model ScheduleCandidate {
   @@index([status, detectedAt(sort: Desc)])
   @@index([dateKst])
 }
+
+/// 최근 클립 중 조회수가 기준을 넘은 것. 승인 전에는 클립 목록에 안 올라감
+enum ClipCandidateStatus {
+  PENDING
+  APPROVED
+  DISMISSED
+}
+
+model ClipCandidate {
+  id           String              @id @default(cuid())
+  clipUid      String              @unique
+  url          String
+  title        String
+  thumbnailUrl String?
+  readCount    Int                 @default(0)
+  streamerId   String
+  streamerName String
+  clipDate     DateTime?           @db.Timestamptz(3)
+  status       ClipCandidateStatus @default(PENDING)
+  detectedAt   DateTime            @default(now()) @db.Timestamptz(3)
+  lastSeenAt   DateTime            @default(now()) @db.Timestamptz(3)
+  resolvedAt   DateTime?           @db.Timestamptz(3)
+  clipId       String?
+
+  @@index([status, readCount(sort: Desc)])
+  @@index([streamerId])
+}
