@@ -6,8 +6,6 @@ import { MapDyoaServerRequestFailedError } from '@/lib/map-dyoa-server-client-er
 import { fetchWithBackoff, readJsonSafely } from '@/lib/map-dyoa-server-http-utils';
 import { getScheduleServerBaseUrl } from '@/lib/map-dyoa-server-schedules';
 
-export type { ClipCandidateScanResult, ClipCandidateView };
-
 function serverBase(): string {
   const base = getScheduleServerBaseUrl();
   if (!base) {

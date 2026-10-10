@@ -9,15 +9,15 @@ import {
   dismissClipCandidate,
   listPendingClipCandidates,
   scanClipCandidates,
-  type ClipCandidateScanResult,
 } from '@/lib/clip-candidate-store';
-import type { ClipCandidateView } from '@/lib/clip-candidate-policy';
+import type {
+  ClipCandidateScanResult,
+  ClipCandidateView,
+} from '@/lib/clip-candidate-policy';
 import { getErrorMessage, logError } from '@/lib/error-handling';
 import type { ActionResult } from '@/types/api-response';
 
-export type { ClipCandidateView };
-
-export type ClipCandidatesPayload = {
+type ClipCandidatesPayload = {
   candidates: ClipCandidateView[];
   scanned: boolean;
   created: number;

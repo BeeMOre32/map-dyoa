@@ -10,11 +10,11 @@ import {
   listClipCandidatesAction,
   refreshClipCandidatesAction,
   registerClipCandidateAction,
-  type ClipCandidateView,
 } from '@/app/clips/candidate-actions';
 import {
   CLIP_CANDIDATE_MIN_READ_COUNT,
   CLIP_CANDIDATE_WINDOW_DAYS,
+  type ClipCandidateView,
 } from '@/lib/clip-candidate-policy';
 
 const SCAN_COOLDOWN_KEY = 'clip-candidates:last-scan';
@@ -68,15 +68,22 @@ export default function ClipCandidateRegisterTab() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await listClipCandidatesAction();
-    setLoading(false);
-    if (!res.success) {
+    try {
+      const res = await listClipCandidatesAction();
+      if (!res.success) {
+        setMessageTone('err');
+        setMessage(res.error ?? '후보를 불러오지 못했습니다.');
+        setCandidates([]);
+        return;
+      }
+      apply(res.data.candidates);
+    } catch {
       setMessageTone('err');
-      setMessage(res.error ?? '후보를 불러오지 못했습니다.');
+      setMessage('후보를 불러오지 못했습니다.');
       setCandidates([]);
-      return;
+    } finally {
+      setLoading(false);
     }
-    apply(res.data.candidates);
   }, [apply]);
 
   useEffect(() => {
