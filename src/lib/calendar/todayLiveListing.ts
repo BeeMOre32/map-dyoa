@@ -40,8 +40,19 @@ function parseOpenDate(value: string | null): Date | null {
   return isValid(date) ? date : null;
 }
 
-function earliestDate(dates: Array<Date | null>): Date | null {
-  const valid = dates.filter((date): date is Date => date instanceof Date);
+/** RSC→클라이언트 직렬화 후 Date가 string으로 올 수 있음 */
+function toDate(value: Date | string | null | undefined): Date | null {
+  if (value == null) return null;
+  if (typeof value === 'string') return parseOpenDate(value);
+  return isValid(value) ? value : null;
+}
+
+function toTime(value: Date | string | null | undefined): number {
+  return toDate(value)?.getTime() ?? 0;
+}
+
+function earliestDate(dates: Array<Date | string | null | undefined>): Date | null {
+  const valid = dates.map(toDate).filter((date): date is Date => date != null);
   if (valid.length === 0) return null;
   return valid.reduce((earliest, date) => (date.getTime() < earliest.getTime() ? date : earliest));
 }
@@ -65,7 +76,7 @@ export function buildTodayLiveRows({
   const consumed = new Set<string>();
   const rows: TodayLiveRow[] = [];
 
-  const ordered = [...schedules].sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+  const ordered = [...schedules].sort((a, b) => toTime(a.startTime) - toTime(b.startTime));
   for (const schedule of ordered) {
     const people = schedule.participants.filter((person) => !person.isGuest);
     const livePeople = people.filter((person) => liveIds.has(person.id) && !consumed.has(person.id));
@@ -75,6 +86,7 @@ export function buildTodayLiveRows({
       .map((person) => channelById.get(person.id))
       .find((channel) => channel?.liveTitle);
     for (const person of livePeople) consumed.add(person.id);
+    const scheduleStart = toDate(schedule.startTime);
 
     rows.push({
       id: schedule.id,
@@ -82,7 +94,7 @@ export function buildTodayLiveRows({
       category: schedule.game?.title?.trim() || liveChannel?.category || null,
       startedAt: earliestDate([
         ...livePeople.map((person) => parseOpenDate(channelById.get(person.id)?.openDate ?? null)),
-        now.getTime() >= schedule.startTime.getTime() ? schedule.startTime : null,
+        scheduleStart && now.getTime() >= scheduleStart.getTime() ? scheduleStart : null,
       ]),
       collab: true,
       members: people.map((person) => ({
@@ -103,11 +115,14 @@ export function buildTodayLiveRows({
       const people = schedule.participants.filter((person) => !person.isGuest);
       return people.length < 2 && people.some((person) => person.id === streamer.id);
     });
+    const soloStart = toDate(solo?.startTime);
     rows.push({
       id: channel.streamerId,
       title: channel.liveTitle || solo?.title?.trim() || `${streamer.name} 방송`,
       category: channel.category || solo?.game?.title?.trim() || null,
-      startedAt: parseOpenDate(channel.openDate) ?? (solo && now.getTime() >= solo.startTime.getTime() ? solo.startTime : null),
+      startedAt:
+        parseOpenDate(channel.openDate) ??
+        (soloStart && now.getTime() >= soloStart.getTime() ? soloStart : null),
       collab: false,
       members: [
         {
@@ -121,7 +136,7 @@ export function buildTodayLiveRows({
     });
   }
 
-  return rows.sort((a, b) => (b.startedAt?.getTime() ?? 0) - (a.startedAt?.getTime() ?? 0));
+  return rows.sort((a, b) => toTime(b.startedAt) - toTime(a.startedAt));
 }
 
 function memberFromParticipant(
@@ -169,7 +184,7 @@ export function buildBetaDayRows({
       id: schedule.id,
       title: schedule.title.trim() || `${people[0]?.name ?? '방송'} 라이브`,
       category: schedule.game?.title?.trim() || null,
-      startedAt: schedule.startTime,
+      startedAt: toDate(schedule.startTime),
       collab: people.length >= 2,
       members: people.map((person) => memberFromParticipant(person, liveIds)),
     });
@@ -177,7 +192,7 @@ export function buildBetaDayRows({
   }
 
   const rows = [...liveRows, ...recorded].sort(
-    (a, b) => (a.startedAt?.getTime() ?? 0) - (b.startedAt?.getTime() ?? 0),
+    (a, b) => toTime(a.startedAt) - toTime(b.startedAt),
   );
   return { cards, rows };
 }
