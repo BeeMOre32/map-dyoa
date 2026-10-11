@@ -6,20 +6,75 @@ export const CHZZK_API_HEADERS: Record<string, string> = {
   'front-client-product-type': 'web',
 };
 
-export type ChzzkLiveDetailContent = {
+/** polling live-status 응답. live-detail에도 같은 필드가 있다. */
+export type ChzzkLiveStatusContent = {
   status?: string;
   liveTitle?: string;
   liveCategory?: string;
+  liveCategoryValue?: string;
   concurrentUserCount?: number;
+  accumulateCount?: number;
   openDate?: string;
+  adult?: boolean;
+  tags?: string[];
+};
+
+export type ChzzkLiveDetailContent = ChzzkLiveStatusContent & {
+  /** `{type}` 자리에 해상도(144·270·360·480·720·1080)를 넣어 쓰는 템플릿 */
+  liveImageUrl?: string | null;
+  defaultThumbnailImageUrl?: string | null;
   channel?: { channelName?: string };
 };
 
 const LIVE_DETAIL_URL = (channelId: string) =>
   `https://api.chzzk.naver.com/service/v2/channels/${channelId}/live-detail`;
 
-export function isChzzkChannelLive(content: ChzzkLiveDetailContent | null | undefined): boolean {
+/** live-detail 대비 응답이 1/5 수준. polling v1은 500을 반환한다. */
+const LIVE_STATUS_URL = (channelId: string) =>
+  `https://api.chzzk.naver.com/polling/v2/channels/${channelId}/live-status`;
+
+export function isChzzkChannelLive(content: ChzzkLiveStatusContent | null | undefined): boolean {
   return content?.status === 'OPEN';
+}
+
+export type ChzzkLiveThumbnailSize = 270 | 360 | 480 | 720 | 1080;
+
+export function chzzkLiveThumbnailUrl(
+  content: ChzzkLiveDetailContent | null | undefined,
+  size: ChzzkLiveThumbnailSize = 480,
+): string | null {
+  const template = content?.liveImageUrl?.trim();
+  if (template) return template.replace('{type}', String(size));
+  return content?.defaultThumbnailImageUrl?.trim() || null;
+}
+
+type ChzzkContentResult<T> = { ok: true; content: T | null } | { ok: false };
+
+/** HTTP 오류·타임아웃은 ok:false, 정상 응답의 content null은 ok:true로 구분 */
+async function fetchChzzkContent<T>(
+  url: string,
+  opts: { timeoutMs: number; retries: number },
+): Promise<ChzzkContentResult<T>> {
+  for (let attempt = 0; attempt <= opts.retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), opts.timeoutMs);
+      const res = await fetch(url, {
+        headers: CHZZK_API_HEADERS,
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+
+      if (!res.ok) continue;
+
+      const json = (await res.json()) as { content?: T | null };
+      return { ok: true, content: json.content ?? null };
+    } catch {
+      // 다음 시도
+    }
+  }
+  return { ok: false };
 }
 
 /**
@@ -48,39 +103,27 @@ export async function fetchChzzkLiveDetail(
   channelId: string,
   opts?: { timeoutMs?: number; retries?: number },
 ): Promise<ChzzkLiveDetailContent | null> {
-  const timeoutMs = opts?.timeoutMs ?? 6000;
-  const retries = opts?.retries ?? 1;
+  const result = await fetchChzzkContent<ChzzkLiveDetailContent>(LIVE_DETAIL_URL(channelId), {
+    timeoutMs: opts?.timeoutMs ?? 6000,
+    retries: opts?.retries ?? 1,
+  });
+  return result.ok ? result.content : null;
+}
 
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), timeoutMs);
-      const res = await fetch(LIVE_DETAIL_URL(channelId), {
-        headers: CHZZK_API_HEADERS,
-        cache: 'no-store',
-        signal: controller.signal,
-      });
-      clearTimeout(timer);
-
-      if (!res.ok) {
-        if (attempt < retries) continue;
-        return null;
-      }
-
-      const json = (await res.json()) as {
-        code?: number;
-        content?: ChzzkLiveDetailContent | null;
-      };
-
-      if (json.content == null) return null;
-      return json.content;
-    } catch {
-      if (attempt < retries) continue;
-      return null;
-    }
-  }
-
-  return null;
+/**
+ * 방송 상태·제목·카테고리·시청자·openDate. 썸네일·재생 정보는 없다.
+ * polling이 실패할 때만 live-detail로 한 번 더 조회한다.
+ */
+export async function fetchChzzkLiveStatus(
+  channelId: string,
+  opts?: { timeoutMs?: number },
+): Promise<ChzzkLiveStatusContent | null> {
+  const result = await fetchChzzkContent<ChzzkLiveStatusContent>(LIVE_STATUS_URL(channelId), {
+    timeoutMs: opts?.timeoutMs ?? 4000,
+    retries: 0,
+  });
+  if (result.ok) return result.content;
+  return fetchChzzkLiveDetail(channelId);
 }
 
 export type ChzzkClipListItem = {

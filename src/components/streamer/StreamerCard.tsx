@@ -1,11 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Eye, LayoutGrid, MoreHorizontal } from 'lucide-react';
+import { Eye, LayoutGrid, MoreHorizontal, Users } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { Streamer } from '@prisma/client';
-import { getStreamerImagePath } from '@/lib/utils';
+import { formatViewerCount, getStreamerImagePath } from '@/lib/utils';
 import { useIsDarkAfterMount } from '@/hooks/useIsDarkAfterMount';
 import { getStreamerColor } from '@/constants/streamercolor';
 import { getChannelUrl } from '@/components/multiview/utils';
@@ -24,6 +24,7 @@ interface StreamerCardProps {
   streamer: Streamer;
   onRequestEdit: (streamer: Streamer) => void;
   isLive?: boolean;
+  viewerCount?: number;
   isSelected?: boolean;
   isMaxReached?: boolean;
   onToggleMultiview?: () => void;
@@ -45,6 +46,7 @@ export default function StreamerCard({
   streamer,
   onRequestEdit,
   isLive = false,
+  viewerCount,
   isSelected = false,
   isMaxReached = false,
   onToggleMultiview,
@@ -266,6 +268,15 @@ export default function StreamerCard({
           {streamer.role && (
             <span className="pointer-events-none rounded-lg border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-indigo-600 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400 sm:rounded-xl sm:px-2.5 sm:py-1 sm:text-[10px]">
               {streamer.role}
+            </span>
+          )}
+          {isLive && viewerCount !== undefined && (
+            <span
+              className="pointer-events-none inline-flex items-center gap-0.5 rounded-lg border border-red-100 bg-red-50 px-2 py-0.5 text-[9px] font-black tabular-nums text-red-600 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 sm:rounded-xl sm:px-2.5 sm:py-1 sm:text-[10px]"
+              title={`시청자 ${viewerCount.toLocaleString('ko-KR')}명`}
+            >
+              <Users className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              {formatViewerCount(viewerCount)}
             </span>
           )}
 

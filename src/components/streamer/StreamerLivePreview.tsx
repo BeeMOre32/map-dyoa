@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
-import { ExternalLink, GripVertical, Pin, PinOff, X } from 'lucide-react';
+import { ExternalLink, GripVertical, Pin, PinOff, Users, X } from 'lucide-react';
 import type { Streamer } from '@prisma/client';
 import { getChannelUrl } from '@/components/multiview/utils';
-import StreamerLiveEmbed from './StreamerLiveEmbed';
+import { formatViewerCount } from '@/lib/utils';
+import StreamerLiveEmbed, { type LiveEmbedMeta } from './StreamerLiveEmbed';
 
 type AnchorRect = {
   top: number;
@@ -81,8 +82,13 @@ export default function StreamerLivePreview({
   const [pos, setPos] = useState(() => computePosition(anchor));
   const [pinned, setPinned] = useState(false);
   const [liveTitle, setLiveTitle] = useState<string | null>(null);
+  const [viewerCount, setViewerCount] = useState<number | null>(null);
   const channelUrl = getChannelUrl(streamer);
-  const metaUrl = streamer.chzzkUrl ?? channelUrl;
+
+  const handleMeta = useCallback((meta: LiveEmbedMeta) => {
+    setLiveTitle(meta.title);
+    setViewerCount(meta.viewerCount);
+  }, []);
 
   useLayoutEffect(() => {
     if (draggedRef.current) return;
@@ -92,23 +98,6 @@ export default function StreamerLivePreview({
   useEffect(() => {
     onPinnedChange?.(pinned);
   }, [pinned, onPinnedChange]);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLiveTitle(null);
-    void fetch(`/api/chzzk/live-meta?url=${encodeURIComponent(metaUrl)}`, {
-      cache: 'no-store',
-    })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((json: { title?: string | null } | null) => {
-        if (cancelled || !json?.title?.trim()) return;
-        setLiveTitle(json.title.trim());
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [metaUrl]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -195,6 +184,15 @@ export default function StreamerLivePreview({
         <span className="shrink-0 rounded bg-red-600 px-1.5 py-0.5 text-[9px] font-black tracking-wide text-white">
           LIVE
         </span>
+        {viewerCount !== null && (
+          <span
+            className="inline-flex shrink-0 items-center gap-0.5 text-[11px] font-bold tabular-nums text-red-300"
+            title={`시청자 ${viewerCount.toLocaleString('ko-KR')}명`}
+          >
+            <Users className="h-3 w-3" />
+            {formatViewerCount(viewerCount)}
+          </span>
+        )}
         <p
           className="min-w-0 flex-1 break-words text-left text-[14px] leading-snug text-[#dfe2ea] line-clamp-2"
           title={titleText}
@@ -237,7 +235,7 @@ export default function StreamerLivePreview({
         </button>
       </div>
 
-      <StreamerLiveEmbed streamer={streamer} showMeta />
+      <StreamerLiveEmbed streamer={streamer} showMeta onMeta={handleMeta} />
     </motion.div>,
     document.body,
   );

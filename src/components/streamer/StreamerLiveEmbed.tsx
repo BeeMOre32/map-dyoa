@@ -27,8 +27,24 @@ type Props = {
   streamer: Streamer;
   className?: string;
   showMeta?: boolean;
-  onMeta?: (meta: { title: string | null; category: string | null }) => void;
+  onMeta?: (meta: LiveEmbedMeta) => void;
 };
+
+export type LiveEmbedMeta = {
+  title: string | null;
+  category: string | null;
+  viewerCount: number | null;
+};
+
+type LiveMetaResponse = {
+  title?: string | null;
+  category?: string | null;
+  categoryValue?: string | null;
+  viewerCount?: number | null;
+  thumbnailUrl?: string | null;
+};
+
+const EMPTY_META: LiveEmbedMeta = { title: null, category: null, viewerCount: null };
 
 /** 확장 미설치 — 광고형 CTA 없이 포스터 + 짧은 안내만 */
 function InviteCard({
@@ -100,10 +116,12 @@ export default function StreamerLiveEmbed({
     'locked',
   );
   const [category, setCategory] = useState<string | null>(null);
+  const [liveThumbnail, setLiveThumbnail] = useState<string | null>(null);
 
   const liveUrl = getPreviewLiveUrl(streamer);
   const metaUrl = streamer.chzzkUrl ?? `https://chzzk.naver.com/${streamer.handle}`;
-  const posterSrc = streamer.profileImg ?? getStreamerImagePath(streamer.name);
+  const posterSrc =
+    liveThumbnail ?? streamer.profileImg ?? getStreamerImagePath(streamer.name);
   const onMetaRef = useRef(onMeta);
   onMetaRef.current = onMeta;
   const muted = audioGate !== 'open';
@@ -127,20 +145,24 @@ export default function StreamerLiveEmbed({
   useEffect(() => {
     let cancelled = false;
     setCategory(null);
-    onMetaRef.current?.({ title: null, category: null });
+    setLiveThumbnail(null);
+    onMetaRef.current?.(EMPTY_META);
     void fetch(`/api/chzzk/live-meta?url=${encodeURIComponent(metaUrl)}`, {
       cache: 'no-store',
     })
       .then((r) => (r.ok ? r.json() : null))
-      .then(
-        (json: { title?: string | null; category?: string | null } | null) => {
-          if (cancelled || !json) return;
-          const title = json.title?.trim() || null;
-          const cat = json.category?.trim() || null;
-          if (cat) setCategory(cat);
-          onMetaRef.current?.({ title, category: cat });
-        },
-      )
+      .then((json: LiveMetaResponse | null) => {
+        if (cancelled || !json) return;
+        const title = json.title?.trim() || null;
+        const cat = json.categoryValue?.trim() || json.category?.trim() || null;
+        if (cat) setCategory(cat);
+        if (json.thumbnailUrl) setLiveThumbnail(json.thumbnailUrl);
+        onMetaRef.current?.({
+          title,
+          category: cat,
+          viewerCount: typeof json.viewerCount === 'number' ? json.viewerCount : null,
+        });
+      })
       .catch(() => {});
     return () => {
       cancelled = true;

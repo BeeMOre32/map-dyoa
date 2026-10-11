@@ -1,11 +1,7 @@
 import { getPrisma, getPrismaForDomain } from '@/lib/prisma';
 import { extractChzzkChannelId } from '@/lib/chzzk';
-import {
-  fetchChzzkLiveDetail,
-  mapWithConcurrency,
-  parseChzzkOpenDate,
-} from '@/lib/chzzk-api';
-import { getLiveStreamerIds } from '@/lib/chzzk-live-status';
+import { fetchChzzkLiveStatus, parseChzzkOpenDate } from '@/lib/chzzk-api';
+import { fetchLiveChannels } from '@/lib/chzzk-live-status';
 import { toKstDateKey, kstDayBounds } from '@/lib/backend-health';
 import { appDataRetentionCutoff } from '@/lib/app-data-retention';
 import {
@@ -22,8 +18,6 @@ import {
   fetchAllGamesFromServer,
 } from '@/lib/map-dyoa-server-games-feedback';
 import type { ScheduleCandidate, ScheduleCandidateStatus } from '@prisma/client';
-
-const DETAIL_CONCURRENCY = 4;
 
 export type ScheduleCandidateView = ScheduleCandidate & {
   suggestedParticipants: CollabMember[];
@@ -138,14 +132,15 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
   skippedResolved: number;
 }> {
   const dateKst = toKstDateKey(now);
-  const [liveIds, members, scheduledIds] = await Promise.all([
-    getLiveStreamerIds({ fresh: true }),
+  const [liveChannels, members, scheduledIds] = await Promise.all([
+    fetchLiveChannels(),
     loadMemberStreamers(),
     streamerIdsWithScheduleToday(dateKst),
   ]);
 
-  const liveSet = new Set(liveIds);
-  const candidates = members.filter((m) => liveSet.has(m.id) && !scheduledIds.has(m.id));
+  const liveIds = liveChannels.map((c) => c.streamerId);
+  const statusById = new Map(liveChannels.map((c) => [c.streamerId, c.status]));
+  const candidates = members.filter((m) => statusById.has(m.id) && !scheduledIds.has(m.id));
   const skippedScheduled = liveIds.filter((id) => scheduledIds.has(id)).length;
 
   const prisma = getPrisma();
@@ -153,17 +148,15 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
   let refreshed = 0;
   let skippedResolved = 0;
 
-  const details = await mapWithConcurrency(candidates, DETAIL_CONCURRENCY, async (m) => {
-    const channelId = m.chzzkUrl ? extractChzzkChannelId(m.chzzkUrl) : null;
-    const content = channelId ? await fetchChzzkLiveDetail(channelId) : null;
-    const liveStart = parseChzzkOpenDate(content?.openDate);
+  const details = candidates.map((m) => {
+    const content = statusById.get(m.id);
     return {
       streamerId: m.id,
       streamerName: m.name,
       title: content?.liveTitle?.trim() || `${m.name} 라이브`,
       liveCategory: content?.liveCategory ?? null,
       liveUrl: liveUrlFor(m.chzzkUrl),
-      liveStart,
+      liveStart: parseChzzkOpenDate(content?.openDate),
     };
   });
 
@@ -336,7 +329,7 @@ export async function approveScheduleCandidate(
   ];
 
   const channelId = row.liveUrl ? extractChzzkChannelId(row.liveUrl) : null;
-  const liveContent = channelId ? await fetchChzzkLiveDetail(channelId) : null;
+  const liveContent = channelId ? await fetchChzzkLiveStatus(channelId) : null;
   const startTime = resolveCandidateStartTime(
     parseChzzkOpenDate(liveContent?.openDate),
     row.detectedAt,

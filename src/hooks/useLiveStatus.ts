@@ -8,6 +8,7 @@ export const LIVE_STATUS_POLL_MS = 45_000;
 export const LIVE_STATUS_STALE_MS = 30_000;
 
 let cache = new Set<string>();
+let viewerCache = new Map<string, number>();
 let lastFetchedAt = 0;
 let isFetching = false;
 let timer: ReturnType<typeof setInterval> | null = null;
@@ -15,6 +16,7 @@ let staleTimer: ReturnType<typeof setInterval> | null = null;
 
 type LiveStatusApiResponse = {
   liveStreamerIds: string[];
+  viewerCounts?: Record<string, number>;
   fetchedAt?: number;
 };
 
@@ -29,6 +31,7 @@ async function fetchLiveStatus(force = false) {
     if (!res.ok) return;
     const data: LiveStatusApiResponse = await res.json();
     cache = new Set(data.liveStreamerIds);
+    viewerCache = new Map(Object.entries(data.viewerCounts ?? {}));
     lastFetchedAt = data.fetchedAt ?? Date.now();
   } catch {
     // 네트워크 실패 시 기존 캐시 유지
@@ -80,6 +83,8 @@ function onVisibilityChange() {
 
 export type LiveStatusState = {
   liveIds: Set<string>;
+  /** 클라이언트 폴링 이후에만 채워짐 (RSC 초기값에는 없음) */
+  viewerCounts: Map<string, number>;
   isLoading: boolean;
   isRefreshing: boolean;
   lastUpdatedAt: number | null;
@@ -94,6 +99,7 @@ function buildState(overrides: Partial<LiveStatusState> = {}): LiveStatusState {
   const lastUpdatedAt = lastFetchedAt || null;
   return {
     liveIds: new Set(cache),
+    viewerCounts: new Map(viewerCache),
     isLoading: lastFetchedAt === 0,
     isRefreshing: false,
     lastUpdatedAt,
@@ -119,6 +125,7 @@ export function useLiveStatus(initialLiveIds?: string[]): LiveStatusState {
     if (initialLiveIds !== undefined) {
       return {
         liveIds: new Set(initialLiveIds),
+        viewerCounts: new Map(viewerCache),
         isLoading: false,
         isRefreshing: true,
         lastUpdatedAt: null,
@@ -131,6 +138,7 @@ export function useLiveStatus(initialLiveIds?: string[]): LiveStatusState {
     }
     return {
       liveIds: new Set(),
+      viewerCounts: new Map(),
       isLoading: true,
       isRefreshing: false,
       lastUpdatedAt: null,

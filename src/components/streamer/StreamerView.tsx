@@ -47,7 +47,7 @@ export default function StreamerView({
   const [selectedOrder, setSelectedOrder] = useState<string[]>([]);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
 
-  const { liveIds, isRefreshing, lastUpdatedAt, isStale, refresh } = useLiveStatus(
+  const { liveIds, viewerCounts, isRefreshing, lastUpdatedAt, isStale, refresh } = useLiveStatus(
     initialLiveIds,
   );
 
@@ -162,6 +162,7 @@ export default function StreamerView({
             streamer={streamer}
             onRequestEdit={handleRequestEdit}
             isLive={liveIds.has(streamer.id)}
+            viewerCount={viewerCounts.get(streamer.id)}
             isSelected={idx >= 0}
             isMaxReached={isMaxReached}
             onToggleMultiview={() => toggleSelect(streamer.id)}

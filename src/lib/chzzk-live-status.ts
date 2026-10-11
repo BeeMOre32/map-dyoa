@@ -1,9 +1,10 @@
 import { unstable_cache } from 'next/cache';
 import { extractChzzkChannelId } from '@/lib/chzzk';
 import {
-  fetchChzzkLiveDetail,
+  fetchChzzkLiveStatus,
   isChzzkChannelLive,
   mapWithConcurrency,
+  type ChzzkLiveStatusContent,
 } from '@/lib/chzzk-api';
 import { fetchWithBackoff } from '@/lib/map-dyoa-server-http-utils';
 import { getPrismaForDomain } from '@/lib/prisma';
@@ -23,7 +24,14 @@ export const LIVE_STATUS_CACHE_SECONDS = 30;
 
 const CHZZK_POLL_CONCURRENCY = 6;
 
-async function fetchLiveStreamerIdsLocal(): Promise<string[]> {
+export type LiveChannel = {
+  streamerId: string;
+  channelId: string;
+  status: ChzzkLiveStatusContent;
+};
+
+/** 멤버 채널을 polling으로 훑어 방송 중인 채널만 반환. 캐시 없음. */
+export async function fetchLiveChannels(): Promise<LiveChannel[]> {
   const streamers = isScheduleServerEnabled()
     ? (await fetchAllStreamersFromServer(false))
         .filter((s) => s.chzzkUrl && !s.isGuest)
@@ -33,15 +41,24 @@ async function fetchLiveStreamerIdsLocal(): Promise<string[]> {
         where: { chzzkUrl: { not: null }, isGuest: false },
       });
 
-  const results = await mapWithConcurrency(streamers, CHZZK_POLL_CONCURRENCY, async (s) => {
-    const channelId = extractChzzkChannelId(s.chzzkUrl!);
-    if (!channelId) return null;
+  const results = await mapWithConcurrency(
+    streamers,
+    CHZZK_POLL_CONCURRENCY,
+    async (s): Promise<LiveChannel | null> => {
+      const channelId = extractChzzkChannelId(s.chzzkUrl!);
+      if (!channelId) return null;
 
-    const content = await fetchChzzkLiveDetail(channelId);
-    return isChzzkChannelLive(content) ? s.id : null;
-  });
+      const status = await fetchChzzkLiveStatus(channelId);
+      if (!status || !isChzzkChannelLive(status)) return null;
+      return { streamerId: s.id, channelId, status };
+    },
+  );
 
-  return results.filter((id): id is string => id !== null);
+  return results.filter((c): c is LiveChannel => c !== null);
+}
+
+async function fetchLiveStreamerIdsLocal(): Promise<string[]> {
+  return (await fetchLiveChannels()).map((c) => c.streamerId);
 }
 
 const getCachedLocalLiveStreamerIds = unstable_cache(

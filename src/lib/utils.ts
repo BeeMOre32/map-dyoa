@@ -56,6 +56,16 @@ export function resolveStreamerAvatarSrc(streamer: {
   return getStreamerImagePath(streamer.name);
 }
 
+const viewerCountFormat = new Intl.NumberFormat('ko-KR', {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
+
+/** 시청자 수 — 1234 → "1.2천", 12345 → "1.2만" */
+export function formatViewerCount(count: number): string {
+  return viewerCountFormat.format(count);
+}
+
 export {
   normalizeExternalUrl,
   normalizeYoutubeUrl,
