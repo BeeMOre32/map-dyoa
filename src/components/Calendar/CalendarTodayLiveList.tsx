@@ -90,7 +90,7 @@ export default function CalendarTodayLiveList({ rows, now }: { rows: TodayLiveRo
           ) : null}
           {row.startedAt ? (
             <p className="mt-0.5 text-[10px] font-bold tabular-nums text-slate-400">
-              {format(row.startedAt, 'HH:mm')}–
+              {format(new Date(row.startedAt), 'HH:mm')}–
             </p>
           ) : null}
         </div>
