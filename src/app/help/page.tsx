@@ -270,22 +270,23 @@ export default function HelpPage() {
           </div>
           <ul className="list-inside list-disc space-y-2 text-sm font-bold text-indigo-700/90 dark:text-indigo-200/90">
             <li>
+              <strong>캘린더 v3 베타</strong> — 주간 보기에서 지금 방송·자동 일정을 제목과
+              태그로 표시. 설정에서 끌 수 있음
+            </li>
+            <li>
+              <strong>방송 자동 등록</strong> — 일정이 없는 방송이 다음 확인에도 켜져 있으면
+              혼자 일정으로 등록
+            </li>
+            <li>
+              <strong>의견 보내기</strong> — 설정에서 창으로 의견·오류·일정·기타 접수
+            </li>
+            <li>
               <strong>9월 후원 정산</strong> — 수익금 79,000원 · 서버비 31,553원 ·
               잔여 121,430원 이월
             </li>
-            <li>
-              <strong>기능별 백엔드 헬스</strong> — 서버·DB·일정·멤버·클립 30분 체크 ·
-              14일 히트맵
-            </li>
-            <li>
-              <strong>라이브 메타 안정화</strong> — live-meta 502 soft-fail · 로컬 폴백
-            </li>
-            <li>
-              <strong>LIVE·클립 미리보기</strong> — 호버 재생 · 소리 켜기 · 확장 1.3.0
-            </li>
           </ul>
           <Link
-            href="/announcements#settlement-2026-09"
+            href="/announcements#update-2026-10"
             className="mt-4 inline-flex items-center gap-1.5 text-sm font-black text-indigo-600 hover:underline dark:text-indigo-400"
           >
             <Megaphone className="h-4 w-4" />
@@ -369,13 +370,24 @@ export default function HelpPage() {
           <div className="space-y-4">
             <Row icon={<LayoutGrid className="h-5 w-5" />}>
               상단 <strong>주간 / 월간</strong> 전환, <strong>← →</strong>로 이전·다음
-              주·월 이동. 기본은 <strong>V2 카드형</strong> 레이아웃입니다.
+              주·월 이동. 주간은 <strong>v3 베타</strong>가 기본이고, 제목 옆에 BETA가
+              붙습니다.
             </Row>
-            <Row icon={<MousePointerClick className="h-5 w-5" />} delay={0.06}>
+            <Row icon={<Radio className="h-5 w-5" />} delay={0.04}>
+              직접 올린 합방·게임 일정은 <strong>카드</strong>로 남습니다. 지금 켜진 방송과
+              자동 등록 일정은 <strong>제목·태그</strong>로 짧게 붙습니다. 합방은 멤버
+              태그, 혼자 방송은 이름과 카테고리입니다.
+            </Row>
+            <Row icon={<Sparkles className="h-5 w-5" />} delay={0.08}>
+              오늘 일정이 없는 멤버가 방송을 켜면 바로 올리지 않습니다. 다음 확인에서도
+              켜져 있으면 그 사람만 등록하고, 제목·시작 시각·방송 주소만 넣습니다. 합방과
+              게임은 비웁니다. 이미 일정이 있으면 건너뜁니다.
+            </Row>
+            <Row icon={<MousePointerClick className="h-5 w-5" />} delay={0.12}>
               날짜 칸·카드를 누르면 <strong>일정 상세 모달</strong>이 열립니다. HOI4
               내전 일정에는 <strong>내전</strong> 뱃지가 붙습니다.
             </Row>
-            <Row icon={<SlidersHorizontal className="h-5 w-5" />} delay={0.12}>
+            <Row icon={<SlidersHorizontal className="h-5 w-5" />} delay={0.16}>
               캘린더 상단 <strong>필터 바</strong>에서 멤버·게임별로 일정을 걸러 볼 수
               있습니다. 이름·<strong>초성</strong> 검색(
               <code className="rounded bg-slate-100 px-1 py-0.5 text-xs font-black dark:bg-slate-700">
@@ -383,7 +395,7 @@ export default function HelpPage() {
               </code>{' '}
               등)과 멤버 옆 <strong>별</strong> 등록도 여기서 합니다.
             </Row>
-            <Row icon={<Gamepad2 className="h-5 w-5" />} delay={0.18}>
+            <Row icon={<Gamepad2 className="h-5 w-5" />} delay={0.2}>
               게임이 연결된 일정은 <strong>게임 색</strong> 배경, 카드 하단 배지는{' '}
               <strong>멤버 고유 색</strong>입니다. <strong>시간 미정</strong>은 게릴라
               일정, 오늘 방송 중인 참여자에게 <LiveBadge /> 표시.
@@ -482,7 +494,7 @@ export default function HelpPage() {
             </Row>
             <Row icon={<Wifi className="h-5 w-5" />} delay={0.06}>
               치지직 <strong>방송 중</strong> 멤버는 상단에 모이고, 상태는 약{' '}
-              <strong>60초마다</strong> 자동 갱신됩니다.
+              <strong>45초마다</strong> 자동 갱신됩니다.
             </Row>
             <Row icon={<LayoutGrid className="h-5 w-5" />} delay={0.12}>
               카드의{' '}
@@ -751,16 +763,25 @@ export default function HelpPage() {
             <Row icon={<EyeOff className="h-5 w-5" />} delay={0.06}>
               <strong>종료된 방송 숨기기</strong>
             </Row>
-            <Row icon={<History className="h-5 w-5" />} delay={0.12}>
-              <strong>구버전 UI로 보기</strong> — 이전 캘린더·일정 모달 디자인
+            <Row icon={<Sparkles className="h-5 w-5" />} delay={0.1}>
+              <strong>캘린더 v3 베타</strong> — 주간에 지금 방송·자동 일정을 짧게 표시.
+              기본으로 켜져 있습니다.
             </Row>
-            <Row icon={<Server className="h-5 w-5" />} delay={0.16}>
+            <Row icon={<History className="h-5 w-5" />} delay={0.14}>
+              <strong>구버전 UI로 보기</strong> — 이전 캘린더·일정 모달 디자인. 켜면 v3
+              베타보다 우선합니다.
+            </Row>
+            <Row icon={<MessageSquare className="h-5 w-5" />} delay={0.18}>
+              <strong>의견 보내기</strong> — 의견·오류·일정·기타 중 골라 창으로 접수합니다.
+              로그인 없이 보낼 수 있습니다.
+            </Row>
+            <Row icon={<Server className="h-5 w-5" />} delay={0.22}>
               <Link href="/health" className="font-black text-indigo-600 dark:text-indigo-400">
                 백엔드 상태
               </Link>
               — API 서버 응답·가동 히트맵 (정보 메뉴에도 있음)
             </Row>
-            <Row icon={<Puzzle className="h-5 w-5" />} delay={0.2}>
+            <Row icon={<Puzzle className="h-5 w-5" />} delay={0.26}>
               <a
                 href={CHROME_EXTENSION_URL}
                 target="_blank"
@@ -771,7 +792,7 @@ export default function HelpPage() {
               </a>
               — {CHROME_EXTENSION_NAME} Chrome 웹스토어
             </Row>
-            <Row icon={<Megaphone className="h-5 w-5" />} delay={0.24}>
+            <Row icon={<Megaphone className="h-5 w-5" />} delay={0.3}>
               <Link href="/announcements" className="font-black text-indigo-600 dark:text-indigo-400">
                 공지사항
               </Link>
@@ -784,11 +805,11 @@ export default function HelpPage() {
                 개인정보처리방침
               </Link>
             </Row>
-            <Row icon={<Keyboard className="h-5 w-5" />} delay={0.28}>
+            <Row icon={<Keyboard className="h-5 w-5" />} delay={0.34}>
               열린 <strong>모달은 Esc</strong>로 닫기. 모바일 주간 뷰는 리스트형
               레이아웃.
             </Row>
-            <Row icon={<Smartphone className="h-5 w-5" />} delay={0.34}>
+            <Row icon={<Smartphone className="h-5 w-5" />} delay={0.38}>
               <strong>홈 화면에 추가</strong> — Chrome·Safari 등에서 앱처럼 설치해
               바로 열 수 있습니다.
             </Row>

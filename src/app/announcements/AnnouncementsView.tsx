@@ -1436,6 +1436,67 @@ function SettlementPostBody() {
   );
 }
 
+function UpdateOctober2026PostBody() {
+  return (
+    <div className="space-y-4 pt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+      <p>
+        주간 캘린더에 <strong className="text-slate-900 dark:text-white">v3 베타</strong>를
+        켜 두었습니다. 직접 올린 합방·게임 일정은 카드 그대로이고, 지금 켜진 방송과
+        자동으로 잡힌 일정은 제목과 태그로 짧게 보입니다.
+      </p>
+
+      <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-900/20">
+        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+        <div className="space-y-2 text-sm text-amber-800 dark:text-amber-200">
+          <p className="font-black text-amber-900 dark:text-amber-100">캘린더 v3 베타</p>
+          <ul className="list-disc space-y-1.5 pl-4">
+            <li>주간 보기 제목 옆에 BETA가 붙습니다. 기본으로 켜져 있습니다.</li>
+            <li>합방은 방송 제목과 멤버 태그, 혼자 방송은 이름과 카테고리로 표시합니다.</li>
+            <li>실제로 켜져 있을 때만 빨간 LIVE가 달립니다. 끝나면 시각만 남습니다.</li>
+            <li>월간 보기와 구버전 UI는 이전 카드 레이아웃입니다.</li>
+            <li>
+              설정 → <strong>캘린더 v3 베타</strong>에서 끌 수 있습니다. 구버전 UI를 켜면
+              베타보다 그 화면이 우선합니다.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="flex gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-800/50 dark:bg-rose-900/20">
+        <Radio className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
+        <div className="space-y-2 text-sm text-rose-800 dark:text-rose-200">
+          <p className="font-black text-rose-900 dark:text-rose-100">방송 자동 등록</p>
+          <ul className="list-disc space-y-1.5 pl-4">
+            <li>오늘 일정이 없는 멤버가 방송을 켜면, 바로 올리지 않고 한 번 더 확인합니다.</li>
+            <li>다음 확인에서도 켜져 있으면 그 사람 일정만 만듭니다. 약 15분 간격입니다.</li>
+            <li>제목은 방송 제목이고, 없으면 「이름 라이브」입니다. 합방과 게임은 비워 둡니다.</li>
+            <li>이미 일정이 있거나 그날 거절한 멤버는 건너뜁니다.</li>
+            <li>한 번 등록된 일정은 이후 확인에서 다시 고치지 않습니다. 관리자가 수정한 내용이 유지됩니다.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="flex gap-3 rounded-2xl border border-violet-200 bg-violet-50 p-4 dark:border-violet-800/50 dark:bg-violet-900/20">
+        <Megaphone className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
+        <div className="space-y-2 text-sm text-violet-800 dark:text-violet-200">
+          <p className="font-black text-violet-900 dark:text-violet-100">의견</p>
+          <ul className="list-disc space-y-1.5 pl-4">
+            <li>설정 → 의견 보내기에서 창으로 접수합니다. 의견·오류·일정·기타 중 고릅니다.</li>
+            <li>로그인 없이 보낼 수 있고, 관리자 화면에서 확인합니다.</li>
+          </ul>
+        </div>
+      </div>
+
+      <p className="text-xs text-slate-500 dark:text-slate-400">
+        <Link href="/help#calendar" className="font-bold text-indigo-600 hover:underline dark:text-indigo-400">
+          도움말 · 캘린더
+        </Link>
+        에서 사용 방법을 정리했습니다.
+      </p>
+    </div>
+  );
+}
+
 export default function AnnouncementsView({
   uptimeBadge = null,
 }: {
@@ -1472,6 +1533,44 @@ export default function AnnouncementsView({
         </div>
 
         <div className="space-y-3">
+          <details
+            id="update-2026-10"
+            className="group scroll-mt-24 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm open:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:open:bg-slate-900"
+          >
+            <summary className="cursor-pointer list-none px-4 py-4 marker:content-none sm:px-5 [&::-webkit-details-marker]:hidden">
+              <span className="flex w-full items-start gap-3 text-left">
+                <span className="min-w-0 flex-1 space-y-2">
+                  <span className="flex flex-wrap items-center gap-2 gap-y-1">
+                    <span
+                      className={cn(
+                        'inline-block rounded-full px-2.5 py-1 text-xs font-black',
+                        'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+                      )}
+                    >
+                      업데이트
+                    </span>
+                    <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                      2026. 10. 11
+                    </span>
+                  </span>
+                  <span className="block pr-1 text-base font-black leading-snug text-slate-900 dark:text-white sm:text-lg">
+                    캘린더 v3 베타 · 방송 자동 등록
+                  </span>
+                  <span className="block text-sm font-medium leading-relaxed text-slate-500 group-open:hidden dark:text-slate-400">
+                    주간 캘린더에 지금 방송과 자동 일정을 짧게 표시하고, 설정에서 의견을
+                    보낼 수 있습니다.
+                  </span>
+                </span>
+                <span className="mt-1 shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180 dark:text-slate-500">
+                  <ChevronDown className="h-5 w-5" aria-hidden />
+                </span>
+              </span>
+            </summary>
+            <div className="border-t border-slate-100 px-4 pb-5 pt-1 dark:border-slate-800 sm:px-5">
+              <UpdateOctober2026PostBody />
+            </div>
+          </details>
+
           <details
             id="settlement-2026-09"
             className="group scroll-mt-24 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm open:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:open:bg-slate-900"
