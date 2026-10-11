@@ -14,6 +14,12 @@ import {
 import { calendarGridPresenceVariants } from '@/lib/calendarMotion';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import { sortSchedulesForCalendarDay } from '@/lib/bongnudo';
+import type { Streamer } from '@prisma/client';
+import CalendarTodayLiveList from '@/components/Calendar/CalendarTodayLiveList';
+import {
+  buildBetaDayRows,
+  type LiveChannelSnapshot,
+} from '@/lib/calendar/todayLiveListing';
 
 interface CalendarMobileWeeklyListProps {
   days: Date[];
@@ -22,6 +28,10 @@ interface CalendarMobileWeeklyListProps {
   currentDate: Date;
   legacyUi: boolean;
   liveStreamerIds: Set<string>;
+  liveChannels?: LiveChannelSnapshot[];
+  streamers?: Streamer[];
+  betaV3?: boolean;
+  autoScheduleIds?: string[];
   isLoggedIn: boolean;
   todayMobileRef: RefObject<HTMLDivElement | null>;
   onDayClick: (day: Date) => void;
@@ -35,6 +45,10 @@ export default function CalendarMobileWeeklyList({
   currentDate,
   legacyUi,
   liveStreamerIds,
+  liveChannels = [],
+  streamers = [],
+  betaV3 = false,
+  autoScheduleIds = [],
   isLoggedIn,
   todayMobileRef,
   onDayClick,
@@ -58,6 +72,16 @@ export default function CalendarMobileWeeklyList({
             schedulesByDate.get(dateKey) ?? [],
           );
           const dayIdx = day.getDay();
+          const betaDay = betaV3
+            ? buildBetaDayRows({
+                schedules: daySchedules,
+                autoScheduleIds: new Set(autoScheduleIds),
+                streamers,
+                channels: liveChannels,
+                now: new Date(),
+                includeLive: today,
+              })
+            : { cards: daySchedules, rows: [] };
 
           return (
             <section
@@ -102,9 +126,12 @@ export default function CalendarMobileWeeklyList({
                 ) : null}
               </button>
 
-              {daySchedules.length > 0 ? (
+              {betaDay.cards.length > 0 || betaDay.rows.length > 0 ? (
                 <div className="space-y-2 border-t border-slate-100 px-3 py-3 dark:border-slate-800">
-                  {daySchedules.map((schedule, i) =>
+                  {betaDay.rows.length > 0 ? (
+                    <CalendarTodayLiveList rows={betaDay.rows} now={new Date()} />
+                  ) : null}
+                  {betaDay.cards.map((schedule, i) =>
                     legacyUi ? (
                       <ScheduleCard
                         key={schedule.id}

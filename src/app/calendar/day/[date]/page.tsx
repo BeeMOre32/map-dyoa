@@ -1,6 +1,7 @@
 import ScheduleModal from '@/components/Calendar/CalendarModal';
 import CalendarView from '@/components/Calendar/CalendarView';
 import { getAllStreamers, getAllGames, getSchedulesByDateRange } from '@/lib/data-fetching';
+import { listAutoScheduleIds } from '@/lib/schedule-candidate-store';
 import { notFound } from 'next/navigation';
 
 export default async function FullDayPage({
@@ -16,10 +17,11 @@ export default async function FullDayPage({
   if (isNaN(startKST.getTime())) return notFound();
 
   // 캐싱된 데이터와 함께 당일 일정 페칭
-  const [flattenedDaySchedules, streamers, games] = await Promise.all([
+  const [flattenedDaySchedules, streamers, games, autoScheduleIds] = await Promise.all([
     getSchedulesByDateRange(startKST, endKST),
     getAllStreamers(),
     getAllGames(),
+    listAutoScheduleIds().catch(() => [] as string[]),
   ]);
 
   return (
@@ -29,6 +31,7 @@ export default async function FullDayPage({
         games={games}
         initialSchedules={flattenedDaySchedules}
         streamers={streamers}
+        autoScheduleIds={autoScheduleIds}
       />
 
       {/* 선택된 날짜의 일정 모달 */}

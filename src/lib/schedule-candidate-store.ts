@@ -122,12 +122,16 @@ function liveUrlsForMembers(
   return urls;
 }
 
-/** LIVE인데 오늘 일정 없는 멤버 → PENDING 후보 upsert. 캘린더에는 쓰지 않음. */
+/** 직전 스캔에서도 켜져 있던 방송만 자동 등록. 크론 간격(15분)보다 짧다. */
+const AUTO_CONFIRM_MS = 10 * 60 * 1000;
+
+/** LIVE인데 오늘 일정 없는 멤버를 후보로 쌓고, 다음 스캔에도 켜져 있으면 혼자 일정으로 등록. */
 export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
   dateKst: string;
   liveCount: number;
   created: number;
   refreshed: number;
+  autoRegistered: number;
   skippedScheduled: number;
   skippedResolved: number;
 }> {
@@ -146,6 +150,7 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
   const prisma = getPrisma();
   let created = 0;
   let refreshed = 0;
+  let autoRegistered = 0;
   let skippedResolved = 0;
 
   const details = candidates.map((m) => {
@@ -170,6 +175,19 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
     if (existing?.status === 'APPROVED' || existing?.status === 'DISMISSED') {
       skippedResolved += 1;
       continue;
+    }
+
+    if (
+      existing?.status === 'PENDING' &&
+      now.getTime() - existing.lastSeenAt.getTime() >= AUTO_CONFIRM_MS
+    ) {
+      try {
+        await approveScheduleCandidate(existing.id, { title: d.title, auto: true });
+        autoRegistered += 1;
+        continue;
+      } catch (error) {
+        console.error('[schedule-candidate] auto', d.streamerId, error);
+      }
     }
 
     if (existing) {
@@ -215,7 +233,21 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
     refreshed,
     skippedScheduled,
     skippedResolved,
+    autoRegistered,
   };
+}
+
+export async function listAutoScheduleIds(): Promise<string[]> {
+  const rows = await getPrisma().scheduleCandidate.findMany({
+    where: {
+      note: 'auto',
+      status: 'APPROVED',
+      scheduleId: { not: null },
+      ...expiredCandidateWhere(),
+    },
+    select: { scheduleId: true },
+  });
+  return rows.flatMap((row) => (row.scheduleId ? [row.scheduleId] : []));
 }
 
 async function loadGames(): Promise<{ id: string; title: string }[]> {
@@ -303,7 +335,13 @@ export async function dismissScheduleCandidate(id: string): Promise<void> {
 /** 치지직 방송 시작(openDate) 또는 감지 시각을 startTime으로 일정 생성 후 APPROVED. */
 export async function approveScheduleCandidate(
   id: string,
-  opts?: { title?: string; participantIds?: string[]; gameId?: string | null },
+  opts?: {
+    title?: string;
+    participantIds?: string[];
+    gameId?: string | null;
+    /** 확인된 방송만. 참여자는 본인, 게임·합방은 비운다. */
+    auto?: boolean;
+  },
 ): Promise<{ scheduleId: string }> {
   const prisma = getPrisma();
   const row = await prisma.scheduleCandidate.findUnique({ where: { id } });
@@ -321,12 +359,14 @@ export async function approveScheduleCandidate(
   const members = await loadMemberStreamers();
   const memberIds = new Set(members.map((m) => m.id));
 
-  const participantIds = [
-    ...new Set([
-      row.streamerId,
-      ...(opts?.participantIds ?? []).filter((pid) => memberIds.has(pid)),
-    ]),
-  ];
+  const participantIds = opts?.auto
+    ? [row.streamerId]
+    : [
+        ...new Set([
+          row.streamerId,
+          ...(opts?.participantIds ?? []).filter((pid) => memberIds.has(pid)),
+        ]),
+      ];
 
   const channelId = row.liveUrl ? extractChzzkChannelId(row.liveUrl) : null;
   const liveContent = channelId ? await fetchChzzkLiveStatus(channelId) : null;
@@ -340,7 +380,7 @@ export async function approveScheduleCandidate(
     opts?.title?.trim() || row.title?.trim() || `${row.streamerName} 라이브`;
   if (!title) throw new Error('일정 제목을 입력해 주세요.');
   const liveUrls = liveUrlsForMembers(participantIds, members, row.liveUrl);
-  const gameId = opts?.gameId?.trim() || undefined;
+  const gameId = opts?.auto ? undefined : opts?.gameId?.trim() || undefined;
 
   const base = getScheduleServerBaseUrl();
   let scheduleId: string;
@@ -391,6 +431,7 @@ export async function approveScheduleCandidate(
       detectedAt: startTime,
       resolvedAt: now,
       scheduleId,
+      ...(opts?.auto ? { note: 'auto' } : {}),
     },
   });
 

@@ -17,6 +17,7 @@ import type { Game, Streamer } from '@prisma/client';
 import { useHideEndedStreams } from '@/hooks/useHideEndedStreams';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
 import { useLegacyCalendarUi } from '@/hooks/useLegacyCalendarUi';
+import { useCalendarBetaV3 } from '@/hooks/useCalendarBetaV3';
 import { useFavoriteStreamers } from '@/hooks/useFavoriteStreamers';
 import { useToast } from '@/components/Common/Toaster';
 import {
@@ -43,12 +44,14 @@ interface UseCalendarViewStateOptions {
   initialSchedules: FlattenedSchedule[];
   streamers: Streamer[];
   games: Game[];
+  autoScheduleIds?: string[];
 }
 
 export function useCalendarViewState({
   initialSchedules,
   streamers,
   games,
+  autoScheduleIds = [],
 }: UseCalendarViewStateOptions) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -56,7 +59,8 @@ export function useCalendarViewState({
   const [mounted, setMounted] = useState(false);
   const [, startTransition] = useTransition();
   const [legacyUi] = useLegacyCalendarUi();
-  const { liveIds: liveStreamerIds } = useLiveStatus();
+  const [calendarBetaV3] = useCalendarBetaV3();
+  const { liveIds: liveStreamerIds, liveChannels } = useLiveStatus();
   const [hideEnded] = useHideEndedStreams();
   const {
     favorites,
@@ -92,6 +96,7 @@ export function useCalendarViewState({
 
   const isLoggedIn = !!session;
   const isV2Weekly = viewMode === 'weekly' && !legacyUi;
+  const isV3Weekly = isV2Weekly && calendarBetaV3;
 
   useEffect(() => {
     try {
@@ -308,8 +313,11 @@ export function useCalendarViewState({
     games,
     legacyUi,
     isV2Weekly,
+    isV3Weekly,
     isLoggedIn,
     liveStreamerIds,
+    liveChannels,
+    autoScheduleIds,
     hideEnded,
     favoriteIds,
     favoritesOnly,

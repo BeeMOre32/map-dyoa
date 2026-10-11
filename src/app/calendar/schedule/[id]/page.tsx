@@ -4,6 +4,7 @@ import ScheduleSeoContent from '@/components/Seo/ScheduleSeoContent';
 import { notFound } from 'next/navigation';
 import CalendarView from '@/components/Calendar/CalendarView';
 import { getCalendarData, getScheduleDetail, getScheduleClips } from '@/lib/data-fetching';
+import { listAutoScheduleIds } from '@/lib/schedule-candidate-store';
 import { buildPageMetadata, formatSocialTitle, withSiteBrand } from '@/lib/site';
 import type { Metadata } from 'next';
 
@@ -59,11 +60,12 @@ export default async function FullSchedulePage({
 }) {
   const { id } = await params;
 
-  const [{ schedules: allSchedules, streamers, games }, targetSchedule, clips] =
+  const [{ schedules: allSchedules, streamers, games }, targetSchedule, clips, autoScheduleIds] =
     await Promise.all([
       getCalendarData(),
       getScheduleDetail(id),
       getScheduleClips(id),
+      listAutoScheduleIds().catch(() => [] as string[]),
     ]);
 
   if (!targetSchedule) return notFound();
@@ -75,6 +77,7 @@ export default async function FullSchedulePage({
         initialSchedules={allSchedules}
         streamers={streamers}
         games={games}
+        autoScheduleIds={autoScheduleIds}
       />
       <ScheduleDetailView
         schedule={targetSchedule}

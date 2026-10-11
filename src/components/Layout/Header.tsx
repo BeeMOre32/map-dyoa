@@ -63,20 +63,20 @@ export default function Header() {
           </div>
 
           {/* 우측 버튼 영역 */}
-          <div className="flex items-center justify-end gap-1 sm:gap-2 shrink-0 ml-auto">
+          <div className="ml-auto flex shrink-0 items-center justify-end gap-1.5">
             {session ? (
               <>
-                <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-100 dark:border-emerald-800 text-[10px] font-black uppercase">
-                  <UserCheck className="w-3 h-3" /> Admin
+                <div className="hidden h-8 items-center gap-1 rounded-xl border border-emerald-100 bg-emerald-50 px-2 text-[10px] font-black uppercase text-emerald-600 sm:inline-flex dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400">
+                  <UserCheck className="h-3.5 w-3.5" /> Admin
                 </div>
                 <motion.button
                   onClick={() => signOut()}
                   whileHover={{ scale: 1.06, transition: { type: 'spring', visualDuration: 0.22, bounce: 0.2 } }}
                   whileTap={{ scale: 0.94, transition: { type: 'spring', visualDuration: 0.16, bounce: 0.12 } }}
-                  className="hidden sm:inline-flex p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm"
+                  className="hidden h-8 w-8 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-slate-400 shadow-sm hover:bg-white hover:text-red-500 sm:inline-flex dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 dark:hover:text-red-400"
                   title="로그아웃"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="h-3.5 w-3.5" />
                 </motion.button>
               </>
             ) : (
@@ -87,10 +87,10 @@ export default function Header() {
               >
               <Link
                 href="/login"
-                className="p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-slate-400 shadow-sm hover:bg-white hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 dark:hover:text-indigo-400"
                 title="관리자 로그인"
               >
-                <LogIn className="w-4 h-4" />
+                <LogIn className="h-3.5 w-3.5" />
               </Link>
               </motion.div>
             )}
@@ -99,7 +99,7 @@ export default function Header() {
               onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
               whileHover={{ scale: 1.06, transition: { type: 'spring', visualDuration: 0.22, bounce: 0.2 } }}
               whileTap={{ scale: 0.94, transition: { type: 'spring', visualDuration: 0.16, bounce: 0.12 } }}
-              className="hidden sm:inline-flex relative p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden"
+              className="relative hidden h-8 w-8 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-slate-50 text-slate-500 shadow-sm hover:bg-white sm:inline-flex dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
               title={resolvedTheme === 'dark' ? '라이트 모드' : '다크 모드'}
             >
               <AnimatePresence mode="wait" initial={false}>
@@ -116,20 +116,37 @@ export default function Header() {
                   }}
                 >
                   {resolvedTheme === 'dark'
-                    ? <Sun className="w-4 h-4 text-amber-400" />
-                    : <Moon className="w-4 h-4 text-indigo-500" />}
+                    ? <Sun className="h-3.5 w-3.5 text-amber-400" />
+                    : <Moon className="h-3.5 w-3.5 text-indigo-500" />}
                 </motion.div>
               </AnimatePresence>
             </motion.button>
 
             <motion.button
               onClick={() => setSettingsOpen(true)}
-              whileHover={{ scale: 1.06, transition: { type: 'spring', visualDuration: 0.22, bounce: 0.2 } }}
-              whileTap={{ scale: 0.94, transition: { type: 'spring', visualDuration: 0.18, bounce: 0.15 } }}
-              className="p-1.5 sm:p-2.5 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 transition-colors shadow-sm"
+              initial="rest"
+              whileHover="hover"
+              whileTap="tap"
+              variants={{
+                rest: { scale: 1 },
+                hover: { scale: 1.06 },
+                tap: { scale: 0.94 },
+              }}
+              transition={{ type: 'spring', visualDuration: 0.22, bounce: 0.2 }}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-slate-400 shadow-sm transition-colors hover:bg-white hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 dark:hover:text-indigo-400"
               title="설정"
             >
-              <Settings className="w-4 h-4" />
+              <motion.span
+                className="inline-flex"
+                variants={{
+                  rest: { rotate: 0 },
+                  hover: { rotate: 48 },
+                  tap: { rotate: 90 },
+                }}
+                transition={{ type: 'spring', visualDuration: 0.32, bounce: 0.22 }}
+              >
+                <Settings className="h-3.5 w-3.5" />
+              </motion.span>
             </motion.button>
           </div>
         </div>

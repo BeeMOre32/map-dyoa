@@ -282,7 +282,7 @@ model AuditLog {
   @@index([entityId])
 }
 
-/// LIVE인데 오늘 일정이 없을 때 쌓는 관리자 후보 큐 (캘린더에 자동 반영 안 함)
+/// LIVE인데 오늘 일정이 없을 때 쌓는 후보. 다음 스캔에도 켜져 있으면 혼자 일정으로 등록하고 note=auto.
 enum ScheduleCandidateStatus {
   PENDING
   APPROVED

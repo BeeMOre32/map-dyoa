@@ -3,9 +3,10 @@
 import {
   Sun, Moon, HelpCircle, Shield, LogIn, LogOut, UserCheck, X,
   LayoutDashboard, EyeOff, Heart, Megaphone, History, BarChart3, Server, Puzzle,
-  Timer, FlaskConical, Car,
+  Timer, FlaskConical, Car, MessageSquare,
 } from 'lucide-react';
 import { CHROME_EXTENSION_NAME, CHROME_EXTENSION_URL } from '@/constants/extension';
+import { useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { useTheme } from '@teispace/next-themes';
@@ -17,6 +18,8 @@ import { usePathname } from 'next/navigation';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { useHideEndedStreams } from '@/hooks/useHideEndedStreams';
 import { useLegacyCalendarUi } from '@/hooks/useLegacyCalendarUi';
+import { useCalendarBetaV3 } from '@/hooks/useCalendarBetaV3';
+import { SettingsFeedbackModalPresence } from '@/components/Layout/SettingsFeedback';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -54,6 +57,9 @@ function GeneralTab({
   setHideEnded,
   legacyUi,
   setLegacyUi,
+  calendarBetaV3,
+  setCalendarBetaV3,
+  onOpenFeedback,
   session,
 }: {
   onClose: () => void;
@@ -63,6 +69,9 @@ function GeneralTab({
   setHideEnded: (v: boolean) => void;
   legacyUi: boolean;
   setLegacyUi: (v: boolean) => void;
+  calendarBetaV3: boolean;
+  setCalendarBetaV3: (v: boolean) => void;
+  onOpenFeedback: () => void;
   session: ReturnType<typeof useSession>['data'];
 }) {
   return (
@@ -115,6 +124,23 @@ function GeneralTab({
           </div>
           <Toggle on={hideEnded} />
         </SettingRow>
+        <SettingRow onClick={() => setCalendarBetaV3(!calendarBetaV3)}>
+          <div className="flex items-center gap-3">
+            <FlaskConical className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+            <div className="text-left">
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                캘린더 v3 베타
+                <span className="ml-1.5 rounded-md bg-amber-100 px-1 py-px text-[9px] font-black text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+                  BETA
+                </span>
+              </p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">
+                오늘 칸에 지금 방송을 제목과 합방 태그로 보여줍니다
+              </p>
+            </div>
+          </div>
+          <Toggle on={calendarBetaV3} />
+        </SettingRow>
         <SettingRow onClick={() => setLegacyUi(!legacyUi)}>
           <div className="flex items-center gap-3">
             <History className="w-4 h-4 text-slate-400 dark:text-slate-500" />
@@ -127,6 +153,18 @@ function GeneralTab({
           </div>
           <Toggle on={legacyUi} />
         </SettingRow>
+      </div>
+
+      <div className="px-2 py-1">
+        <SectionLabel>의견</SectionLabel>
+        <button
+          type="button"
+          onClick={onOpenFeedback}
+          className="flex w-full items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-left transition-colors hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700"
+        >
+          <MessageSquare className="h-4 w-4 text-indigo-500" />
+          <span className="text-sm font-bold text-slate-700 dark:text-slate-200">의견 보내기</span>
+        </button>
       </div>
 
       <a
@@ -257,12 +295,22 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   const { data: session } = useSession();
   const [hideEnded, setHideEnded] = useHideEndedStreams();
   const [legacyUi, setLegacyUi] = useLegacyCalendarUi();
+  const [calendarBetaV3, setCalendarBetaV3] = useCalendarBetaV3();
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const closeFeedback = useCallback(() => setFeedbackOpen(false), []);
   const isDark = resolvedTheme === 'dark';
 
-  useEscapeKey(dismiss);
+  useEscapeKey(() => {
+    if (feedbackOpen) {
+      closeFeedback();
+      return;
+    }
+    dismiss();
+  });
   useScrollLock();
 
   return (
+    <>
     <motion.div
       initial="hidden"
       animate="visible"
@@ -298,10 +346,18 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             setHideEnded={setHideEnded}
             legacyUi={legacyUi}
             setLegacyUi={setLegacyUi}
+            calendarBetaV3={calendarBetaV3}
+            setCalendarBetaV3={setCalendarBetaV3}
+            onOpenFeedback={() => setFeedbackOpen(true)}
             session={session}
           />
         </div>
       </motion.div>
     </motion.div>
+    <SettingsFeedbackModalPresence
+      open={feedbackOpen}
+      onClose={closeFeedback}
+    />
+    </>
   );
 }

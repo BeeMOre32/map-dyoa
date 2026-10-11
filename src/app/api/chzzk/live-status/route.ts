@@ -8,12 +8,18 @@ export async function GET() {
   const channels = await fetchLiveChannels();
   const liveStreamerIds = channels.map((c) => c.streamerId);
   const viewerCounts: Record<string, number> = {};
-  for (const c of channels) {
+  const liveChannels = channels.map((c) => {
     const count = c.status.concurrentUserCount;
     if (typeof count === 'number') viewerCounts[c.streamerId] = count;
-  }
+    return {
+      streamerId: c.streamerId,
+      liveTitle: c.status.liveTitle?.trim() ?? '',
+      openDate: c.status.openDate ?? null,
+      category: c.status.liveCategoryValue?.trim() || c.status.liveCategory?.trim() || null,
+    };
+  });
   return NextResponse.json(
-    { liveStreamerIds, viewerCounts, fetchedAt },
+    { liveStreamerIds, viewerCounts, liveChannels, fetchedAt },
     {
       headers: {
         'Cache-Control': 'no-store, max-age=0',

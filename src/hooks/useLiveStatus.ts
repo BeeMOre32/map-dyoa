@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import type { LiveChannelSnapshot } from '@/lib/calendar/todayLiveListing';
 
 /** 백그라운드 폴링 간격 */
 export const LIVE_STATUS_POLL_MS = 45_000;
@@ -9,6 +10,7 @@ export const LIVE_STATUS_STALE_MS = 30_000;
 
 let cache = new Set<string>();
 let viewerCache = new Map<string, number>();
+let channelCache: LiveChannelSnapshot[] = [];
 let lastFetchedAt = 0;
 let isFetching = false;
 let timer: ReturnType<typeof setInterval> | null = null;
@@ -17,6 +19,7 @@ let staleTimer: ReturnType<typeof setInterval> | null = null;
 type LiveStatusApiResponse = {
   liveStreamerIds: string[];
   viewerCounts?: Record<string, number>;
+  liveChannels?: LiveChannelSnapshot[];
   fetchedAt?: number;
 };
 
@@ -32,6 +35,7 @@ async function fetchLiveStatus(force = false) {
     const data: LiveStatusApiResponse = await res.json();
     cache = new Set(data.liveStreamerIds);
     viewerCache = new Map(Object.entries(data.viewerCounts ?? {}));
+    channelCache = data.liveChannels ?? [];
     lastFetchedAt = data.fetchedAt ?? Date.now();
   } catch {
     // 네트워크 실패 시 기존 캐시 유지
@@ -85,6 +89,7 @@ export type LiveStatusState = {
   liveIds: Set<string>;
   /** 클라이언트 폴링 이후에만 채워짐 (RSC 초기값에는 없음) */
   viewerCounts: Map<string, number>;
+  liveChannels: LiveChannelSnapshot[];
   isLoading: boolean;
   isRefreshing: boolean;
   lastUpdatedAt: number | null;
@@ -100,6 +105,7 @@ function buildState(overrides: Partial<LiveStatusState> = {}): LiveStatusState {
   return {
     liveIds: new Set(cache),
     viewerCounts: new Map(viewerCache),
+    liveChannels: channelCache,
     isLoading: lastFetchedAt === 0,
     isRefreshing: false,
     lastUpdatedAt,
@@ -126,6 +132,7 @@ export function useLiveStatus(initialLiveIds?: string[]): LiveStatusState {
       return {
         liveIds: new Set(initialLiveIds),
         viewerCounts: new Map(viewerCache),
+        liveChannels: channelCache,
         isLoading: false,
         isRefreshing: true,
         lastUpdatedAt: null,
@@ -139,6 +146,7 @@ export function useLiveStatus(initialLiveIds?: string[]): LiveStatusState {
     return {
       liveIds: new Set(),
       viewerCounts: new Map(),
+      liveChannels: [],
       isLoading: true,
       isRefreshing: false,
       lastUpdatedAt: null,

@@ -18,6 +18,12 @@ import {
 } from '@/lib/calendarMotion';
 import { isScheduleLiveOnCard } from '@/lib/schedule-live';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
+import type { Streamer } from '@prisma/client';
+import CalendarTodayLiveList from '@/components/Calendar/CalendarTodayLiveList';
+import {
+  buildBetaDayRows,
+  type LiveChannelSnapshot,
+} from '@/lib/calendar/todayLiveListing';
 import {
   isBongnudoHubLive,
   isBongnudoHubSchedule,
@@ -34,6 +40,10 @@ interface CalendarWeeklyV2GridProps {
   slideDirection: CalendarSlideDirection;
   currentDate: Date;
   liveStreamerIds: Set<string>;
+  liveChannels?: LiveChannelSnapshot[];
+  streamers?: Streamer[];
+  betaV3?: boolean;
+  autoScheduleIds?: string[];
   isLoggedIn: boolean;
   onDayClick: (day: Date) => void;
   onOpenCreateModal: () => void;
@@ -45,6 +55,10 @@ export default function CalendarWeeklyV2Grid({
   slideDirection,
   currentDate,
   liveStreamerIds,
+  liveChannels = [],
+  streamers = [],
+  betaV3 = false,
+  autoScheduleIds = [],
   isLoggedIn,
   onDayClick,
   onOpenCreateModal,
@@ -88,11 +102,20 @@ export default function CalendarWeeklyV2Grid({
             const inHubRun = hubRuns.some(
               (run) => colIndex >= run.start && colIndex <= run.end,
             );
-            const visibleCount = otherSchedules.length;
             const dayIdx = day.getDay();
             const liveCount = otherSchedules.filter((s) =>
               isScheduleLiveOnCard(s, liveStreamerIds),
             ).length;
+            const betaDay = betaV3
+              ? buildBetaDayRows({
+                  schedules: otherSchedules,
+                  autoScheduleIds: new Set(autoScheduleIds),
+                  streamers,
+                  channels: liveChannels,
+                  now: new Date(),
+                  includeLive: today,
+                })
+              : { cards: otherSchedules, rows: [] };
 
             return (
               <motion.div
@@ -141,7 +164,7 @@ export default function CalendarWeeklyV2Grid({
                         {format(day, 'd')}
                       </p>
                     </div>
-                    {visibleCount > 0 ? (
+                    {betaDay.cards.length + betaDay.rows.length > 0 ? (
                       <span
                         className={`inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-black ${
                           today
@@ -149,15 +172,18 @@ export default function CalendarWeeklyV2Grid({
                             : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
                         }`}
                       >
-                        {visibleCount}
+                        {betaDay.cards.length + betaDay.rows.length}
                       </span>
                     ) : null}
                   </div>
                 </div>
                 <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-1.5 custom-scrollbar sm:gap-2 sm:p-2">
+                  {betaDay.rows.length > 0 ? (
+                    <CalendarTodayLiveList rows={betaDay.rows} now={new Date()} />
+                  ) : null}
                   {inHubRun ? <div className="h-9 shrink-0" aria-hidden /> : null}
-                  {otherSchedules.length > 0 ? (
-                    otherSchedules.map((schedule, i) => (
+                  {betaDay.cards.length > 0 ? (
+                    betaDay.cards.map((schedule, i) => (
                       <ScheduleCardV2
                         key={schedule.id}
                         schedule={schedule}
@@ -166,7 +192,7 @@ export default function CalendarWeeklyV2Grid({
                         index={i}
                       />
                     ))
-                  ) : !inHubRun ? (
+                  ) : !inHubRun && betaDay.rows.length === 0 ? (
                     <CalendarEmptyDay
                       compact
                       isLoggedIn={isLoggedIn}

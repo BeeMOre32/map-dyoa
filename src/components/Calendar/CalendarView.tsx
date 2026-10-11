@@ -28,6 +28,7 @@ interface CalendarViewProps {
   initialSchedules: FlattenedSchedule[];
   streamers: Streamer[];
   games: Game[];
+  autoScheduleIds?: string[];
 }
 
 export default function CalendarView(props: CalendarViewProps) {
@@ -61,6 +62,11 @@ export default function CalendarView(props: CalendarViewProps) {
             slideDirection={state.slideDirection}
             {...state.header}
           />
+          {state.isV3Weekly ? (
+            <span className="shrink-0 rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-black tracking-wide text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+              BETA
+            </span>
+          ) : null}
         </div>
         <CalendarDesktopToolbar
           viewMode={state.viewMode}
@@ -102,6 +108,10 @@ export default function CalendarView(props: CalendarViewProps) {
             currentDate={state.currentDate}
             legacyUi={state.legacyUi}
             liveStreamerIds={state.liveStreamerIds}
+            liveChannels={state.liveChannels}
+            streamers={state.streamers}
+            betaV3={state.isV3Weekly}
+            autoScheduleIds={state.autoScheduleIds}
             isLoggedIn={state.isLoggedIn}
             todayMobileRef={state.todayMobileRef}
             onDayClick={state.handleDayClick}
@@ -121,6 +131,10 @@ export default function CalendarView(props: CalendarViewProps) {
               slideDirection={state.slideDirection}
               currentDate={state.currentDate}
               liveStreamerIds={state.liveStreamerIds}
+              liveChannels={state.liveChannels}
+              streamers={state.streamers}
+              betaV3={state.isV3Weekly}
+              autoScheduleIds={state.autoScheduleIds}
               isLoggedIn={state.isLoggedIn}
               onDayClick={state.handleDayClick}
               onOpenCreateModal={state.handleOpenCreateModal}
