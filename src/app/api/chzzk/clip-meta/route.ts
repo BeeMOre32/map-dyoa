@@ -29,71 +29,98 @@ function findCoverUrl(obj: unknown): string | null {
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
+type ClipMetaBody = { thumbnailUrl: string | null; title: string | null };
+
+function parseClipMeta(json: unknown): ClipMetaBody | null {
+  if (!json || typeof json !== 'object') return null;
+  const rec = json as Record<string, unknown>;
+  const thumbnailUrl =
+    typeof rec.thumbnailUrl === 'string' && rec.thumbnailUrl.startsWith('http')
+      ? rec.thumbnailUrl
+      : null;
+  const title = typeof rec.title === 'string' && rec.title.trim() ? rec.title : null;
+  if (!thumbnailUrl && !title) return null;
+  return { thumbnailUrl, title };
+}
+
+/** play-info + neonplayer. 썸네일까지 있으면 성공, 제목만 있으면 부분 성공. */
+async function fetchClipMetaDirect(clipId: string): Promise<ClipMetaBody | null> {
+  const playInfoRes = await fetch(
+    `https://api.chzzk.naver.com/service/v1/play-info/clip/${clipId}`,
+    { headers: { 'User-Agent': UA }, next: { revalidate: 3600 } },
+  );
+  if (!playInfoRes.ok) return null;
+
+  const playInfo = await playInfoRes.json();
+  const content = playInfo?.content;
+  const videoId: string | null = content?.videoId ?? null;
+  const inKey: string | null = content?.inKey ?? null;
+  const title: string | null = content?.contentTitle ?? null;
+  if (!videoId || !inKey) return null;
+
+  const vodUrl =
+    `https://apis.naver.com/neonplayer/vodplay/v1/playback/${videoId}` +
+    `?key=${encodeURIComponent(inKey)}&sid=2208832&lang=ko_KR&connectType=PC` +
+    `&playerType=HTML5_FLASH&videoId=${videoId}&playType=CLIP`;
+
+  const vodRes = await fetch(vodUrl, {
+    headers: { 'User-Agent': UA },
+    next: { revalidate: 3600 },
+  });
+  if (!vodRes.ok) return { thumbnailUrl: null, title };
+
+  const thumbnailUrl = findCoverUrl(await vodRes.json());
+  return { thumbnailUrl, title };
+}
+
+async function fetchClipMetaFromFly(url: string): Promise<ClipMetaBody | null> {
+  const base = getScheduleServerBaseUrl();
+  if (!base) return null;
+  try {
+    const res = await fetchWithBackoff(
+      `${base}/chzzk/clip-meta?url=${encodeURIComponent(url)}`,
+      { cache: 'no-store' },
+      { maxRetries: 1, baseDelayMs: 200 },
+    );
+    if (!res.ok) return null;
+    return parseClipMeta(await res.json());
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get('url');
   if (!url) {
     return NextResponse.json({ error: 'url 파라미터가 필요합니다.' }, { status: 400 });
   }
 
-  const base = getScheduleServerBaseUrl();
-  if (base) {
+  const clipId = extractChzzkClipId(url);
+  let direct: ClipMetaBody | null = null;
+  if (clipId) {
     try {
-      const res = await fetchWithBackoff(`${base}/chzzk/clip-meta?url=${encodeURIComponent(url)}`, {
-        cache: 'no-store',
-      });
-      const json = await res.json();
-      return NextResponse.json(json, { status: res.status });
+      direct = await fetchClipMetaDirect(clipId);
     } catch {
-      // 서버 호출 실패 시 로컬 폴백
+      direct = null;
     }
   }
 
-  const clipId = extractChzzkClipId(url);
+  if (direct?.thumbnailUrl) {
+    return NextResponse.json(direct);
+  }
+
+  const fly = await fetchClipMetaFromFly(url);
+  if (fly?.thumbnailUrl) {
+    return NextResponse.json({
+      thumbnailUrl: fly.thumbnailUrl,
+      title: direct?.title ?? fly.title,
+    });
+  }
+  if (direct) return NextResponse.json(direct);
+  if (fly) return NextResponse.json(fly);
+
   if (!clipId) {
     return NextResponse.json({ error: '유효한 치지직 클립 URL이 아닙니다.' }, { status: 400 });
   }
-
-  try {
-    // Step 1: play-info 로 videoId, inKey 가져오기 (인증 불필요)
-    const playInfoRes = await fetch(
-      `https://api.chzzk.naver.com/service/v1/play-info/clip/${clipId}`,
-      { headers: { 'User-Agent': UA }, next: { revalidate: 3600 } },
-    );
-
-    if (!playInfoRes.ok) {
-      return NextResponse.json({ error: `play-info 오류: ${playInfoRes.status}` }, { status: 502 });
-    }
-
-    const playInfo = await playInfoRes.json();
-    const content = playInfo?.content;
-    const videoId: string | null = content?.videoId ?? null;
-    const inKey: string | null = content?.inKey ?? null;
-    const title: string | null = content?.contentTitle ?? null;
-
-    if (!videoId || !inKey) {
-      return NextResponse.json({ error: '클립 정보를 가져올 수 없습니다.' }, { status: 502 });
-    }
-
-    // Step 2: VOD 플레이백으로 썸네일 가져오기
-    const vodUrl =
-      `https://apis.naver.com/neonplayer/vodplay/v1/playback/${videoId}` +
-      `?key=${encodeURIComponent(inKey)}&sid=2208832&lang=ko_KR&connectType=PC` +
-      `&playerType=HTML5_FLASH&videoId=${videoId}&playType=CLIP`;
-
-    const vodRes = await fetch(vodUrl, {
-      headers: { 'User-Agent': UA },
-      next: { revalidate: 3600 },
-    });
-
-    if (!vodRes.ok) {
-      return NextResponse.json({ thumbnailUrl: null, title });
-    }
-
-    const vodData = await vodRes.json();
-    const thumbnailUrl = findCoverUrl(vodData);
-
-    return NextResponse.json({ thumbnailUrl, title });
-  } catch {
-    return NextResponse.json({ error: '요청 중 오류가 발생했습니다.' }, { status: 500 });
-  }
+  return NextResponse.json({ error: '클립 정보를 가져올 수 없습니다.' }, { status: 502 });
 }

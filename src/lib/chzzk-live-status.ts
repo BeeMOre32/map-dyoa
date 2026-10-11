@@ -6,13 +6,9 @@ import {
   mapWithConcurrency,
   type ChzzkLiveStatusContent,
 } from '@/lib/chzzk-api';
-import { fetchWithBackoff } from '@/lib/map-dyoa-server-http-utils';
 import { getPrismaForDomain } from '@/lib/prisma';
 import { fetchAllStreamersFromServer } from '@/lib/map-dyoa-server-streamers';
-import {
-  getScheduleServerBaseUrl,
-  isScheduleServerEnabled,
-} from '@/lib/map-dyoa-server-schedules';
+import { isScheduleServerEnabled } from '@/lib/map-dyoa-server-schedules';
 
 type GetLiveStreamerIdsOptions = {
   /** API·클라이언트 폴링 — 캐시 우회 */
@@ -67,40 +63,14 @@ const getCachedLocalLiveStreamerIds = unstable_cache(
   { revalidate: LIVE_STATUS_CACHE_SECONDS },
 );
 
-async function fetchLiveStreamerIdsFromServer(fresh: boolean): Promise<string[]> {
-  const base = getScheduleServerBaseUrl();
-  if (!base) return [];
-
-  const res = await fetchWithBackoff(`${base}/chzzk/live-status`, {
-    cache: fresh ? 'no-store' : undefined,
-    next: fresh ? undefined : { revalidate: LIVE_STATUS_CACHE_SECONDS },
-  });
-  if (!res.ok) return [];
-
-  const data = (await res.json()) as { liveStreamerIds?: unknown[] };
-  if (!Array.isArray(data.liveStreamerIds)) return [];
-  return data.liveStreamerIds.map(String);
-}
-
-function mergeLiveIds(...lists: string[][]): string[] {
-  return [...new Set(lists.flat())];
-}
-
-/** RSC·API 공통: 현재 라이브 중인 스트리머 id 목록 */
+/**
+ * 현재 라이브 중인 스트리머 id.
+ * 치지직 조회는 Next polling만 쓴다. Fly `/chzzk/live-status`와 합치면
+ * 오래된 캐시가 끝난 방송을 첫 화면에 LIVE로 남긴다.
+ */
 export async function getLiveStreamerIds(
   options?: GetLiveStreamerIdsOptions,
 ): Promise<string[]> {
-  const fresh = options?.fresh ?? false;
-
-  if (fresh) {
-    // API·폴링 — 로컬 직접 조회만 (Fly 이중 폴링·누락 방지)
-    return fetchLiveStreamerIdsLocal();
-  }
-
-  const [localIds, serverIds] = await Promise.all([
-    getCachedLocalLiveStreamerIds(),
-    fetchLiveStreamerIdsFromServer(false).catch(() => [] as string[]),
-  ]);
-
-  return mergeLiveIds(localIds, serverIds);
+  if (options?.fresh) return fetchLiveStreamerIdsLocal();
+  return getCachedLocalLiveStreamerIds();
 }
