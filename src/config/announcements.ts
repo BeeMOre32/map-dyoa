@@ -18,7 +18,7 @@ export const announcementToast: Announcement = {
   type: 'info',
   accent: 'amber',
   title: '캘린더 v3 베타 · 방송 자동 등록',
-  content: '주간 캘린더에 지금 방송과 자동 일정을 짧게 표시합니다.',
+  content: '주간 캘린더에 지금 방송과 자동 일정을 짧게 표시하고, 끝나면 종료 시각도 채웁니다.',
   href: '/announcements#update-2026-10',
 };
 

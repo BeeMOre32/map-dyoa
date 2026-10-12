@@ -5,12 +5,14 @@ import { fetchLiveChannels } from '@/lib/chzzk-live-status';
 import { toKstDateKey, kstDayBounds } from '@/lib/backend-health';
 import { appDataRetentionCutoff } from '@/lib/app-data-retention';
 import {
+  fetchScheduleByIdFromServer,
   fetchSchedulesFromServer,
   getScheduleServerBaseUrl,
   isScheduleServerEnabled,
 } from '@/lib/map-dyoa-server-schedules';
 import { fetchAllStreamersFromServer } from '@/lib/map-dyoa-server-streamers';
 import { fetchWithBackoff } from '@/lib/map-dyoa-server-http-utils';
+import { scheduleParticipantsForApi } from '@/lib/map-dyoa-server-fetch';
 import { revalidateScheduleDataCaches } from '@/lib/schedule-cache';
 import { expandCollabWithCohorts, type CollabMember } from '@/lib/schedule-candidate-collab';
 import { suggestGameIdFromText } from '@/constants/chzzkGameMap';
@@ -125,6 +127,166 @@ function liveUrlsForMembers(
 /** 직전 스캔에서도 켜져 있던 방송만 자동 등록. 크론 간격(15분)보다 짧다. */
 const AUTO_CONFIRM_MS = 10 * 60 * 1000;
 
+function resolveAutoEndTime(lastSeenAt: Date, startTime: Date, now: Date): Date {
+  const seen = toValidInstant(lastSeenAt) ?? now;
+  if (seen.getTime() > startTime.getTime()) return seen;
+  return now.getTime() > startTime.getTime() ? now : new Date(startTime.getTime() + 60_000);
+}
+
+/** 자동 등록 일정에 종료 시각·종료 표시만 기입. 이미 endTime이 있으면 건드리지 않음. */
+async function markAutoScheduleEnded(
+  scheduleId: string,
+  endTime: Date,
+): Promise<boolean> {
+  const base = getScheduleServerBaseUrl();
+
+  if (base) {
+    const existing = await fetchScheduleByIdFromServer(scheduleId);
+    if (!existing) return false;
+    if (existing.endTime) return false;
+
+    const resolvedEnd = resolveAutoEndTime(endTime, existing.startTime, endTime);
+    const res = await fetchWithBackoff(`${base}/schedules/${encodeURIComponent(scheduleId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: existing.title,
+        startTime: existing.startTime.toISOString(),
+        endTime: resolvedEnd.toISOString(),
+        participants: scheduleParticipantsForApi(
+          existing.participants.map((p) => ({
+            id: p.id,
+            nation: p.nation ?? undefined,
+            result: p.result ?? undefined,
+            isGuest: p.isGuest,
+          })),
+        ),
+        liveUrls: existing.liveUrls,
+        isGuerrilla: existing.isGuerrilla,
+        isNaeJeon: existing.isNaeJeon,
+        isLiveEnded: true,
+        ...(existing.gameId ? { gameId: existing.gameId } : {}),
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(`일정 종료 반영 실패 (${res.status}): ${text.slice(0, 200)}`);
+    }
+  } else {
+    const existing = await getPrismaForDomain().schedule.findUnique({
+      where: { id: scheduleId },
+      select: { endTime: true, startTime: true, isLiveEnded: true },
+    });
+    if (!existing) return false;
+    if (existing.endTime) return false;
+
+    const resolvedEnd = resolveAutoEndTime(endTime, existing.startTime, endTime);
+    await getPrismaForDomain().schedule.update({
+      where: { id: scheduleId },
+      data: { endTime: resolvedEnd, isLiveEnded: true },
+    });
+  }
+
+  await revalidateScheduleDataCaches();
+  return true;
+}
+
+/**
+ * 자동 등록(note=auto*) 일정: 아직 켜져 있으면 lastSeenAt 갱신,
+ * 꺼졌으면 마지막 감지 시각을 endTime으로 기입하고 note=auto:ended.
+ */
+async function reconcileAutoScheduleEnds(
+  liveIds: Set<string>,
+  now: Date,
+): Promise<{ liveTracked: number; endedMarked: number }> {
+  const prisma = getPrisma();
+  const todayKst = toKstDateKey(now);
+  const yesterdayKst = toKstDateKey(new Date(now.getTime() - 24 * 60 * 60 * 1000));
+  const rows = await prisma.scheduleCandidate.findMany({
+    where: {
+      status: 'APPROVED',
+      note: 'auto',
+      scheduleId: { not: null },
+      ...expiredCandidateWhere(),
+      // 오늘·어제만 (expiredCandidateWhere의 dateKst보다 좁게 덮어씀)
+      dateKst: { in: [todayKst, yesterdayKst] },
+    },
+  });
+
+  let liveTracked = 0;
+  let endedMarked = 0;
+
+  for (const row of rows) {
+    if (!row.scheduleId) continue;
+
+    if (liveIds.has(row.streamerId)) {
+      await prisma.scheduleCandidate.update({
+        where: { id: row.id },
+        data: { lastSeenAt: now },
+      });
+      liveTracked += 1;
+      continue;
+    }
+
+    try {
+      const marked = await markAutoScheduleEnded(row.scheduleId, row.lastSeenAt);
+      if (marked) {
+        await prisma.scheduleCandidate.update({
+          where: { id: row.id },
+          data: { note: 'auto:ended' },
+        });
+        endedMarked += 1;
+      } else {
+        // 이미 종료 시각이 있으면 재시도하지 않음
+        await prisma.scheduleCandidate.update({
+          where: { id: row.id },
+          data: { note: 'auto:ended' },
+        });
+      }
+    } catch (error) {
+      console.error('[schedule-candidate] end', row.streamerId, error);
+    }
+  }
+
+  return { liveTracked, endedMarked };
+}
+
+/**
+ * 두 번 이상 본 뒤 꺼진 PENDING: 일정으로 등록하면서 종료 시각도 기입.
+ * (등록 직전 스캔에서 승인 실패한 경우 등)
+ */
+async function approveEndedPendingCandidates(
+  liveIds: Set<string>,
+  now: Date,
+  dateKst: string,
+): Promise<number> {
+  const prisma = getPrisma();
+  const rows = await prisma.scheduleCandidate.findMany({
+    where: {
+      status: 'PENDING',
+      ...expiredCandidateWhere(),
+      dateKst,
+    },
+  });
+
+  let autoRegistered = 0;
+  for (const row of rows) {
+    if (liveIds.has(row.streamerId)) continue;
+    if (row.lastSeenAt.getTime() - row.detectedAt.getTime() < AUTO_CONFIRM_MS) continue;
+    try {
+      await approveScheduleCandidate(row.id, {
+        title: row.title ?? undefined,
+        auto: true,
+        endTime: row.lastSeenAt.getTime() > now.getTime() ? now : row.lastSeenAt,
+      });
+      autoRegistered += 1;
+    } catch (error) {
+      console.error('[schedule-candidate] end-approve', row.streamerId, error);
+    }
+  }
+  return autoRegistered;
+}
+
 /** LIVE인데 오늘 일정 없는 멤버를 후보로 쌓고, 다음 스캔에도 켜져 있으면 혼자 일정으로 등록. */
 export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
   dateKst: string;
@@ -134,6 +296,8 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
   autoRegistered: number;
   skippedScheduled: number;
   skippedResolved: number;
+  liveTracked: number;
+  endedMarked: number;
 }> {
   const dateKst = toKstDateKey(now);
   const [liveChannels, members, scheduledIds] = await Promise.all([
@@ -143,6 +307,7 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
   ]);
 
   const liveIds = liveChannels.map((c) => c.streamerId);
+  const liveIdSet = new Set(liveIds);
   const statusById = new Map(liveChannels.map((c) => [c.streamerId, c.status]));
   const candidates = members.filter((m) => statusById.has(m.id) && !scheduledIds.has(m.id));
   const skippedScheduled = liveIds.filter((id) => scheduledIds.has(id)).length;
@@ -226,6 +391,11 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
     }
   }
 
+  const endedApproved = await approveEndedPendingCandidates(liveIdSet, now, dateKst);
+  autoRegistered += endedApproved;
+
+  const { liveTracked, endedMarked } = await reconcileAutoScheduleEnds(liveIdSet, now);
+
   return {
     dateKst,
     liveCount: liveIds.length,
@@ -234,13 +404,15 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
     skippedScheduled,
     skippedResolved,
     autoRegistered,
+    liveTracked,
+    endedMarked,
   };
 }
 
 export async function listAutoScheduleIds(): Promise<string[]> {
   const rows = await getPrisma().scheduleCandidate.findMany({
     where: {
-      note: 'auto',
+      note: { startsWith: 'auto' },
       status: 'APPROVED',
       scheduleId: { not: null },
       ...expiredCandidateWhere(),
@@ -341,6 +513,8 @@ export async function approveScheduleCandidate(
     gameId?: string | null;
     /** 확인된 방송만. 참여자는 본인, 게임·합방은 비운다. */
     auto?: boolean;
+    /** 이미 끝난 방송을 등록할 때 종료 시각 */
+    endTime?: Date;
   },
 ): Promise<{ scheduleId: string }> {
   const prisma = getPrisma();
@@ -376,6 +550,9 @@ export async function approveScheduleCandidate(
     row.dateKst,
     new Date(),
   );
+  const endTime = opts?.endTime
+    ? resolveAutoEndTime(opts.endTime, startTime, opts.endTime)
+    : null;
   const title =
     opts?.title?.trim() || row.title?.trim() || `${row.streamerName} 라이브`;
   if (!title) throw new Error('일정 제목을 입력해 주세요.');
@@ -404,11 +581,16 @@ export async function approveScheduleCandidate(
       throw new Error(json.message || json.error || '일정 생성에 실패했습니다.');
     }
     scheduleId = json.id;
+    // 서버 create는 endTime을 안 받으므로 생성 후 PATCH
+    if (endTime) {
+      await markAutoScheduleEnded(scheduleId, endTime);
+    }
   } else {
     const created = await getPrismaForDomain().schedule.create({
       data: {
         title,
         startTime,
+        ...(endTime ? { endTime, isLiveEnded: true } : {}),
         isGuerrilla: false,
         liveUrls,
         ...(gameId ? { game: { connect: { id: gameId } } } : {}),
@@ -431,7 +613,7 @@ export async function approveScheduleCandidate(
       detectedAt: startTime,
       resolvedAt: now,
       scheduleId,
-      ...(opts?.auto ? { note: 'auto' } : {}),
+      ...(opts?.auto ? { note: endTime ? 'auto:ended' : 'auto' } : {}),
     },
   });
 
