@@ -374,9 +374,10 @@ export default function HelpPage() {
               붙습니다.
             </Row>
             <Row icon={<Radio className="h-5 w-5" />} delay={0.04}>
-              직접 올린 합방·게임 일정은 <strong>카드</strong>로 남습니다. 지금 켜진 방송과
-              자동 등록 일정은 <strong>제목·태그</strong>로 짧게 붙습니다. 합방은 멤버
-              태그, 혼자 방송은 이름과 카테고리입니다.
+              직접 올린 합방·게임 일정은 <strong>카드</strong>로 남습니다. 지금 켜진 방송은{' '}
+              <strong>제목·태그</strong>로 짧게 붙고, 누르면 일정 상세가 열립니다. 시작
+              시각이 최근인 방송이 위입니다. 방송 종료가 인식되면 그 줄은 빠지고 일정
+              카드로 남습니다.
             </Row>
             <Row icon={<Sparkles className="h-5 w-5" />} delay={0.08}>
               오늘 일정이 없는 멤버가 방송을 켜면 바로 올리지 않습니다. 다음 확인에서도

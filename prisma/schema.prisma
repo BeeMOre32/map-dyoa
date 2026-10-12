@@ -49,6 +49,8 @@ model Schedule {
   updatedAt    DateTime              @updatedAt
   game         Game?                 @relation(fields: [gameId], references: [id])
   gameId       String?
+
+  @@index([startTime])
 }
 
 model ScheduleParticipant {

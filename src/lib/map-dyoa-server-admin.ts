@@ -7,6 +7,15 @@ async function fetchJson<T>(path: string, revalidate = 60): Promise<T> {
   return readJsonSafely<T>(res, `관리자 API 오류: ${res.status}`)
 }
 
+export function fetchPublicOverviewFromServer() {
+  return fetchJson<{
+    scheduleCount: number
+    clipCount: number
+    memberCount: number
+    gameCount: number
+  }>("/stats/overview", 120)
+}
+
 export function fetchAdminStatsFromServer() {
   return fetchJson<{
     scheduleCount: number

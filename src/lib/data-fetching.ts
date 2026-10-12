@@ -25,6 +25,7 @@ import {
 } from './map-dyoa-server-games-feedback';
 import {
   fetchAdminClipsFromServer,
+  fetchPublicOverviewFromServer,
   fetchAdminSchedulesFromServer,
   fetchAdminStatsFromServer,
   fetchHoi4LeaderboardFromServer,
@@ -98,6 +99,11 @@ export type PublicSiteOverview = {
 export const getPublicSiteOverview = unstable_cache(
   async (): Promise<PublicSiteOverview> => {
     if (isScheduleServerEnabled()) {
+      try {
+        return await fetchPublicOverviewFromServer();
+      } catch (error) {
+        console.error('[overview] count', error);
+      }
       const [{ schedules, streamers, games }, clipResult] = await Promise.all([
         getCalendarData(),
         fetchClipsPaginatedFromServer({

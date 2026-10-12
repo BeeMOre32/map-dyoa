@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache';
 import { getPrisma, getPrismaForDomain } from '@/lib/prisma';
 import { extractChzzkChannelId } from '@/lib/chzzk';
 import { fetchChzzkLiveStatus, parseChzzkOpenDate } from '@/lib/chzzk-api';
@@ -215,18 +216,19 @@ async function reconcileAutoScheduleEnds(
 
   let liveTracked = 0;
   let endedMarked = 0;
+  const stillLiveIds = rows
+    .filter((row) => row.scheduleId && liveIds.has(row.streamerId))
+    .map((row) => row.id);
+  if (stillLiveIds.length > 0) {
+    await prisma.scheduleCandidate.updateMany({
+      where: { id: { in: stillLiveIds } },
+      data: { lastSeenAt: now },
+    });
+    liveTracked = stillLiveIds.length;
+  }
 
   for (const row of rows) {
-    if (!row.scheduleId) continue;
-
-    if (liveIds.has(row.streamerId)) {
-      await prisma.scheduleCandidate.update({
-        where: { id: row.id },
-        data: { lastSeenAt: now },
-      });
-      liveTracked += 1;
-      continue;
-    }
+    if (!row.scheduleId || liveIds.has(row.streamerId)) continue;
 
     try {
       const marked = await markAutoScheduleEnded(row.scheduleId, row.lastSeenAt);
@@ -330,12 +332,19 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
     };
   });
 
+  const existingRows =
+    details.length === 0
+      ? []
+      : await prisma.scheduleCandidate.findMany({
+          where: {
+            dateKst,
+            streamerId: { in: details.map((d) => d.streamerId) },
+          },
+        });
+  const existingByStreamer = new Map(existingRows.map((row) => [row.streamerId, row]));
+
   for (const d of details) {
-    const existing = await prisma.scheduleCandidate.findUnique({
-      where: {
-        streamerId_dateKst: { streamerId: d.streamerId, dateKst },
-      },
-    });
+    const existing = existingByStreamer.get(d.streamerId);
 
     if (existing?.status === 'APPROVED' || existing?.status === 'DISMISSED') {
       skippedResolved += 1;
@@ -409,7 +418,7 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
   };
 }
 
-export async function listAutoScheduleIds(): Promise<string[]> {
+async function loadAutoScheduleIds(): Promise<string[]> {
   const rows = await getPrisma().scheduleCandidate.findMany({
     where: {
       note: { startsWith: 'auto' },
@@ -421,6 +430,11 @@ export async function listAutoScheduleIds(): Promise<string[]> {
   });
   return rows.flatMap((row) => (row.scheduleId ? [row.scheduleId] : []));
 }
+
+export const listAutoScheduleIds = unstable_cache(loadAutoScheduleIds, ['auto-schedule-ids'], {
+  revalidate: 60,
+  tags: ['calendar'],
+});
 
 async function loadGames(): Promise<{ id: string; title: string }[]> {
   if (isScheduleServerEnabled()) {

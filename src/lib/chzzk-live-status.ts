@@ -18,7 +18,7 @@ type GetLiveStreamerIdsOptions = {
 /** RSC 첫 paint용 — 클라이언트 폴링(45초)보다 짧게 */
 export const LIVE_STATUS_CACHE_SECONDS = 30;
 
-const CHZZK_POLL_CONCURRENCY = 6;
+const CHZZK_POLL_CONCURRENCY = 12;
 
 export type LiveChannel = {
   streamerId: string;

@@ -18,6 +18,8 @@ export type TodayLiveMember = {
 
 export type TodayLiveRow = {
   id: string;
+  /** 연결된 일정. 없으면 아직 등록 전 라이브 */
+  scheduleId: string | null;
   title: string;
   category: string | null;
   startedAt: Date | null;
@@ -90,6 +92,7 @@ export function buildTodayLiveRows({
 
     rows.push({
       id: schedule.id,
+      scheduleId: schedule.id,
       title: schedule.title.trim() || liveChannel?.liveTitle || '합방',
       category: schedule.game?.title?.trim() || liveChannel?.category || null,
       startedAt: earliestDate([
@@ -117,7 +120,8 @@ export function buildTodayLiveRows({
     });
     const soloStart = toDate(solo?.startTime);
     rows.push({
-      id: channel.streamerId,
+      id: solo?.id ?? channel.streamerId,
+      scheduleId: solo?.id ?? null,
       title: channel.liveTitle || solo?.title?.trim() || `${streamer.name} 방송`,
       category: channel.category || solo?.game?.title?.trim() || null,
       startedAt:
@@ -139,20 +143,7 @@ export function buildTodayLiveRows({
   return rows.sort((a, b) => toTime(b.startedAt) - toTime(a.startedAt));
 }
 
-function memberFromParticipant(
-  person: FlattenedSchedule['participants'][number],
-  liveIds: Set<string>,
-): TodayLiveMember {
-  return {
-    id: person.id,
-    name: person.name,
-    colorCode: person.colorCode,
-    profileImg: person.profileImg,
-    live: liveIds.has(person.id),
-  };
-}
-
-/** 베타 주간: 직접 잡은 일정은 카드, 자동 등록은 목록. 지금 라이브는 그 목록 위에 붙는다. */
+/** 베타 주간: 켜진 자동 일정은 목록, 방종이 인식되면 목록에서 빠지고 카드로 남는다. */
 export function buildBetaDayRows({
   schedules,
   autoScheduleIds,
@@ -168,31 +159,21 @@ export function buildBetaDayRows({
   now: Date;
   includeLive: boolean;
 }): { cards: FlattenedSchedule[]; rows: TodayLiveRow[] } {
-  const cards = schedules.filter((schedule) => !autoScheduleIds.has(schedule.id));
-  const autos = schedules.filter((schedule) => autoScheduleIds.has(schedule.id));
   const liveRows = includeLive
     ? buildTodayLiveRows({ schedules, streamers, channels, now })
     : [];
-  const covered = new Set(liveRows.flatMap((row) => row.members.map((member) => member.id)));
-  const liveIds = new Set(channels.map((channel) => channel.streamerId));
-  const recorded: TodayLiveRow[] = [];
-
-  for (const schedule of autos) {
-    const people = schedule.participants.filter((person) => !person.isGuest);
-    if (people.length === 0 || people.some((person) => covered.has(person.id))) continue;
-    recorded.push({
-      id: schedule.id,
-      title: schedule.title.trim() || `${people[0]?.name ?? '방송'} 라이브`,
-      category: schedule.game?.title?.trim() || null,
-      startedAt: toDate(schedule.startTime),
-      collab: people.length >= 2,
-      members: people.map((person) => memberFromParticipant(person, liveIds)),
-    });
-    for (const person of people) covered.add(person.id);
-  }
-
-  const rows = [...liveRows, ...recorded].sort(
-    (a, b) => toTime(a.startedAt) - toTime(b.startedAt),
+  const endedIds = new Set(
+    schedules.filter((schedule) => schedule.isLiveEnded).map((schedule) => schedule.id),
   );
+  const rows = liveRows
+    .filter((row) => row.members.some((member) => member.live))
+    .filter((row) => !row.scheduleId || !endedIds.has(row.scheduleId))
+    .sort((a, b) => toTime(b.startedAt) - toTime(a.startedAt));
+  const listedAutoIds = new Set(
+    rows.flatMap((row) =>
+      row.scheduleId && autoScheduleIds.has(row.scheduleId) ? [row.scheduleId] : [],
+    ),
+  );
+  const cards = schedules.filter((schedule) => !listedAutoIds.has(schedule.id));
   return { cards, rows };
 }

@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { format } from 'date-fns';
 import { resolveStreamerAvatarSrc } from '@/lib/utils';
+import { markModalSoftNav } from '@/lib/modal-navigation';
 import type { TodayLiveMember, TodayLiveRow } from '@/lib/calendar/todayLiveListing';
 
 function Face({ member }: { member: TodayLiveMember }) {
@@ -48,15 +50,13 @@ export default function CalendarTodayLiveList({ rows, now }: { rows: TodayLiveRo
       ) : null}
       {rows.map((row) => {
         const live = row.members.some((member) => member.live);
-        return (
-        <div
-          key={row.id}
-          className={`rounded-xl bg-white px-2 py-2 ring-1 dark:bg-slate-950 ${
-            live
-              ? 'ring-red-200 dark:ring-red-900/70'
-              : 'ring-slate-200 dark:ring-slate-700'
-          }`}
-        >
+        const className = `block rounded-xl bg-white px-2 py-2 text-left ring-1 dark:bg-slate-950 ${
+          live
+            ? 'ring-red-200 dark:ring-red-900/70'
+            : 'ring-slate-200 dark:ring-slate-700'
+        } ${row.scheduleId ? 'cursor-pointer hover:ring-indigo-300 dark:hover:ring-indigo-700' : ''}`;
+        const body = (
+          <>
           <div className="flex items-start justify-between gap-1">
             <p className="line-clamp-2 text-[12px] font-black leading-snug text-slate-800 dark:text-slate-100">
               {row.title}
@@ -93,7 +93,28 @@ export default function CalendarTodayLiveList({ rows, now }: { rows: TodayLiveRo
               {format(new Date(row.startedAt), 'HH:mm')}–
             </p>
           ) : null}
-        </div>
+          </>
+        );
+        if (!row.scheduleId) {
+          return (
+            <div key={row.id} className={className}>
+              {body}
+            </div>
+          );
+        }
+        return (
+          <Link
+            key={row.id}
+            href={`/calendar/schedule/${row.scheduleId}`}
+            scroll={false}
+            className={className}
+            onClick={(event) => {
+              event.stopPropagation();
+              markModalSoftNav();
+            }}
+          >
+            {body}
+          </Link>
         );
       })}
     </div>
