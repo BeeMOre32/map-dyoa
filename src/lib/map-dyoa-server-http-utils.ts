@@ -5,6 +5,7 @@ import { log } from "next-axiom";
 import { MapDyoaServerRequestFailedError } from "@/lib/map-dyoa-server-client-error";
 
 const REQUEST_ID_HEADER = "x-request-id";
+const WRITE_TOKEN_HEADER = "x-write-token";
 
 function logTargetUrl(url: string): string {
   try {
@@ -44,6 +45,16 @@ function mergeRequestIdHeaders(init?: RequestInit): Headers {
   const headers = new Headers(init?.headers);
   if (!headers.has(REQUEST_ID_HEADER)) {
     headers.set(REQUEST_ID_HEADER, crypto.randomUUID());
+  }
+  const method = (init?.method ?? "GET").toUpperCase();
+  const writeToken = process.env.MAP_DYOA_SERVER_WRITE_TOKEN?.trim();
+  if (
+    writeToken &&
+    method !== "GET" &&
+    method !== "HEAD" &&
+    !headers.has(WRITE_TOKEN_HEADER)
+  ) {
+    headers.set(WRITE_TOKEN_HEADER, writeToken);
   }
   return headers;
 }
