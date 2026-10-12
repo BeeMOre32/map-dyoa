@@ -207,8 +207,9 @@ async function reconcileAutoScheduleEnds(
       status: 'APPROVED',
       note: 'auto',
       scheduleId: { not: null },
-      dateKst: { in: [todayKst, yesterdayKst] },
       ...expiredCandidateWhere(),
+      // 오늘·어제만 (expiredCandidateWhere의 dateKst보다 좁게 덮어씀)
+      dateKst: { in: [todayKst, yesterdayKst] },
     },
   });
 
@@ -263,8 +264,8 @@ async function approveEndedPendingCandidates(
   const rows = await prisma.scheduleCandidate.findMany({
     where: {
       status: 'PENDING',
-      dateKst,
       ...expiredCandidateWhere(),
+      dateKst,
     },
   });
 
