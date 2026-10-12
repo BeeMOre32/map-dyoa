@@ -275,7 +275,7 @@ export default function HelpPage() {
             </li>
             <li>
               <strong>방송 자동 등록</strong> — 일정이 없는 방송이 다음 확인에도 켜져 있으면
-              혼자 일정으로 등록
+              혼자 일정으로 등록하고, 끝나면 종료 시각도 채움
             </li>
             <li>
               <strong>의견 보내기</strong> — 설정에서 창으로 의견·오류·일정·기타 접수
