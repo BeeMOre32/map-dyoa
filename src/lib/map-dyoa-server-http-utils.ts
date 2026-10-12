@@ -6,6 +6,12 @@ import { MapDyoaServerRequestFailedError } from "@/lib/map-dyoa-server-client-er
 
 const REQUEST_ID_HEADER = "x-request-id";
 const WRITE_TOKEN_HEADER = "x-write-token";
+const WRITE_TOKEN_ENV = "MAP_DYOA_SERVER_WRITE_TOKEN";
+
+function readWriteToken(): string {
+  const value = process.env[WRITE_TOKEN_ENV];
+  return typeof value === "string" ? value.trim() : "";
+}
 
 function logTargetUrl(url: string): string {
   try {
@@ -30,6 +36,7 @@ function buildFetchLogFields(
     method: (init?.method ?? "GET").toUpperCase(),
     url: logTargetUrl(url),
     requestId: headers.get(REQUEST_ID_HEADER) ?? undefined,
+    writeTokenAttached: headers.has(WRITE_TOKEN_HEADER),
     attempt: attempt + 1,
     durationMs: Math.round(durationMs),
   };
@@ -47,7 +54,7 @@ function mergeRequestIdHeaders(init?: RequestInit): Headers {
     headers.set(REQUEST_ID_HEADER, crypto.randomUUID());
   }
   const method = (init?.method ?? "GET").toUpperCase();
-  const writeToken = process.env.MAP_DYOA_SERVER_WRITE_TOKEN?.trim();
+  const writeToken = readWriteToken();
   if (
     writeToken &&
     method !== "GET" &&
