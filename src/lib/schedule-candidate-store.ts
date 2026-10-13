@@ -4,6 +4,7 @@ import { extractChzzkChannelId } from '@/lib/chzzk';
 import { fetchChzzkLiveStatus, parseChzzkOpenDate } from '@/lib/chzzk-api';
 import { fetchLiveChannels } from '@/lib/chzzk-live-status';
 import { toKstDateKey, kstDayBounds } from '@/lib/backend-health';
+import { overnightStartKey, previousKstDateKey } from '@/lib/schedule-overnight';
 import { appDataRetentionCutoff } from '@/lib/app-data-retention';
 import {
   fetchScheduleByIdFromServer,
@@ -84,7 +85,7 @@ function toValidInstant(value: Date | string | number | null | undefined): Date 
 
 /**
  * 일정 시작 시각: 같은 KST 날의 치지직 방송 시작(openDate) 우선.
- * 전날부터 이어진 방송은 오늘 날짜에 넣기 위해 fallback(스캔·감지 시각)을 쓴다.
+ * 시작일을 못 찾은 방송만 오늘 감지 시각으로 넣는다.
  */
 function resolveCandidateStartTime(
   openDate: Date | null,
@@ -275,6 +276,22 @@ async function approveEndedPendingCandidates(
   for (const row of rows) {
     if (liveIds.has(row.streamerId)) continue;
     if (row.lastSeenAt.getTime() - row.detectedAt.getTime() < AUTO_CONFIRM_MS) continue;
+
+    // 전날 자동 일정이 아직 켜져 있으면 이 행은 자정을 넘긴 중복이다.
+    const carried = await prisma.scheduleCandidate.findFirst({
+      where: {
+        streamerId: row.streamerId,
+        dateKst: previousKstDateKey(row.dateKst),
+        status: 'APPROVED',
+        note: 'auto',
+      },
+      select: { id: true },
+    });
+    if (carried) {
+      await prisma.scheduleCandidate.delete({ where: { id: row.id } });
+      continue;
+    }
+
     try {
       await approveScheduleCandidate(row.id, {
         title: row.title ?? undefined,
@@ -312,7 +329,7 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
   const liveIdSet = new Set(liveIds);
   const statusById = new Map(liveChannels.map((c) => [c.streamerId, c.status]));
   const candidates = members.filter((m) => statusById.has(m.id) && !scheduledIds.has(m.id));
-  const skippedScheduled = liveIds.filter((id) => scheduledIds.has(id)).length;
+  let skippedScheduled = liveIds.filter((id) => scheduledIds.has(id)).length;
 
   const prisma = getPrisma();
   let created = 0;
@@ -343,7 +360,77 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
         });
   const existingByStreamer = new Map(existingRows.map((row) => [row.streamerId, row]));
 
+  const carryTargets = details.flatMap((d) => {
+    const startKey = overnightStartKey(d.liveStart, dateKst);
+    return startKey ? [{ streamerId: d.streamerId, dateKst: startKey }] : [];
+  });
+  const priorRows =
+    carryTargets.length === 0
+      ? []
+      : await prisma.scheduleCandidate.findMany({
+          where: {
+            OR: carryTargets.map((target) => ({
+              streamerId: target.streamerId,
+              dateKst: target.dateKst,
+            })),
+          },
+        });
+  const priorByStreamer = new Map(priorRows.map((row) => [row.streamerId, row]));
+  const scheduledOnStartDay = new Map<string, Set<string>>();
+  await Promise.all(
+    [...new Set(carryTargets.map((target) => target.dateKst))].map(async (startKey) => {
+      scheduledOnStartDay.set(startKey, await streamerIdsWithScheduleToday(startKey));
+    }),
+  );
+
   for (const d of details) {
+    const startKey = overnightStartKey(d.liveStart, dateKst);
+    if (startKey) {
+      const prior = priorByStreamer.get(d.streamerId);
+      const samePrior = prior?.dateKst === startKey ? prior : undefined;
+      const alreadyCovered =
+        (samePrior != null && samePrior.status !== 'PENDING') ||
+        (samePrior == null && (scheduledOnStartDay.get(startKey)?.has(d.streamerId) ?? false));
+
+      if (samePrior?.status === 'PENDING' || alreadyCovered) {
+        const todayDup = existingByStreamer.get(d.streamerId);
+        if (todayDup?.status === 'PENDING') {
+          await prisma.scheduleCandidate.delete({ where: { id: todayDup.id } });
+          existingByStreamer.delete(d.streamerId);
+        }
+      }
+
+      if (samePrior?.status === 'PENDING') {
+        if (now.getTime() - samePrior.lastSeenAt.getTime() >= AUTO_CONFIRM_MS) {
+          try {
+            await approveScheduleCandidate(samePrior.id, { title: d.title, auto: true });
+            autoRegistered += 1;
+          } catch (error) {
+            console.error('[schedule-candidate] auto', d.streamerId, error);
+          }
+        } else {
+          await prisma.scheduleCandidate.update({
+            where: { id: samePrior.id },
+            data: {
+              title: d.title,
+              liveCategory: d.liveCategory,
+              liveUrl: d.liveUrl,
+              streamerName: d.streamerName,
+              lastSeenAt: now,
+            },
+          });
+          refreshed += 1;
+        }
+        continue;
+      }
+
+      if (alreadyCovered) {
+        if (samePrior?.status === 'DISMISSED') skippedResolved += 1;
+        else skippedScheduled += 1;
+        continue;
+      }
+    }
+
     const existing = existingByStreamer.get(d.streamerId);
 
     if (existing?.status === 'APPROVED' || existing?.status === 'DISMISSED') {
@@ -400,8 +487,10 @@ export async function scanLiveScheduleCandidates(now = new Date()): Promise<{
     }
   }
 
+  const yesterdayKst = toKstDateKey(new Date(now.getTime() - 24 * 60 * 60 * 1000));
   const endedApproved = await approveEndedPendingCandidates(liveIdSet, now, dateKst);
-  autoRegistered += endedApproved;
+  const endedYesterday = await approveEndedPendingCandidates(liveIdSet, now, yesterdayKst);
+  autoRegistered += endedApproved + endedYesterday;
 
   const { liveTracked, endedMarked } = await reconcileAutoScheduleEnds(liveIdSet, now);
 
