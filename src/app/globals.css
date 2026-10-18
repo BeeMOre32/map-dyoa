@@ -76,9 +76,10 @@ html.dark main {
   background-color: var(--bg-primary);
 }
 
-/* 다크 모드에서 카드/컨테이너 스타일 */
+/* 다크 모드에서 카드/컨테이너 스타일
+   backdrop·container는 반투명/블러용이라 불투명 배경을 씌우지 않음 */
 html.dark [class*='card'],
-html.dark [class*='modal'],
+html.dark [class*='modal']:not([data-slot='modal-backdrop']):not([data-slot='modal-container']),
 html.dark [class*='section'] {
   background-color: var(--bg-secondary);
   border-color: var(--border-color);
