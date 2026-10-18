@@ -51,23 +51,21 @@ function SettingSwitch({
   description?: string;
 }) {
   return (
-    <Switch
-      className="!flex !w-full !flex-row !flex-nowrap !items-center !justify-between gap-4 bg-transparent px-3 py-2.5"
-      isSelected={isSelected}
-      onChange={onChange}
-    >
-      <span className="flex min-w-0 items-center gap-2.5 text-left">
-        <span className="text-zinc-400">{icon}</span>
-        <span className="min-w-0">
-          <span className="block text-sm font-medium text-zinc-900 dark:text-zinc-100">{title}</span>
-          {description ? (
-            <span className="mt-0.5 block text-xs leading-snug text-zinc-500">{description}</span>
-          ) : null}
+    <Switch className="w-full bg-transparent" isSelected={isSelected} onChange={onChange}>
+      <Switch.Content className="!flex !w-full !flex-row !flex-nowrap !items-center !justify-between gap-4 px-3 py-2.5">
+        <span className="flex min-w-0 items-center gap-2.5 text-left">
+          <span className="text-zinc-400">{icon}</span>
+          <span className="min-w-0">
+            <span className="block text-sm font-medium text-zinc-900 dark:text-zinc-100">{title}</span>
+            {description ? (
+              <span className="mt-0.5 block text-xs leading-snug text-zinc-500">{description}</span>
+            ) : null}
+          </span>
         </span>
-      </span>
-      <Switch.Control className="shrink-0">
-        <Switch.Thumb />
-      </Switch.Control>
+        <Switch.Control className="shrink-0">
+          <Switch.Thumb />
+        </Switch.Control>
+      </Switch.Content>
     </Switch>
   );
 }
