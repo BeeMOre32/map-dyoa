@@ -308,7 +308,11 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
           if (!next) dismiss();
         }}
       >
-        <Modal.Backdrop isKeyboardDismissDisabled={feedbackOpen}>
+        <Modal.Backdrop
+          variant="blur"
+          className="bg-slate-900/30 dark:bg-slate-950/50"
+          isKeyboardDismissDisabled={feedbackOpen}
+        >
           <Modal.Container placement="center" size="sm">
             <Modal.Dialog className="border border-zinc-200 shadow-xl dark:border-zinc-800">
               <Modal.Header>
