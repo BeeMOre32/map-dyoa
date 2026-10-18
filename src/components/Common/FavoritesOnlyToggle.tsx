@@ -1,5 +1,6 @@
 'use client';
 
+import { ToggleButton } from '@heroui/react';
 import { Star } from 'lucide-react';
 import { useFavoriteStreamers } from '@/hooks/useFavoriteStreamers';
 
@@ -7,15 +8,33 @@ type Props = {
   className?: string;
   /** 즐겨찾기 멤버가 없을 때 버튼 숨김 */
   hideWhenEmpty?: boolean;
+  appearance?: 'plain' | 'hero';
 };
 
 export default function FavoritesOnlyToggle({
   className = '',
   hideWhenEmpty = true,
+  appearance = 'plain',
 }: Props) {
   const { favorites, favoritesOnly, setFavoritesOnly } = useFavoriteStreamers();
 
   if (hideWhenEmpty && favorites.length === 0) return null;
+
+  if (appearance === 'hero') {
+    return (
+      <ToggleButton
+        size="sm"
+        className={className}
+        isSelected={favoritesOnly}
+        isDisabled={favorites.length === 0}
+        aria-label={favoritesOnly ? '전체 멤버 보기' : '관심 멤버만 보기'}
+        onChange={setFavoritesOnly}
+      >
+        <Star className={`size-3.5 ${favoritesOnly ? 'fill-current' : ''}`} />
+        {favoritesOnly ? '관심 멤버' : '전체'}
+      </ToggleButton>
+    );
+  }
 
   return (
     <button

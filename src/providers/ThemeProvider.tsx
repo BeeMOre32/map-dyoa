@@ -17,6 +17,7 @@ export function ThemeProvider({ children, initialTheme }: Props) {
       storageKey={APP_THEME.storageKey}
       themes={[...APP_THEME.themes]}
       initialTheme={initialTheme}
+      transition={{ type: 'fade', duration: 160, easing: 'ease-out' }}
     >
       {children}
     </NextThemesProvider>

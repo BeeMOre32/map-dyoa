@@ -262,27 +262,29 @@ export default function StreamerCard({
         </div>
 
         <div className="relative z-[1] mt-3 flex items-center gap-1.5 sm:mt-6 sm:gap-2">
-          <span className="pointer-events-none rounded-lg border border-slate-200 bg-slate-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-slate-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-400 sm:rounded-xl sm:px-2.5 sm:py-1 sm:text-[10px]">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 sm:gap-2">
+          <span className="pointer-events-none shrink-0 whitespace-nowrap rounded-lg border border-slate-200 bg-slate-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-slate-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-400 sm:rounded-xl sm:px-2.5 sm:py-1 sm:text-[10px]">
             {streamer.generation}기
           </span>
           {streamer.role && (
-            <span className="pointer-events-none rounded-lg border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-indigo-600 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400 sm:rounded-xl sm:px-2.5 sm:py-1 sm:text-[10px]">
+            <span className="pointer-events-none shrink-0 whitespace-nowrap rounded-lg border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-indigo-600 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400 sm:rounded-xl sm:px-2.5 sm:py-1 sm:text-[10px]">
               {streamer.role}
             </span>
           )}
           {isLive && viewerCount !== undefined && (
             <span
-              className="pointer-events-none inline-flex items-center gap-0.5 rounded-lg border border-red-100 bg-red-50 px-2 py-0.5 text-[9px] font-black tabular-nums text-red-600 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 sm:rounded-xl sm:px-2.5 sm:py-1 sm:text-[10px]"
+              className="pointer-events-none inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded-lg border border-red-100 bg-red-50 px-2 py-0.5 text-[9px] font-black tabular-nums text-red-600 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 sm:rounded-xl sm:px-2.5 sm:py-1 sm:text-[10px]"
               title={`시청자 ${viewerCount.toLocaleString('ko-KR')}명`}
             >
               <Users className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               {formatViewerCount(viewerCount)}
             </span>
           )}
+          </div>
 
           <motion.div
             layout
-            className="relative z-[2] ml-auto flex items-center gap-1 sm:gap-1.5"
+            className="relative z-[2] flex shrink-0 items-center gap-1 sm:gap-1.5"
             style={{ display: 'flex' }}
           >
             {isLive && (
@@ -301,7 +303,7 @@ export default function StreamerCard({
                 className={`flex h-7 items-center gap-1 rounded-lg px-2 text-[9px] font-black transition-all sm:h-8 sm:rounded-xl sm:px-2.5 sm:text-[10px] ${
                   previewOpen
                     ? 'bg-red-500 text-white'
-                    : 'bg-red-50 text-red-600 opacity-100 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100'
+                    : 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300 [@media(hover:hover)]:hidden [@media(hover:hover)]:group-hover:flex'
                 }`}
               >
                 <Eye className="h-3.5 w-3.5" />

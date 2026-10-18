@@ -1,8 +1,8 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutGroup, motion } from 'motion/react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Tabs } from '@heroui/react';
+import { motion } from 'motion/react';
 import { Calendar, Users, Clapperboard, Sword, Radio } from 'lucide-react';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
 import { isBongnudoSeasonActive } from '@/lib/bongnudo';
@@ -12,11 +12,12 @@ const tabs = [
   { id: 'streamers', label: '멤버·라이브', href: '/streamers', icon: Users },
   { id: 'clips', label: '클립', href: '/clips', icon: Clapperboard },
   { id: 'bongnudo', label: '봉누도', href: '/bongnudo', icon: Radio },
-  { id: 'hoi4', label: '전적', href: '/hoi4', icon: Sword, accent: 'amber' as const },
+  { id: 'hoi4', label: '전적', href: '/hoi4', icon: Sword },
 ];
 
 export default function Navigation() {
   const pathname = usePathname();
+  const router = useRouter();
   const { liveIds } = useLiveStatus();
   const liveCount = liveIds.size;
 
@@ -28,65 +29,52 @@ export default function Navigation() {
 
   if (isModalOpen) return null;
 
+  const visible = tabs.filter((tab) => tab.id !== 'bongnudo' || isBongnudoSeasonActive());
+  const current = visible.find((tab) => pathname.startsWith(tab.href))?.id ?? null;
+
   return (
-    <nav className="flex justify-center py-0 shrink-0 transition-colors z-30 w-max mx-auto" aria-label="지도동 메뉴">
-      <LayoutGroup>
-      <div className="rounded-xl flex bg-slate-100 dark:bg-slate-900 p-1 border-2 border-slate-200 dark:border-slate-800 relative shadow-inner">
-        {tabs
-          .filter((tab) => tab.id !== 'bongnudo' || isBongnudoSeasonActive())
-          .map((tab) => {
-          const isActive = pathname.startsWith(tab.href);
-          const isAmber = tab.accent === 'amber';
-          const isStreamers = tab.id === 'streamers';
-          const showLiveGlow = isStreamers && liveCount > 0;
-
-          return (
-            <Link
-              key={tab.id}
-              href={tab.href}
-              className={`relative z-10 flex items-center gap-0.5 rounded-xl px-1.5 py-1 text-xs font-black transition-all sm:gap-1 sm:rounded-2xl sm:px-4 sm:py-1.5 sm:text-sm md:px-5 ${
-                isActive
-                  ? isAmber
-                    ? 'text-amber-600 dark:text-amber-400'
-                    : isStreamers && liveCount > 0
-                      ? 'text-red-600 dark:text-red-400'
-                      : 'text-indigo-600 dark:text-indigo-400'
-                  : isAmber
-                    ? 'text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300'
-                    : showLiveGlow
-                      ? 'text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300'
-                      : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
-              }`}
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute inset-0 bg-white dark:bg-slate-800 rounded-2xl shadow-md border border-slate-200/50 dark:border-slate-700"
-                  transition={{ type: 'spring', visualDuration: 0.32, bounce: 0.14 }}
-                />
-              )}
-
-              {showLiveGlow && !isActive && (
-                <motion.div
-                  className="absolute inset-0 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200/60 dark:border-red-700/50"
-                  animate={{ opacity: [0.6, 1, 0.6] }}
-                  transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-                />
-              )}
-
-              <tab.icon className="z-20 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="z-20 hidden sm:inline">{tab.label}</span>
-
-              {isStreamers && liveCount > 0 && (
-                <span className="z-20 flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-red-500 text-white text-[9px] font-black leading-none">
-                  {liveCount}
-                </span>
-              )}
-            </Link>
-          );
-        })}
-      </div>
-      </LayoutGroup>
-    </nav>
+    <Tabs
+      className="w-max max-w-full"
+      selectedKey={current ?? undefined}
+      onSelectionChange={(key) => {
+        const href = visible.find((tab) => tab.id === String(key))?.href;
+        if (!href || pathname.startsWith(href)) return;
+        router.push(href);
+      }}
+    >
+      <Tabs.ListContainer className="w-max max-w-full">
+        <Tabs.List aria-label="지도동 메뉴" className="!w-max !min-w-0">
+          {visible.map((tab) => {
+            const live = tab.id === 'streamers' && liveCount > 0;
+            return (
+              <Tabs.Tab
+                key={tab.id}
+                id={tab.id}
+                className={`!h-auto !w-auto shrink-0 gap-1 !whitespace-nowrap px-2 py-1.5 sm:px-4 ${
+                  tab.id === 'hoi4' ? 'data-[selected=true]:text-amber-600' : ''
+                } ${live ? 'data-[selected=true]:text-red-600' : ''}`}
+              >
+                {live && current !== 'streamers' ? (
+                  <motion.span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 rounded-2xl border border-red-200/70 bg-red-50 dark:border-red-700/50 dark:bg-red-900/20"
+                    animate={{ opacity: [0.45, 1, 0.45] }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+                  />
+                ) : null}
+                <tab.icon className="relative z-10 size-3.5 shrink-0 sm:size-4" />
+                <span className="relative z-10 hidden whitespace-nowrap sm:inline">{tab.label}</span>
+                {live ? (
+                  <span className="relative z-10 inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black leading-none text-white">
+                    {liveCount}
+                  </span>
+                ) : null}
+                <Tabs.Indicator />
+              </Tabs.Tab>
+            );
+          })}
+        </Tabs.List>
+      </Tabs.ListContainer>
+    </Tabs>
   );
 }

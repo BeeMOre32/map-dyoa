@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '@heroui/styles';
 
 /* Tailwind v4: dark: 유틸리티를 html.dark 클래스 기반으로 동작하도록 설정 (next-themes 연동) */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -29,13 +30,36 @@ html.dark {
   --border-color: #333333;
 }
 
-/* 다크모드 전환 시 모든 요소의 색상이 부드럽게 바뀌도록 전역 transition 적용 */
-*,
-*::before,
-*::after {
-  transition-property: color, background-color, border-color, fill, stroke;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 200ms;
+/* 테마는 화면 전체를 한 장으로 넘긴다. 요소마다 색을 옮기면 카드가 많을 때 끊긴다 */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 160ms;
+  animation-timing-function: ease-out;
+}
+
+html:active-view-transition *,
+html:active-view-transition *::before,
+html:active-view-transition *::after {
+  transition: none !important;
+}
+
+/* 전역 색 전환이 위치 애니메이션을 지우지 않게 한다 */
+[data-slot='toast'] {
+  transition-property: transform, height, opacity;
+  transition-duration: var(--toast-translate-duration, 350ms), var(--toast-height-duration, 350ms), var(--toast-opacity-duration, 150ms);
+  transition-timing-function: var(--toast-ease, ease);
+}
+
+.tabs__indicator {
+  transition-property: translate, width, height, transform;
+  transition-duration: 250ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.switch__thumb {
+  transition-property: margin, background-color, transform;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* 다크 모드 기본 스타일 */

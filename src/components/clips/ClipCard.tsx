@@ -20,6 +20,7 @@ import {
 } from '@/lib/clip-hover-preview';
 import { postToChzzkIframe } from '@/components/multiview/utils';
 import { ClipPlayerModal } from './ClipPlayerModal';
+import { ClipRecommendButton } from './ClipRecommendButton';
 import { isBongnudoClip } from '@/lib/bongnudo';
 
 /** 호버 후 미리보기 iframe 마운트까지 */
@@ -195,7 +196,7 @@ export default function ClipCard({ clip, onEdit, index = 0 }: ClipCardProps) {
   const formattedDate = clip.clipDate
     ? new Date(clip.clipDate).toLocaleDateString('ko-KR', {
         year: 'numeric',
-        month: 'long',
+        month: 'short',
         day: 'numeric',
       })
     : null;
@@ -228,12 +229,12 @@ export default function ClipCard({ clip, onEdit, index = 0 }: ClipCardProps) {
         variants={clipCardVariants}
         whileHover={{ y: -3, transition: { type: 'spring', visualDuration: 0.22, bounce: 0.16 } }}
         whileTap={{ scale: 0.99 }}
-        className="group flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white transition-colors hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-700 dark:hover:shadow-indigo-950/50 sm:rounded-3xl"
+        className="group flex overflow-hidden rounded-2xl border border-slate-100 bg-white transition-colors hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-700 dark:hover:shadow-indigo-950/50 sm:flex-col sm:rounded-3xl"
       >
 
         {/* 미디어 영역 — 치지직 클립은 호버 1초 후 인라인 미리보기 */}
         <div
-          className="relative aspect-video overflow-hidden bg-black"
+          className="relative aspect-video w-36 shrink-0 overflow-hidden bg-black sm:w-full"
           onMouseEnter={onMediaEnter}
           onMouseLeave={onMediaLeave}
         >
@@ -316,9 +317,9 @@ export default function ClipCard({ clip, onEdit, index = 0 }: ClipCardProps) {
                   aria-label={`${clip.title} 재생`}
                 >
                   {!previewPlaying ? (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover/thumb:bg-black/25">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 opacity-0 backdrop-blur-sm transition-opacity group-hover/thumb:opacity-100">
-                        <Play className="ml-0.5 h-6 w-6 fill-white text-white" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/15 transition-colors group-hover/thumb:bg-black/25 sm:bg-black/0">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/25 opacity-100 backdrop-blur-sm transition-opacity group-hover/thumb:opacity-100 sm:h-12 sm:w-12 sm:bg-white/20 sm:opacity-0">
+                        <Play className="ml-0.5 h-4 w-4 fill-white text-white sm:h-6 sm:w-6" />
                       </div>
                     </div>
                   ) : null}
@@ -435,7 +436,7 @@ export default function ClipCard({ clip, onEdit, index = 0 }: ClipCardProps) {
         </div>
 
         {/* 정보 영역 */}
-        <div className="flex flex-1 flex-col gap-1.5 p-3 sm:gap-2 sm:p-4">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-2.5 sm:gap-2 sm:p-4">
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-black text-slate-800 dark:text-white text-sm leading-snug line-clamp-2 flex-1">
               {clip.title}
@@ -473,7 +474,7 @@ export default function ClipCard({ clip, onEdit, index = 0 }: ClipCardProps) {
           </div>
 
           {clip.description && (
-            <p className="text-xs leading-4 text-slate-400 dark:text-slate-500 line-clamp-2">
+            <p className="hidden text-xs leading-4 text-slate-400 line-clamp-2 dark:text-slate-500 sm:block">
               {clip.description}
             </p>
           )}
@@ -505,11 +506,14 @@ export default function ClipCard({ clip, onEdit, index = 0 }: ClipCardProps) {
                 {streamer.name}
               </span>
             ))}
-            {formattedDate && (
-              <span className="ml-auto text-[10px] font-bold text-slate-400 dark:text-slate-500 self-center">
-                {formattedDate}
-              </span>
-            )}
+            <span className="inline-flex items-center gap-2 self-center sm:ml-auto">
+              <ClipRecommendButton clipId={clip.id} recommends={clip.recommends} tone="light" />
+              {formattedDate ? (
+                <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                  {formattedDate}
+                </span>
+              ) : null}
+            </span>
           </div>
         </div>
       </motion.article>
@@ -518,8 +522,10 @@ export default function ClipCard({ clip, onEdit, index = 0 }: ClipCardProps) {
         {showPlayer && chzzkClipId && (
           <ClipPlayerModal
             url={clip.url}
-            clipId={chzzkClipId}
+            embedId={chzzkClipId}
+            clipId={clip.id}
             title={clip.title}
+            recommends={clip.recommends}
             onClose={() => setShowPlayer(false)}
           />
         )}

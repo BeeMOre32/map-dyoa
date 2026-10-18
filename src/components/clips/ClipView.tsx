@@ -6,7 +6,8 @@ import {
   clipEmptyStateVariants,
   clipGridPresenceVariants,
 } from '@/lib/clipMotion';
-import { Clapperboard, Plus, Search, X, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
+import { Button, ListBox, SearchField, Select } from '@heroui/react';
+import { Clapperboard, Plus, SlidersHorizontal, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { format, isValid, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -20,6 +21,45 @@ import { ClipSkeletonCard } from './ClipSkeleton';
 import { ClipPagination } from './ClipPagination';
 import FavoritesOnlyToggle from '@/components/Common/FavoritesOnlyToggle';
 import FavoritesClipFilter from './FavoritesClipFilter';
+
+function ClipFilterSelect({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { id: string; label: string }[];
+}) {
+  return (
+    <Select
+      aria-label={label}
+      className="w-fit max-w-full"
+      selectedKey={value}
+      onSelectionChange={(key) => {
+        if (key == null) return;
+        onChange(String(key));
+      }}
+    >
+      <Select.Trigger>
+        <Select.Value />
+        <Select.Indicator />
+      </Select.Trigger>
+      <Select.Popover className="max-h-72 overflow-auto">
+        <ListBox>
+          {options.map((option) => (
+            <ListBox.Item key={option.id} id={option.id} textValue={option.label}>
+              {option.label}
+              <ListBox.ItemIndicator />
+            </ListBox.Item>
+          ))}
+        </ListBox>
+      </Select.Popover>
+    </Select>
+  );
+}
 
 interface ClipViewProps {
   clips: ClipWithParticipants[];
@@ -84,7 +124,7 @@ export default function ClipView({
   }, []);
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-lg shadow-slate-200/40 dark:border-slate-800 dark:bg-slate-900 dark:shadow-slate-900/50 sm:rounded-3xl sm:shadow-xl sm:shadow-slate-200/50">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
       <FavoritesClipFilter favoritesParam={!!currentFilters.favoritesOnly} />
       {/* 헤더 */}
       <motion.div
@@ -94,7 +134,7 @@ export default function ClipView({
           isHeaderCondensed ? 'p-2.5' : 'p-3 sm:p-4'
         }`}
       >
-        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
           <div className="min-w-0">
             <h2
               className={`flex items-center gap-1.5 whitespace-nowrap font-black text-slate-800 transition-all dark:text-white sm:gap-2 ${
@@ -112,20 +152,18 @@ export default function ClipView({
           </div>
 
           <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:shrink-0 sm:justify-end sm:gap-2">
-            <FavoritesOnlyToggle className="!px-2 !py-1 text-[11px] sm:!px-3 sm:!py-1.5 sm:text-sm" />
-            <button
-              type="button"
-              onClick={() => setShowFilters((prev) => !prev)}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-slate-500 transition-colors hover:text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-slate-100 sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs"
+            <FavoritesOnlyToggle appearance="hero" />
+            <Button
+              size="sm"
+              variant={shouldShowAdvancedFilters ? 'secondary' : 'outline'}
+              onPress={() => {
+                setIsHeaderCondensed(false);
+                setShowFilters((prev) => !prev);
+              }}
             >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <SlidersHorizontal className="size-3.5" />
               필터
-              {shouldShowAdvancedFilters ? (
-                <ChevronUp className="h-3.5 w-3.5" />
-              ) : (
-                <ChevronDown className="h-3.5 w-3.5" />
-              )}
-            </button>
+            </Button>
             {session && (
               <motion.button
                 onClick={handleOpen}
@@ -146,90 +184,71 @@ export default function ClipView({
         </div>
 
         {/* 검색 */}
-        <div className="relative w-full min-w-0">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
-          <input
-            type="text"
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            placeholder="제목 · 스트리머 검색"
-            className="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-8 pr-2.5 text-xs font-medium text-slate-700 transition-all placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:placeholder:text-slate-500 dark:focus:ring-indigo-700 sm:rounded-xl sm:pl-9 sm:pr-3 sm:text-sm"
-          />
-        </div>
+        <SearchField
+          aria-label="클립 검색"
+          className="w-full"
+          value={searchValue}
+          onChange={setSearchValue}
+        >
+          <SearchField.Group>
+            <SearchField.SearchIcon />
+            <SearchField.Input className="text-sm" placeholder="제목 · 스트리머 검색" />
+            <SearchField.ClearButton />
+          </SearchField.Group>
+        </SearchField>
 
-        <AnimatePresence initial={false}>
-          {shouldShowAdvancedFilters && (
-            <motion.div
-              initial={{ height: 0, opacity: 0, y: -6 }}
-              animate={{ height: 'auto', opacity: 1, y: 0 }}
-              exit={{ height: 0, opacity: 0, y: -6 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="overflow-hidden"
-            >
-              <div className="flex flex-wrap items-center gap-1.5 pt-1.5">
-                <select
-                  value={currentFilters.month}
-                  onChange={(e) =>
-                    navigate(buildUrl({ month: e.target.value, page: 1 }))
+        {shouldShowAdvancedFilters && (
+              <div className="flex flex-wrap items-center gap-2 pt-1.5">
+                <ClipFilterSelect
+                  label="기간"
+                  value={currentFilters.month || 'all'}
+                  onChange={(month) =>
+                    navigate(buildUrl({ month: month === 'all' ? '' : month, page: 1 }))
                   }
-                  className="px-3 py-1.5 text-sm font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700 transition-all"
-                >
-                  <option value="">전체 기간</option>
-                  {monthOptions.map((m) => {
-                    const d = parseISO(`${m}-01`);
-                    const label = isValid(d) ? format(d, 'yyyy년 M월', { locale: ko }) : m;
-                    return (
-                      <option key={m} value={m}>
-                        {label}
-                      </option>
-                    );
-                  })}
-                </select>
-
-                <select
-                  value={currentFilters.streamerId}
-                  onChange={(e) =>
-                    navigate(buildUrl({ streamer: e.target.value, page: 1 }))
+                  options={[
+                    { id: 'all', label: '전체 기간' },
+                    ...monthOptions.map((month) => {
+                      const date = parseISO(`${month}-01`);
+                      return {
+                        id: month,
+                        label: isValid(date) ? format(date, 'yyyy년 M월', { locale: ko }) : month,
+                      };
+                    }),
+                  ]}
+                />
+                <ClipFilterSelect
+                  label="스트리머"
+                  value={currentFilters.streamerId || 'all'}
+                  onChange={(streamer) =>
+                    navigate(buildUrl({ streamer: streamer === 'all' ? '' : streamer, page: 1 }))
                   }
-                  className="px-3 py-1.5 text-sm font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700 transition-all"
-                >
-                  <option value="">전체 스트리머</option>
-                  {streamers.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-
-                <select
+                  options={[
+                    { id: 'all', label: '전체 스트리머' },
+                    ...streamers.map((streamer) => ({ id: streamer.id, label: streamer.name })),
+                  ]}
+                />
+                <ClipFilterSelect
+                  label="정렬"
                   value={currentFilters.sort}
-                  onChange={(e) =>
-                    navigate(
-                      buildUrl({ sort: e.target.value as ClipSortOption, page: 1 }),
-                    )
+                  onChange={(sort) =>
+                    navigate(buildUrl({ sort: sort as ClipSortOption, page: 1 }))
                   }
-                  className="px-3 py-1.5 text-sm font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700 transition-all"
-                >
-                  <option value="newest">최신 등록순</option>
-                  <option value="oldest">오래된 순</option>
-                  <option value="date_desc">클립 날짜 최신순</option>
-                  <option value="date_asc">클립 날짜 오래된순</option>
-                  <option value="title">제목순</option>
-                </select>
-
+                  options={[
+                    { id: 'newest', label: '최신 등록순' },
+                    { id: 'oldest', label: '오래된 순' },
+                    { id: 'date_desc', label: '클립 날짜 최신순' },
+                    { id: 'date_asc', label: '클립 날짜 오래된순' },
+                    { id: 'title', label: '제목순' },
+                  ]}
+                />
                 {hasFilter && (
-                  <button
-                    onClick={clearFilters}
-                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-colors"
-                  >
-                    <X className="w-3.5 h-3.5" />
+                  <Button size="sm" variant="ghost" onPress={clearFilters}>
+                    <X className="size-3.5" />
                     초기화
-                  </button>
+                  </Button>
                 )}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        )}
       </motion.div>
 
       {/* 클립 그리드 */}
@@ -241,7 +260,7 @@ export default function ClipView({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4"
+            className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4"
           >
             {Array.from({ length: clips.length || 8 }).map((_, i) => (
               <ClipSkeletonCard key={i} index={i} />
@@ -284,7 +303,7 @@ export default function ClipView({
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4"
+            className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4"
           >
             {clips.map((clip, i) => (
               <ClipCard key={clip.id} clip={clip} index={i} onEdit={setEditingClip} />

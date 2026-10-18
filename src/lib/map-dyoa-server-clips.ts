@@ -107,6 +107,7 @@ export function hydrateClipApiRow(raw: Record<string, unknown>): ClipWithPartici
     })(),
     participants,
     schedule,
+    recommends: typeof raw.recommends === 'number' ? raw.recommends : 0,
   } as ClipWithParticipants;
 }
 

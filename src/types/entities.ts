@@ -97,4 +97,6 @@ export type ClipWithParticipants = Prisma.ClipGetPayload<{
       };
     };
   };
-}>;
+}> & {
+  recommends?: number;
+};

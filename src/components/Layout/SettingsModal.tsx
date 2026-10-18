@@ -1,52 +1,75 @@
 'use client';
 
 import {
-  Sun, Moon, HelpCircle, Shield, LogIn, LogOut, UserCheck, X,
+  Sun, Moon, HelpCircle, Shield, LogIn, LogOut,
   LayoutDashboard, EyeOff, Heart, Megaphone, History, BarChart3, Server, Puzzle,
-  Timer, FlaskConical, Car, MessageSquare,
+  Timer, FlaskConical, Car, MessageSquare, ChevronRight,
 } from 'lucide-react';
 import { CHROME_EXTENSION_NAME, CHROME_EXTENSION_URL } from '@/constants/extension';
 import { useCallback, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
+import { Modal, Switch } from '@heroui/react';
 import { useTheme } from '@teispace/next-themes';
 import { useSession, signOut } from 'next-auth/react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { useModalDismiss } from '@/hooks/useModalDismiss';
 import { usePathname } from 'next/navigation';
-import { useScrollLock } from '@/hooks/useScrollLock';
 import { useHideEndedStreams } from '@/hooks/useHideEndedStreams';
 import { useLegacyCalendarUi } from '@/hooks/useLegacyCalendarUi';
 import { useCalendarBetaV3 } from '@/hooks/useCalendarBetaV3';
+import { useClipWeeklyBeta } from '@/hooks/useClipWeeklyBeta';
 import { SettingsFeedbackModalPresence } from '@/components/Layout/SettingsFeedback';
 
 interface SettingsModalProps {
+  open: boolean;
   onClose: () => void;
 }
 
-function Toggle({ on }: { on: boolean }) {
-  const bg = on ? 'bg-indigo-500' : 'bg-slate-200 dark:bg-slate-600';
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <h3 className="mb-2 px-1 text-xs font-medium text-zinc-500">{children}</h3>;
+}
+
+function SettingGroup({ children }: { children: React.ReactNode }) {
   return (
-    <div className={`w-10 h-6 rounded-full relative transition-colors ${bg}`}>
-      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${on ? 'translate-x-5' : 'translate-x-1'}`} />
+    <div className="divide-y divide-zinc-200 overflow-hidden rounded-lg border border-zinc-200 bg-white dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-950">
+      {children}
     </div>
   );
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SettingSwitch({
+  isSelected,
+  onChange,
+  icon,
+  title,
+  description,
+}: {
+  isSelected: boolean;
+  onChange: (selected: boolean) => void;
+  icon: React.ReactNode;
+  title: React.ReactNode;
+  description?: string;
+}) {
   return (
-    <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">
-      {children}
-    </p>
+    <Switch
+      className="!flex !w-full !flex-row !flex-nowrap !items-center !justify-between gap-4 bg-transparent px-3 py-2.5"
+      isSelected={isSelected}
+      onChange={onChange}
+    >
+      <span className="flex min-w-0 items-center gap-2.5 text-left">
+        <span className="text-zinc-400">{icon}</span>
+        <span className="min-w-0">
+          <span className="block text-sm font-medium text-zinc-900 dark:text-zinc-100">{title}</span>
+          {description ? (
+            <span className="mt-0.5 block text-xs leading-snug text-zinc-500">{description}</span>
+          ) : null}
+        </span>
+      </span>
+      <Switch.Control className="shrink-0">
+        <Switch.Thumb />
+      </Switch.Control>
+    </Switch>
   );
-}
-
-function SettingRow({ onClick, children }: { onClick?: () => void; children: React.ReactNode }) {
-  const cls =
-    'w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors';
-  if (onClick) return <button onClick={onClick} className={cls}>{children}</button>;
-  return <div className={cls}>{children}</div>;
 }
 
 function GeneralTab({
@@ -59,6 +82,8 @@ function GeneralTab({
   setLegacyUi,
   calendarBetaV3,
   setCalendarBetaV3,
+  clipWeeklyBeta,
+  setClipWeeklyBeta,
   onOpenFeedback,
   session,
 }: {
@@ -71,293 +96,249 @@ function GeneralTab({
   setLegacyUi: (v: boolean) => void;
   calendarBetaV3: boolean;
   setCalendarBetaV3: (v: boolean) => void;
+  clipWeeklyBeta: boolean;
+  setClipWeeklyBeta: (v: boolean) => void;
   onOpenFeedback: () => void;
   session: ReturnType<typeof useSession>['data'];
 }) {
+  const router = useRouter();
+  const go = (href: string) => {
+    onClose();
+    router.push(href);
+  };
+
+  const rowClass =
+    'flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm font-medium text-zinc-900 hover:bg-zinc-50 dark:text-zinc-100 dark:hover:bg-zinc-900';
+
+  const links: { href: string; icon: React.ReactNode; label: string; hint?: string }[] = [
+    { href: '/bongnudo', icon: <Car className="size-4" />, label: '봉누도 2', hint: '종료' },
+    { href: '/lab/time-attack', icon: <Timer className="size-4" />, label: '호이고사', hint: 'β' },
+    { href: '/lab', icon: <FlaskConical className="size-4" />, label: '실험실' },
+    { href: '/announcements', icon: <Megaphone className="size-4" />, label: '공지사항' },
+    { href: '/health', icon: <Server className="size-4" />, label: '백엔드 상태' },
+    { href: '/calendar/monthly', icon: <BarChart3 className="size-4" />, label: '지도동 통계' },
+    { href: '/help', icon: <HelpCircle className="size-4" />, label: '도움말' },
+    { href: '/privacy', icon: <Shield className="size-4" />, label: '개인정보처리방침' },
+  ];
+
   return (
-    <div className="space-y-2">
-      <div className="px-2 py-1">
+    <div className="flex flex-col gap-5">
+      <section>
         <SectionLabel>화면</SectionLabel>
-        <SettingRow onClick={() => setTheme(isDark ? 'light' : 'dark')}>
-          <div className="flex items-center gap-3">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={isDark ? 'dark' : 'light'}
-                initial={{ rotate: -40, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: 40, opacity: 0 }}
-                transition={{
-                  type: 'spring',
-                  visualDuration: 0.22,
-                  bounce: 0.12,
-                  opacity: { duration: 0.14 },
-                }}
-              >
-                {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
-              </motion.div>
-            </AnimatePresence>
-            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
-              {isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
-            </span>
-          </div>
-          <Toggle on={isDark} />
-        </SettingRow>
-      </div>
+        <SettingGroup>
+          <SettingSwitch
+            isSelected={isDark}
+            onChange={(selected) => setTheme(selected ? 'dark' : 'light')}
+            icon={isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+            title={isDark ? '라이트 모드' : '다크 모드'}
+            description="화면 색을 바로 바꿉니다"
+          />
+        </SettingGroup>
+      </section>
 
-      <div className="px-2 py-1">
+      <section>
         <SectionLabel>관심 멤버</SectionLabel>
-        <p className="px-4 pb-2 text-xs font-medium text-slate-400 dark:text-slate-500">
-          캘린더·멤버·클립 상단의 「전체 / 관심 멤버」로 즐겨찾기만 볼 수 있습니다. 멤버는
-          캘린더 필터에서 별 아이콘으로 등록하세요.
+        <p className="px-1 text-xs leading-relaxed text-zinc-500">
+          캘린더·멤버·클립 상단의 전체 / 관심 멤버로 즐겨찾기만 볼 수 있습니다. 멤버는 캘린더
+          필터에서 별 아이콘으로 등록하세요.
         </p>
-      </div>
+      </section>
 
-      <div className="px-2 py-1">
-        <SectionLabel>캐린더</SectionLabel>
-        <SettingRow onClick={() => setHideEnded(!hideEnded)}>
-          <div className="flex items-center gap-3">
-            <EyeOff className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-            <div className="text-left">
-              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">종료된 방송 숨기기</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">완료 처리된 일정을 캐린더에서 숨깁니다</p>
-            </div>
-          </div>
-          <Toggle on={hideEnded} />
-        </SettingRow>
-        <SettingRow onClick={() => setCalendarBetaV3(!calendarBetaV3)}>
-          <div className="flex items-center gap-3">
-            <FlaskConical className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-            <div className="text-left">
-              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                캘린더 v3 베타
-                <span className="ml-1.5 rounded-md bg-amber-100 px-1 py-px text-[9px] font-black text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
-                  BETA
-                </span>
-              </p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">
-                오늘 칸에 지금 방송을 제목과 합방 태그로 보여줍니다
-              </p>
-            </div>
-          </div>
-          <Toggle on={calendarBetaV3} />
-        </SettingRow>
-        <SettingRow onClick={() => setLegacyUi(!legacyUi)}>
-          <div className="flex items-center gap-3">
-            <History className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-            <div className="text-left">
-              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">구버전 UI로 보기</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">
-                이전 캘린더·일정 모달 디자인을 사용합니다
-              </p>
-            </div>
-          </div>
-          <Toggle on={legacyUi} />
-        </SettingRow>
-      </div>
+      <section>
+        <SectionLabel>기능</SectionLabel>
+        <SettingGroup>
+          <SettingSwitch
+            isSelected={hideEnded}
+            onChange={setHideEnded}
+            icon={<EyeOff className="size-4" />}
+            title="종료된 방송 숨기기"
+            description="완료된 일정을 캘린더에서 숨깁니다"
+          />
+          <SettingSwitch
+            isSelected={calendarBetaV3}
+            onChange={setCalendarBetaV3}
+            icon={<FlaskConical className="size-4" />}
+            title={
+              <>
+                캘린더 v3 <BetaMark />
+              </>
+            }
+            description="오늘 칸에 지금 방송을 제목과 합방 태그로 보여줍니다"
+          />
+          <SettingSwitch
+            isSelected={clipWeeklyBeta}
+            onChange={setClipWeeklyBeta}
+            icon={<FlaskConical className="size-4" />}
+            title={
+              <>
+                클립 위클리 <BetaMark />
+              </>
+            }
+            description="클립 목록에서 이번 주 추천 페이지로 들어갑니다"
+          />
+          <SettingSwitch
+            isSelected={legacyUi}
+            onChange={setLegacyUi}
+            icon={<History className="size-4" />}
+            title="구버전 UI"
+            description="이전 캘린더와 일정 모달을 사용합니다"
+          />
+        </SettingGroup>
+      </section>
 
-      <div className="px-2 py-1">
-        <SectionLabel>의견</SectionLabel>
-        <button
-          type="button"
-          onClick={onOpenFeedback}
-          className="flex w-full items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-left transition-colors hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700"
-        >
-          <MessageSquare className="h-4 w-4 text-indigo-500" />
-          <span className="text-sm font-bold text-slate-700 dark:text-slate-200">의견 보내기</span>
-        </button>
-      </div>
+      <section>
+        <SectionLabel>바로가기</SectionLabel>
+        <SettingGroup>
+          <button type="button" className={rowClass} onClick={onOpenFeedback}>
+            <MessageSquare className="size-4 text-zinc-400" />
+            <span className="min-w-0 flex-1">의견 보내기</span>
+            <ChevronRight className="size-4 text-zinc-300 dark:text-zinc-600" />
+          </button>
+          <button
+            type="button"
+            className={rowClass}
+            onClick={() => window.open('https://ctee.kr/place/mapdoya', '_blank', 'noopener,noreferrer')}
+          >
+            <Heart className="size-4 text-zinc-400" />
+            <span className="min-w-0 flex-1">
+              후원하기
+              <span className="mt-0.5 block text-xs font-normal text-zinc-500">서버비 제외 전액 기부</span>
+            </span>
+            <ChevronRight className="size-4 text-zinc-300 dark:text-zinc-600" />
+          </button>
+          <button
+            type="button"
+            className={rowClass}
+            onClick={() => window.open(CHROME_EXTENSION_URL, '_blank', 'noopener,noreferrer')}
+          >
+            <Puzzle className="size-4 text-zinc-400" />
+            <span className="min-w-0 flex-1">
+              멀티뷰 확장 프로그램
+              <span className="mt-0.5 block text-xs font-normal text-zinc-500">{CHROME_EXTENSION_NAME}</span>
+            </span>
+            <ChevronRight className="size-4 text-zinc-300 dark:text-zinc-600" />
+          </button>
+        </SettingGroup>
+      </section>
 
-      <a
-        href="https://ctee.kr/place/mapdoya"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-3 px-4 py-3 mx-2 bg-pink-50 dark:bg-pink-900/20 hover:bg-pink-100 dark:hover:bg-pink-900/30 border border-pink-200 dark:border-pink-800/50 rounded-2xl transition-colors"
-      >
-        <Heart className="w-4 h-4 text-pink-500 dark:text-pink-400 shrink-0" />
-        <div>
-          <p className="text-sm font-bold text-pink-600 dark:text-pink-400">후원하기</p>
-          <p className="text-xs text-pink-400 dark:text-pink-500 font-medium mt-0.5">서버비 제외 전액 기부됩니다</p>
-        </div>
-      </a>
-
-      <a
-        href={CHROME_EXTENSION_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-3 px-4 py-3 mx-2 bg-cyan-50 dark:bg-cyan-900/20 hover:bg-cyan-100 dark:hover:bg-cyan-900/30 border border-cyan-200 dark:border-cyan-800/50 rounded-2xl transition-colors"
-      >
-        <Puzzle className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
-        <div>
-          <p className="text-sm font-bold text-cyan-700 dark:text-cyan-300">멀티뷰 확장 프로그램</p>
-          <p className="text-xs text-cyan-500/80 dark:text-cyan-500 font-medium mt-0.5">
-            {CHROME_EXTENSION_NAME} · Chrome 웹스토어
-          </p>
-        </div>
-      </a>
-
-      <div className="px-2 py-1">
+      <section>
         <SectionLabel>정보</SectionLabel>
-        <div className="space-y-1">
-          {[
-            {
-              href: '/bongnudo',
-              icon: <Car className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />,
-              label: '봉누도 2',
-              hint: '종료',
-            },
-            {
-              href: '/lab/time-attack',
-              icon: <Timer className="w-4 h-4 text-amber-500 dark:text-amber-400" />,
-              label: '호이고사',
-              hint: 'β',
-            },
-            {
-              href: '/lab',
-              icon: <FlaskConical className="w-4 h-4 text-slate-400 dark:text-slate-500" />,
-              label: '실험실',
-            },
-            { href: '/announcements', icon: <Megaphone className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '공지사항' },
-            { href: '/health', icon: <Server className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '백엔드 상태' },
-            { href: '/calendar/monthly', icon: <BarChart3 className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '지도동 통계' },
-            { href: '/help', icon: <HelpCircle className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '도움말' },
-            { href: '/privacy', icon: <Shield className="w-4 h-4 text-slate-400 dark:text-slate-500" />, label: '개인정보처리방침' },
-          ].map(({ href, icon, label, hint }) => (
-            <Link
-              key={href}
-              href={href}
-              onClick={onClose}
-              className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
-            >
-              {icon}
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{label}</span>
+        <SettingGroup>
+          {links.map(({ href, icon, label, hint }) => (
+            <button key={href} type="button" className={rowClass} onClick={() => go(href)}>
+              <span className="text-zinc-400">{icon}</span>
+              <span className="min-w-0 flex-1">{label}</span>
               {hint ? (
-                <span
-                  className={`ml-auto text-[10px] font-black ${
-                    hint === '종료'
-                      ? 'text-slate-400 dark:text-slate-500'
-                      : 'text-amber-500 dark:text-amber-400'
-                  }`}
-                >
-                  {hint}
-                </span>
-              ) : null}
-            </Link>
+                <span className="text-xs font-normal text-zinc-400">{hint}</span>
+              ) : (
+                <ChevronRight className="size-4 text-zinc-300 dark:text-zinc-600" />
+              )}
+            </button>
           ))}
-        </div>
-      </div>
+        </SettingGroup>
+      </section>
 
-      <div className="px-2 py-1">
+      <section>
         <SectionLabel>계정</SectionLabel>
-        <div className="space-y-1">
+        <SettingGroup>
           {session ? (
             <>
-              <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl">
-                <UserCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-                <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">관리자 로그인 중</span>
+              <div className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-zinc-500">
+                <span className="size-1.5 rounded-full bg-emerald-500" />
+                관리자 로그인 중
               </div>
-              <Link
-                href="/admin"
-                onClick={onClose}
-                className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors"
-              >
-                <LayoutDashboard className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">관리자 대시보드</span>
-              </Link>
+              <button type="button" className={rowClass} onClick={() => go('/admin')}>
+                <LayoutDashboard className="size-4 text-zinc-400" />
+                <span className="min-w-0 flex-1">관리자 대시보드</span>
+                <ChevronRight className="size-4 text-zinc-300 dark:text-zinc-600" />
+              </button>
               <button
-                onClick={() => { signOut(); onClose(); }}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 rounded-2xl transition-colors text-slate-400 dark:text-slate-500"
+                type="button"
+                className={`${rowClass} text-red-600 dark:text-red-400`}
+                onClick={() => {
+                  signOut();
+                  onClose();
+                }}
               >
-                <LogOut className="w-4 h-4" />
-                <span className="text-sm font-bold">로그아웃</span>
+                <LogOut className="size-4" />
+                <span className="min-w-0 flex-1">로그아웃</span>
               </button>
             </>
           ) : (
-            <Link
-              href="/login"
-              onClick={onClose}
-              className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-2xl transition-colors"
-            >
-              <LogIn className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-200">관리자 로그인</span>
-            </Link>
+            <button type="button" className={rowClass} onClick={() => go('/login')}>
+              <LogIn className="size-4 text-zinc-400" />
+              <span className="min-w-0 flex-1">관리자 로그인</span>
+              <ChevronRight className="size-4 text-zinc-300 dark:text-zinc-600" />
+            </button>
           )}
-        </div>
-      </div>
+        </SettingGroup>
+      </section>
     </div>
   );
 }
 
-export default function SettingsModal({ onClose }: SettingsModalProps) {
+function BetaMark() {
+  return (
+    <span className="ml-1.5 align-middle text-[10px] font-medium uppercase tracking-wide text-zinc-400">
+      Beta
+    </span>
+  );
+}
+
+export default function SettingsModal({ open, onClose }: SettingsModalProps) {
   const pathname = usePathname();
-  // 설정은 URL을 바꾸지 않음 — 현재 경로를 mother로 두어 replace 방지
   const dismiss = useModalDismiss({ mother: pathname, onClose });
   const { resolvedTheme, setTheme } = useTheme();
   const { data: session } = useSession();
   const [hideEnded, setHideEnded] = useHideEndedStreams();
   const [legacyUi, setLegacyUi] = useLegacyCalendarUi();
   const [calendarBetaV3, setCalendarBetaV3] = useCalendarBetaV3();
+  const [clipWeeklyBeta, setClipWeeklyBeta] = useClipWeeklyBeta();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const closeFeedback = useCallback(() => setFeedbackOpen(false), []);
   const isDark = resolvedTheme === 'dark';
 
   useEscapeKey(() => {
-    if (feedbackOpen) {
-      closeFeedback();
-      return;
-    }
-    dismiss();
+    if (feedbackOpen) closeFeedback();
   });
-  useScrollLock();
 
   return (
     <>
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      exit="hidden"
-      variants={backdropVariants}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 dark:bg-slate-950/50 backdrop-blur-sm"
-      onClick={dismiss}
-    >
-      <motion.div
-        variants={smoothModalVariants}
-        initial="hidden"
-        animate="visible"
-        exit="hidden"
-        className="w-full max-w-sm max-h-[90dvh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl dark:shadow-black/60 border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
+      <Modal
+        isOpen={open}
+        onOpenChange={(next) => {
+          if (!next) dismiss();
+        }}
       >
-        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800 sm:px-6 sm:py-5">
-          <h2 className="text-base font-black text-slate-800 dark:text-white sm:text-lg">설정</h2>
-          <button
-            onClick={dismiss}
-            className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="p-4 space-y-2 overflow-y-auto flex-1 min-h-0">
-          <GeneralTab
-            onClose={dismiss}
-            isDark={isDark}
-            setTheme={setTheme}
-            hideEnded={hideEnded}
-            setHideEnded={setHideEnded}
-            legacyUi={legacyUi}
-            setLegacyUi={setLegacyUi}
-            calendarBetaV3={calendarBetaV3}
-            setCalendarBetaV3={setCalendarBetaV3}
-            onOpenFeedback={() => setFeedbackOpen(true)}
-            session={session}
-          />
-        </div>
-      </motion.div>
-    </motion.div>
-    <SettingsFeedbackModalPresence
-      open={feedbackOpen}
-      onClose={closeFeedback}
-    />
+        <Modal.Backdrop isKeyboardDismissDisabled={feedbackOpen}>
+          <Modal.Container placement="center" size="sm">
+            <Modal.Dialog className="border border-zinc-200 shadow-xl dark:border-zinc-800">
+              <Modal.Header>
+                <Modal.Heading className="text-sm font-medium">설정</Modal.Heading>
+                <Modal.CloseTrigger />
+              </Modal.Header>
+              <Modal.Body className="max-h-[70dvh] overflow-y-auto">
+                <GeneralTab
+                  onClose={dismiss}
+                  isDark={isDark}
+                  setTheme={setTheme}
+                  hideEnded={hideEnded}
+                  setHideEnded={setHideEnded}
+                  legacyUi={legacyUi}
+                  setLegacyUi={setLegacyUi}
+                  calendarBetaV3={calendarBetaV3}
+                  setCalendarBetaV3={setCalendarBetaV3}
+                  clipWeeklyBeta={clipWeeklyBeta}
+                  setClipWeeklyBeta={setClipWeeklyBeta}
+                  onOpenFeedback={() => setFeedbackOpen(true)}
+                  session={session}
+                />
+              </Modal.Body>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
+      </Modal>
+      <SettingsFeedbackModalPresence open={feedbackOpen} onClose={closeFeedback} />
     </>
   );
 }
