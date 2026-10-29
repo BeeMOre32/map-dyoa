@@ -5,8 +5,10 @@ import { usePathname } from 'next/navigation';
 import { Loader2, MessageSquare, Send, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { submitSiteFeedbackAction } from '@/app/site-feedback-action';
+import { rememberFeedbackReceipt } from '@/lib/feedback-receipt-client';
 import { SITE_FEEDBACK_CATEGORIES, type SiteFeedbackCategory } from '@/lib/site-feedback';
 import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
+import ModalOverlayPortal from '@/components/Common/ModalOverlayPortal';
 
 export default function SettingsFeedbackModal({ onClose }: { onClose: () => void }) {
   const pathname = usePathname();
@@ -38,6 +40,7 @@ export default function SettingsFeedbackModal({ onClose }: { onClose: () => void
         setError(result.error);
         return;
       }
+      if (result.id && result.receipt) rememberFeedbackReceipt(result.id, result.receipt);
       setContent('');
       setSent(true);
     } catch {
@@ -53,7 +56,7 @@ export default function SettingsFeedbackModal({ onClose }: { onClose: () => void
       animate="visible"
       exit="hidden"
       variants={backdropVariants}
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm dark:bg-slate-950/60"
+      className="fixed inset-0 z-[100010] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm dark:bg-slate-950/60"
       onClick={pending ? undefined : onClose}
     >
       <motion.div
@@ -184,8 +187,10 @@ export function SettingsFeedbackModalPresence({
   onClose: () => void;
 }) {
   return (
-    <AnimatePresence>
-      {open ? <SettingsFeedbackModal onClose={onClose} /> : null}
-    </AnimatePresence>
+    <ModalOverlayPortal>
+      <AnimatePresence>
+        {open ? <SettingsFeedbackModal onClose={onClose} /> : null}
+      </AnimatePresence>
+    </ModalOverlayPortal>
   );
 }

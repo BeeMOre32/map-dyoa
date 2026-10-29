@@ -138,6 +138,7 @@ export default async function AdminFeedbackPage({
                 <ResolveFeedbackButton
                   feedbackId={item.id}
                   initialStatus={item.status as 'PENDING' | 'RESOLVED' | 'REJECTED'}
+                  initialReply={'reply' in item ? item.reply : null}
                 />
               </div>
             </div>

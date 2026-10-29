@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { SlidersHorizontal, X, ChevronDown, Search, Check, Star } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTheme } from '@teispace/next-themes';
@@ -313,6 +313,7 @@ interface FilterBarProps {
   onToggleFavorite: (id: string) => void;
   onApplyFavorites: () => void;
   onClearAll: () => void;
+  leading?: ReactNode;
 }
 
 export default function FilterBar({
@@ -326,6 +327,7 @@ export default function FilterBar({
   onToggleFavorite,
   onApplyFavorites,
   onClearAll,
+  leading,
 }: FilterBarProps) {
   const favoriteCount = favoriteIds.size;
   const [isOpen, setIsOpen] = useState(false);
@@ -353,7 +355,9 @@ export default function FilterBar({
   }, []);
 
   return (
-    <div className="flex items-center gap-2 flex-wrap shrink-0 mb-3">
+    <div className="mb-3 flex flex-col gap-2">
+      <div className="flex flex-nowrap items-center gap-2 overflow-x-auto [&>*]:shrink-0">
+      {leading}
       <FavoritesOnlyToggle />
       {favoriteCount > 0 && (
         <button
@@ -426,8 +430,9 @@ export default function FilterBar({
           )}
         </AnimatePresence>
       </div>
+      </div>
 
-      {/* 활성 칩들 + 전체 해제 */}
+      {hasFilters ? (
       <motion.div
         className="flex flex-wrap items-center gap-1.5"
         style={{ display: 'flex' }}
@@ -510,6 +515,7 @@ export default function FilterBar({
         )}
       </AnimatePresence>
       </motion.div>
+      ) : null}
 
       {/* 모바일 바텀시트 */}
       <AnimatePresence>

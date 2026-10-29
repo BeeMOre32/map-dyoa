@@ -23,7 +23,11 @@ export async function fetchAllGamesFromServer() {
 
 export async function fetchFeedbacksFromServer() {
   const base = requireServerBaseUrl()
-  const res = await fetchWithBackoff(`${base}/feedbacks`, { next: { revalidate: 30 } })
+  const token = process.env.MAP_DYOA_SERVER_WRITE_TOKEN?.trim()
+  const res = await fetchWithBackoff(`${base}/feedbacks`, {
+    next: { revalidate: 30 },
+    headers: token ? { "x-write-token": token } : {},
+  })
   const data = await readJsonSafely<{ feedbacks?: unknown[]; message?: string }>(
     res,
     `피드백 API ${res.status}`,
@@ -36,6 +40,7 @@ export async function fetchFeedbacksFromServer() {
     category: string
     streamerName: string | null
     content: string
+    reply: string | null
     createdAt: string | Date
   }>
 }

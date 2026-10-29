@@ -4,7 +4,7 @@ import { buildPageMetadata } from '@/lib/site';
 
 export const metadata = buildPageMetadata({
   title: '이번 주 추천 클립',
-  description: '이번 주 지도동 사이트에서 추천이 많은 클립입니다. 추천 수는 계속 남습니다.',
+  description: '이번 주 추천이 들어온 클립을 지금까지 쌓인 추천 수 순으로 보여 줍니다.',
   path: '/clips/week',
 });
 

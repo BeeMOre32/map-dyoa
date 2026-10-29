@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { AnimatePresence } from 'motion/react';
 import { calendarGridSlide } from '@/lib/calendarMotion';
@@ -20,6 +21,9 @@ import CalendarWeeklyV2Grid from '@/components/Calendar/grids/CalendarWeeklyV2Gr
 import CalendarMonthLegacyGrid from '@/components/Calendar/grids/CalendarMonthLegacyGrid';
 import type { FlattenedSchedule } from '@/lib/schedule-formatters';
 import type { Game, Streamer } from '@prisma/client';
+import { useScheduleScope } from '@/hooks/useScheduleScope';
+import { filterSchedulesByScope } from '@/lib/schedule-scope';
+import ScheduleScopeBar from '@/components/Calendar/ScheduleScopeBar';
 
 /** 이전 배포 클라이언트 번들 호환 */
 void calendarGridSlide;
@@ -33,6 +37,11 @@ interface CalendarViewProps {
 
 export default function CalendarView(props: CalendarViewProps) {
   const state = useCalendarViewState(props);
+  const [scope, setScope] = useScheduleScope();
+  const schedulesByDate = useMemo(
+    () => filterSchedulesByScope(state.schedulesByDate, scope),
+    [state.schedulesByDate, scope],
+  );
 
   if (!state.mounted) {
     return <div className="flex-1 bg-slate-50/50 dark:bg-slate-950" />;
@@ -78,6 +87,7 @@ export default function CalendarView(props: CalendarViewProps) {
       </div>
 
       <FilterBar
+        leading={<ScheduleScopeBar scope={scope} onScope={setScope} />}
         streamers={state.streamers}
         games={state.games}
         selectedStreamers={state.selectedStreamers}
@@ -103,7 +113,7 @@ export default function CalendarView(props: CalendarViewProps) {
         {state.viewMode === 'weekly' ? (
           <CalendarMobileWeeklyList
             days={state.days}
-            schedulesByDate={state.schedulesByDate}
+            schedulesByDate={schedulesByDate}
             slideDirection={state.slideDirection}
             currentDate={state.currentDate}
             legacyUi={state.legacyUi}
@@ -116,6 +126,7 @@ export default function CalendarView(props: CalendarViewProps) {
             todayMobileRef={state.todayMobileRef}
             onDayClick={state.handleDayClick}
             onOpenCreateModal={state.handleOpenCreateModal}
+            scope={scope}
           />
         ) : null}
 
@@ -127,7 +138,7 @@ export default function CalendarView(props: CalendarViewProps) {
           {state.isV2Weekly ? (
             <CalendarWeeklyV2Grid
               days={state.days}
-              schedulesByDate={state.schedulesByDate}
+              schedulesByDate={schedulesByDate}
               slideDirection={state.slideDirection}
               currentDate={state.currentDate}
               liveStreamerIds={state.liveStreamerIds}
@@ -138,11 +149,12 @@ export default function CalendarView(props: CalendarViewProps) {
               isLoggedIn={state.isLoggedIn}
               onDayClick={state.handleDayClick}
               onOpenCreateModal={state.handleOpenCreateModal}
+              scope={scope}
             />
           ) : (
             <CalendarMonthLegacyGrid
               days={state.days}
-              schedulesByDate={state.schedulesByDate}
+              schedulesByDate={schedulesByDate}
               slideDirection={state.slideDirection}
               currentDate={state.currentDate}
               viewMode={state.viewMode}
@@ -174,7 +186,7 @@ export default function CalendarView(props: CalendarViewProps) {
         day={state.mobileMonthDay}
         schedules={
           state.mobileMonthDay
-            ? state.schedulesByDate.get(
+            ? schedulesByDate.get(
                 format(state.mobileMonthDay, 'yyyy-MM-dd'),
               ) ?? []
             : []
@@ -183,6 +195,7 @@ export default function CalendarView(props: CalendarViewProps) {
         isLoggedIn={state.isLoggedIn}
         onClose={() => state.setMobileMonthDay(null)}
         onAdd={state.handleOpenCreateModal}
+        emptyLabel={scope === 'personal' ? '이날 단독 방송 없음' : undefined}
         onOpenDay={(day) => {
           state.setMobileMonthDay(null);
           state.handleDayClick(day);

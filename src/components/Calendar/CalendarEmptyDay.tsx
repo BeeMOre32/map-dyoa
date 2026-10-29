@@ -6,12 +6,14 @@ interface CalendarEmptyDayProps {
   compact?: boolean;
   isLoggedIn: boolean;
   onAdd?: () => void;
+  label?: string;
 }
 
 export default function CalendarEmptyDay({
   compact = false,
   isLoggedIn,
   onAdd,
+  label = '이날 등록된 합방 없음',
 }: CalendarEmptyDayProps) {
   return (
     <div
@@ -26,7 +28,7 @@ export default function CalendarEmptyDay({
           compact ? 'text-[11px]' : 'text-xs'
         }`}
       >
-        이날 등록된 합방 없음
+        {label}
       </p>
       {isLoggedIn && onAdd ? (
         <button

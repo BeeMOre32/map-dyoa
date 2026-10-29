@@ -639,6 +639,7 @@ export const getFeedbacks = unstable_cache(
         category: true,
         streamerName: true,
         content: true,
+        reply: true,
         createdAt: true,
       },
       orderBy: { createdAt: 'desc' },

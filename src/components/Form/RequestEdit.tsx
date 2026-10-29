@@ -6,6 +6,7 @@ import { motion } from 'motion/react';
 import { X, Send, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
 import { useTheme } from '@teispace/next-themes';
 import { createFeedbackAction } from '@/app/actions';
+import { rememberFeedbackReceipt } from '@/lib/feedback-receipt-client';
 import { feedbackSchema } from '@/lib/schemas';
 import { backdropVariants, defaultModalVariants } from '@/lib/modalVariants';
 import { useModalDismiss } from '@/hooks/useModalDismiss';
@@ -57,6 +58,9 @@ export default function RequestEditModal({
       });
 
       if (result.success) {
+        if (result.data?.id && result.data.receipt) {
+          rememberFeedbackReceipt(result.data.id, result.data.receipt);
+        }
         setIsSuccess(true);
         setTimeout(dismiss, 1800);
       } else {

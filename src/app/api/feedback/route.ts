@@ -54,5 +54,9 @@ export async function POST(request: Request) {
     /* 캐시 무효화 실패해도 저장은 완료됨 */
   }
 
-  return NextResponse.json({ ok: true as const });
+  return NextResponse.json({
+    ok: true as const,
+    id: result.id,
+    receipt: result.receipt,
+  });
 }

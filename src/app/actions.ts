@@ -1271,7 +1271,7 @@ export async function createFeedbackAction(formData: {
   content: string;
   /** 에러 제보·사이트 문제는 `ERROR_REPORT`로 어드민 피드백 목록에서 구분 */
   type?: 'EDIT_REQUEST' | 'ERROR_REPORT';
-}): Promise<ActionResult> {
+}): Promise<ActionResult<{ id: string; receipt: string } | null>> {
   try {
     const validated = feedbackSchema.parse(formData);
     const contentTrimmed = validated.content.trim();
@@ -1316,7 +1316,13 @@ export async function createFeedbackAction(formData: {
         contentLength: contentOut.length,
       }),
     });
-    return { success: true, data: null };
+    return {
+      success: true,
+      data:
+        inserted.id && inserted.receipt
+          ? { id: inserted.id, receipt: inserted.receipt }
+          : null,
+    };
   } catch (error) {
     const { message, code } = getErrorMessage(error);
     logError('createFeedback', error);
@@ -1573,6 +1579,63 @@ export async function resolveFeedbackAction(
   } catch (error) {
     const { message, code } = getErrorMessage(error);
     logError('resolveFeedback', error);
+    return { success: false, error: message, errorCode: code };
+  }
+}
+
+export async function replyFeedbackAction(
+  feedbackId: string,
+  reply: string,
+): Promise<ActionResult> {
+  try {
+    const session = await requireAdmin();
+    const text = reply.trim();
+    if (!feedbackId || text.length < 1 || text.length > 500) {
+      return { success: false, error: '답변은 1자 이상 500자 이내로 적어주세요.' };
+    }
+    const base = getScheduleServerBaseUrl();
+    if (base) {
+      const res = await fetchWithBackoff(
+        `${base}/feedbacks/${encodeURIComponent(feedbackId)}/reply`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reply: text }),
+        },
+      );
+      const json = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
+      if (res.status === 404) {
+        return { success: false, error: '피드백을 찾을 수 없습니다.', errorCode: 'NOT_FOUND' };
+      }
+      if (!res.ok) {
+        return {
+          success: false,
+          error: json.message ?? '답변을 남기지 못했습니다.',
+          errorCode: json.error ?? 'API_ERROR',
+        };
+      }
+    } else {
+      await getPrismaForDomain().feedback.update({
+        where: { id: feedbackId },
+        data: { reply: text },
+      });
+    }
+    const paths = getRevalidationPaths('admin');
+    await Promise.all([
+      ...paths.map((path: string) => revalidatePath(path)),
+      updateTag('admin'),
+    ]);
+    auditLog(session, {
+      action: 'update',
+      entity: 'feedback',
+      entityId: feedbackId,
+      summary: `피드백 답변 id=${feedbackId}`,
+      changes: { replyLength: text.length },
+    });
+    return { success: true, data: null };
+  } catch (error) {
+    const { message, code } = getErrorMessage(error);
+    logError('replyFeedback', error);
     return { success: false, error: message, errorCode: code };
   }
 }

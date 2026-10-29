@@ -7,6 +7,7 @@
  * 비활성화: `FEEDBACK_DEV_PRISMA_FALLBACK=0`
  */
 
+import { createHash, randomBytes } from 'node:crypto';
 import { getPrisma } from '@/lib/prisma';
 import { fetchWithBackoff } from '@/lib/map-dyoa-server-http-utils';
 import { getScheduleServerBaseUrl } from '@/lib/map-dyoa-server-schedules';
@@ -39,24 +40,30 @@ function remoteFeedbackErrorMessage(
   return `피드백 API 실패 (HTTP ${status})`;
 }
 
+function receiptHash(receipt: string): string {
+  return createHash('sha256').update(receipt).digest('hex');
+}
+
 async function persistFeedbackViaPrisma(input: {
   feedbackType: 'EDIT_REQUEST' | 'ERROR_REPORT';
   categoryTrim: string;
   contentOut: string;
   streamerId?: string;
   streamerName?: string;
-}): Promise<{ ok: true } | { ok: false; error: string; errorCode?: string }> {
+}): Promise<{ ok: true; id: string; receipt: string } | { ok: false; error: string; errorCode?: string }> {
+  const receipt = randomBytes(32).toString('base64url');
   try {
-    await getPrisma().feedback.create({
+    const row = await getPrisma().feedback.create({
       data: {
         type: input.feedbackType,
         category: input.categoryTrim,
         content: input.contentOut,
         streamerId: input.streamerId?.trim() || null,
         streamerName: input.streamerName?.trim() || null,
+        receiptHash: receiptHash(receipt),
       },
     });
-    return { ok: true };
+    return { ok: true, id: row.id, receipt };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return { ok: false, error: msg, errorCode: 'PRISMA_ERROR' };
@@ -65,7 +72,9 @@ async function persistFeedbackViaPrisma(input: {
 
 export async function submitFeedbackCore(
   input: SubmitFeedbackCoreInput,
-): Promise<{ ok: true } | { ok: false; error: string; errorCode?: string }> {
+): Promise<
+  { ok: true; id?: string; receipt?: string } | { ok: false; error: string; errorCode?: string }
+> {
   const feedbackType = input.type === 'ERROR_REPORT' ? 'ERROR_REPORT' : 'EDIT_REQUEST';
   const categoryTrim = input.category.trim();
   const contentTrimmed = input.content.trim();
@@ -108,7 +117,9 @@ export async function submitFeedbackCore(
       }
 
       if (res.ok) {
-        return { ok: true };
+        const id = typeof json.id === 'string' ? json.id : undefined;
+        const receipt = typeof json.receipt === 'string' ? json.receipt : undefined;
+        return { ok: true, id, receipt };
       }
 
       const remoteErr = remoteFeedbackErrorMessage(res.status, json);

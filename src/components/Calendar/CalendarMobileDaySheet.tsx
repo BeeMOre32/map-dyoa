@@ -19,6 +19,7 @@ interface CalendarMobileDaySheetProps {
   onClose: () => void;
   onAdd: () => void;
   onOpenDay: (day: Date) => void;
+  emptyLabel?: string;
 }
 
 export default function CalendarMobileDaySheet({
@@ -29,6 +30,7 @@ export default function CalendarMobileDaySheet({
   onClose,
   onAdd,
   onOpenDay,
+  emptyLabel,
 }: CalendarMobileDaySheetProps) {
   const [legacyUi] = useLegacyCalendarUi();
 
@@ -93,7 +95,7 @@ export default function CalendarMobileDaySheet({
                   )}
                 </div>
               ) : (
-                <CalendarEmptyDay isLoggedIn={isLoggedIn} onAdd={onAdd} />
+                <CalendarEmptyDay isLoggedIn={isLoggedIn} onAdd={onAdd} label={emptyLabel} />
               )}
             </div>
             <div className="border-t border-slate-100 px-3 py-3 dark:border-slate-800">

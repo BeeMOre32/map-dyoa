@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, Check, Copy, Loader2, RotateCcw, Send } from 'lucide-react';
 import { useToast } from '@/components/Common/Toaster';
+import { rememberFeedbackReceipt } from '@/lib/feedback-receipt-client';
 import {
   buildErrorReportClipboardText,
   extractBackendRequestIdFromMessage,
@@ -73,12 +74,17 @@ export default function ErrorReportPanel({ error, reset, variant = 'embedded' }:
           type: 'ERROR_REPORT',
         }),
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        id?: string;
+        receipt?: string;
+      };
       if (!res.ok) {
         toast.error(data.error ?? `전송 실패 (HTTP ${res.status})`);
         return;
       }
-      toast.success('관리자에게 전달되었습니다. 피드백 목록에서 확인할 수 있습니다.');
+      if (data.id && data.receipt) rememberFeedbackReceipt(data.id, data.receipt);
+      toast.success('관리자에게 전달되었습니다. 답변이 오면 이 브라우저에 알려 드립니다.');
       setExtraNote('');
     } catch {
       toast.error('전송 중 오류가 발생했습니다.');

@@ -20,6 +20,7 @@ import {
   buildBetaDayRows,
   type LiveChannelSnapshot,
 } from '@/lib/calendar/todayLiveListing';
+import { liveRowMatchesScope, type ScheduleScope } from '@/lib/schedule-scope';
 
 interface CalendarMobileWeeklyListProps {
   days: Date[];
@@ -36,6 +37,7 @@ interface CalendarMobileWeeklyListProps {
   todayMobileRef: RefObject<HTMLDivElement | null>;
   onDayClick: (day: Date) => void;
   onOpenCreateModal: () => void;
+  scope?: ScheduleScope;
 }
 
 export default function CalendarMobileWeeklyList({
@@ -53,6 +55,7 @@ export default function CalendarMobileWeeklyList({
   todayMobileRef,
   onDayClick,
   onOpenCreateModal,
+  scope = 'both',
 }: CalendarMobileWeeklyListProps) {
   return (
     <AnimatePresence mode="wait" custom={slideDirection}>
@@ -72,7 +75,7 @@ export default function CalendarMobileWeeklyList({
             schedulesByDate.get(dateKey) ?? [],
           );
           const dayIdx = day.getDay();
-          const betaDay = betaV3
+          const built = betaV3
             ? buildBetaDayRows({
                 schedules: daySchedules,
                 autoScheduleIds: new Set(autoScheduleIds),
@@ -82,6 +85,10 @@ export default function CalendarMobileWeeklyList({
                 includeLive: today,
               })
             : { cards: daySchedules, rows: [] };
+          const betaDay = {
+            cards: built.cards,
+            rows: built.rows.filter((row) => liveRowMatchesScope(row.collab, scope)),
+          };
 
           return (
             <section
@@ -155,6 +162,7 @@ export default function CalendarMobileWeeklyList({
                 <CalendarEmptyDay
                   isLoggedIn={isLoggedIn}
                   onAdd={onOpenCreateModal}
+                  label={scope === 'personal' ? '이날 단독 방송 없음' : undefined}
                 />
               )}
             </section>

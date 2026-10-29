@@ -33,6 +33,7 @@ import {
 } from '@/lib/bongnudo';
 import { BONGNUDO2_PATH, BONGNUDO2_TITLE } from '@/config/bongnudo2';
 import { markModalSoftNav } from '@/lib/modal-navigation';
+import { liveRowMatchesScope, type ScheduleScope } from '@/lib/schedule-scope';
 
 interface CalendarWeeklyV2GridProps {
   days: Date[];
@@ -47,6 +48,7 @@ interface CalendarWeeklyV2GridProps {
   isLoggedIn: boolean;
   onDayClick: (day: Date) => void;
   onOpenCreateModal: () => void;
+  scope?: ScheduleScope;
 }
 
 export default function CalendarWeeklyV2Grid({
@@ -62,6 +64,7 @@ export default function CalendarWeeklyV2Grid({
   isLoggedIn,
   onDayClick,
   onOpenCreateModal,
+  scope = 'both',
 }: CalendarWeeklyV2GridProps) {
   const headerRef = useRef<HTMLDivElement | null>(null);
   const [headerH, setHeaderH] = useState(56);
@@ -106,7 +109,7 @@ export default function CalendarWeeklyV2Grid({
             const liveCount = otherSchedules.filter((s) =>
               isScheduleLiveOnCard(s, liveStreamerIds),
             ).length;
-            const betaDay = betaV3
+            const built = betaV3
               ? buildBetaDayRows({
                   schedules: otherSchedules,
                   autoScheduleIds: new Set(autoScheduleIds),
@@ -116,6 +119,10 @@ export default function CalendarWeeklyV2Grid({
                   includeLive: today,
                 })
               : { cards: otherSchedules, rows: [] };
+            const betaDay = {
+              cards: built.cards,
+              rows: built.rows.filter((row) => liveRowMatchesScope(row.collab, scope)),
+            };
 
             return (
               <motion.div
@@ -197,6 +204,7 @@ export default function CalendarWeeklyV2Grid({
                       compact
                       isLoggedIn={isLoggedIn}
                       onAdd={onOpenCreateModal}
+                      label={scope === 'personal' ? '이날 단독 방송 없음' : undefined}
                     />
                   ) : null}
                 </div>

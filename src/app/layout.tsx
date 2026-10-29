@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import AuthProvider from '@/providers/AuthProvider';
 import Header from '@/components/Layout/Header';
 import PromotionToastStack from '@/components/Common/PromotionToastStack';
+import FeedbackReplyWatcher from '@/components/Layout/FeedbackReplyWatcher';
 import { ToastProvider } from '@/components/Common/Toaster';
 import PwaRegistrar from '@/components/Common/PwaRegistrar';
 import { Analytics } from '@vercel/analytics/next';
@@ -53,6 +54,7 @@ export default async function RootLayout({
             <AuthProvider>
               <ToastProvider>
                 <PwaRegistrar />
+                <FeedbackReplyWatcher />
                 <main className="h-dvh w-full bg-slate-50/50 dark:bg-slate-950 flex flex-col overflow-hidden transition-colors duration-300">
                   <Header />
                   <div className="flex min-h-0 flex-1 flex-col overflow-y-auto sm:overflow-hidden">

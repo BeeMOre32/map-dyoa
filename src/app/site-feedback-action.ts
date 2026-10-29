@@ -15,7 +15,9 @@ import {
 const CONTENT_MIN = 8;
 const CONTENT_MAX = 800;
 
-export type SiteFeedbackResult = { ok: true } | { ok: false; error: string };
+export type SiteFeedbackResult =
+  | { ok: true; id?: string; receipt?: string }
+  | { ok: false; error: string };
 
 async function clientKey(): Promise<string> {
   const headerList = await headers();
@@ -70,5 +72,5 @@ export async function submitSiteFeedbackAction(input: {
     logError('submitSiteFeedbackRevalidate', error);
   }
 
-  return { ok: true };
+  return { ok: true, id: inserted.id, receipt: inserted.receipt };
 }

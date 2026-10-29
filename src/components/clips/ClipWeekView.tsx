@@ -2,10 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { Heart } from 'lucide-react';
 import { extractChzzkClipId } from '@/lib/chzzk';
 import { subscribeClipRecommend } from '@/lib/clip-recommend-client';
 import type { ClipWeekRecommendRow } from '@/lib/clip-week';
 import { ClipPlayerModal } from './ClipPlayerModal';
+
+function rankRows(rows: ClipWeekRecommendRow[]) {
+  return [...rows]
+    .filter((row) => row.weekRecommends > 0 && row.recommends > 0)
+    .sort((a, b) => b.recommends - a.recommends || b.weekRecommends - a.weekRecommends);
+}
 
 function daysAgo(iso: string | null): string | null {
   if (!iso) return null;
@@ -18,19 +25,27 @@ function daysAgo(iso: string | null): string | null {
 }
 
 export default function ClipWeekView({ rows: initialRows }: { rows: ClipWeekRecommendRow[] }) {
-  const [rows, setRows] = useState(initialRows);
+  const [rows, setRows] = useState(() => rankRows(initialRows));
   const [playing, setPlaying] = useState<ClipWeekRecommendRow | null>(null);
 
   useEffect(() => {
-    setRows(initialRows);
+    setRows(rankRows(initialRows));
   }, [initialRows]);
 
   useEffect(() => {
     const stops = initialRows.map((row) =>
       subscribeClipRecommend(row.clipId, (detail) => {
         setRows((current) =>
-          current.map((item) =>
-            item.clipId === detail.clipId ? { ...item, recommends: detail.recommends } : item,
+          rankRows(
+            current.map((item) =>
+              item.clipId === detail.clipId
+                ? {
+                    ...item,
+                    recommends: detail.recommends,
+                    weekRecommends: Math.min(item.weekRecommends, detail.recommends),
+                  }
+                : item,
+            ),
           ),
         );
         setPlaying((current) =>
@@ -50,7 +65,7 @@ export default function ClipWeekView({ rows: initialRows }: { rows: ClipWeekReco
       <header className="shrink-0 border-b border-slate-50 px-3 py-3 dark:border-slate-800 sm:px-4">
         <h1 className="text-base font-black text-slate-800 dark:text-white sm:text-lg">주간 추천</h1>
         <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-          이번 주 추천이 많은 클립입니다. 추천 수는 월요일이 되어도 그대로 남습니다.
+          이번 주 추천이 들어온 클립입니다. 숫자는 지금까지 쌓인 추천이고, 월요일에 사라지지 않습니다.
         </p>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto">
@@ -62,6 +77,8 @@ export default function ClipWeekView({ rows: initialRows }: { rows: ClipWeekReco
           <ol>
             {rows.map((row, index) => {
               const when = daysAgo(row.clipDate);
+              const added = row.recommends - row.weekRecommends;
+              const share = rows[0].recommends > 0 ? row.recommends / rows[0].recommends : 0;
               return (
                 <motion.li
                   key={row.clipId}
@@ -80,7 +97,17 @@ export default function ClipWeekView({ rows: initialRows }: { rows: ClipWeekReco
                     onClick={() => setPlaying(row)}
                     className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 sm:px-4"
                   >
-                    <span className="w-5 shrink-0 text-sm tabular-nums text-slate-400">{index + 1}</span>
+                    <span
+                      className={`w-5 shrink-0 text-sm tabular-nums ${
+                        index === 0
+                          ? 'font-black text-rose-600 dark:text-rose-400'
+                          : index < 3
+                            ? 'font-bold text-slate-700 dark:text-slate-200'
+                            : 'text-slate-400'
+                      }`}
+                    >
+                      {index + 1}
+                    </span>
                     <span className="relative h-14 w-24 shrink-0 overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
                       {row.thumbnailUrl ? (
                         <img src={row.thumbnailUrl} alt="" className="h-full w-full object-cover" />
@@ -89,6 +116,12 @@ export default function ClipWeekView({ rows: initialRows }: { rows: ClipWeekReco
                     <span className="min-w-0 flex-1">
                       <span className="line-clamp-2 text-sm leading-snug text-slate-800 dark:text-slate-100">
                         {row.title}
+                      </span>
+                      <span className="mt-1.5 block h-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                        <span
+                          className="block h-full rounded-full bg-rose-400/80 dark:bg-rose-400/70"
+                          style={{ width: `${Math.max(share > 0 ? 8 : 0, share * 100)}%` }}
+                        />
                       </span>
                       <span className="mt-1 flex flex-wrap items-center gap-1 sm:hidden">
                         {row.streamers.map((name) => (
@@ -113,13 +146,16 @@ export default function ClipWeekView({ rows: initialRows }: { rows: ClipWeekReco
                       ))}
                     </span>
                     <span className="hidden w-14 shrink-0 text-right text-xs text-slate-400 sm:block">{when}</span>
-                    <span className="w-14 shrink-0 text-right">
-                      <span className="block text-sm font-semibold tabular-nums text-rose-600 dark:text-rose-400">
+                    <span className="w-16 shrink-0 text-right">
+                      <span className="inline-flex items-center gap-1 text-sm font-bold tabular-nums text-rose-600 dark:text-rose-400">
+                        <Heart className="size-3.5 fill-current" aria-hidden />
                         {row.recommends}
                       </span>
-                      <span className="block text-[10px] font-medium text-slate-400">
-                        이번 주 {row.weekRecommends}
-                      </span>
+                      {added > 0 ? (
+                        <span className="mt-0.5 block whitespace-nowrap text-[10px] font-medium tabular-nums text-slate-400">
+                          이번 주 +{row.weekRecommends}
+                        </span>
+                      ) : null}
                     </span>
                   </button>
                 </motion.li>

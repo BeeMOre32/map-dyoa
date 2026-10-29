@@ -15,7 +15,6 @@ import {
   bandRoleForCalendarDay,
   sortSchedulesForCalendarDay,
 } from '@/lib/bongnudo';
-
 interface CalendarMonthLegacyGridProps {
   days: Date[];
   schedulesByDate: Map<string, FlattenedSchedule[]>;
@@ -114,7 +113,7 @@ export default function CalendarMonthLegacyGrid({
                   {daySchedules.length > 0 ? (
                     <div className="mt-auto flex min-w-0 shrink-0 flex-col gap-0.5 sm:hidden">
                       <span className="truncate text-[9px] font-bold leading-tight text-slate-700 dark:text-slate-200">
-                        {daySchedules[0].title}
+                        {daySchedules[0]?.title}
                       </span>
                       {daySchedules.length > 1 ? (
                         <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400">

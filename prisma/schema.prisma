@@ -113,6 +113,8 @@ model Feedback {
   streamerName String? // 스트리머가 삭제될 경우를 대비한 스냅샷
 
   status    String   @default("PENDING") // PENDING, IN_PROGRESS, RESOLVED, REJECTED
+  reply     String?  @db.Text
+  receiptHash String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
