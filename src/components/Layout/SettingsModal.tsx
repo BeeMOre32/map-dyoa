@@ -18,7 +18,7 @@ import { useHideEndedStreams } from '@/hooks/useHideEndedStreams';
 import { useLegacyCalendarUi } from '@/hooks/useLegacyCalendarUi';
 import { useCalendarBetaV3 } from '@/hooks/useCalendarBetaV3';
 import { useClipWeeklyBeta } from '@/hooks/useClipWeeklyBeta';
-import { SettingsFeedbackModalPresence } from '@/components/Layout/SettingsFeedback';
+import SettingsFeedbackForm from '@/components/Layout/SettingsFeedback';
 
 interface SettingsModalProps {
   open: boolean;
@@ -192,10 +192,11 @@ function GeneralTab({
             <span className="min-w-0 flex-1">의견 보내기</span>
             <ChevronRight className="size-4 text-zinc-300 dark:text-zinc-600" />
           </button>
-          <button
-            type="button"
+          <a
+            href="https://ctee.kr/place/mapdoya"
+            target="_blank"
+            rel="noopener noreferrer"
             className={rowClass}
-            onClick={() => window.open('https://ctee.kr/place/mapdoya', '_blank', 'noopener,noreferrer')}
           >
             <Heart className="size-4 text-zinc-400" />
             <span className="min-w-0 flex-1">
@@ -203,11 +204,12 @@ function GeneralTab({
               <span className="mt-0.5 block text-xs font-normal text-zinc-500">서버비 제외 전액 기부</span>
             </span>
             <ChevronRight className="size-4 text-zinc-300 dark:text-zinc-600" />
-          </button>
-          <button
-            type="button"
+          </a>
+          <a
+            href={CHROME_EXTENSION_URL}
+            target="_blank"
+            rel="noopener noreferrer"
             className={rowClass}
-            onClick={() => window.open(CHROME_EXTENSION_URL, '_blank', 'noopener,noreferrer')}
           >
             <Puzzle className="size-4 text-zinc-400" />
             <span className="min-w-0 flex-1">
@@ -215,7 +217,7 @@ function GeneralTab({
               <span className="mt-0.5 block text-xs font-normal text-zinc-500">{CHROME_EXTENSION_NAME}</span>
             </span>
             <ChevronRight className="size-4 text-zinc-300 dark:text-zinc-600" />
-          </button>
+          </a>
         </SettingGroup>
       </section>
 
@@ -316,31 +318,45 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
           <Modal.Container placement="center" size="sm">
             <Modal.Dialog className="border border-zinc-200 shadow-xl dark:border-zinc-800">
               <Modal.Header>
-                <Modal.Heading className="text-sm font-medium">설정</Modal.Heading>
+                <Modal.Heading className="text-sm font-medium">
+                  {feedbackOpen ? '의견 보내기' : '설정'}
+                </Modal.Heading>
+                {feedbackOpen ? (
+                  <button
+                    type="button"
+                    onClick={closeFeedback}
+                    className="text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                  >
+                    돌아가기
+                  </button>
+                ) : null}
                 <Modal.CloseTrigger />
               </Modal.Header>
               <Modal.Body className="max-h-[70dvh] overflow-y-auto">
-                <GeneralTab
-                  onClose={dismiss}
-                  isDark={isDark}
-                  setTheme={setTheme}
-                  hideEnded={hideEnded}
-                  setHideEnded={setHideEnded}
-                  legacyUi={legacyUi}
-                  setLegacyUi={setLegacyUi}
-                  calendarBetaV3={calendarBetaV3}
-                  setCalendarBetaV3={setCalendarBetaV3}
-                  clipWeeklyBeta={clipWeeklyBeta}
-                  setClipWeeklyBeta={setClipWeeklyBeta}
-                  onOpenFeedback={() => setFeedbackOpen(true)}
-                  session={session}
-                />
+                {feedbackOpen ? (
+                  <SettingsFeedbackForm onClose={closeFeedback} />
+                ) : (
+                  <GeneralTab
+                    onClose={dismiss}
+                    isDark={isDark}
+                    setTheme={setTheme}
+                    hideEnded={hideEnded}
+                    setHideEnded={setHideEnded}
+                    legacyUi={legacyUi}
+                    setLegacyUi={setLegacyUi}
+                    calendarBetaV3={calendarBetaV3}
+                    setCalendarBetaV3={setCalendarBetaV3}
+                    clipWeeklyBeta={clipWeeklyBeta}
+                    setClipWeeklyBeta={setClipWeeklyBeta}
+                    onOpenFeedback={() => setFeedbackOpen(true)}
+                    session={session}
+                  />
+                )}
               </Modal.Body>
             </Modal.Dialog>
           </Modal.Container>
         </Modal.Backdrop>
       </Modal>
-      <SettingsFeedbackModalPresence open={feedbackOpen} onClose={closeFeedback} />
     </>
   );
 }

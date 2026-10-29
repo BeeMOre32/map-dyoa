@@ -7,7 +7,7 @@ import {
   clipGridPresenceVariants,
 } from '@/lib/clipMotion';
 import { Button, ListBox, SearchField, Select } from '@heroui/react';
-import { Clapperboard, Plus, SlidersHorizontal, X } from 'lucide-react';
+import { Clapperboard, Plus, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { format, isValid, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -36,18 +36,18 @@ function ClipFilterSelect({
   return (
     <Select
       aria-label={label}
-      className="w-fit max-w-full"
+      className="!w-full !min-w-0 sm:!w-fit"
       selectedKey={value}
       onSelectionChange={(key) => {
         if (key == null) return;
         onChange(String(key));
       }}
     >
-      <Select.Trigger>
-        <Select.Value />
+      <Select.Trigger className="!w-full !min-w-0 !overflow-hidden !pe-7 sm:!w-auto">
+        <Select.Value className="!block !max-w-full !truncate" />
         <Select.Indicator />
       </Select.Trigger>
-      <Select.Popover className="max-h-72 overflow-auto">
+      <Select.Popover className="!min-w-40 max-h-72 overflow-auto">
         <ListBox>
           {options.map((option) => (
             <ListBox.Item key={option.id} id={option.id} textValue={option.label}>
@@ -91,7 +91,6 @@ export default function ClipView({
   const { data: session } = useSession();
   const [showModal, setShowModal] = useState(false);
   const [editingClip, setEditingClip] = useState<ClipWithParticipants | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
   const [isHeaderCondensed, setIsHeaderCondensed] = useState(false);
   const lastScrollTopRef = useRef(0);
 
@@ -100,7 +99,7 @@ export default function ClipView({
 
   const handleOpen = useCallback(() => setShowModal(true), []);
   const handleClose = useCallback(() => setShowModal(false), []);
-  const shouldShowAdvancedFilters = (showFilters && !isHeaderCondensed) || hasFilter;
+  const canReset = hasFilter || currentFilters.sort !== 'newest';
 
   const gridFilterKey = useMemo(
     () =>
@@ -153,17 +152,6 @@ export default function ClipView({
 
           <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:shrink-0 sm:justify-end sm:gap-2">
             <FavoritesOnlyToggle appearance="hero" />
-            <Button
-              size="sm"
-              variant={shouldShowAdvancedFilters ? 'secondary' : 'outline'}
-              onPress={() => {
-                setIsHeaderCondensed(false);
-                setShowFilters((prev) => !prev);
-              }}
-            >
-              <SlidersHorizontal className="size-3.5" />
-              필터
-            </Button>
             {session && (
               <motion.button
                 onClick={handleOpen}
@@ -197,58 +185,56 @@ export default function ClipView({
           </SearchField.Group>
         </SearchField>
 
-        {shouldShowAdvancedFilters && (
-              <div className="flex flex-wrap items-center gap-2 pt-1.5">
-                <ClipFilterSelect
-                  label="기간"
-                  value={currentFilters.month || 'all'}
-                  onChange={(month) =>
-                    navigate(buildUrl({ month: month === 'all' ? '' : month, page: 1 }))
-                  }
-                  options={[
-                    { id: 'all', label: '전체 기간' },
-                    ...monthOptions.map((month) => {
-                      const date = parseISO(`${month}-01`);
-                      return {
-                        id: month,
-                        label: isValid(date) ? format(date, 'yyyy년 M월', { locale: ko }) : month,
-                      };
-                    }),
-                  ]}
-                />
-                <ClipFilterSelect
-                  label="스트리머"
-                  value={currentFilters.streamerId || 'all'}
-                  onChange={(streamer) =>
-                    navigate(buildUrl({ streamer: streamer === 'all' ? '' : streamer, page: 1 }))
-                  }
-                  options={[
-                    { id: 'all', label: '전체 스트리머' },
-                    ...streamers.map((streamer) => ({ id: streamer.id, label: streamer.name })),
-                  ]}
-                />
-                <ClipFilterSelect
-                  label="정렬"
-                  value={currentFilters.sort}
-                  onChange={(sort) =>
-                    navigate(buildUrl({ sort: sort as ClipSortOption, page: 1 }))
-                  }
-                  options={[
-                    { id: 'newest', label: '최신 등록순' },
-                    { id: 'oldest', label: '오래된 순' },
-                    { id: 'date_desc', label: '클립 날짜 최신순' },
-                    { id: 'date_asc', label: '클립 날짜 오래된순' },
-                    { id: 'title', label: '제목순' },
-                  ]}
-                />
-                {hasFilter && (
-                  <Button size="sm" variant="ghost" onPress={clearFilters}>
-                    <X className="size-3.5" />
-                    초기화
-                  </Button>
-                )}
-              </div>
-        )}
+        <div className="grid grid-cols-3 items-center gap-1.5 pt-1.5 sm:flex sm:flex-wrap sm:gap-2">
+          <ClipFilterSelect
+            label="기간"
+            value={currentFilters.month || 'all'}
+            onChange={(month) =>
+              navigate(buildUrl({ month: month === 'all' ? '' : month, page: 1 }))
+            }
+            options={[
+              { id: 'all', label: '전체 기간' },
+              ...monthOptions.map((month) => {
+                const date = parseISO(`${month}-01`);
+                return {
+                  id: month,
+                  label: isValid(date) ? format(date, 'yyyy년 M월', { locale: ko }) : month,
+                };
+              }),
+            ]}
+          />
+          <ClipFilterSelect
+            label="스트리머"
+            value={currentFilters.streamerId || 'all'}
+            onChange={(streamer) =>
+              navigate(buildUrl({ streamer: streamer === 'all' ? '' : streamer, page: 1 }))
+            }
+            options={[
+              { id: 'all', label: '스트리머' },
+              ...streamers.map((streamer) => ({ id: streamer.id, label: streamer.name })),
+            ]}
+          />
+          <ClipFilterSelect
+            label="정렬"
+            value={currentFilters.sort}
+            onChange={(sort) =>
+              navigate(buildUrl({ sort: sort as ClipSortOption, page: 1 }))
+            }
+            options={[
+              { id: 'newest', label: '최신순' },
+              { id: 'oldest', label: '오래된순' },
+              { id: 'date_desc', label: '날짜 최신' },
+              { id: 'date_asc', label: '날짜 오래된' },
+              { id: 'title', label: '제목순' },
+            ]}
+          />
+          {canReset && (
+            <Button size="sm" variant="ghost" onPress={clearFilters}>
+              <X className="size-3.5" />
+              초기화
+            </Button>
+          )}
+        </div>
       </motion.div>
 
       {/* 클립 그리드 */}
