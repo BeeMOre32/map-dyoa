@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { Modal } from '@heroui/react';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { useModalDismiss } from '@/hooks/useModalDismiss';
-import { motion } from 'motion/react';
-import { backdropVariants, smoothModalVariants } from '@/lib/modalVariants';
 import { CreateScheduleModalProps, CreateMode } from './types';
 import { useEditScheduleForm } from './hooks/useEditScheduleForm';
 import { useBatchScheduleForm } from './hooks/useBatchScheduleForm';
@@ -181,24 +180,21 @@ export default function CreateScheduleModal({
   }
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      exit="hidden"
-      variants={backdropVariants}
-      className="fixed inset-0 z-70 flex items-center justify-center p-4 md:p-6 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm"
-      onClick={handleDismiss}
+    <Modal
+      isOpen
+      onOpenChange={(next) => {
+        if (!next) handleDismiss();
+      }}
     >
-      <motion.div
-        variants={smoothModalVariants}
-        initial="hidden"
-        animate="visible"
-        exit="hidden"
-        className={`bg-white dark:bg-slate-800 w-full ${modalMaxWidthClass} rounded-[2.5rem] shadow-2xl dark:shadow-slate-900/50 flex flex-col max-h-[90dvh] border border-slate-100 dark:border-slate-700`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {body}
-      </motion.div>
-    </motion.div>
+      <Modal.Backdrop variant="blur" className="bg-slate-900/60 dark:bg-slate-950/80">
+        <Modal.Container placement="center" className={`w-full ${modalMaxWidthClass}`}>
+          <Modal.Dialog
+            className={`flex max-h-[90dvh] w-full flex-col overflow-hidden border border-slate-100 bg-white dark:border-slate-700 dark:bg-slate-800 ${modalMaxWidthClass}`}
+          >
+            {body}
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
   );
 }

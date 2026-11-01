@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Drawer, Modal } from '@heroui/react';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -32,10 +33,7 @@ import CreateScheduleModal from '../Form/CreateScheduleModal';
 import { useToast } from '@/components/Common/Toaster';
 import ConfirmModal from '@/components/Common/ConfirmModal';
 import {
-  backdropVariants,
-  bottomSheetVariants,
   companionPanelVariants,
-  sheetBackdropVariants,
   smoothModalVariants,
 } from '@/lib/modalVariants';
 import {
@@ -122,6 +120,10 @@ export default function ScheduleDetailModalV2({
   const goBack = useGoBack('/calendar');
 
   const handleClose = () => {
+    if (showConfirm) {
+      if (!isDeleting) setShowConfirm(false);
+      return;
+    }
     if (sheetOpen) {
       setSheetOpen(false);
       return;
@@ -158,24 +160,29 @@ export default function ScheduleDetailModalV2({
 
   return (
     <>
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      exit="hidden"
-      variants={backdropVariants}
-      style={{ display: 'flex' }}
-      className="fixed inset-0 z-70 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md"
-      onClick={handleClose}
+    <Modal
+      isOpen
+      onOpenChange={(next) => {
+        if (!next) handleClose();
+      }}
     >
-      <div className="pointer-events-none flex w-full sm:w-auto sm:flex-row sm:items-stretch sm:gap-3">
-        {/* 메인 모달 */}
+      <Modal.Backdrop
+        variant="blur"
+        className="bg-slate-900/60 dark:bg-slate-950/80"
+        isKeyboardDismissDisabled
+      >
+        <Modal.Container
+          placement="center"
+          className="!w-full !max-w-none !items-end !p-0 sm:!w-auto sm:!items-center sm:!p-4"
+        >
+          <Modal.Dialog className="!w-full !max-w-none !border-0 !bg-transparent !p-0 !shadow-none sm:!w-auto">
+      <div className="pointer-events-none flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row">
         <motion.div
           variants={smoothModalVariants}
           initial="hidden"
           animate="visible"
           exit="hidden"
           className="pointer-events-auto relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-4xl border border-slate-100 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-900/50 sm:max-h-[90dvh] sm:max-w-lg sm:rounded-[2.5rem]"
-          onClick={(e) => e.stopPropagation()}
         >
           {isEditing ? (
             <EditView
@@ -218,63 +225,47 @@ export default function ScheduleDetailModalV2({
               animate="visible"
               exit="hidden"
               className="pointer-events-auto hidden max-h-[90dvh] min-h-0 w-80 flex-col overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-900/50 sm:flex"
-              onClick={(e) => e.stopPropagation()}
             >
               <SidePanel {...sidePanelProps} />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
 
-    <AnimatePresence>
-      {showConfirm && (
-          <ConfirmModal
-            message="정말로 이 일정을 삭제할까요? 되돌릴 수 없습니다."
-            isLoading={isDeleting}
-            onConfirm={handleConfirmDelete}
-            onCancel={() => setShowConfirm(false)}
-          />
-      )}
-    </AnimatePresence>
+    {showConfirm && (
+      <ConfirmModal
+        message="정말로 이 일정을 삭제할까요? 되돌릴 수 없습니다."
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowConfirm(false)}
+      />
+    )}
 
-    {/* 모바일 바텀시트 */}
-    <AnimatePresence>
-      {sheetOpen && (
-        <motion.div
-          className="fixed inset-0 z-80 flex flex-col justify-end sm:hidden"
-          initial={false}
-        >
-          <motion.div
-            className="absolute inset-0 bg-black/40"
-              variants={sheetBackdropVariants}
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              onClick={() => setSheetOpen(false)}
-            />
-          <motion.div
-            className="relative z-10 flex max-h-[75dvh] min-h-0 flex-col rounded-t-3xl border-t border-slate-100 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800"
-              variants={bottomSheetVariants}
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex shrink-0 justify-center pb-1 pt-3">
-                <div className="h-1 w-10 rounded-full bg-slate-200 dark:bg-slate-700" />
-              </div>
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                <SidePanel
-                  {...sidePanelProps}
-                  onClose={() => setSheetOpen(false)}
-                  defaultTab={sheetTab}
-                />
-              </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <Drawer
+      isOpen={sheetOpen}
+      onOpenChange={(next) => {
+        if (!next) setSheetOpen(false);
+      }}
+    >
+      <Drawer.Backdrop className="sm:hidden" isKeyboardDismissDisabled>
+        <Drawer.Content placement="bottom" className="sm:hidden">
+          <Drawer.Dialog className="max-h-[75dvh]">
+            <Drawer.Handle />
+            <Drawer.Body className="min-h-0 overflow-hidden p-0">
+              <SidePanel
+                {...sidePanelProps}
+                onClose={() => setSheetOpen(false)}
+                defaultTab={sheetTab}
+              />
+            </Drawer.Body>
+          </Drawer.Dialog>
+        </Drawer.Content>
+      </Drawer.Backdrop>
+    </Drawer>
     </>
   );
 }

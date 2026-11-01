@@ -8,6 +8,7 @@ import {
 } from '@/lib/clipMotion';
 import { Button, ListBox, SearchField, Select } from '@heroui/react';
 import { Clapperboard, Plus, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { format, isValid, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -89,6 +90,7 @@ export default function ClipView({
   currentFilters,
 }: ClipViewProps) {
   const { data: session } = useSession();
+  const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [editingClip, setEditingClip] = useState<ClipWithParticipants | null>(null);
   const [isHeaderCondensed, setIsHeaderCondensed] = useState(false);
@@ -97,7 +99,13 @@ export default function ClipView({
   const { isPending, searchValue, setSearchValue, buildUrl, navigate, clearFilters, hasFilter } =
     useClipNavigation(currentFilters, currentPage);
 
-  const handleOpen = useCallback(() => setShowModal(true), []);
+  const handleOpen = useCallback(() => {
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+    setShowModal(true);
+  }, [router, session]);
   const handleClose = useCallback(() => setShowModal(false), []);
   const canReset = hasFilter || currentFilters.sort !== 'newest';
 
@@ -150,24 +158,12 @@ export default function ClipView({
             )}
           </div>
 
-          <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:shrink-0 sm:justify-end sm:gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <FavoritesOnlyToggle appearance="hero" />
-            {session && (
-              <motion.button
-                onClick={handleOpen}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="relative ml-auto inline-flex items-center gap-1 overflow-hidden rounded-lg bg-indigo-600 px-2.5 py-1 text-[11px] font-black text-white shadow-lg shadow-indigo-300/40 transition-colors hover:bg-indigo-700 dark:shadow-indigo-900/30 sm:ml-0 sm:gap-1.5 sm:rounded-xl sm:px-3.5 sm:py-2 sm:text-xs"
-              >
-                <motion.div
-                  className="absolute inset-0 bg-white/10"
-                  animate={{ x: ['-100%', '100%'] }}
-                  transition={{ duration: 1.8, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 }}
-                />
-                <Plus className="relative z-10 h-3.5 w-3.5" />
-                <span className="relative z-10">추가</span>
-              </motion.button>
-            )}
+            <Button size="sm" variant="primary" className="shrink-0" onPress={handleOpen}>
+              <Plus className="h-3.5 w-3.5" />
+              클립 추가
+            </Button>
           </div>
         </div>
 

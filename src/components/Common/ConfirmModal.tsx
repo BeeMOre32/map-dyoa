@@ -1,9 +1,7 @@
 'use client';
 
-import { motion } from 'motion/react';
+import { Button, Modal } from '@heroui/react';
 import { AlertTriangle } from 'lucide-react';
-import { useScrollLock } from '@/hooks/useScrollLock';
-import { backdropVariants, compactModalVariants } from '@/lib/modalVariants';
 
 interface ConfirmModalProps {
   message: string;
@@ -20,49 +18,52 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
-  useScrollLock();
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      exit="hidden"
-      variants={backdropVariants}
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-sm"
-      onClick={onCancel}
+    <Modal
+      isOpen
+      onOpenChange={(next) => {
+        if (!next && !isLoading) onCancel();
+      }}
     >
-      <motion.div
-        variants={compactModalVariants}
-        initial="hidden"
-        animate="visible"
-        exit="hidden"
-        className="w-full max-w-xs bg-white dark:bg-slate-900 rounded-3xl shadow-2xl dark:shadow-black/60 border border-slate-100 dark:border-slate-800 p-6 space-y-5"
-        onClick={(e) => e.stopPropagation()}
+      <Modal.Backdrop
+        variant="blur"
+        className="bg-slate-900/40 dark:bg-slate-950/60"
+        isDismissable={!isLoading}
+        isKeyboardDismissDisabled={isLoading}
       >
-        <div className="flex flex-col items-center gap-3 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
-            <AlertTriangle className="w-6 h-6 text-red-500 dark:text-red-400" />
-          </div>
-          <p className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-relaxed">
-            {message}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={onCancel}
-            disabled={isLoading}
-            className="flex-1 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-          >
-            취소
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={isLoading}
-            className="flex-1 py-2.5 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm transition-colors disabled:opacity-60"
-          >
-            {isLoading ? '처리 중...' : confirmLabel}
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
+        <Modal.Container placement="center" size="sm">
+          <Modal.Dialog className="max-w-xs border border-slate-100 dark:border-slate-800">
+            <Modal.Body className="gap-5">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-900/20">
+                  <AlertTriangle className="h-6 w-6 text-red-500 dark:text-red-400" />
+                </div>
+                <p className="text-sm font-bold leading-relaxed text-slate-700 dark:text-slate-200">
+                  {message}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1"
+                  variant="secondary"
+                  onPress={onCancel}
+                  isDisabled={isLoading}
+                >
+                  취소
+                </Button>
+                <Button
+                  className="flex-1"
+                  variant="danger"
+                  onPress={onConfirm}
+                  isDisabled={isLoading}
+                >
+                  {isLoading ? '처리 중...' : confirmLabel}
+                </Button>
+              </div>
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
   );
 }
