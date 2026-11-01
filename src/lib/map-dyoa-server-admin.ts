@@ -1,9 +1,18 @@
 import { fetchWithBackoff } from "@/lib/map-dyoa-server-http-utils"
 import { readJsonSafely, requireServerBaseUrl } from "./map-dyoa-server-fetch"
 
+function adminTokenHeader(path: string): HeadersInit {
+  if (!path.startsWith("/admin")) return {}
+  const token = process.env.MAP_DYOA_SERVER_WRITE_TOKEN?.trim()
+  return token ? { "x-write-token": token } : {}
+}
+
 async function fetchJson<T>(path: string, revalidate = 60): Promise<T> {
   const base = requireServerBaseUrl()
-  const res = await fetchWithBackoff(`${base}${path}`, { next: { revalidate } })
+  const res = await fetchWithBackoff(`${base}${path}`, {
+    next: { revalidate },
+    headers: adminTokenHeader(path),
+  })
   return readJsonSafely<T>(res, `관리자 API 오류: ${res.status}`)
 }
 
@@ -148,6 +157,7 @@ export function fetchHoi4LeaderboardFromServer() {
   return fetchWithBackoff(`${base}/admin/hoi4-leaderboard`, {
     // time-based revalidate만 쓰면 일정 수정 직후에도 stale 응답이 남을 수 있음
     next: { revalidate: 120, tags: ["calendar", "hoi4"] },
+    headers: adminTokenHeader("/admin/hoi4-leaderboard"),
   }).then((res) =>
     readJsonSafely<Hoi4LeaderboardData>(res, `관리자 API 오류: ${res.status}`),
   )
