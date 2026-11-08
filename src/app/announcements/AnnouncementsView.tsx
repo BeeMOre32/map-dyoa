@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState, type Key, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Accordion } from '@heroui/react';
 import { buttonVariants } from '@heroui/styles';
 import {
@@ -21,6 +21,8 @@ import {
   UpdateOctober2026PostBody,
 } from './announcement-posts';
 import { KindChip } from './notice-ui';
+
+type AccordionKey = string | number;
 
 function NoticeItem({
   id,
@@ -67,7 +69,7 @@ export default function AnnouncementsView({
 }: {
   uptimeBadge?: ReactNode;
 }) {
-  const [expanded, setExpanded] = useState<Set<Key>>(
+  const [expanded, setExpanded] = useState<Set<AccordionKey>>(
     () => new Set(['settlement-2026-10']),
   );
 
