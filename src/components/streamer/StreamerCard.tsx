@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Eye, LayoutGrid, MoreHorizontal, Users } from 'lucide-react';
+import { Button, Chip } from '@heroui/react';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { Streamer } from '@prisma/client';
@@ -239,17 +240,16 @@ export default function StreamerCard({
               </span>
             )}
           </div>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onRequestEdit(streamer);
-            }}
-            className="relative z-[2] rounded-lg p-1 text-slate-300 transition-all hover:bg-indigo-50 hover:text-indigo-600 dark:text-slate-600 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400 sm:p-1.5"
+          <Button
+            isIconOnly
+            size="sm"
+            variant="ghost"
+            aria-label={`${streamer.name} 정보 수정 요청`}
+            className="relative z-[2]"
+            onPress={() => onRequestEdit(streamer)}
           >
-            <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          </button>
+            <MoreHorizontal className="size-4" />
+          </Button>
         </motion.div>
 
         <div className="pointer-events-none relative z-[1] space-y-0.5 sm:space-y-1">
@@ -263,23 +263,26 @@ export default function StreamerCard({
 
         <div className="relative z-[1] mt-3 flex items-center gap-1.5 sm:mt-6 sm:gap-2">
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 sm:gap-2">
-          <span className="pointer-events-none shrink-0 whitespace-nowrap rounded-lg border border-slate-200 bg-slate-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-slate-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-400 sm:rounded-xl sm:px-2.5 sm:py-1 sm:text-[10px]">
+          <Chip size="sm" variant="soft" className="pointer-events-none">
             {streamer.generation}기
-          </span>
-          {streamer.role && (
-            <span className="pointer-events-none shrink-0 whitespace-nowrap rounded-lg border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-indigo-600 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400 sm:rounded-xl sm:px-2.5 sm:py-1 sm:text-[10px]">
+          </Chip>
+          {streamer.role ? (
+            <Chip size="sm" variant="soft" color="accent" className="pointer-events-none">
               {streamer.role}
-            </span>
-          )}
-          {isLive && viewerCount !== undefined && (
-            <span
-              className="pointer-events-none inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded-lg border border-red-100 bg-red-50 px-2 py-0.5 text-[9px] font-black tabular-nums text-red-600 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 sm:rounded-xl sm:px-2.5 sm:py-1 sm:text-[10px]"
+            </Chip>
+          ) : null}
+          {isLive && viewerCount !== undefined ? (
+            <Chip
+              size="sm"
+              variant="soft"
+              color="danger"
+              className="pointer-events-none"
               title={`시청자 ${viewerCount.toLocaleString('ko-KR')}명`}
             >
-              <Users className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              <Users className="size-3" />
               {formatViewerCount(viewerCount)}
-            </span>
-          )}
+            </Chip>
+          ) : null}
           </div>
 
           <motion.div
